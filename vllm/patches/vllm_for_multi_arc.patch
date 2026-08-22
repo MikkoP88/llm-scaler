@@ -14566,7 +14566,7 @@ index e86b205b9..96edd7c07 100644
          def remap_weight_names(weights):
              for name, weight in weights:
 diff --git a/vllm/model_executor/models/qwen3_dflash.py b/vllm/model_executor/models/qwen3_dflash.py
-index cffe6267a..b6924297c 100644
+index cffe6267a..c3df99b63 100644
 --- a/vllm/model_executor/models/qwen3_dflash.py
 +++ b/vllm/model_executor/models/qwen3_dflash.py
 @@ -1,7 +1,7 @@
@@ -14904,6 +14904,118 @@ index cffe6267a..b6924297c 100644
              if "t2d" in name:
                  continue
              if "d2t" in name:
+@@ -624,3 +796,111 @@ class DFlashQwen3ForCausalLM(Qwen3ForCausalLM):
+         )
+         loader.load_weights(model_weights.items())
+         self.model._build_fused_kv_buffers()
++
++
++class VanillaMarkov(nn.Module):
++    """Low-rank learned bigram bias added to the draft logits (DSpark).
++
++    Mirrors SpecForge's ``dspark.DSparkDraftModel`` head (adapted from
++    DeepSeek DeepSpec): position i's logits are biased by a rank-``markov_rank``
++    projection of the previous token's embedding.
++    """
++
++    def __init__(self, *, vocab_size: int, markov_rank: int):
++        super().__init__()
++        self.markov_w1 = nn.Embedding(vocab_size, markov_rank)
++        self.markov_w2 = nn.Linear(markov_rank, vocab_size, bias=False)
++
++    def get_prev_embeddings(self, token_ids: torch.Tensor) -> torch.Tensor:
++        return self.markov_w1(token_ids.long())
++
++    def project_bias(self, latent_states: torch.Tensor) -> torch.Tensor:
++        return self.markov_w2(latent_states)
++
++    def compute_step_bias(self, token_ids: torch.Tensor) -> torch.Tensor:
++        return self.project_bias(self.get_prev_embeddings(token_ids))
++
++
++class AcceptRatePredictor(nn.Module):
++    """Per-position acceptance-probability predictor (DSpark confidence head)."""
++
++    def __init__(self, input_dim: int):
++        super().__init__()
++        self.proj = nn.Linear(input_dim, 1)
++
++    def forward(self, features: torch.Tensor) -> torch.Tensor:
++        return self.proj(features).squeeze(-1)
++
++
++class DSparkDraftModel(DFlashQwen3ForCausalLM):
++    """DSpark drafter: the DFlash backbone plus a Markov bigram-bias head and
++    an optional per-position acceptance-confidence head.
++
++    SpecForge-trained DSpark drafters (e.g. rwmacy/qwen3.8-27b DSpark draft
++    checkpoints) carry the DFlash backbone weights plus
++    ``markov_head.markov_w{1,2}.weight`` and, when the confidence head is
++    enabled, ``confidence_head.proj.{weight,bias}``. The heads bias/score the
++    full draft vocabulary, matching ``compute_logits`` output when
++    ``draft_vocab_size == vocab_size``.
++    """
++
++    def __init__(self, *, vllm_config: VllmConfig, prefix: str = ""):
++        super().__init__(vllm_config=vllm_config, prefix=prefix)
++        config = self.config
++        dtype = vllm_config.model_config.dtype
++
++        markov_rank = int(getattr(config, "markov_rank", 0) or 0)
++        if markov_rank > 0:
++            self.markov_head = VanillaMarkov(
++                vocab_size=config.vocab_size,
++                markov_rank=markov_rank,
++            )
++        else:
++            self.markov_head = None
++
++        self.confidence_head: AcceptRatePredictor | None = None
++        if getattr(config, "enable_confidence_head", False):
++            conf_input_dim = config.hidden_size
++            if getattr(config, "confidence_head_with_markov", False):
++                if self.markov_head is None:
++                    raise ValueError(
++                        "confidence_head_with_markov=True requires a Markov "
++                        "head (markov_rank > 0)."
++                    )
++                conf_input_dim += markov_rank
++            self.confidence_head = AcceptRatePredictor(conf_input_dim)
++
++        if self.markov_head is not None:
++            self.markov_head.to(dtype)
++        if self.confidence_head is not None:
++            self.confidence_head.to(dtype)
++
++    def compute_markov_bias(
++        self, prev_tokens: torch.Tensor
++    ) -> torch.Tensor | None:
++        """Full-vocabulary bigram bias for the given previous tokens."""
++        if self.markov_head is None:
++            return None
++        return self.markov_head.compute_step_bias(prev_tokens)
++
++    def load_weights(self, weights: Iterable[tuple[str, torch.Tensor]]):
++        # The head weights are top-level modules of this class; everything
++        # else follows the DFlash layout (backbone under ``model.``,
++        # ``lm_head``, ``fc``).
++        head_prefixes = ("markov_head.", "confidence_head.")
++        head_weights: dict[str, torch.Tensor] = {}
++        backbone: list[tuple[str, torch.Tensor]] = []
++        for name, loaded_weight in weights:
++            if name.startswith(head_prefixes):
++                head_weights[name] = loaded_weight
++            else:
++                backbone.append((name, loaded_weight))
++        super().load_weights(backbone)
++        if head_weights:
++            params_dict = dict(self.named_parameters())
++            for name, loaded_weight in head_weights.items():
++                param = params_dict[name]
++                weight_loader = getattr(
++                    param, "weight_loader", default_weight_loader
++                )
++                weight_loader(param, loaded_weight)
 diff --git a/vllm/model_executor/models/qwen3_next.py b/vllm/model_executor/models/qwen3_next.py
 index f4c716789..6eeb120cc 100644
 --- a/vllm/model_executor/models/qwen3_next.py
@@ -16207,7 +16319,7 @@ index f4c716789..6eeb120cc 100644
          if self.layer_scale:
              if len(hidden_states.shape) == 2:
 diff --git a/vllm/model_executor/models/registry.py b/vllm/model_executor/models/registry.py
-index 5b77da7aa..a077ac471 100644
+index 5b77da7aa..789741a3c 100644
 --- a/vllm/model_executor/models/registry.py
 +++ b/vllm/model_executor/models/registry.py
 @@ -153,6 +153,7 @@ _TEXT_GENERATION_MODELS = {
@@ -16245,10 +16357,11 @@ index 5b77da7aa..a077ac471 100644
      "GlmAsrForConditionalGeneration": ("glmasr", "GlmAsrForConditionalGeneration"),
      "GLM4VForCausalLM": ("glm4v", "GLM4VForCausalLM"),
      "Glm4vForConditionalGeneration": ("glm4_1v", "Glm4vForConditionalGeneration"),
-@@ -587,6 +600,11 @@ _SPECULATIVE_DECODING_MODELS = {
+@@ -587,6 +600,12 @@ _SPECULATIVE_DECODING_MODELS = {
      "EagleLlama4ForCausalLM": ("llama4_eagle", "EagleLlama4ForCausalLM"),
      "EagleMiniCPMForCausalLM": ("minicpm_eagle", "EagleMiniCPMForCausalLM"),
      "DFlashDraftModel": ("qwen3_dflash", "DFlashQwen3ForCausalLM"),
++    "DSparkDraftModel": ("qwen3_dflash", "DSparkDraftModel"),
 +    "DFlashMuseGlimmerAssistantModel": (
 +        "qwen3_dflash",
 +        "DFlashQwen3ForCausalLM",
@@ -17497,6 +17610,19 @@ index 000000000..246a25b32
 +            self.vision_config = vision_config
 +        self.audio_config = None
 +        PretrainedConfig.__init__(self, **kwargs)
+diff --git a/vllm/transformers_utils/configs/eagle.py b/vllm/transformers_utils/configs/eagle.py
+index 682828c0a..2de46d825 100644
+--- a/vllm/transformers_utils/configs/eagle.py
++++ b/vllm/transformers_utils/configs/eagle.py
+@@ -68,7 +68,7 @@ class EAGLEConfig(PretrainedConfig):
+             )
+             kwargs["architectures"] = [
+                 arch
+-                if arch.startswith("DFlash") or arch.endswith("DFlash")
++                if arch.startswith(("DFlash", "DSpark")) or arch.endswith("DFlash")
+                 else f"DFlash{arch}"
+                 for arch in self.model.architectures
+             ]
 diff --git a/vllm/transformers_utils/configs/gemma4_unified.py b/vllm/transformers_utils/configs/gemma4_unified.py
 new file mode 100644
 index 000000000..c8cb21ace
@@ -20969,14 +21095,15 @@ index 363b113f0..c538fd58c 100644
  
  
 diff --git a/vllm/v1/spec_decode/dflash.py b/vllm/v1/spec_decode/dflash.py
-index db74044f4..eedafa929 100644
+index db74044f4..f8dc3e7c0 100644
 --- a/vllm/v1/spec_decode/dflash.py
 +++ b/vllm/v1/spec_decode/dflash.py
-@@ -1,17 +1,17 @@
+@@ -1,17 +1,18 @@
  # SPDX-License-Identifier: Apache-2.0
  # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
  
 -from dataclasses import replace
++import os
  from typing import Any
  
  import torch
@@ -20992,7 +21119,7 @@ index db74044f4..eedafa929 100644
  from vllm.v1.spec_decode.llm_base_proposer import SpecDecodeBaseProposer
  from vllm.v1.spec_decode.utils import copy_and_expand_dflash_inputs_kernel
  
-@@ -30,9 +30,16 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -30,9 +31,16 @@ class DFlashProposer(SpecDecodeBaseProposer):
          super().__init__(
              vllm_config=vllm_config,
              device=device,
@@ -21009,7 +21136,7 @@ index db74044f4..eedafa929 100644
  
          # Only next_token_ids and mask tokens are query tokens, all other context is K/V
          self.max_query_tokens = self.max_batch_size * (1 + self.num_speculative_tokens)
-@@ -50,6 +57,11 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -50,6 +58,11 @@ class DFlashProposer(SpecDecodeBaseProposer):
              dtype=torch.int64,
              device=device,
          )
@@ -21021,7 +21148,7 @@ index db74044f4..eedafa929 100644
          self._context_positions_buffer = torch.zeros(
              self.max_num_tokens,
              dtype=torch.int64,
-@@ -65,8 +77,90 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -65,8 +78,303 @@ class DFlashProposer(SpecDecodeBaseProposer):
              self.max_positions + 1, device=device, dtype=torch.int32
          )
  
@@ -21029,6 +21156,196 @@ index db74044f4..eedafa929 100644
 +        # DFlash embeds mask tokens directly.
          self.parallel_drafting_hidden_state_tensor = None
 +        self._packed_target_hidden_states: torch.Tensor | None = None
++
++        # DSpark: previous-token context for the Markov bigram bias. Set in
++        # propose() before the first sampling; None when the draft model has
++        # no Markov head (plain DFlash).
++        self._markov_prev_tokens: torch.Tensor | None = None
++
++        # DSpark adaptive block length (confidence head). Off by default: for
++        # small bandwidth-bound target batches a full draft block is optimal;
++        # truncation pays when verify cost grows with width (larger batches,
++        # graph padding). Enable with DSPARK_ADAPTIVE_BLOCK=1.
++        self._dspark_adaptive = os.environ.get("DSPARK_ADAPTIVE_BLOCK", "0") == "1"
++        self._dspark_conf_threshold = float(
++            os.environ.get("DSPARK_CONF_THRESHOLD", "0.5")
++        )
++        self._dspark_min_tokens = max(
++            1, int(os.environ.get("DSPARK_MIN_DRAFT_TOKENS", "1"))
++        )
++        # Per-position predicted acceptance probability, filled by
++        # _greedy_sample when adaptive mode is on; consumed by propose().
++        self._draft_confidence: torch.Tensor | None = None
++        if self._dspark_adaptive:
++            logger.info(
++                "DSpark adaptive block length enabled "
++                "(threshold=%.3f, min_tokens=%d)",
++                self._dspark_conf_threshold,
++                self._dspark_min_tokens,
++            )
++
++    def propose(
++        self,
++        target_token_ids,
++        target_positions,
++        target_hidden_states,
++        next_token_ids,
++        token_indices_to_sample,
++        common_attn_metadata,
++        sampling_metadata,
++        mm_embed_inputs=None,
++        num_rejected_tokens_gpu=None,
++        slot_mappings=None,
++    ):
++        # For the first draft position the "previous token" is the accepted
++        # bonus token, which is known at proposal time. Capture it so
++        # _greedy_sample can build the Markov bigram bias. Block-N drafting
++        # chains the context semi-autoregressively inside _greedy_sample.
++        self._draft_confidence = None
++        if getattr(self.model, "markov_head", None) is not None:
++            self._markov_prev_tokens = next_token_ids
++        else:
++            self._markov_prev_tokens = None
++        draft_token_ids = super().propose(
++            target_token_ids,
++            target_positions,
++            target_hidden_states,
++            next_token_ids,
++            token_indices_to_sample,
++            common_attn_metadata,
++            sampling_metadata,
++            mm_embed_inputs=mm_embed_inputs,
++            num_rejected_tokens_gpu=num_rejected_tokens_gpu,
++            slot_mappings=slot_mappings,
++        )
++        if (
++            self._dspark_adaptive
++            and self._draft_confidence is not None
++            and torch.is_tensor(draft_token_ids)
++            and draft_token_ids.dim() == 2
++        ):
++            return self._truncate_by_confidence(draft_token_ids)
++        return draft_token_ids
++
++    def _truncate_by_confidence(
++        self, draft_token_ids: torch.Tensor
++    ) -> list[list[int]]:
++        """Per-request prefix stopping driven by the DSpark confidence head.
++
++        The confidence head predicts, per draft position, the probability that
++        the position's draft token survives target verification given all
++        earlier positions survived (DSpark paper: c_k = sigmoid(w^T [h_k;
++        W1[x_{k-1}]]). We propose the longest prefix whose predicted
++        acceptance stays at or above the threshold. Variable-width draft lists
++        flow through vLLM v1's scheduler and verify paths unchanged (both
++        handle per-request draft lengths).
++        """
++        conf = self._draft_confidence
++        keep = (conf >= self._dspark_conf_threshold).long()
++        lengths = keep.cumprod(dim=1).sum(dim=1).clamp(min=self._dspark_min_tokens)
++        tokens = draft_token_ids.tolist()
++        lens = lengths.tolist()
++        truncated = [row[:n] for row, n in zip(tokens, lens)]
++        if logger.isEnabledFor(10):  # DEBUG
++            logger.debug(
++                "DSpark adaptive widths: %s (conf=%s)",
++                [len(row) for row in truncated],
++                conf.tolist(),
++            )
++        return truncated
++
++    def _greedy_sample(self, hidden_states: torch.Tensor) -> torch.Tensor:
++        model = self.model
++        markov_head = getattr(model, "markov_head", None)
++        if markov_head is None or self._markov_prev_tokens is None:
++            return super()._greedy_sample(hidden_states)
++
++        batch_size = self._markov_prev_tokens.shape[0]
++        num_spec = self.num_speculative_tokens
++
++        # compute_logits all-gathers to the full vocabulary on XPU, so the
++        # full-vocab Markov bias is added directly before argmax.
++        if num_spec == 1 or hidden_states.shape[0] == batch_size:
++            # Single-token (block-1) case: one previous token (the accepted
++            # bonus token) per request.
++            logits = model.compute_logits(hidden_states)
++            if logits is None:
++                return super()._greedy_sample(hidden_states)
++            bias = model.compute_markov_bias(self._markov_prev_tokens)
++            if bias is not None:
++                logits = logits + bias.to(logits.dtype)
++            return logits.argmax(dim=-1)
++
++        if hidden_states.shape[0] == batch_size * num_spec and num_spec > 1:
++            # Block-N parallel drafting (DFlash/DSpark). hidden_states is laid
++            # out positions-contiguous per request: [b0_p0..pN, b1_p0..pN, ...].
++            # Apply the Markov bigram bias semi-autoregressively (DSpark paper:
++            # at inference each position conditions on the previously *drafted*
++            # token): position i's bias is conditioned on position i-1's
++            # (biased) prediction, with position 0 conditioned on the accepted
++            # bonus token.
++            logits = model.compute_logits(hidden_states)
++            if logits is None:
++                return super()._greedy_sample(hidden_states)
++            vocab = logits.shape[-1]
++            logits = logits.view(batch_size, num_spec, vocab)
++            if os.environ.get("DFLASH_DEBUG") == "1" and not getattr(
++                self, "_dbg_logits", False
++            ):
++                self._dbg_logits = True
++                with torch.no_grad():
++                    hs = hidden_states.detach().float()
++                    lg = logits.detach().float()
++                    prev = self._markov_prev_tokens.detach()
++                    logger.info(
++                        "DFLASH_DBG greedy_blockN hidden shape=%s mean=%.4f "
++                        "std=%.4f nan=%s | logits shape=%s mean=%.4f std=%.4f "
++                        "max=%.4f | prev(bonus)=%s | top1=%s",
++                        tuple(hidden_states.shape),
++                        hs.mean().item(),
++                        hs.std().item(),
++                        bool(torch.isnan(hs).any().item()),
++                        tuple(logits.shape),
++                        lg.mean().item(),
++                        lg.std().item(),
++                        lg.max().item(),
++                        prev.tolist(),
++                        lg[0].argmax(dim=-1).tolist(),
++                    )
++            conf_head = getattr(model, "confidence_head", None)
++            want_conf = self._dspark_adaptive and conf_head is not None
++            confidences = None
++            block_hidden = None
++            if want_conf:
++                confidences = torch.empty(
++                    batch_size,
++                    num_spec,
++                    device=logits.device,
++                    dtype=torch.float32,
++                )
++                block_hidden = hidden_states.view(batch_size, num_spec, -1)
++            prev_tokens = self._markov_prev_tokens
++            for i in range(num_spec):
++                latent = markov_head.get_prev_embeddings(prev_tokens)
++                bias = markov_head.project_bias(latent)
++                logits[:, i, :] = logits[:, i, :] + bias.to(logits.dtype)
++                if want_conf:
++                    # c_k = sigmoid(w^T [h_k; W1[x_{k-1}]]) (DSpark paper).
++                    param_dtype = conf_head.proj.weight.dtype
++                    feats = torch.cat(
++                        [
++                            block_hidden[:, i, :].to(param_dtype),
++                            latent.to(param_dtype),
++                        ],
++                        dim=-1,
++                    )
++                    confidences[:, i] = torch.sigmoid(conf_head(feats)).float()
++                # Next position's context is this position's prediction.
++                prev_tokens = logits[:, i, :].argmax(dim=-1)
++            self._draft_confidence = confidences
++            return logits.argmax(dim=-1)
++
++        return super()._greedy_sample(hidden_states)
 +
 +    def pack_aux_hidden_states(
 +        self,
@@ -21077,6 +21394,29 @@ index db74044f4..eedafa929 100644
 +            )
 +            packed[:, offset : offset + width].copy_(source)
 +            offset += width
++        if os.environ.get("DFLASH_DEBUG") == "1" and not getattr(
++            self, "_dbg_pack", False
++        ):
++            self._dbg_pack = True
++            with torch.no_grad():
++                stats = []
++                for hidden_state in aux_hidden_states:
++                    hs = hidden_state[:num_tokens].detach().float()
++                    stats.append(
++                        f"shape={tuple(hidden_state.shape)} "
++                        f"mean={hs.mean().item():.4f} std={hs.std().item():.4f} "
++                        f"nan={bool(torch.isnan(hs).any().item())}"
++                    )
++                pk = packed.detach().float()
++                logger.info(
++                    "DFLASH_DBG pack_aux n_layers=%d | %s | PACKED shape=%s "
++                    "mean=%.4f std=%.4f",
++                    len(aux_hidden_states),
++                    " || ".join(stats),
++                    tuple(packed.shape),
++                    pk.mean().item(),
++                    pk.std().item(),
++                )
 +        return packed
 +
 +    @override
@@ -21113,7 +21453,7 @@ index db74044f4..eedafa929 100644
  
      @override
      def _create_draft_vllm_config(self) -> VllmConfig:
-@@ -82,8 +176,85 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -82,8 +390,85 @@ class DFlashProposer(SpecDecodeBaseProposer):
      @override
      def _warn_if_multimodal(self):
          # Override to allow multimodal inputs since DFlash supports Qwen3.5 models
@@ -21199,12 +21539,12 @@ index db74044f4..eedafa929 100644
      @override
      def set_inputs_first_pass(
          self,
-@@ -99,14 +270,12 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -99,14 +484,12 @@ class DFlashProposer(SpecDecodeBaseProposer):
          # Q from query embeddings (bonus + mask tokens).
          batch_size = cad.batch_size()
          num_context = target_token_ids.shape[0]
 -        num_query_per_req = 1 + self.num_speculative_tokens
-+        num_query_per_req = self.num_speculative_tokens
++        num_query_per_req = self.num_speculative_tokens  # OMP: SpecForge DSpark block layout (anchor + k-1 masks)
          num_query_total = batch_size * num_query_per_req
  
 -        # Store for build_model_inputs_first_pass to use
@@ -21216,7 +21556,7 @@ index db74044f4..eedafa929 100644
          self._dflash_hidden_states = target_hidden_states
  
          token_indices_to_sample = torch.empty(
-@@ -115,8 +284,7 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -115,8 +498,7 @@ class DFlashProposer(SpecDecodeBaseProposer):
              device=self.device,
          )
  
@@ -21226,7 +21566,7 @@ index db74044f4..eedafa929 100644
          max_ctx_per_req = cad.max_query_len
          max_tokens_per_req = max_ctx_per_req + num_query_per_req
          BLOCK_SIZE = min(256, triton.next_power_of_2(max_tokens_per_req))
-@@ -124,36 +292,48 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -124,36 +506,48 @@ class DFlashProposer(SpecDecodeBaseProposer):
          grid = (batch_size, num_blocks)
  
          has_num_rejected = num_rejected_tokens_gpu is not None
@@ -21304,7 +21644,7 @@ index db74044f4..eedafa929 100644
          new_query_start_loc = self.arange[: batch_size + 1] * num_query_per_req
  
          # In padded mode, cad.seq_lens includes rejected tokens. Subtract
-@@ -162,12 +342,6 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -162,12 +556,6 @@ class DFlashProposer(SpecDecodeBaseProposer):
          if has_num_rejected:
              effective_seq_lens = effective_seq_lens - num_rejected_tokens_gpu
  
@@ -21317,7 +21657,7 @@ index db74044f4..eedafa929 100644
          new_cad = CommonAttentionMetadata(
              query_start_loc=new_query_start_loc,
              seq_lens=effective_seq_lens + num_query_per_req,
-@@ -177,12 +351,11 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -177,16 +565,40 @@ class DFlashProposer(SpecDecodeBaseProposer):
              ),
              _seq_lens_cpu=None,
              _num_computed_tokens_cpu=None,
@@ -21331,7 +21671,36 @@ index db74044f4..eedafa929 100644
              slot_mapping=query_slot_mapping,
              causal=False,  # Non-causal attention is required for DFlash
          )
-@@ -227,10 +400,11 @@ class DFlashProposer(SpecDecodeBaseProposer):
+ 
++        if os.environ.get("DFLASH_DEBUG") == "1" and not getattr(
++            self, "_dbg_attn", False
++        ):
++            self._dbg_attn = True
++            with torch.no_grad():
++                sl = new_cad.seq_lens.detach()
++                ti = token_indices_to_sample.detach()
++                bt = new_cad.block_table_tensor.detach()
++                csm = self._slot_mapping_buffers_by_gid[primary_kv_cache_gid][0]
++                qsm = self._slot_mapping_buffers_by_gid[primary_kv_cache_gid][1]
++                logger.info(
++                    "DFLASH_DBG attn_meta batch=%d n_query_total=%d "
++                    "num_query_per_req=%d seq_lens[:2]=%s token_indices=%s | "
++                    "block_table[0,:6]=%s | ctx_slot_map[:8]=%s | "
++                    "qry_slot_map[:8]=%s",
++                    batch_size,
++                    num_query_total,
++                    num_query_per_req,
++                    sl[:2].tolist(),
++                    ti.tolist(),
++                    bt[0, :6].tolist() if bt.dim() == 2 else f"dim={bt.dim()}",
++                    csm[:8].tolist(),
++                    qsm[:8].tolist(),
++                )
++
+         return num_query_total, token_indices_to_sample, new_cad
+ 
+     @override
+@@ -227,10 +639,11 @@ class DFlashProposer(SpecDecodeBaseProposer):
  
          # Context and query positions use separate buffers; no copy needed.
          context_positions = self._context_positions_buffer[:num_tokens]
@@ -21347,7 +21716,7 @@ index db74044f4..eedafa929 100644
  
          # Run the KV projection (GEMM + norms + RoPE) for memory profiling,
          self.model.precompute_and_store_context_kv(context_states, context_positions)
-@@ -255,16 +429,17 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -255,16 +668,38 @@ class DFlashProposer(SpecDecodeBaseProposer):
          num_input_tokens: int,
          mm_embed_inputs: tuple[list[torch.Tensor], torch.Tensor] | None,
      ) -> tuple[dict[str, Any], int]:
@@ -21370,10 +21739,31 @@ index db74044f4..eedafa929 100644
 +            )
 +        finally:
 +            self._dflash_hidden_states = None
++        if os.environ.get("DFLASH_DEBUG") == "1" and not getattr(
++            self, "_dbg_inputs", False
++        ):
++            self._dbg_inputs = True
++            with torch.no_grad():
++                ids = self.input_ids[:num_input_tokens].detach()
++                pos = self._get_positions(num_input_tokens).detach()
++                n_mask = int((ids == self.parallel_drafting_token_id).sum().item())
++                logger.info(
++                    "DFLASH_DBG draft_inputs n_query=%d n_context=%d "
++                    "mask_token_id=%s n_mask=%d ids[:16]=%s pos[:16]=%s "
++                    "pos_min=%d pos_max=%d",
++                    num_input_tokens,
++                    num_context,
++                    self.parallel_drafting_token_id,
++                    n_mask,
++                    ids[:16].tolist(),
++                    pos[:16].tolist(),
++                    int(pos.min().item()),
++                    int(pos.max().item()),
++                )
          return (
              dict(
                  input_ids=self.input_ids[:num_input_tokens],
-@@ -278,10 +453,56 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -278,10 +713,56 @@ class DFlashProposer(SpecDecodeBaseProposer):
      def build_per_group_and_layer_attn_metadata(
          self, cad: CommonAttentionMetadata, draft_index: int = 0
      ) -> tuple[list[object], dict[str, object]]:
