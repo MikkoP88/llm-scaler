@@ -14566,7 +14566,7 @@ index e86b205b9..96edd7c07 100644
          def remap_weight_names(weights):
              for name, weight in weights:
 diff --git a/vllm/model_executor/models/qwen3_dflash.py b/vllm/model_executor/models/qwen3_dflash.py
-index cffe6267a..d03ac0882 100644
+index cffe6267a..b6924297c 100644
 --- a/vllm/model_executor/models/qwen3_dflash.py
 +++ b/vllm/model_executor/models/qwen3_dflash.py
 @@ -1,7 +1,7 @@
@@ -14705,7 +14705,7 @@ index cffe6267a..d03ac0882 100644
              prefix=f"{prefix}.attn",
              attn_type=attn_type,
          )
-@@ -158,12 +248,17 @@ class DFlashQwen3DecoderLayer(nn.Module):
+@@ -158,12 +248,24 @@ class DFlashQwen3DecoderLayer(nn.Module):
          config: Qwen3Config,
          cache_config: CacheConfig | None = None,
          quant_config: QuantizationConfig | None = None,
@@ -14714,6 +14714,13 @@ index cffe6267a..d03ac0882 100644
      ) -> None:
          super().__init__()
          self.hidden_size = config.hidden_size
++        if cache_config is None:
++            # Inherit the KV cache dtype from the active vllm_config so the
++            # drafter's KV cache spec follows --kv-cache-dtype (e.g. fp8).
++            # Without this, Attention defaults to "auto" (model dtype), which
++            # yields a 2x page size vs the target and breaks hybrid page-size
++            # unification (MambaSpec pages cannot be rescaled).
++            cache_config = getattr(vllm_config, "cache_config", None)
 +        self.layer_type = layer_type
          set_default_rope_theta(config, default_theta=1000000)
          attn_type = AttentionType.DECODER
@@ -14723,7 +14730,7 @@ index cffe6267a..d03ac0882 100644
  
          self.self_attn = DFlashQwen3Attention(
              hidden_size=self.hidden_size,
-@@ -175,6 +270,8 @@ class DFlashQwen3DecoderLayer(nn.Module):
+@@ -175,6 +277,8 @@ class DFlashQwen3DecoderLayer(nn.Module):
              head_dim=getattr(config, "head_dim", None),
              cache_config=cache_config,
              quant_config=quant_config,
@@ -14732,7 +14739,7 @@ index cffe6267a..d03ac0882 100644
              rope_parameters=config.rope_parameters,
              prefix=f"{prefix}.self_attn",
              attn_type=attn_type,
-@@ -243,16 +340,23 @@ class DFlashQwen3Model(nn.Module):
+@@ -243,16 +347,23 @@ class DFlashQwen3Model(nn.Module):
              prefix=maybe_prefix(prefix, "embed_tokens"),
          )
  
@@ -14756,7 +14763,7 @@ index cffe6267a..d03ac0882 100644
          if self.use_aux_hidden_state:
              num_features_to_use = self.config.num_hidden_layers
              if "target_layer_ids" in drafter_config:
-@@ -338,12 +442,50 @@ class DFlashQwen3Model(nn.Module):
+@@ -338,12 +449,50 @@ class DFlashQwen3Model(nn.Module):
  
          # References to inner Attention layers for direct cache writes
          self._attn_layers = [layer.self_attn.attn for layer in self.layers]
@@ -14808,7 +14815,7 @@ index cffe6267a..d03ac0882 100644
      ) -> None:
          """Precompute K/V for context states write them into each layer's KV cache.
  
-@@ -381,12 +523,14 @@ class DFlashQwen3Model(nn.Module):
+@@ -381,12 +530,14 @@ class DFlashQwen3Model(nn.Module):
          all_kv_flat = F.linear(
              normed_context_states, self._fused_kv_weight, self._fused_kv_bias
          )
@@ -14823,7 +14830,7 @@ index cffe6267a..d03ac0882 100644
          all_k = all_kv[0]  # [L, num_ctx, nkv, hd], contiguous
          all_v = all_kv[1]  # [L, num_ctx, nkv, hd], contiguous
  
-@@ -424,13 +568,18 @@ class DFlashQwen3Model(nn.Module):
+@@ -424,13 +575,18 @@ class DFlashQwen3Model(nn.Module):
          all_k_final = all_k_flat.view(L, num_ctx, nkv, hd)
          for i in range(L):
              attn = self._attn_layers[i]
@@ -14843,7 +14850,7 @@ index cffe6267a..d03ac0882 100644
              )
  
      def forward(
-@@ -521,7 +670,8 @@ class DFlashQwen3ForCausalLM(Qwen3ForCausalLM):
+@@ -521,7 +677,8 @@ class DFlashQwen3ForCausalLM(Qwen3ForCausalLM):
              prefix=maybe_prefix(prefix, "lm_head"),
          )
          self.logits_processor = LogitsProcessor(
@@ -14853,7 +14860,7 @@ index cffe6267a..d03ac0882 100644
          )
          target_vocab_size = vllm_config.model_config.get_vocab_size()
          if self.config.draft_vocab_size != target_vocab_size:
-@@ -569,13 +719,17 @@ class DFlashQwen3ForCausalLM(Qwen3ForCausalLM):
+@@ -569,13 +726,17 @@ class DFlashQwen3ForCausalLM(Qwen3ForCausalLM):
          self,
          context_states: torch.Tensor,
          context_positions: torch.Tensor,
@@ -14872,7 +14879,7 @@ index cffe6267a..d03ac0882 100644
      def combine_hidden_states(
          self,
          hidden_states: torch.Tensor,
-@@ -585,6 +739,8 @@ class DFlashQwen3ForCausalLM(Qwen3ForCausalLM):
+@@ -585,6 +746,8 @@ class DFlashQwen3ForCausalLM(Qwen3ForCausalLM):
          needs_squeeze = hidden_states.dim() == 1
          if needs_squeeze:
              hidden_states = hidden_states.unsqueeze(0)
@@ -14881,7 +14888,7 @@ index cffe6267a..d03ac0882 100644
          result = self.model.fc(hidden_states)
          if needs_squeeze:
              result = result.squeeze(0)
-@@ -598,6 +754,15 @@ class DFlashQwen3ForCausalLM(Qwen3ForCausalLM):
+@@ -598,6 +761,15 @@ class DFlashQwen3ForCausalLM(Qwen3ForCausalLM):
              assert "mask_hidden" not in name, (
                  "DFlash should use mask_token_id to embed the padding hidden state"
              )
