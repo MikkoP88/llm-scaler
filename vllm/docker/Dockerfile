@@ -91,11 +91,16 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # ---------------------------------------------------------------------------
 # 1b. custom ESIMD kernels  ->  wheel  (TORCH_XPU_ARCH_LIST=bmg-g21)
 # ---------------------------------------------------------------------------
+# ESIMD/DPC++ translation units are memory-hungry to compile (10-20+ GB peak
+# per TU), so parallelism defaults to 1 for unknown builder machines.
+# Override with --build-arg ESIMD_MAX_JOBS=N on hosts with ample RAM
+# (e.g. 8 on 36 cores / 384 GB, leaving headroom for page cache).
+ARG ESIMD_MAX_JOBS=1
 RUN --mount=type=cache,target=/root/.cache/uv \
     set -eo pipefail && \
     source /opt/intel/oneapi/setvars.sh --force && \
     cd /src/custom-esimd-kernels-vllm && \
-    TORCH_XPU_ARCH_LIST=bmg-g21 MAX_JOBS=1 python3 setup.py bdist_wheel && \
+    TORCH_XPU_ARCH_LIST=bmg-g21 MAX_JOBS=${ESIMD_MAX_JOBS} python3 setup.py bdist_wheel && \
     cp dist/*.whl ${WHEELS}/ && \
     rm -rf build dist
 
