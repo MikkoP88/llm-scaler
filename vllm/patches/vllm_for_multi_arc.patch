@@ -20190,6 +20190,87 @@ index 0aeb33ae6..4598d5a6e 100644
              alibi_slopes=self.alibi_slopes,
              use_alibi_sqrt=self.use_alibi_sqrt,
              window_size=self.sliding_window,
+diff --git a/vllm/v1/attention/backends/turboquant_attn.py b/vllm/v1/attention/backends/turboquant_attn.py
+index 53684b436..6c1c38333 100644
+--- a/vllm/v1/attention/backends/turboquant_attn.py
++++ b/vllm/v1/attention/backends/turboquant_attn.py
+@@ -295,6 +295,11 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
+             vllm_config.attention_config.tq_max_kv_splits_for_cuda_graph
+         )
+ 
++        # Fallback dequant buffers for _continuation_prefill when the shared
++        # workspace is locked (see _continuation_prefill). Grow-only cache.
++        self._fallback_k_buf: torch.Tensor | None = None
++        self._fallback_v_buf: torch.Tensor | None = None
++
+     def _flash_attn_varlen(
+         self,
+         q: torch.Tensor,
+@@ -744,10 +749,29 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
+         # Use WorkspaceManager for dequant buffers.
+         # Shared across all layers — saves 60× memory at long context.
+         # Required for CUDA Graph capture (per-layer growth incompatible with CG).
+-        k_buf, v_buf = current_workspace_manager().get_simultaneous(
+-            (buf_shape, torch.float16),
+-            (buf_shape, torch.float16),
+-        )
++        try:
++            k_buf, v_buf = current_workspace_manager().get_simultaneous(
++                (buf_shape, torch.float16),
++                (buf_shape, torch.float16),
++            )
++        except AssertionError:
++            # The workspace was locked (at capture time) before any TQ
++            # attention ran, so it was never sized for these buffers. In
++            # PIECEWISE graph mode, dummy runs skip attention entirely and
++            # attention executes eagerly outside the captured pieces, so a
++            # backend-local grow-only buffer is safe (it is never baked
++            # into a graph).
++            if (
++                self._fallback_k_buf is None
++                or self._fallback_k_buf.shape[2] < alloc_len
++            ):
++                self._fallback_k_buf = torch.empty(
++                    buf_shape, dtype=torch.float16, device=device
++                )
++                self._fallback_v_buf = torch.empty(
++                    buf_shape, dtype=torch.float16, device=device
++                )
++            k_buf, v_buf = self._fallback_k_buf, self._fallback_v_buf
+         # Skip .zero_() — kernel writes all positions up to cached_len,
+         # and we only read [:cached_len] afterwards.
+         k_cached = k_buf[:, :, :alloc_len, :]
+@@ -874,14 +898,23 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
+         Hq = self.num_heads
+         mid_o_buf = output_buf = lse_buf = None
+         if is_workspace_manager_initialized():
+-            # output_buf in query dtype — matches the in-kernel fp16 cast in stage2.
+-            mid_o_buf, output_buf, lse_buf = (
+-                current_workspace_manager().get_simultaneous(
+-                    ((B, Hq, S, D + 1), torch.float32),
+-                    ((B, Hq, D), query.dtype),
+-                    ((B, Hq), torch.float32),
++            try:
++                # output_buf in query dtype — matches the in-kernel fp16 cast in stage2.
++                mid_o_buf, output_buf, lse_buf = (
++                    current_workspace_manager().get_simultaneous(
++                        ((B, Hq, S, D + 1), torch.float32),
++                        ((B, Hq, D), query.dtype),
++                        ((B, Hq), torch.float32),
++                    )
+                 )
+-            )
++            except AssertionError:
++                # Workspace was locked (at graph capture time) before any TQ
++                # decode ran, so it was never sized for these buffers. In
++                # PIECEWISE graph mode attention executes eagerly outside the
++                # captured pieces, so falling back to kernel-internal
++                # allocation (per-call torch.empty via the caching
++                # allocator) is graph-safe.
++                mid_o_buf = output_buf = lse_buf = None
+ 
+         result = triton_turboquant_decode_attention(
+             query=query,
 diff --git a/vllm/v1/attention/ops/triton_attention_helpers.py b/vllm/v1/attention/ops/triton_attention_helpers.py
 index 6ed50f6a2..b09f0b2e9 100644
 --- a/vllm/v1/attention/ops/triton_attention_helpers.py
