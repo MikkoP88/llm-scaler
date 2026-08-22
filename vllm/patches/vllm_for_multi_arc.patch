@@ -20881,7 +20881,7 @@ index 363b113f0..c538fd58c 100644
  
  
 diff --git a/vllm/v1/spec_decode/dflash.py b/vllm/v1/spec_decode/dflash.py
-index db74044f4..0a0040af5 100644
+index db74044f4..eedafa929 100644
 --- a/vllm/v1/spec_decode/dflash.py
 +++ b/vllm/v1/spec_decode/dflash.py
 @@ -1,17 +1,17 @@
@@ -21111,8 +21111,12 @@ index db74044f4..0a0040af5 100644
      @override
      def set_inputs_first_pass(
          self,
-@@ -102,11 +273,9 @@ class DFlashProposer(SpecDecodeBaseProposer):
-         num_query_per_req = 1 + self.num_speculative_tokens
+@@ -99,14 +270,12 @@ class DFlashProposer(SpecDecodeBaseProposer):
+         # Q from query embeddings (bonus + mask tokens).
+         batch_size = cad.batch_size()
+         num_context = target_token_ids.shape[0]
+-        num_query_per_req = 1 + self.num_speculative_tokens
++        num_query_per_req = self.num_speculative_tokens
          num_query_total = batch_size * num_query_per_req
  
 -        # Store for build_model_inputs_first_pass to use
@@ -21858,6 +21862,23 @@ index 9a41ff5c8..5da41510b 100644
 +            self.counter_spec_decode_num_accepted_tokens_per_pos.get(engine_idx, [])
          ):
              counter.inc(spec_decoding_stats.num_accepted_tokens_per_pos[pos])
+diff --git a/vllm/v1/spec_decode/utils.py b/vllm/v1/spec_decode/utils.py
+index e046f0136..15675bc0f 100644
+--- a/vllm/v1/spec_decode/utils.py
++++ b/vllm/v1/spec_decode/utils.py
+@@ -553,9 +553,9 @@ def copy_and_expand_dflash_inputs_kernel(
+     input_id = tl.where(is_bonus, bonus_token, parallel_drafting_token_id)
+     tl.store(out_input_ids_ptr + query_out, input_id, mask=is_query)
+ 
+-    # --- Token indices to sample (mask tokens, skip the bonus token) ---
+-    is_sample = is_query & (query_off > 0)
+-    sample_out_idx = req_idx * num_speculative_tokens + (query_off - 1)
++    # --- Token indices to sample (all k draft slots at offsets 0..k-1) ---
++    is_sample = is_query
++    sample_out_idx = req_idx * num_speculative_tokens + query_off
+     tl.store(
+         out_token_indices_ptr + sample_out_idx,
+         query_out,
 diff --git a/vllm/v1/worker/gpu/attn_utils.py b/vllm/v1/worker/gpu/attn_utils.py
 index 5930777de..b515ee67e 100644
 --- a/vllm/v1/worker/gpu/attn_utils.py
@@ -22382,10 +22403,32 @@ index 83d87c74a..234ebb4ef 100644
          if num_spec_steps > 0:
              decode_output.scheduled_spec_decode_tokens = {
 diff --git a/vllm/v1/worker/gpu_model_runner.py b/vllm/v1/worker/gpu_model_runner.py
-index 98b2fbf12..efd4eb189 100644
+index 98b2fbf12..b8f8a6973 100644
 --- a/vllm/v1/worker/gpu_model_runner.py
 +++ b/vllm/v1/worker/gpu_model_runner.py
-@@ -2318,6 +2318,14 @@ class GPUModelRunner(
+@@ -1749,6 +1749,21 @@ class GPUModelRunner(
+         if self._draft_token_ids is None or not spec_flattened_indices:
+             return
+ 
++        # Adaptive truncation may return variable-length lists; pad to tensor.
++        if isinstance(self._draft_token_ids, list):
++            padded = torch.zeros(
++                len(self._draft_token_ids),
++                self.num_spec_tokens,
++                dtype=torch.int32,
++                pin_memory=self.pin_memory,
++            )
++            for i, toks in enumerate(self._draft_token_ids):
++                if toks:
++                    padded[i, : len(toks)] = torch.tensor(
++                        toks, dtype=torch.int32
++                    )
++            self._draft_token_ids = padded.to(self.device, non_blocking=True)
++
+         assert isinstance(self._draft_token_ids, torch.Tensor)
+         draft_tokens_index_tensor = torch.tensor(
+             spec_flattened_indices, dtype=torch.int64, pin_memory=self.pin_memory
+@@ -2318,6 +2333,14 @@ class GPUModelRunner(
          # Prepare the attention metadata for each KV cache group and make layers
          # in the same group share the same metadata.
          spec_decode_common_attn_metadata = None
@@ -22400,7 +22443,7 @@ index 98b2fbf12..efd4eb189 100644
          for kv_cache_gid, kv_cache_group in enumerate(kv_cache_groups):
              cm = copy(cm_base)  # shallow copy
  
-@@ -2333,6 +2341,11 @@ class GPUModelRunner(
+@@ -2333,6 +2356,11 @@ class GPUModelRunner(
                  cm.block_table_tensor = _get_block_table(kv_cache_gid)
                  cm.slot_mapping = slot_mappings[kv_cache_gid]
  
@@ -22412,7 +22455,7 @@ index 98b2fbf12..efd4eb189 100644
              if self.speculative_config and spec_decode_common_attn_metadata is None:
                  if isinstance(
                      self.drafter, (EagleProposer, DFlashProposer, Gemma4Proposer)
-@@ -4770,9 +4783,16 @@ class GPUModelRunner(
+@@ -4770,9 +4798,16 @@ class GPUModelRunner(
                  target_positions = self._get_positions(num_scheduled_tokens)
                  if self.use_aux_hidden_state_outputs:
                      assert aux_hidden_states is not None
@@ -22432,7 +22475,7 @@ index 98b2fbf12..efd4eb189 100644
                  else:
                      target_hidden_states = hidden_states[:num_scheduled_tokens]
              else:
-@@ -4787,9 +4807,17 @@ class GPUModelRunner(
+@@ -4787,9 +4822,17 @@ class GPUModelRunner(
                      target_positions = self._get_positions(token_indices)
                      if self.use_aux_hidden_state_outputs:
                          assert aux_hidden_states is not None
@@ -22453,7 +22496,7 @@ index 98b2fbf12..efd4eb189 100644
                      else:
                          target_hidden_states = hidden_states[token_indices]
                  else:
-@@ -4808,12 +4836,28 @@ class GPUModelRunner(
+@@ -4808,12 +4851,28 @@ class GPUModelRunner(
                      target_positions = self._get_positions(total_num_tokens)
                      if self.use_aux_hidden_state_outputs:
                          assert aux_hidden_states is not None
@@ -22485,7 +22528,7 @@ index 98b2fbf12..efd4eb189 100644
              if self.supports_mm_inputs and self.drafter.supports_mm_inputs:
                  mm_embed_inputs = self._gather_mm_embeddings(
                      scheduler_output,
-@@ -5042,7 +5086,8 @@ class GPUModelRunner(
+@@ -5042,7 +5101,8 @@ class GPUModelRunner(
          if not layer_ids:
              dflash_config = getattr(hf_config, "dflash_config", None)
              if dflash_config and isinstance(dflash_config, dict):
@@ -22495,7 +22538,7 @@ index 98b2fbf12..efd4eb189 100644
  
          if layer_ids and isinstance(layer_ids, (list, tuple)):
              return tuple(layer_ids)
-@@ -6675,6 +6720,119 @@ class GPUModelRunner(
+@@ -6675,6 +6735,119 @@ class GPUModelRunner(
          for attn_groups in self.attn_groups:
              yield from attn_groups
  
@@ -22615,7 +22658,7 @@ index 98b2fbf12..efd4eb189 100644
      def _reshape_kv_cache_tensors(
          self,
          kv_cache_raw_tensors: dict[str, torch.Tensor],
-@@ -6693,6 +6851,10 @@ class GPUModelRunner(
+@@ -6693,6 +6866,10 @@ class GPUModelRunner(
          """
          kv_caches: dict[str, torch.Tensor] = {}
          has_attn, has_mamba = False, False
@@ -22626,7 +22669,7 @@ index 98b2fbf12..efd4eb189 100644
          for group in self._kv_cache_spec_attn_group_iterator():
              kv_cache_spec = group.kv_cache_spec
              attn_backend = group.backend
-@@ -6713,25 +6875,47 @@ class GPUModelRunner(
+@@ -6713,25 +6890,47 @@ class GPUModelRunner(
                      )
                      kernel_num_blocks = num_blocks * num_blocks_per_kv_block
  
@@ -22690,7 +22733,7 @@ index 98b2fbf12..efd4eb189 100644
                      # The allocation respects the backend-defined stride order
                      # to ensure the semantic remains consistent for each
                      # backend. We first obtain the generic kv cache shape and
-@@ -6746,16 +6930,15 @@ class GPUModelRunner(
+@@ -6746,16 +6945,15 @@ class GPUModelRunner(
                          for i in range(len(kv_cache_stride_order))
                      ]
  
