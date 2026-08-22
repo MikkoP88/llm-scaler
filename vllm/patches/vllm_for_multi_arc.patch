@@ -20519,6 +20519,65 @@ index 6ed50f6a2..b09f0b2e9 100644
  
      # PrefixLM: extend mask with bidirectional ranges for multimodal tokens.
      # Applied AFTER sliding window so mm_prefix ranges override SW restriction.
+diff --git a/vllm/v1/attention/ops/triton_turboquant_decode.py b/vllm/v1/attention/ops/triton_turboquant_decode.py
+index 3adaf2610..2d58dc365 100644
+--- a/vllm/v1/attention/ops/triton_turboquant_decode.py
++++ b/vllm/v1/attention/ops/triton_turboquant_decode.py
+@@ -516,16 +516,52 @@ def triton_turboquant_decode_attention(
+ 
+     cfg = _get_layout(D, mse_bits, value_quant_bits, key_packed_size)
+ 
++    # PIECEWISE-graph fallback: the workspace manager is locked at capture
++    # time, so the caller passes mid_o/output/lse bufs as None. Reuse the
++    # scratch cached on the layer from the first call instead of
++    # re-allocating it every step — the buffers were stored on buf_holder
++    # but never read back, pumping per-layer scratch (~MBs/step at B=1)
++    # through the XPU caching allocator, which wedges the xe engines under
++    # XPU graphs when free memory is low.
++    if mid_o_buf is None and buf_holder is not None:
++        mid_o_buf = getattr(buf_holder, "_tq_mid_o_buf", None)
++    if output_buf is None and buf_holder is not None:
++        output_buf = getattr(buf_holder, "_tq_output_buf", None)
++    if lse_buf is None and buf_holder is not None:
++        lse_buf = getattr(buf_holder, "_tq_lse_buf", None)
++
+     # Compute q_rot = q @ Pi.T (rotated query for MSE key scoring)
+     # FP8 path: pass query directly (float16); kernel casts inline.
+     # MSE path: still needs external GEMM (cuBLAS), so q_rot is float32.
+     if key_fp8:
+         q_rot = query.contiguous()
+     else:
+-        q_float = query.float()
+         if PiT is None:
+             PiT = Pi.T.contiguous()
+-        q_rot = (q_float @ PiT).contiguous()
++        # Cache the cast + GEMM temporaries on the layer (grow-only) so the
++        # MSE path is allocation-free after the first call.
++        n_flat = B * Hq
++        q_float_buf = (
++            getattr(buf_holder, "_tq_q_float_buf", None)
++            if buf_holder is not None
++            else None
++        )
++        if q_float_buf is None or q_float_buf.shape[0] < n_flat:
++            q_float_buf = torch.empty(n_flat, D, dtype=torch.float32, device=device)
++            if buf_holder is not None:
++                buf_holder._tq_q_float_buf = q_float_buf
++        q_rot_buf = (
++            getattr(buf_holder, "_tq_q_rot_buf", None)
++            if buf_holder is not None
++            else None
++        )
++        if q_rot_buf is None or q_rot_buf.shape[0] < n_flat:
++            q_rot_buf = torch.empty(n_flat, D, dtype=torch.float32, device=device)
++            if buf_holder is not None:
++                buf_holder._tq_q_rot_buf = q_rot_buf
++        q_float = q_float_buf[:n_flat]
++        q_float.copy_(query.reshape(n_flat, D))
++        q_rot = torch.mm(q_float, PiT, out=q_rot_buf[:n_flat]).view(B, Hq, D)
+ 
+     NUM_KV_SPLITS = max_num_kv_splits
+ 
 diff --git a/vllm/v1/attention/ops/triton_unified_attention.py b/vllm/v1/attention/ops/triton_unified_attention.py
 index 1774f1b30..c06c72c20 100644
 --- a/vllm/v1/attention/ops/triton_unified_attention.py
