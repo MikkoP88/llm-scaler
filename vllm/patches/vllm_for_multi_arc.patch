@@ -3452,7 +3452,7 @@ index 53f91e1b6..e50a11b0a 100644
                      self.scheduler_config.max_num_seqs * decode_query_len * 2, 512
                  )
 diff --git a/vllm/distributed/device_communicators/xpu_communicator.py b/vllm/distributed/device_communicators/xpu_communicator.py
-index 209005c5b..cd20c6c23 100644
+index 209005c5b..fc98c8836 100644
 --- a/vllm/distributed/device_communicators/xpu_communicator.py
 +++ b/vllm/distributed/device_communicators/xpu_communicator.py
 @@ -2,15 +2,105 @@
@@ -3561,7 +3561,7 @@ index 209005c5b..cd20c6c23 100644
  
  
  class XpuCommunicator(DeviceCommunicatorBase):
-@@ -40,10 +130,107 @@ class XpuCommunicator(DeviceCommunicatorBase):
+@@ -40,10 +130,144 @@ class XpuCommunicator(DeviceCommunicatorBase):
  
                  self.all2all_manager = AgRsAll2AllManager(self.cpu_group)
                  logger.info("Using AgRs manager on XPU device.")
@@ -3573,8 +3573,45 @@ index 209005c5b..cd20c6c23 100644
 -        output = input_.clone()
 +        if os.environ.get("SKIP_ALL_REDUCE") == "1":
 +            return input_
++        if torch.compiler.is_compiling():
++            # Bounce the collective off the registered `vllm::all_reduce`
++            # custom op while tracing, so dynamo emits a single fx node
++            # instead of inlining this function. platforms/xpu.py registers
++            # that op as a splitting op, which keeps the oneCCL collective
++            # OUT of captured XPU graph pieces: a replayed oneCCL kernel can
++            # wedge both TP ranks mid-decode (py-spy shows both workers
++            # parked inside torch/xpu/graphs.py replay) and is also the
++            # documented source of intermittent NaN all-reduce output. The
++            # op dispatches back to this method (with is_compiling() False)
++            # when the piecewise wrapper runs it eagerly between pieces.
++            return torch.ops.vllm.all_reduce(input_, group_name=self.unique_name)
++        # VLLM_XPU_ALLREDUCE_VIA_ALLGATHER=1 replaces the oneCCL *reduce*
++        # kernel with allgather + local add (the same primitive the NaN
++        # repair fallback below already uses, which has been stable). This is
++        # a bisect lever + workaround for the mid-generation TP wedge: all
++        # three observed hang modes (XPU-graph replay, eager event sync,
++        # _to_list D2H sync) die at the first blocking queue touch after the
++        # device queue stalls, and oneCCL all_reduce is the only TP=2 op that
++        # runs ~80x/step across ranks with a documented history of both
++        # intermittent NaN output and wedging when replayed from a graph.
++        # Routing through allgather swaps the flaky reduce kernel out while
++        # keeping the same numerics (sum). Costs an extra clone per call, so
++        # it is opt-in.
++        if (
++            _env_enabled("VLLM_XPU_ALLREDUCE_VIA_ALLGATHER", False)
++            and self.world_size > 1
++            and not torch.xpu.is_current_stream_capturing()
++        ):
++            output = input_.clone()
++            _xpu_allgather_allreduce(
++                output,
++                self.device_group,
++                self.world_size,
++                self._xpu_allgather_fallback_buffers,
++            )
++            return output
 +        global _xpu_allreduce_retry_seq
-+        output = input_.clone() if torch.compiler.is_compiling() else input_
++        output = input_
 +        retry_armed = False
 +        batch_descriptor = None
 +        runtime_mode = None
@@ -4069,11 +4106,23 @@ index 782b2eaea..143505eed 100644
                      msg = (
                          "Tool usage is only supported "
 diff --git a/vllm/envs.py b/vllm/envs.py
-index ded474dc0..7a29d18c0 100755
+index ded474dc0..e9ec0bda7 100755
 --- a/vllm/envs.py
 +++ b/vllm/envs.py
-@@ -268,6 +268,10 @@ if TYPE_CHECKING:
+@@ -266,8 +266,22 @@ if TYPE_CHECKING:
+     VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS: bool = True
+     VLLM_NIXL_EP_MAX_NUM_RANKS: int = 32
      VLLM_XPU_ENABLE_XPU_GRAPH: bool = False
++    VLLM_XPU_ALLOW_COMM_IN_GRAPH: bool = False
++    """Allow oneCCL collectives (vllm::all_reduce) to be captured inside XPU
++    graph pieces. Off by default: replayed oneCCL kernels can wedge both TP
++    ranks mid-decode, so the collective is split out of the captured pieces
++    and runs eagerly between them instead."""
++    VLLM_XPU_ALLREDUCE_VIA_ALLGATHER: bool = False
++    """On XPU TP>1, compute all_reduce as allgather + local add instead of the
++    oneCCL reduce kernel (bisect lever / workaround for the mid-generation
++    TP wedge and intermittent NaN all-reduce output). Costs one clone and
++    extra copies per call, so it is opt-in."""
      VLLM_XPU_USE_SAMPLER_KERNEL: bool = True
      VLLM_LORA_ENABLE_DUAL_STREAM: bool = False
 +    VLLM_OFFLOAD_WEIGHTS_BEFORE_QUANT: bool = False
@@ -4083,7 +4132,22 @@ index ded474dc0..7a29d18c0 100755
  
  
  def get_default_cache_root():
-@@ -1788,6 +1792,17 @@ environment_variables: dict[str, Callable[[], Any]] = {
+@@ -1776,6 +1790,14 @@ environment_variables: dict[str, Callable[[], Any]] = {
+     "VLLM_XPU_ENABLE_XPU_GRAPH": lambda: bool(
+         int(os.getenv("VLLM_XPU_ENABLE_XPU_GRAPH", "0"))
+     ),
++    # Whether to allow oneCCL collectives inside captured XPU graph pieces
++    "VLLM_XPU_ALLOW_COMM_IN_GRAPH": lambda: bool(
++        int(os.getenv("VLLM_XPU_ALLOW_COMM_IN_GRAPH", "0"))
++    ),
++    # XPU: compute all_reduce via allgather + local add (bypass oneCCL reduce)
++    "VLLM_XPU_ALLREDUCE_VIA_ALLGATHER": lambda: bool(
++        int(os.getenv("VLLM_XPU_ALLREDUCE_VIA_ALLGATHER", "0"))
++    ),
+     # whether use xpu specific sample kernel
+     "VLLM_XPU_USE_SAMPLER_KERNEL": lambda: bool(
+         int(os.getenv("VLLM_XPU_USE_SAMPLER_KERNEL", "1"))
+@@ -1788,6 +1810,17 @@ environment_variables: dict[str, Callable[[], Any]] = {
      "VLLM_LORA_ENABLE_DUAL_STREAM": lambda: bool(
          int(os.getenv("VLLM_LORA_ENABLE_DUAL_STREAM", "0"))
      ),
@@ -16507,7 +16571,7 @@ index 46acc7fb1..d01e8e1bb 100644
          state.previous_token_ids = current_token_ids
          return delta_message
 diff --git a/vllm/platforms/xpu.py b/vllm/platforms/xpu.py
-index bd9006f3f..46fd495c5 100644
+index bd9006f3f..081f72f31 100644
 --- a/vllm/platforms/xpu.py
 +++ b/vllm/platforms/xpu.py
 @@ -61,6 +61,42 @@ class XPUPlatform(Platform):
@@ -16628,7 +16692,7 @@ index bd9006f3f..46fd495c5 100644
              ):
                  compilation_config.cudagraph_mode = CUDAGraphMode.PIECEWISE
                  logger.warning(
-@@ -213,6 +274,32 @@ class XPUPlatform(Platform):
+@@ -213,6 +274,47 @@ class XPUPlatform(Platform):
                      "falling back to PIECEWISE graph mode on XPU platform."
                  )
  
@@ -16648,20 +16712,35 @@ index bd9006f3f..46fd495c5 100644
 +                    "moe_ops::moe_forward_full",
 +                    "moe_ops::moe_forward_full_v2",
 +                ]
++                # oneCCL collectives replayed from captured XPU graph pieces
++                # can wedge both TP ranks mid-decode (both workers park inside
++                # torch/xpu/graphs.py replay, request stuck Running) and
++                # intermittently produce NaN output (see
++                # XpuCommunicator.all_reduce). Splitting at the collective
++                # keeps it eager between the captured pieces. Set
++                # VLLM_XPU_ALLOW_COMM_IN_GRAPH=1 to restore the previous
++                # behavior of capturing the collective inside the graph.
++                _comm_splits: list[str] = []
++                if (
++                    parallel_config.tensor_parallel_size > 1
++                    and not envs.VLLM_XPU_ALLOW_COMM_IN_GRAPH
++                ):
++                    _comm_splits = ["vllm::all_reduce"]
 +                if compilation_config.splitting_ops is None:
 +                    compilation_config.splitting_ops = (
 +                        list(compilation_config._attention_ops)
 +                        + _esimd_moe_splits
++                        + _comm_splits
 +                    )
 +                else:
-+                    for _op in _esimd_moe_splits:
++                    for _op in _esimd_moe_splits + _comm_splits:
 +                        if _op not in compilation_config.splitting_ops:
 +                            compilation_config.splitting_ops.append(_op)
 +
          # Disable fusion passes not yet supported on XPU.
          pass_config = compilation_config.pass_config
          fusion_passes_to_disable = {
-@@ -235,6 +322,14 @@ class XPUPlatform(Platform):
+@@ -235,6 +337,14 @@ class XPUPlatform(Platform):
  
          # check and update parallel config
          parallel_config = vllm_config.parallel_config
@@ -16676,7 +16755,7 @@ index bd9006f3f..46fd495c5 100644
          # Only override worker_cls if it's still the default "auto"
          # This allows custom workers (like vllm-omni workers) to be used on XPU
          if parallel_config.worker_cls == "auto":
-@@ -259,7 +354,6 @@ class XPUPlatform(Platform):
+@@ -259,7 +369,6 @@ class XPUPlatform(Platform):
          from vllm.model_executor.layers.attention_layer_base import (
              AttentionLayerBase,
          )
@@ -16684,7 +16763,7 @@ index bd9006f3f..46fd495c5 100644
  
          cache_config = vllm_config.cache_config
          # special fix for GDN since kernel only supports block size dividable by 64
-@@ -277,9 +371,14 @@ class XPUPlatform(Platform):
+@@ -277,9 +386,14 @@ class XPUPlatform(Platform):
  
          if kernel_block_size is None:
              return
@@ -20932,10 +21011,74 @@ index 1774f1b30..c06c72c20 100644
          stride_k_cache_1=k.stride(1),
          stride_k_cache_2=k.stride(2),
 diff --git a/vllm/v1/core/kv_cache_utils.py b/vllm/v1/core/kv_cache_utils.py
-index b57e10b67..71f308e25 100644
+index b57e10b67..d24eb5b93 100644
 --- a/vllm/v1/core/kv_cache_utils.py
 +++ b/vllm/v1/core/kv_cache_utils.py
-@@ -1302,9 +1302,9 @@ def get_kv_cache_config_from_groups(
+@@ -19,6 +19,7 @@ from vllm.utils.hashing import sha256_cbor, xxhash_cbor
+ from vllm.utils.math_utils import cdiv, round_up
+ from vllm.utils.mem_utils import format_gib
+ from vllm.v1.kv_cache_interface import (
++    AttentionSpec,
+     ChunkedLocalAttentionSpec,
+     FullAttentionSpec,
+     KVCacheConfig,
+@@ -1010,8 +1011,10 @@ def unify_kv_cache_spec_page_size(
+     """
+     Unify the page size of the given KVCacheSpec. If the page size of all layers
+     are the same, return the original KVCacheSpec. If not same, unify the page
+-    size by increasing the block size of layers with smaller page size. Raise
+-    NotImplementedError if failed to unify the page size.
++    size by increasing the block size of layers with smaller page size. If a
++    layer's page size is not divisible by the maximum page size, pad the
++    layer's page via `page_size_padded` instead. Raise NotImplementedError
++    only for spec types that cannot be padded.
+ 
+     Args:
+         kv_cache_spec: The KVCacheSpec of each attention layer in the model
+@@ -1029,18 +1032,34 @@ def unify_kv_cache_spec_page_size(
+     for layer_name, layer_spec in kv_cache_spec.items():
+         if layer_spec.page_size_bytes == max_page_size:
+             new_kv_cache_spec[layer_name] = layer_spec
+-        else:
+-            layer_page_size = layer_spec.page_size_bytes
+-            if max_page_size % layer_page_size != 0:
+-                raise NotImplementedError(
+-                    "The page size of the layer is not divisible by the "
+-                    "maximum page size. Cannot unify by adjusting block_size."
+-                )
++            continue
++        layer_page_size = layer_spec.page_size_bytes
++        if max_page_size % layer_page_size == 0:
+             ratio = max_page_size // layer_page_size
+             new_block_size = layer_spec.block_size * ratio
+             new_spec = replace(layer_spec, block_size=new_block_size)
+             assert new_spec.page_size_bytes == max_page_size
+-            new_kv_cache_spec[layer_name] = new_spec
++        elif isinstance(layer_spec, (AttentionSpec, MambaSpec)):
++            # The page size cannot be unified by growing block_size, e.g. a
++            # DFlash drafter whose page is a power of two next to a
++            # TurboQuant target page that has a non-power-of-two factor.
++            # Pad the page up to the maximum page size instead; the tail of
++            # each block is unused memory accounted for by the allocator.
++            new_spec = replace(layer_spec, page_size_padded=max_page_size)
++            logger.info(
++                "Padding KV cache page size of %s from %d to %d bytes "
++                "to unify page sizes across KV cache groups.",
++                layer_name,
++                layer_page_size,
++                max_page_size,
++            )
++        else:
++            raise NotImplementedError(
++                "The page size of the layer is not divisible by the "
++                "maximum page size and this spec type does not support "
++                "page_size_padded. Cannot unify by adjusting block_size."
++            )
++        new_kv_cache_spec[layer_name] = new_spec
+     return new_kv_cache_spec
+ 
+ 
+@@ -1302,9 +1321,9 @@ def get_kv_cache_config_from_groups(
          kv_cache_tensors = []
          for i in range(group_size):
              shared_by = []
@@ -21202,6 +21345,100 @@ index 2f2c15d24..65029b3bb 100644
          # In external DP LB mode, the coordinator address that the
          # front-end procs connect to is obtained by each engine via it's
          # initial handshake with the rank 0 front-end.
+diff --git a/vllm/v1/executor/multiproc_executor.py b/vllm/v1/executor/multiproc_executor.py
+index db21d7cee..5dabed122 100644
+--- a/vllm/v1/executor/multiproc_executor.py
++++ b/vllm/v1/executor/multiproc_executor.py
+@@ -941,13 +941,73 @@ class WorkerProc:
+             output = self.async_output_queue.get()
+             self.enqueue_output(output)
+ 
++    def _step_watchdog_thread(self, timeout_s: float) -> None:
++        """Fail fast if a single engine step wedges (e.g. XPU device hang).
++
++        A wedged device kernel parks the worker main thread inside a native
++        call (graph replay / event.synchronize / collective) forever; the
++        engine then degrades into the shm_broadcast "no available broadcast
++        block found" zombie state. Exiting the process lets the parent
++        executor detect worker death and shut the engine down cleanly
++        (restartable via the container restart policy) instead of hanging
++        indefinitely.
++        """
++        pid = os.getpid()
++        while True:
++            time.sleep(5.0)
++            busy_since = self._step_busy_since
++            if busy_since is None:
++                continue
++            elapsed = time.monotonic() - busy_since
++            if elapsed > timeout_s:
++                logger.error(
++                    "Worker step watchdog: '%s' call on rank %s has been "
++                    "running for %.0fs (timeout %.0fs, env "
++                    "VLLM_WORKER_STEP_TIMEOUT_S). The device likely wedged "
++                    "(hung kernel / driver stall). Killing worker pid %d so "
++                    "the engine fails fast instead of hanging.",
++                    self._step_busy_method,
++                    self.rank,
++                    elapsed,
++                    timeout_s,
++                    pid,
++                )
++                os._exit(86)
++
+     def worker_busy_loop(self):
+         """Main busy loop for Multiprocessing Workers"""
+         assert self.rpc_broadcast_mq is not None
++        # Time single engine steps and kill the worker if one wedges. Long
++        # init RPCs (load_model, compile_or_warm_up_model, profile_run) are
++        # exempt; only execute_model / sample_tokens steps are timed. A cold
++        # torch.compile can legitimately take minutes inside the first
++        # steps, so the default timeout is generous.
++        step_timeout_s = float(
++            os.environ.get(
++                "VLLM_WORKER_STEP_TIMEOUT_S",
++                "600" if current_platform.is_xpu() else "0",
++            )
++        )
++        if step_timeout_s > 0:
++            self._step_busy_since = None
++            self._step_busy_method = None
++            Thread(
++                target=self._step_watchdog_thread,
++                args=(step_timeout_s,),
++                daemon=True,
++                name="StepWatchdog",
++            ).start()
+         while True:
+             method, args, kwargs, output_rank = self.rpc_broadcast_mq.dequeue(
+                 indefinite=True
+             )
++            # Pickled (bytes) callables are rare; time them defensively too.
++            timed_call = not isinstance(method, str) or method in (
++                "execute_model",
++                "sample_tokens",
++            )
++            self._step_busy_since = time.monotonic() if timed_call else None
++            self._step_busy_method = method if timed_call else None
+             try:
+                 if isinstance(method, str):
+                     func = getattr(self.worker, method)
+@@ -956,6 +1016,7 @@ class WorkerProc:
+ 
+                 output = func(*args, **kwargs)
+             except Exception as e:
++                self._step_busy_since = None
+                 # Notes have been introduced in python 3.11
+                 if hasattr(e, "add_note"):
+                     e.add_note(traceback.format_exc())
+@@ -965,6 +1026,7 @@ class WorkerProc:
+                 if output_rank is None or self.rank == output_rank:
+                     self.handle_output(e)
+                 continue
++            self._step_busy_since = None
+ 
+             if output_rank is None or self.rank == output_rank:
+                 self.handle_output(output)
 diff --git a/vllm/v1/kv_offload/cpu/gpu_worker.py b/vllm/v1/kv_offload/cpu/gpu_worker.py
 index 2da3f1038..1572137fc 100644
 --- a/vllm/v1/kv_offload/cpu/gpu_worker.py
@@ -22703,10 +22940,60 @@ index e046f0136..15675bc0f 100644
          out_token_indices_ptr + sample_out_idx,
          query_out,
 diff --git a/vllm/v1/worker/gpu/attn_utils.py b/vllm/v1/worker/gpu/attn_utils.py
-index 5930777de..b515ee67e 100644
+index 5930777de..12621cd85 100644
 --- a/vllm/v1/worker/gpu/attn_utils.py
 +++ b/vllm/v1/worker/gpu/attn_utils.py
-@@ -312,6 +312,7 @@ def build_attn_metadata(
+@@ -191,15 +191,21 @@ def _reshape_kv_cache(
+                     # Use strided view to handle page_size_bytes that
+                     # include padding. This follows the same pattern as
+                     # MambaSpec handling in gpu_model_runner.py.
+-                    # NOTE: This assumes kv_cache_shape[0] == num_blocks
+-                    # (i.e. the first physical dimension is the block
+-                    # index), which holds for MLA backends but NOT for
+-                    # standard attention backends whose shape starts with
+-                    # a K/V dimension of size 2.
+                     dtype_size = get_dtype_size(dtype)
+                     page_stride = kv_cache_spec.page_size_bytes // dtype_size
+                     strides = list(torch.empty(kv_cache_shape).stride())
+-                    strides[inv_order[0]] = page_stride
++                    if kv_cache_shape[inv_order[0]] == 2:
++                        # K/V-first layout, e.g. (2, num_blocks, ...):
++                        # each block's slot holds K then V adjacently, so
++                        # the K/V dim strides by one real K half and the
++                        # block dim strides by the padded page size.
++                        kv_half_stride = strides[inv_order[1]]
++                        strides[inv_order[0]] = kv_half_stride
++                        strides[inv_order[1]] = page_stride
++                    else:
++                        # Block-first layout (e.g. MLA): the first
++                        # dimension is the block index.
++                        strides[inv_order[0]] = page_stride
+                     kv_cache = torch.as_strided(
+                         kv_tensor,
+                         size=kv_cache_shape,
+@@ -258,11 +264,20 @@ def _update_hybrid_attention_layout(
+                     f"Cannot determine layout for tensor of shape {kv_cache.shape}"
+                 )
+                 hidden_size = kv_cache.shape[2:].numel()
++                # With a padded page, blocks stride by the padded page size
++                # instead of 2 * hidden_size so the per-page tail padding is
++                # skipped (must match _reshape_kv_cache).
++                block_stride = 2 * hidden_size
++                if kv_cache_spec.page_size_padded is not None:
++                    block_stride = (
++                        kv_cache_spec.page_size_bytes
++                        // get_dtype_size(kv_cache_spec.dtype)
++                    )
+                 kv_cache.as_strided_(
+                     size=kv_cache.shape,
+                     stride=(
+                         hidden_size,
+-                        2 * hidden_size,
++                        block_stride,
+                         *kv_cache.stride()[2:],
+                     ),
+                 )
+@@ -312,6 +327,7 @@ def build_attn_metadata(
      positions: torch.Tensor | None = None,
      model_specific_attn_metadata: ModelSpecificAttnMetadata | None = None,
      for_cudagraph_capture: bool = False,
@@ -22714,7 +23001,7 @@ index 5930777de..b515ee67e 100644
  ) -> dict[str, Any]:
      seq_lens = seq_lens[:num_reqs]
      if dcp_local_seq_lens is not None:
-@@ -341,7 +342,7 @@ def build_attn_metadata(
+@@ -341,7 +357,7 @@ def build_attn_metadata(
              max_query_len=max_query_len,
              block_table_tensor=block_table,
              slot_mapping=slot_mapping,
@@ -23226,7 +23513,7 @@ index 83d87c74a..234ebb4ef 100644
          if num_spec_steps > 0:
              decode_output.scheduled_spec_decode_tokens = {
 diff --git a/vllm/v1/worker/gpu_model_runner.py b/vllm/v1/worker/gpu_model_runner.py
-index 98b2fbf12..b8f8a6973 100644
+index 98b2fbf12..2a0eaa3bc 100644
 --- a/vllm/v1/worker/gpu_model_runner.py
 +++ b/vllm/v1/worker/gpu_model_runner.py
 @@ -1749,6 +1749,21 @@ class GPUModelRunner(
@@ -23556,7 +23843,7 @@ index 98b2fbf12..b8f8a6973 100644
                      # The allocation respects the backend-defined stride order
                      # to ensure the semantic remains consistent for each
                      # backend. We first obtain the generic kv cache shape and
-@@ -6746,16 +6945,15 @@ class GPUModelRunner(
+@@ -6746,20 +6945,25 @@ class GPUModelRunner(
                          for i in range(len(kv_cache_stride_order))
                      ]
  
@@ -23565,18 +23852,56 @@ index 98b2fbf12..b8f8a6973 100644
                          # Use strided view to handle page_size_bytes that
 -                        # include padding. This follows
 -                        # the same pattern as MambaSpec handling below.
-+                        # include padding. This follows the same pattern as
-+                        # MambaSpec handling below.
-                         # NOTE: This assumes kv_cache_shape[0] == num_blocks
-                         # (i.e. the first physical dimension is the block
-                         # index), which holds for MLA backends but NOT for
+-                        # NOTE: This assumes kv_cache_shape[0] == num_blocks
+-                        # (i.e. the first physical dimension is the block
+-                        # index), which holds for MLA backends but NOT for
 -                        # standard attention backends whose shape starts with
 -                        # a K/V dimension of size 2.
-+                        # standard attention backends whose shape starts
-+                        # with a K/V dimension of size 2.
++                        # include padding. This follows the same pattern as
++                        # MambaSpec handling below.
                          dtype_size = get_dtype_size(dtype)
                          page_stride = kv_cache_spec.page_size_bytes // dtype_size
                          strides = list(torch.empty(kv_cache_shape).stride())
+-                        strides[inv_order[0]] = page_stride
++                        if kv_cache_shape[inv_order[0]] == 2:
++                            # K/V-first layout, e.g. (2, num_blocks, ...):
++                            # each block's slot holds K then V adjacently, so
++                            # the K/V dim strides by one real K half and the
++                            # block dim strides by the padded page size.
++                            kv_half_stride = strides[inv_order[1]]
++                            strides[inv_order[0]] = kv_half_stride
++                            strides[inv_order[1]] = page_stride
++                        else:
++                            # Block-first layout (e.g. MLA): the first
++                            # dimension is the block index.
++                            strides[inv_order[0]] = page_stride
+                         kv_cache = torch.as_strided(
+                             raw_tensor,
+                             size=kv_cache_shape,
+@@ -6831,9 +7035,22 @@ class GPUModelRunner(
+             for layer_name in group.layer_names:
+                 kv_cache = kv_caches[layer_name]
+                 hidden_size = kv_cache.shape[2:].numel()
++                # With a padded page, blocks stride by the padded page size
++                # instead of 2 * hidden_size so the per-page tail padding is
++                # skipped (must match _reshape_kv_cache_tensors).
++                block_stride = 2 * hidden_size
++                if kv_cache_spec.page_size_padded is not None:
++                    block_stride = (
++                        kv_cache_spec.page_size_bytes
++                        // get_dtype_size(kv_cache_spec.dtype)
++                    )
+                 kv_cache.as_strided_(
+                     size=kv_cache.shape,
+-                    stride=(hidden_size, 2 * hidden_size, *kv_cache.stride()[2:]),
++                    stride=(
++                        hidden_size,
++                        block_stride,
++                        *kv_cache.stride()[2:],
++                    ),
+                 )
+ 
+     def initialize_kv_cache_tensors(
 diff --git a/vllm/v1/worker/mamba_utils.py b/vllm/v1/worker/mamba_utils.py
 index c832389b1..241860f9c 100644
 --- a/vllm/v1/worker/mamba_utils.py
