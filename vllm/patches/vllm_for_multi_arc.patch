@@ -14566,7 +14566,7 @@ index e86b205b9..96edd7c07 100644
          def remap_weight_names(weights):
              for name, weight in weights:
 diff --git a/vllm/model_executor/models/qwen3_dflash.py b/vllm/model_executor/models/qwen3_dflash.py
-index cffe6267a..c3df99b63 100644
+index cffe6267a..e645eb8bd 100644
 --- a/vllm/model_executor/models/qwen3_dflash.py
 +++ b/vllm/model_executor/models/qwen3_dflash.py
 @@ -1,7 +1,7 @@
@@ -14860,7 +14860,59 @@ index cffe6267a..c3df99b63 100644
          )
          target_vocab_size = vllm_config.model_config.get_vocab_size()
          if self.config.draft_vocab_size != target_vocab_size:
-@@ -569,13 +726,17 @@ class DFlashQwen3ForCausalLM(Qwen3ForCausalLM):
+@@ -556,26 +713,63 @@ class DFlashQwen3ForCausalLM(Qwen3ForCausalLM):
+         if self.draft_id_to_target_id is None:
+             return logits
+ 
+-        base = torch.arange(self.config.draft_vocab_size, device=logits.device)
+-        targets = base + self.draft_id_to_target_id
+-        logits_new = logits.new_full(
+-            (logits.shape[0], self.config.vocab_size),
+-            float("-inf"),
++        # The remap indices are constant and the full-vocab scratch has a
++        # stable upper bound, but this runs from Python on every spec-decode
++        # step. Rebuilding them pumps ~3MB/step per rank through the XPU
++        # caching allocator, which wedges the xe engines under PIECEWISE XPU
++        # graphs once free memory runs low (same failure mode as the
++        # TurboQuant decode scratch). Cache both grow-only instead.
++        targets = getattr(self, "_logits_remap_targets", None)
++        if targets is None or targets.device != logits.device:
++            base = torch.arange(
++                self.config.draft_vocab_size, device=logits.device
++            )
++            targets = base + self.draft_id_to_target_id
++            self._logits_remap_targets = targets
++
++        num_tokens = logits.shape[0]
++        buf = getattr(self, "_logits_new_buf", None)
++        layout_ok = (
++            buf is not None
++            and buf.shape[1] == self.config.vocab_size
++            and buf.dtype == logits.dtype
++            and buf.device == logits.device
+         )
+-        logits_new[:, targets] = logits
++        if not layout_ok or buf.shape[0] < num_tokens:
++            if buf is not None:
++                # Keep replaced scratch alive: a captured graph may still
++                # hold its address.
++                self._retired_logits_bufs = getattr(
++                    self, "_retired_logits_bufs", []
++                )
++                self._retired_logits_bufs.append(buf)
++            capacity = max(num_tokens, buf.shape[0] * 2) if layout_ok else num_tokens
++            buf = torch.empty(
++                (capacity, self.config.vocab_size),
++                dtype=logits.dtype,
++                device=logits.device,
++            )
++            self._logits_new_buf = buf
++        logits_new = buf[:num_tokens]
++        logits_new.fill_(float("-inf"))
++        logits_new.scatter_(1, targets.expand(num_tokens, -1), logits)
+         return logits_new
+ 
+     def precompute_and_store_context_kv(
          self,
          context_states: torch.Tensor,
          context_positions: torch.Tensor,
@@ -14879,7 +14931,7 @@ index cffe6267a..c3df99b63 100644
      def combine_hidden_states(
          self,
          hidden_states: torch.Tensor,
-@@ -585,6 +746,8 @@ class DFlashQwen3ForCausalLM(Qwen3ForCausalLM):
+@@ -585,6 +779,8 @@ class DFlashQwen3ForCausalLM(Qwen3ForCausalLM):
          needs_squeeze = hidden_states.dim() == 1
          if needs_squeeze:
              hidden_states = hidden_states.unsqueeze(0)
@@ -14888,7 +14940,7 @@ index cffe6267a..c3df99b63 100644
          result = self.model.fc(hidden_states)
          if needs_squeeze:
              result = result.squeeze(0)
-@@ -598,6 +761,15 @@ class DFlashQwen3ForCausalLM(Qwen3ForCausalLM):
+@@ -598,6 +794,15 @@ class DFlashQwen3ForCausalLM(Qwen3ForCausalLM):
              assert "mask_hidden" not in name, (
                  "DFlash should use mask_token_id to embed the padding hidden state"
              )
@@ -14904,7 +14956,7 @@ index cffe6267a..c3df99b63 100644
              if "t2d" in name:
                  continue
              if "d2t" in name:
-@@ -624,3 +796,111 @@ class DFlashQwen3ForCausalLM(Qwen3ForCausalLM):
+@@ -624,3 +829,111 @@ class DFlashQwen3ForCausalLM(Qwen3ForCausalLM):
          )
          loader.load_weights(model_weights.items())
          self.model._build_fused_kv_buffers()
@@ -21154,7 +21206,7 @@ index 363b113f0..c538fd58c 100644
  
  
 diff --git a/vllm/v1/spec_decode/dflash.py b/vllm/v1/spec_decode/dflash.py
-index db74044f4..f8dc3e7c0 100644
+index db74044f4..97afbf0fe 100644
 --- a/vllm/v1/spec_decode/dflash.py
 +++ b/vllm/v1/spec_decode/dflash.py
 @@ -1,17 +1,18 @@
@@ -21207,7 +21259,7 @@ index db74044f4..f8dc3e7c0 100644
          self._context_positions_buffer = torch.zeros(
              self.max_num_tokens,
              dtype=torch.int64,
-@@ -65,8 +78,303 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -65,8 +78,336 @@ class DFlashProposer(SpecDecodeBaseProposer):
              self.max_positions + 1, device=device, dtype=torch.int32
          )
  
@@ -21332,7 +21384,7 @@ index db74044f4..f8dc3e7c0 100644
 +                return super()._greedy_sample(hidden_states)
 +            bias = model.compute_markov_bias(self._markov_prev_tokens)
 +            if bias is not None:
-+                logits = logits + bias.to(logits.dtype)
++                logits.add_(bias)
 +            return logits.argmax(dim=-1)
 +
 +        if hidden_states.shape[0] == batch_size * num_spec and num_spec > 1:
@@ -21383,11 +21435,44 @@ index db74044f4..f8dc3e7c0 100644
 +                    dtype=torch.float32,
 +                )
 +                block_hidden = hidden_states.view(batch_size, num_spec, -1)
++            # project_bias + the logits add allocate ~2 x [B, vocab] per
++            # position per step. Reuse one grow-only bias scratch and add in
++            # place so the eager drafting loop is allocation-free after the
++            # first call — fresh per-step [B, vocab] temporaries churn the
++            # XPU caching allocator and wedge the xe engines under PIECEWISE
++            # XPU graphs when free memory is low.
++            w2 = markov_head.markov_w2.weight
++            bias_buf = getattr(self, "_markov_bias_buf", None)
++            if (
++                bias_buf is None
++                or bias_buf.shape[0] < batch_size
++                or bias_buf.shape[1] != w2.shape[0]
++                or bias_buf.dtype != w2.dtype
++                or bias_buf.device != w2.device
++            ):
++                if bias_buf is not None:
++                    self._retired_markov_bufs = getattr(
++                        self, "_retired_markov_bufs", []
++                    )
++                    self._retired_markov_bufs.append(bias_buf)
++                capacity = (
++                    max(batch_size, bias_buf.shape[0] * 2)
++                    if bias_buf is not None and bias_buf.device == w2.device
++                    else batch_size
++                )
++                bias_buf = torch.empty(
++                    (capacity, w2.shape[0]),
++                    dtype=w2.dtype,
++                    device=w2.device,
++                )
++                self._markov_bias_buf = bias_buf
++            w2_t = w2.t()
 +            prev_tokens = self._markov_prev_tokens
 +            for i in range(num_spec):
 +                latent = markov_head.get_prev_embeddings(prev_tokens)
-+                bias = markov_head.project_bias(latent)
-+                logits[:, i, :] = logits[:, i, :] + bias.to(logits.dtype)
++                bias = bias_buf[:batch_size]
++                torch.mm(latent, w2_t, out=bias)
++                logits[:, i, :].add_(bias)
 +                if want_conf:
 +                    # c_k = sigmoid(w^T [h_k; W1[x_{k-1}]]) (DSpark paper).
 +                    param_dtype = conf_head.proj.weight.dtype
@@ -21512,7 +21597,7 @@ index db74044f4..f8dc3e7c0 100644
  
      @override
      def _create_draft_vllm_config(self) -> VllmConfig:
-@@ -82,8 +390,85 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -82,8 +423,85 @@ class DFlashProposer(SpecDecodeBaseProposer):
      @override
      def _warn_if_multimodal(self):
          # Override to allow multimodal inputs since DFlash supports Qwen3.5 models
@@ -21598,7 +21683,7 @@ index db74044f4..f8dc3e7c0 100644
      @override
      def set_inputs_first_pass(
          self,
-@@ -99,14 +484,12 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -99,14 +517,12 @@ class DFlashProposer(SpecDecodeBaseProposer):
          # Q from query embeddings (bonus + mask tokens).
          batch_size = cad.batch_size()
          num_context = target_token_ids.shape[0]
@@ -21615,7 +21700,7 @@ index db74044f4..f8dc3e7c0 100644
          self._dflash_hidden_states = target_hidden_states
  
          token_indices_to_sample = torch.empty(
-@@ -115,8 +498,7 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -115,8 +531,7 @@ class DFlashProposer(SpecDecodeBaseProposer):
              device=self.device,
          )
  
@@ -21625,7 +21710,7 @@ index db74044f4..f8dc3e7c0 100644
          max_ctx_per_req = cad.max_query_len
          max_tokens_per_req = max_ctx_per_req + num_query_per_req
          BLOCK_SIZE = min(256, triton.next_power_of_2(max_tokens_per_req))
-@@ -124,36 +506,48 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -124,36 +539,48 @@ class DFlashProposer(SpecDecodeBaseProposer):
          grid = (batch_size, num_blocks)
  
          has_num_rejected = num_rejected_tokens_gpu is not None
@@ -21703,7 +21788,7 @@ index db74044f4..f8dc3e7c0 100644
          new_query_start_loc = self.arange[: batch_size + 1] * num_query_per_req
  
          # In padded mode, cad.seq_lens includes rejected tokens. Subtract
-@@ -162,12 +556,6 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -162,12 +589,6 @@ class DFlashProposer(SpecDecodeBaseProposer):
          if has_num_rejected:
              effective_seq_lens = effective_seq_lens - num_rejected_tokens_gpu
  
@@ -21716,7 +21801,7 @@ index db74044f4..f8dc3e7c0 100644
          new_cad = CommonAttentionMetadata(
              query_start_loc=new_query_start_loc,
              seq_lens=effective_seq_lens + num_query_per_req,
-@@ -177,16 +565,40 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -177,16 +598,40 @@ class DFlashProposer(SpecDecodeBaseProposer):
              ),
              _seq_lens_cpu=None,
              _num_computed_tokens_cpu=None,
@@ -21759,7 +21844,7 @@ index db74044f4..f8dc3e7c0 100644
          return num_query_total, token_indices_to_sample, new_cad
  
      @override
-@@ -227,10 +639,11 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -227,10 +672,11 @@ class DFlashProposer(SpecDecodeBaseProposer):
  
          # Context and query positions use separate buffers; no copy needed.
          context_positions = self._context_positions_buffer[:num_tokens]
@@ -21775,7 +21860,7 @@ index db74044f4..f8dc3e7c0 100644
  
          # Run the KV projection (GEMM + norms + RoPE) for memory profiling,
          self.model.precompute_and_store_context_kv(context_states, context_positions)
-@@ -255,16 +668,38 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -255,16 +701,38 @@ class DFlashProposer(SpecDecodeBaseProposer):
          num_input_tokens: int,
          mm_embed_inputs: tuple[list[torch.Tensor], torch.Tensor] | None,
      ) -> tuple[dict[str, Any], int]:
@@ -21822,7 +21907,7 @@ index db74044f4..f8dc3e7c0 100644
          return (
              dict(
                  input_ids=self.input_ids[:num_input_tokens],
-@@ -278,10 +713,56 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -278,10 +746,56 @@ class DFlashProposer(SpecDecodeBaseProposer):
      def build_per_group_and_layer_attn_metadata(
          self, cad: CommonAttentionMetadata, draft_index: int = 0
      ) -> tuple[list[object], dict[str, object]]:
