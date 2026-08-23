@@ -95,6 +95,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # per TU), so parallelism defaults to 1 for unknown builder machines.
 # Override with --build-arg ESIMD_MAX_JOBS=N on hosts with ample RAM
 # (e.g. 8 on 36 cores / 384 GB, leaving headroom for page cache).
+# Also caps the vllm-xpu-kernels wheel build below: its SYCL TUs have the
+# same memory profile, and its build backend otherwise defaults to nproc
+# parallel jobs, which OOM-freezes 64-core builders.
 ARG ESIMD_MAX_JOBS=1
 RUN --mount=type=cache,target=/root/.cache/uv \
     set -eo pipefail && \
@@ -120,6 +123,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     sed -i 's|^transformers|# transformers|' requirements.txt && \
     uv pip install -r requirements.txt && \
     export CMAKE_PREFIX_PATH="$(python3 -c 'import site; print(site.getsitepackages()[0])'):${CMAKE_PREFIX_PATH:-}" && \
+    MAX_JOBS=${ESIMD_MAX_JOBS} CMAKE_BUILD_PARALLEL_LEVEL=${ESIMD_MAX_JOBS} \
     pip wheel --no-build-isolation --no-deps . -w ${WHEELS} && \
     rm -rf build .deps
 
