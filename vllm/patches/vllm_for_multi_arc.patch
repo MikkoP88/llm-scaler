@@ -21391,7 +21391,7 @@ index 363b113f0..c538fd58c 100644
  
  
 diff --git a/vllm/v1/spec_decode/dflash.py b/vllm/v1/spec_decode/dflash.py
-index db74044f4..97afbf0fe 100644
+index db74044f4..36d8452cc 100644
 --- a/vllm/v1/spec_decode/dflash.py
 +++ b/vllm/v1/spec_decode/dflash.py
 @@ -1,17 +1,18 @@
@@ -21444,7 +21444,7 @@ index db74044f4..97afbf0fe 100644
          self._context_positions_buffer = torch.zeros(
              self.max_num_tokens,
              dtype=torch.int64,
-@@ -65,8 +78,336 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -65,12 +78,352 @@ class DFlashProposer(SpecDecodeBaseProposer):
              self.max_positions + 1, device=device, dtype=torch.int32
          )
  
@@ -21782,7 +21782,23 @@ index db74044f4..97afbf0fe 100644
  
      @override
      def _create_draft_vllm_config(self) -> VllmConfig:
-@@ -82,8 +423,85 @@ class DFlashProposer(SpecDecodeBaseProposer):
+         base = super()._create_draft_vllm_config()
++        # TurboQuant kernels are causal-only and cannot serve DFlash's
++        # non-causal drafting attention; run the drafter unquantized.
++        if base.cache_config.cache_dtype.startswith("turboquant_"):
++            logger.info(
++                "TurboQuant KV cache dtype %s is unsupported for DFlash"
++                " drafting; using 'auto' for the draft model KV cache.",
++                base.cache_config.cache_dtype,
++            )
++            base = replace(
++                base,
++                cache_config=replace(base.cache_config, cache_dtype="auto"),
++            )
+         return replace(
+             base,
+             attention_config=replace(
+@@ -82,8 +435,85 @@ class DFlashProposer(SpecDecodeBaseProposer):
      @override
      def _warn_if_multimodal(self):
          # Override to allow multimodal inputs since DFlash supports Qwen3.5 models
@@ -21868,7 +21884,7 @@ index db74044f4..97afbf0fe 100644
      @override
      def set_inputs_first_pass(
          self,
-@@ -99,14 +517,12 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -99,14 +529,12 @@ class DFlashProposer(SpecDecodeBaseProposer):
          # Q from query embeddings (bonus + mask tokens).
          batch_size = cad.batch_size()
          num_context = target_token_ids.shape[0]
@@ -21885,7 +21901,7 @@ index db74044f4..97afbf0fe 100644
          self._dflash_hidden_states = target_hidden_states
  
          token_indices_to_sample = torch.empty(
-@@ -115,8 +531,7 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -115,8 +543,7 @@ class DFlashProposer(SpecDecodeBaseProposer):
              device=self.device,
          )
  
@@ -21895,7 +21911,7 @@ index db74044f4..97afbf0fe 100644
          max_ctx_per_req = cad.max_query_len
          max_tokens_per_req = max_ctx_per_req + num_query_per_req
          BLOCK_SIZE = min(256, triton.next_power_of_2(max_tokens_per_req))
-@@ -124,36 +539,48 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -124,36 +551,48 @@ class DFlashProposer(SpecDecodeBaseProposer):
          grid = (batch_size, num_blocks)
  
          has_num_rejected = num_rejected_tokens_gpu is not None
@@ -21973,7 +21989,7 @@ index db74044f4..97afbf0fe 100644
          new_query_start_loc = self.arange[: batch_size + 1] * num_query_per_req
  
          # In padded mode, cad.seq_lens includes rejected tokens. Subtract
-@@ -162,12 +589,6 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -162,12 +601,6 @@ class DFlashProposer(SpecDecodeBaseProposer):
          if has_num_rejected:
              effective_seq_lens = effective_seq_lens - num_rejected_tokens_gpu
  
@@ -21986,7 +22002,7 @@ index db74044f4..97afbf0fe 100644
          new_cad = CommonAttentionMetadata(
              query_start_loc=new_query_start_loc,
              seq_lens=effective_seq_lens + num_query_per_req,
-@@ -177,16 +598,40 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -177,16 +610,40 @@ class DFlashProposer(SpecDecodeBaseProposer):
              ),
              _seq_lens_cpu=None,
              _num_computed_tokens_cpu=None,
@@ -22029,7 +22045,7 @@ index db74044f4..97afbf0fe 100644
          return num_query_total, token_indices_to_sample, new_cad
  
      @override
-@@ -227,10 +672,11 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -227,10 +684,11 @@ class DFlashProposer(SpecDecodeBaseProposer):
  
          # Context and query positions use separate buffers; no copy needed.
          context_positions = self._context_positions_buffer[:num_tokens]
@@ -22045,7 +22061,7 @@ index db74044f4..97afbf0fe 100644
  
          # Run the KV projection (GEMM + norms + RoPE) for memory profiling,
          self.model.precompute_and_store_context_kv(context_states, context_positions)
-@@ -255,16 +701,38 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -255,16 +713,38 @@ class DFlashProposer(SpecDecodeBaseProposer):
          num_input_tokens: int,
          mm_embed_inputs: tuple[list[torch.Tensor], torch.Tensor] | None,
      ) -> tuple[dict[str, Any], int]:
@@ -22092,7 +22108,7 @@ index db74044f4..97afbf0fe 100644
          return (
              dict(
                  input_ids=self.input_ids[:num_input_tokens],
-@@ -278,10 +746,56 @@ class DFlashProposer(SpecDecodeBaseProposer):
+@@ -278,10 +758,56 @@ class DFlashProposer(SpecDecodeBaseProposer):
      def build_per_group_and_layer_attn_metadata(
          self, cad: CommonAttentionMetadata, draft_index: int = 0
      ) -> tuple[list[object], dict[str, object]]:
