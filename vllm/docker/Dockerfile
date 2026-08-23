@@ -110,6 +110,12 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # ---------------------------------------------------------------------------
 # 1c. vllm-xpu-kernels (patch + pinned commit)  ->  wheel
 # ---------------------------------------------------------------------------
+# vllm-xpu-kernels TUs are lighter than the ESIMD ones: on a clean builder
+# they parallelize well, so this defaults to the ESIMD knob but can be pushed
+# higher (e.g. 90% of nproc) via --build-arg KERNELS_MAX_JOBS=N. Both knobs
+# cap the build backends that otherwise default to nproc parallel jobs and
+# can OOM-freeze builders when free RAM is not pristine.
+ARG KERNELS_MAX_JOBS=${ESIMD_MAX_JOBS}
 RUN --mount=type=cache,target=/root/.cache/uv \
     set -eo pipefail && \
     source /opt/intel/oneapi/setvars.sh --force && \
@@ -123,7 +129,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     sed -i 's|^transformers|# transformers|' requirements.txt && \
     uv pip install -r requirements.txt && \
     export CMAKE_PREFIX_PATH="$(python3 -c 'import site; print(site.getsitepackages()[0])'):${CMAKE_PREFIX_PATH:-}" && \
-    MAX_JOBS=${ESIMD_MAX_JOBS} CMAKE_BUILD_PARALLEL_LEVEL=${ESIMD_MAX_JOBS} \
+    MAX_JOBS=${KERNELS_MAX_JOBS} CMAKE_BUILD_PARALLEL_LEVEL=${KERNELS_MAX_JOBS} \
     pip wheel --no-build-isolation --no-deps . -w ${WHEELS} && \
     rm -rf build .deps
 
