@@ -20376,22 +20376,23 @@ index 0aeb33ae6..4598d5a6e 100644
              use_alibi_sqrt=self.use_alibi_sqrt,
              window_size=self.sliding_window,
 diff --git a/vllm/v1/attention/backends/turboquant_attn.py b/vllm/v1/attention/backends/turboquant_attn.py
-index 53684b436..6c1c38333 100644
+index 53684b436..3f9057a12 100644
 --- a/vllm/v1/attention/backends/turboquant_attn.py
 +++ b/vllm/v1/attention/backends/turboquant_attn.py
-@@ -295,6 +295,11 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
-             vllm_config.attention_config.tq_max_kv_splits_for_cuda_graph
-         )
+@@ -68,6 +68,12 @@ if _HAS_FLASH_ATTN:
+ # per continuation, eliminating the O(N²/chunk_size) collapse at long context.
+ _CONTINUATION_DECODE_THRESHOLD = 128
  
-+        # Fallback dequant buffers for _continuation_prefill when the shared
-+        # workspace is locked (see _continuation_prefill). Grow-only cache.
-+        self._fallback_k_buf: torch.Tensor | None = None
-+        self._fallback_v_buf: torch.Tensor | None = None
++# Shared grow-only dequant buffers for _continuation_prefill when the
++# workspace manager is locked (PIECEWISE graphs). Full-attention layers
++# execute sequentially, so a single (k, v) pair shared across all layers
++# and steps is safe and uses ~1/num_layers the memory of per-layer buffers.
++_DEQUANT_BUFS: dict[int, tuple[torch.Tensor, torch.Tensor]] = {}
 +
-     def _flash_attn_varlen(
-         self,
-         q: torch.Tensor,
-@@ -744,10 +749,29 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
+ 
+ def _build_hadamard(d: int, device_str: str) -> torch.Tensor:
+     """Orthonormal Hadamard matrix (Sylvester construction), cached per (d, device).
+@@ -744,10 +750,31 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
          # Use WorkspaceManager for dequant buffers.
          # Shared across all layers — saves 60× memory at long context.
          # Required for CUDA Graph capture (per-layer growth incompatible with CG).
@@ -20409,23 +20410,25 @@ index 53684b436..6c1c38333 100644
 +            # attention ran, so it was never sized for these buffers. In
 +            # PIECEWISE graph mode, dummy runs skip attention entirely and
 +            # attention executes eagerly outside the captured pieces, so a
-+            # backend-local grow-only buffer is safe (it is never baked
-+            # into a graph).
++            # grow-only buffer shared across layers is safe (it is never
++            # baked into a graph and layers execute sequentially).
++            dev = device.index if device.index is not None else 0
++            entry = _DEQUANT_BUFS.get(dev)
 +            if (
-+                self._fallback_k_buf is None
-+                or self._fallback_k_buf.shape[2] < alloc_len
++                entry is None
++                or entry[0].shape[2] < alloc_len
++                or entry[0].shape[1] != Hk
 +            ):
-+                self._fallback_k_buf = torch.empty(
-+                    buf_shape, dtype=torch.float16, device=device
++                entry = (
++                    torch.empty(buf_shape, dtype=torch.float16, device=device),
++                    torch.empty(buf_shape, dtype=torch.float16, device=device),
 +                )
-+                self._fallback_v_buf = torch.empty(
-+                    buf_shape, dtype=torch.float16, device=device
-+                )
-+            k_buf, v_buf = self._fallback_k_buf, self._fallback_v_buf
++                _DEQUANT_BUFS[dev] = entry
++            k_buf, v_buf = entry
          # Skip .zero_() — kernel writes all positions up to cached_len,
          # and we only read [:cached_len] afterwards.
          k_cached = k_buf[:, :, :alloc_len, :]
-@@ -874,14 +898,23 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
+@@ -874,14 +901,23 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
          Hq = self.num_heads
          mid_o_buf = output_buf = lse_buf = None
          if is_workspace_manager_initialized():
@@ -20572,10 +20575,54 @@ index 6ed50f6a2..b09f0b2e9 100644
      # PrefixLM: extend mask with bidirectional ranges for multimodal tokens.
      # Applied AFTER sliding window so mm_prefix ranges override SW restriction.
 diff --git a/vllm/v1/attention/ops/triton_turboquant_decode.py b/vllm/v1/attention/ops/triton_turboquant_decode.py
-index 3adaf2610..2d58dc365 100644
+index 3adaf2610..d498164d8 100644
 --- a/vllm/v1/attention/ops/triton_turboquant_decode.py
 +++ b/vllm/v1/attention/ops/triton_turboquant_decode.py
-@@ -516,16 +516,52 @@ def triton_turboquant_decode_attention(
+@@ -466,6 +466,43 @@ def _tq_full_dequant_kv(
+ _layout_cache: dict = {}
+ 
+ 
++def _stream_capturing() -> bool:
++    try:
++        return torch.accelerator.is_current_stream_capturing()
++    except Exception:
++        return False
++
++
++# Shared grow-only scratch for callers that pass neither pre-allocated
++# buffers nor a buf_holder (e.g. the TQ continuation fast path). Layers
++# execute sequentially, so one buffer per (device, name) suffices; this
++# avoids pumping multi-MB mid_o tensors through the XPU caching allocator
++# on every call. Never used while a graph is being captured.
++_SCRATCH: dict = {}
++
++
++def _get_scratch(
++    device: torch.device, name: str, shape: tuple[int, ...], dtype: torch.dtype
++) -> torch.Tensor:
++    if _stream_capturing():
++        return torch.empty(shape, dtype=dtype, device=device)
++    dev = device.index if device.index is not None else 0
++    store = _SCRATCH.setdefault(dev, {})
++    if name == "output":
++        store = store.setdefault("output_by_dtype", {})
++        name = str(dtype)
++    buf = store.get(name)
++    if (
++        buf is None
++        or buf.dtype != dtype
++        or buf.shape[0] < shape[0]
++        or buf.shape[1:] != tuple(shape[1:])
++    ):
++        buf = torch.empty(shape, dtype=dtype, device=device)
++        store[name] = buf
++    return buf[: shape[0]]
++
++
+ def _get_layout(D, mse_bits, value_quant_bits, key_packed_size):
+     """Get cached layout constants."""
+     key = (D, mse_bits, value_quant_bits, key_packed_size)
+@@ -516,16 +553,52 @@ def triton_turboquant_decode_attention(
  
      cfg = _get_layout(D, mse_bits, value_quant_bits, key_packed_size)
  
@@ -20609,7 +20656,7 @@ index 3adaf2610..2d58dc365 100644
 +        q_float_buf = (
 +            getattr(buf_holder, "_tq_q_float_buf", None)
 +            if buf_holder is not None
-+            else None
++            else _get_scratch(device, "q_float", (n_flat, D), torch.float32)
 +        )
 +        if q_float_buf is None or q_float_buf.shape[0] < n_flat:
 +            q_float_buf = torch.empty(n_flat, D, dtype=torch.float32, device=device)
@@ -20618,7 +20665,7 @@ index 3adaf2610..2d58dc365 100644
 +        q_rot_buf = (
 +            getattr(buf_holder, "_tq_q_rot_buf", None)
 +            if buf_holder is not None
-+            else None
++            else _get_scratch(device, "q_rot", (n_flat, D), torch.float32)
 +        )
 +        if q_rot_buf is None or q_rot_buf.shape[0] < n_flat:
 +            q_rot_buf = torch.empty(n_flat, D, dtype=torch.float32, device=device)
@@ -20630,6 +20677,144 @@ index 3adaf2610..2d58dc365 100644
  
      NUM_KV_SPLITS = max_num_kv_splits
  
+@@ -535,7 +608,7 @@ def triton_turboquant_decode_attention(
+         and mid_o_buf.shape[2] >= NUM_KV_SPLITS
+     ):
+         mid_o = mid_o_buf[:B, :Hq, :NUM_KV_SPLITS, :]
+-    else:
++    elif buf_holder is not None:
+         mid_o = torch.empty(
+             B,
+             Hq,
+@@ -544,8 +617,11 @@ def triton_turboquant_decode_attention(
+             dtype=torch.float32,
+             device=device,
+         )
+-        if buf_holder is not None:
+-            buf_holder._tq_mid_o_buf = mid_o
++        buf_holder._tq_mid_o_buf = mid_o
++    else:
++        mid_o = _get_scratch(
++            device, "mid_o", (B, Hq, NUM_KV_SPLITS, D + 1), torch.float32
++        )
+ 
+     # Stage 1: split-KV tiled attention scoring + value accumulation
+     fp8_e4b15 = _use_fp8_e4b15(device.index or 0)
+@@ -596,16 +672,18 @@ def triton_turboquant_decode_attention(
+         and output_buf.dtype == out_dtype
+     ):
+         output = output_buf[:B, :Hq, :D]
+-    else:
++    elif buf_holder is not None:
+         output = torch.empty(B, Hq, D, dtype=out_dtype, device=device)
+-        if buf_holder is not None:
+-            buf_holder._tq_output_buf = output
++        buf_holder._tq_output_buf = output
++    else:
++        output = _get_scratch(device, "output", (B, Hq, D), out_dtype)
+     if lse_buf is not None and lse_buf.shape[0] >= B:
+         lse = lse_buf[:B, :Hq]
+-    else:
++    elif buf_holder is not None:
+         lse = torch.empty(B, Hq, dtype=torch.float32, device=device)
+-        if buf_holder is not None:
+-            buf_holder._tq_lse_buf = lse
++        buf_holder._tq_lse_buf = lse
++    else:
++        lse = _get_scratch(device, "lse", (B, Hq), torch.float32)
+ 
+     grid2 = (B, Hq)
+     _fwd_kernel_stage2[grid2](
+diff --git a/vllm/v1/attention/ops/triton_turboquant_store.py b/vllm/v1/attention/ops/triton_turboquant_store.py
+index 3ad2d4148..a3f234dbd 100644
+--- a/vllm/v1/attention/ops/triton_turboquant_store.py
++++ b/vllm/v1/attention/ops/triton_turboquant_store.py
+@@ -15,7 +15,10 @@ import math
+ import torch
+ 
+ from vllm.triton_utils import tl, triton
+-from vllm.v1.attention.ops.triton_turboquant_decode import _use_fp8_e4b15
++from vllm.v1.attention.ops.triton_turboquant_decode import (
++    _stream_capturing,
++    _use_fp8_e4b15,
++)
+ 
+ # ═══════════════════════════════════════════════════════════════════════
+ # Shared: value uniform quantization + pack + scale/zero store
+@@ -347,6 +350,27 @@ def _tq_fused_store_mse(
+ # ═══════════════════════════════════════════════════════════════════════
+ 
+ 
++# Shared grow-only scratch for the MSE store path. Full-attention layers
++# execute sequentially, so one buffer per (device, name) suffices for all
++# layers and steps. Eliminating the per-call allocations stops pumping
++# ~6 tensors/layer/step through the XPU caching allocator during decode,
++# which wedges the xe engines under XPU graphs when free memory is low.
++_MSE_SCRATCH: dict = {}
++
++
++def _mse_scratch(device: torch.device, name: str, rows: int, cols: int):
++    """Return a [rows, cols] float32 view of shared grow-only scratch."""
++    if _stream_capturing():
++        return torch.empty(rows, cols, dtype=torch.float32, device=device)
++    dev = device.index if device.index is not None else 0
++    store = _MSE_SCRATCH.setdefault(dev, {})
++    buf = store.get(name)
++    if buf is None or buf.shape[0] < rows or buf.shape[1] != cols:
++        buf = torch.empty(rows, cols, dtype=torch.float32, device=device)
++        store[name] = buf
++    return buf[:rows]
++
++
+ def triton_turboquant_store(
+     key: torch.Tensor,  # [N, H, D] — raw keys (post-RoPE)
+     value: torch.Tensor,  # [N, H, D] — raw values
+@@ -410,19 +434,37 @@ def triton_turboquant_store(
+         return
+ 
+     # ── MSE PATH: external GEMM + fused bucketize/pack kernel ──
+-    # Normalize + rotation GEMM externally (cuBLAS is faster than in-kernel)
+-    k_flat = key.float().reshape(NH, D)
+-    norms = k_flat.norm(dim=1, keepdim=True)
+-    x_hat = k_flat / (norms + 1e-8)
+-    y = x_hat @ PiT
+-
+-    v_flat = value.float().reshape(NH, D)
++    # Normalize + rotation GEMM externally (cuBLAS is faster than in-kernel).
++    # All intermediates live in shared grow-only scratch (allocation-free
++    # after the first call); during graph capture, allocate fresh instead.
++    if _stream_capturing():
++        k_flat = key.float().reshape(NH, D)
++        norms = k_flat.norm(dim=1, keepdim=True)
++        x_hat = k_flat / (norms + 1e-8)
++        y = x_hat @ PiT
++        v_flat = value.float().reshape(NH, D)
++        norms_arg = norms.squeeze(1)
++    else:
++        device = key.device
++        k_flat = _mse_scratch(device, "k", NH, D)
++        k_flat.copy_(key.reshape(NH, D))
++        norms = _mse_scratch(device, "norms", NH, 1)
++        torch.linalg.vector_norm(k_flat, dim=1, keepdim=True, out=norms)
++        denom = _mse_scratch(device, "denom", NH, 1)
++        torch.add(norms, 1e-8, out=denom)
++        x_hat = _mse_scratch(device, "x_hat", NH, D)
++        torch.div(k_flat, denom, out=x_hat)
++        y = _mse_scratch(device, "y", NH, D)
++        torch.mm(x_hat, PiT, out=y)
++        v_flat = _mse_scratch(device, "v", NH, D)
++        v_flat.copy_(value.reshape(NH, D))
++        norms_arg = norms.squeeze(1)
+ 
+     # Fused kernel: bucketize + MSE index pack + norm store + value pack
+     grid = (NH,)
+     _tq_fused_store_mse[grid](
+         y,
+-        norms.squeeze(1),
++        norms_arg,
+         v_flat,
+         midpoints,
+         kv_cache.view(-1),
 diff --git a/vllm/v1/attention/ops/triton_unified_attention.py b/vllm/v1/attention/ops/triton_unified_attention.py
 index 1774f1b30..c06c72c20 100644
 --- a/vllm/v1/attention/ops/triton_unified_attention.py
@@ -23391,3 +23576,20 @@ index c832389b1..241860f9c 100644
              sizes=make_buffer(n, dtype=torch.int32),
              mamba_group_ids=mamba_group_ids,
              mamba_spec=mamba_spec,
+diff --git a/vllm/v1/worker/utils.py b/vllm/v1/worker/utils.py
+index b693adbf2..2efc90d17 100644
+--- a/vllm/v1/worker/utils.py
++++ b/vllm/v1/worker/utils.py
+@@ -205,7 +205,11 @@ class KVBlockZeroer:
+         assert self._ids_pinned is not None and self._ids_gpu is not None
+         self._ids_pinned[:n_blocks].numpy()[:] = block_ids
+         idx = self._ids_gpu[:n_blocks]
+-        idx.copy_(self._ids_pinned[:n_blocks], non_blocking=True)
++        # Synchronous copy: the pinned staging buffer is reused on the next
++        # call, so an async H2D could pick up overwritten ids (torn between
++        # the old and new allocation) and zero the wrong pages. Block
++        # allocations are rare, so the sync cost is negligible.
++        idx.copy_(self._ids_pinned[:n_blocks])
+         grid = (n_blocks * n_segs * (page_size_el // blk_size),)
+         _zero_kv_blocks_kernel[grid](
+             seg_addrs,
