@@ -16571,10 +16571,110 @@ index 46acc7f..d01e8e1 100644
          state.previous_token_ids = current_token_ids
          return delta_message
 diff --git a/vllm/platforms/xpu.py b/vllm/platforms/xpu.py
-index bd9006f..c76952e 100644
+index bd9006f..fef90e6 100644
 --- a/vllm/platforms/xpu.py
 +++ b/vllm/platforms/xpu.py
-@@ -61,6 +61,42 @@ class XPUPlatform(Platform):
+@@ -3,6 +3,7 @@
+ 
+ import contextlib
+ import os
++import threading
+ from typing import TYPE_CHECKING
+ 
+ import torch
+@@ -28,6 +29,91 @@ else:
+ 
+ logger = init_logger(__name__)
+ 
++_probe_done: bool = False
++_probe_lock = threading.Lock()
++
++_XPU_PROBE_ACTIONABLE_MSG = (
++    "The XPU device is wedged from a previous unclean shutdown. "
++    "No in-process recovery exists. Stop all GPU processes and "
++    "REBOOT THE HOST (or reset the GPUs) before restarting vLLM."
++)
++
++
++def _xpu_startup_health_probe(logger) -> None:
++    """Run once per process to detect a poisoned XPU device early."""
++    global _probe_done
++
++    with _probe_lock:
++        if _probe_done:
++            return
++        _probe_done = True
++
++    # (a) Check for stale devcoredump from a previous GPU fault
++    import glob
++
++    dcdumps = sorted(glob.glob("/sys/class/drm/card*/device/devcoredump"))
++    for dcd in dcdumps:
++        data_path = os.path.join(dcd, "data")
++        if os.path.isfile(data_path) and os.path.getsize(data_path) > 0:
++            logger.warning(
++                "A previous GPU fault devcoredump is present at %s. "
++                "If startup hangs or fails, the host must be rebooted "
++                "to recover the GPU.",
++                data_path,
++            )
++
++    # (b) Device probe with watchdog
++    timeout_s = float(
++        os.environ.get("VLLM_XPU_STARTUP_PROBE_TIMEOUT_S", "60")
++    )
++
++    probe_done_event = threading.Event()
++    probe_error: Exception = None
++
++    def probe_body() -> None:
++        nonlocal probe_error
++        try:
++            if not torch.xpu.is_available():
++                probe_error = RuntimeError("torch.xpu.is_available() is False")
++                return
++            t = torch.xpu.zeros(1, 1, dtype=torch.float32)
++            t.fill_(1.0)
++            torch.xpu.synchronize()
++            if t.item() != 1.0:
++                probe_error = RuntimeError(
++                    "XPU probe: tensor fill verification failed"
++                )
++                return
++        except Exception as e:  # noqa: BLE001 - report any device failure
++            probe_error = e
++
++    probe_thread = threading.Thread(target=probe_body, name="XpuStartupProbe")
++    probe_thread.start()
++
++    def watchdog() -> None:
++        probe_thread.join(timeout=timeout_s)
++        if probe_thread.is_alive() and not probe_done_event.is_set():
++            logger.error(
++                "XPU startup probe timed out after %.0fs. %s",
++                timeout_s,
++                _XPU_PROBE_ACTIONABLE_MSG,
++            )
++            os._exit(1)
++
++    wd = threading.Thread(target=watchdog, name="XpuStartupWatchdog", daemon=True)
++    wd.start()
++
++    probe_thread.join()
++    probe_done_event.set()
++    wd.join()
++
++    if probe_error is not None:
++        raise RuntimeError(
++            "XPU startup probe failed: {}. {}".format(
++                probe_error, _XPU_PROBE_ACTIONABLE_MSG
++            )
++        )
++
+ 
+ class XPUPlatform(Platform):
+     _enum = PlatformEnum.XPU
+@@ -61,6 +147,42 @@ class XPUPlatform(Platform):
              "only NHD layout is supported by XPU attention kernels."
          )
  
@@ -16617,7 +16717,7 @@ index bd9006f..c76952e 100644
          # TurboQuant KV cache: route directly to TQ backend
          kv_cache_dtype = attn_selector_config.kv_cache_dtype
          if kv_cache_dtype is not None and kv_cache_dtype.startswith("turboquant_"):
-@@ -72,8 +108,17 @@ class XPUPlatform(Platform):
+@@ -72,8 +194,17 @@ class XPUPlatform(Platform):
              logger.info_once("Using XPU MLA Sparse backend.")
              return AttentionBackendEnum.XPU_MLA_SPARSE.get_path()
          if attn_selector_config.use_mla:
@@ -16637,7 +16737,20 @@ index bd9006f..c76952e 100644
          if selected_backend == AttentionBackendEnum.TRITON_ATTN:
              logger.info_once("Using Triton backend.")
              return AttentionBackendEnum.TRITON_ATTN.get_path()
-@@ -169,12 +214,23 @@ class XPUPlatform(Platform):
+@@ -130,6 +261,12 @@ class XPUPlatform(Platform):
+         Set the device for the current platform.
+         """
+         torch.xpu.set_device(device)
++        # Worker-side device init: detect a driver poisoned by a previous
++        # unclean shutdown before any heavy work (model load, capture) so
++        # the failure is a clear, bounded error instead of an infinite
++        # shm_broadcast hang. Runs in device processes only (never in the
++        # API-server frontend), once per process.
++        _xpu_startup_health_probe(logger)
+ 
+     @classmethod
+     def manual_seed_all(cls, seed: int) -> None:
+@@ -169,12 +306,23 @@ class XPUPlatform(Platform):
      def get_static_graph_wrapper_cls(cls) -> str:
          return "vllm.compilation.cuda_graph.CUDAGraphWrapper"
  
@@ -16662,7 +16775,7 @@ index bd9006f..c76952e 100644
  
          compilation_config = vllm_config.compilation_config
          if compilation_config.compile_sizes is None:
-@@ -195,17 +251,22 @@ class XPUPlatform(Platform):
+@@ -195,17 +343,22 @@ class XPUPlatform(Platform):
                  "XPU Graph is disabled by environment variable, "
                  "please set VLLM_XPU_ENABLE_XPU_GRAPH=1 to enable it."
              )
@@ -16692,7 +16805,7 @@ index bd9006f..c76952e 100644
              ):
                  compilation_config.cudagraph_mode = CUDAGraphMode.PIECEWISE
                  logger.warning(
-@@ -213,6 +274,106 @@ class XPUPlatform(Platform):
+@@ -213,6 +366,106 @@ class XPUPlatform(Platform):
                      "falling back to PIECEWISE graph mode on XPU platform."
                  )
  
@@ -16799,7 +16912,7 @@ index bd9006f..c76952e 100644
          # Disable fusion passes not yet supported on XPU.
          pass_config = compilation_config.pass_config
          fusion_passes_to_disable = {
-@@ -235,6 +396,14 @@ class XPUPlatform(Platform):
+@@ -235,6 +488,14 @@ class XPUPlatform(Platform):
  
          # check and update parallel config
          parallel_config = vllm_config.parallel_config
@@ -16814,7 +16927,7 @@ index bd9006f..c76952e 100644
          # Only override worker_cls if it's still the default "auto"
          # This allows custom workers (like vllm-omni workers) to be used on XPU
          if parallel_config.worker_cls == "auto":
-@@ -259,7 +428,6 @@ class XPUPlatform(Platform):
+@@ -259,7 +520,6 @@ class XPUPlatform(Platform):
          from vllm.model_executor.layers.attention_layer_base import (
              AttentionLayerBase,
          )
@@ -16822,7 +16935,7 @@ index bd9006f..c76952e 100644
  
          cache_config = vllm_config.cache_config
          # special fix for GDN since kernel only supports block size dividable by 64
-@@ -277,9 +445,14 @@ class XPUPlatform(Platform):
+@@ -277,9 +537,14 @@ class XPUPlatform(Platform):
  
          if kernel_block_size is None:
              return
@@ -20514,10 +20627,35 @@ index 0aeb33a..4598d5a 100644
              use_alibi_sqrt=self.use_alibi_sqrt,
              window_size=self.sliding_window,
 diff --git a/vllm/v1/attention/backends/turboquant_attn.py b/vllm/v1/attention/backends/turboquant_attn.py
-index 53684b4..3f9057a 100644
+index 53684b4..f78c934 100644
 --- a/vllm/v1/attention/backends/turboquant_attn.py
 +++ b/vllm/v1/attention/backends/turboquant_attn.py
-@@ -68,6 +68,12 @@ if _HAS_FLASH_ATTN:
+@@ -18,6 +18,7 @@ Per-head per-position slot layout:
+ 
+ import functools
+ import math
++import os
+ from dataclasses import dataclass
+ from typing import Any, ClassVar
+ 
+@@ -26,6 +27,7 @@ import torch.nn.functional as F
+ 
+ from vllm.config import get_current_vllm_config
+ from vllm.config.cache import CacheDType
++from vllm.logger import init_logger
+ from vllm.model_executor.layers.quantization.turboquant.centroids import (
+     get_centroids,
+ )
+@@ -61,6 +63,8 @@ _HAS_FLASH_ATTN = is_flash_attn_varlen_func_available()
+ if _HAS_FLASH_ATTN:
+     from vllm.v1.attention.backends.fa_utils import flash_attn_varlen_func
+ 
++logger = init_logger(__name__)
++
+ # Continuation prefill: for small continuation chunks (q_len ≤ threshold),
+ # use the TQ decode kernel directly instead of full-dequant + flash_attn.
+ # do_kv_cache_update already stored all tokens to TQ cache, so the decode
+@@ -68,6 +72,12 @@ if _HAS_FLASH_ATTN:
  # per continuation, eliminating the O(N²/chunk_size) collapse at long context.
  _CONTINUATION_DECODE_THRESHOLD = 128
  
@@ -20530,7 +20668,69 @@ index 53684b4..3f9057a 100644
  
  def _build_hadamard(d: int, device_str: str) -> torch.Tensor:
      """Orthonormal Hadamard matrix (Sylvester construction), cached per (d, device).
-@@ -744,10 +750,31 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
+@@ -295,6 +305,61 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
+             vllm_config.attention_config.tq_max_kv_splits_for_cuda_graph
+         )
+ 
++        # Adaptive split-KV scaling for long contexts. Under PIECEWISE
++        # XPU graphs (and eager mode) attention is a splitting op that
++        # runs OUTSIDE the captured pieces (see platforms/xpu.py
++        # splitting_ops), so the launch grid may vary per batch. Only
++        # full-decode capture modes require a constant grid.
++        from vllm.config import CUDAGraphMode
++
++        adaptive_env = os.environ.get("VLLM_TQ_ADAPTIVE_KV_SPLITS", "1")
++        try:
++            self._tq_max_kv_splits = max(
++                self.max_num_kv_splits,
++                int(os.environ.get("VLLM_TQ_MAX_KV_SPLITS", "256")),
++            )
++            self._tq_max_kv_splits = min(self._tq_max_kv_splits, 1024)
++        except ValueError:
++            self._tq_max_kv_splits = 256
++        graph_mode = vllm_config.compilation_config.cudagraph_mode
++        self._tq_adaptive_splits = adaptive_env == "1" and graph_mode not in (
++            CUDAGraphMode.FULL_DECODE_ONLY,
++            CUDAGraphMode.FULL_AND_PIECEWISE,
++        )
++        if adaptive_env == "1" and not self._tq_adaptive_splits:
++            logger.warning(
++                "TurboQuant adaptive KV splits disabled: cudagraph_mode=%s "
++                "captures attention (grid must stay constant).",
++                graph_mode,
++            )
++        elif self._tq_adaptive_splits:
++            logger.info(
++                "TurboQuant adaptive KV splits enabled: base=%d ceiling=%d "
++                "(VLLM_TQ_MAX_KV_SPLITS, VLLM_TQ_ADAPTIVE_KV_SPLITS).",
++                self.max_num_kv_splits,
++                self._tq_max_kv_splits,
++            )
++
++    def _effective_kv_splits(self, max_seq_len: int) -> int:
++        """Scale split-KV parallelism with context length (eager attn only).
++
++        With fixed splits each program walks seq_len/splits KV positions;
++        at 40k+ contexts that serial walk dominates decode time. Scaling
++        the split count keeps per-program work bounded.
++        """
++        if not self._tq_adaptive_splits or max_seq_len <= 0:
++            return self.max_num_kv_splits
++        base = self.max_num_kv_splits
++        if max_seq_len <= 16384:
++            splits = base
++        elif max_seq_len <= 49152:
++            splits = base * 2
++        elif max_seq_len <= 131072:
++            splits = base * 4
++        else:
++            splits = base * 8
++        return min(splits, self._tq_max_kv_splits)
++
+     def _flash_attn_varlen(
+         self,
+         q: torch.Tensor,
+@@ -744,10 +809,31 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
          # Use WorkspaceManager for dequant buffers.
          # Shared across all layers — saves 60× memory at long context.
          # Required for CUDA Graph capture (per-layer growth incompatible with CG).
@@ -20566,7 +20766,15 @@ index 53684b4..3f9057a 100644
          # Skip .zero_() — kernel writes all positions up to cached_len,
          # and we only read [:cached_len] afterwards.
          k_cached = k_buf[:, :, :alloc_len, :]
-@@ -874,14 +901,23 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
+@@ -870,18 +956,30 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
+         # Falls back to kernel-internal allocation if workspace unavailable.
+         B = query.shape[0]
+         D = self.head_size
+-        S = self.max_num_kv_splits
++        # max_seq_len is a host-side int on the metadata (no D2H sync).
++        # Attention runs eagerly (splitting op) under PIECEWISE XPU
++        # graphs, so a per-batch split count is graph-safe.
++        S = self._effective_kv_splits(getattr(attn_metadata, "max_seq_len", 0))
          Hq = self.num_heads
          mid_o_buf = output_buf = lse_buf = None
          if is_workspace_manager_initialized():
@@ -20597,6 +20805,14 @@ index 53684b4..3f9057a 100644
  
          result = triton_turboquant_decode_attention(
              query=query,
+@@ -901,6 +999,6 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
+             output_buf=output_buf,
+             lse_buf=lse_buf,
+             buf_holder=layer,
+-            max_num_kv_splits=self.max_num_kv_splits,
++            max_num_kv_splits=S,
+         )
+         return result
 diff --git a/vllm/v1/attention/ops/triton_attention_helpers.py b/vllm/v1/attention/ops/triton_attention_helpers.py
 index 6ed50f6..b09f0b2 100644
 --- a/vllm/v1/attention/ops/triton_attention_helpers.py
@@ -21405,10 +21621,10 @@ index 2f2c15d..65029b3 100644
          # front-end procs connect to is obtained by each engine via it's
          # initial handshake with the rank 0 front-end.
 diff --git a/vllm/v1/executor/multiproc_executor.py b/vllm/v1/executor/multiproc_executor.py
-index db21d7c..5dabed1 100644
+index db21d7c..ca9d732 100644
 --- a/vllm/v1/executor/multiproc_executor.py
 +++ b/vllm/v1/executor/multiproc_executor.py
-@@ -941,13 +941,73 @@ class WorkerProc:
+@@ -941,13 +941,76 @@ class WorkerProc:
              output = self.async_output_queue.get()
              self.enqueue_output(output)
  
@@ -21436,7 +21652,10 @@ index db21d7c..5dabed1 100644
 +                    "running for %.0fs (timeout %.0fs, env "
 +                    "VLLM_WORKER_STEP_TIMEOUT_S). The device likely wedged "
 +                    "(hung kernel / driver stall). Killing worker pid %d so "
-+                    "the engine fails fast instead of hanging.",
++                    "the engine fails fast instead of hanging. If this "
++                    "follows an unclean shutdown (kill -9 / crash), the xe "
++                    "driver may be poisoned: stop all GPU processes and "
++                    "reboot the host before restarting vLLM.",
 +                    self._step_busy_method,
 +                    self.rank,
 +                    elapsed,
@@ -21482,7 +21701,7 @@ index db21d7c..5dabed1 100644
              try:
                  if isinstance(method, str):
                      func = getattr(self.worker, method)
-@@ -956,6 +1016,7 @@ class WorkerProc:
+@@ -956,6 +1019,7 @@ class WorkerProc:
  
                  output = func(*args, **kwargs)
              except Exception as e:
@@ -21490,7 +21709,7 @@ index db21d7c..5dabed1 100644
                  # Notes have been introduced in python 3.11
                  if hasattr(e, "add_note"):
                      e.add_note(traceback.format_exc())
-@@ -965,6 +1026,7 @@ class WorkerProc:
+@@ -965,6 +1029,7 @@ class WorkerProc:
                  if output_rank is None or self.rank == output_rank:
                      self.handle_output(e)
                  continue
@@ -23993,3 +24212,70 @@ index b693adb..2efc90d 100644
          grid = (n_blocks * n_segs * (page_size_el // blk_size),)
          _zero_kv_blocks_kernel[grid](
              seg_addrs,
+diff --git a/vllm/v1/worker/xpu_model_runner.py b/vllm/v1/worker/xpu_model_runner.py
+index f93d043..f5b8509 100644
+--- a/vllm/v1/worker/xpu_model_runner.py
++++ b/vllm/v1/worker/xpu_model_runner.py
+@@ -1,5 +1,7 @@
+ # SPDX-License-Identifier: Apache-2.0
+ # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
++import atexit
++import logging
+ from contextlib import contextmanager
+ 
+ import torch
+@@ -11,6 +13,38 @@ from vllm.v1.worker.gpu.model_runner import (
+ )
+ from vllm.v1.worker.gpu_model_runner import GPUModelRunner
+ 
++logger = logging.getLogger(__name__)
++
++_xpu_drain_registered = False
++
++
++def _drain_xpu_at_exit() -> None:
++    """Drain in-flight XPU kernels before the worker process exits.
++
++    A graceful shutdown (SIGTERM -> engine shutdown) that leaves a
++    no-timeout job running on the engine forces the xe driver to reclaim
++    it with an engine reset, which silently breaks whatever process is
++    live on the device next (see vllm/KNOWN_ISSUES.md #03). Draining the
++    queue here keeps clean shutdowns actually clean.
++    """
++    try:
++        torch.xpu.synchronize()
++        torch.xpu.empty_cache()
++    except Exception:
++        logger.warning(
++            "XPU shutdown drain failed (device may already be wedged); "
++            "the host may need a reboot before the next vLLM start.",
++            exc_info=True,
++        )
++
++
++def _register_xpu_drain_at_exit() -> None:
++    global _xpu_drain_registered
++    if _xpu_drain_registered:
++        return
++    _xpu_drain_registered = True
++    atexit.register(_drain_xpu_at_exit)
++
+ 
+ class XPUModelRunner(GPUModelRunner):
+     """A model runner for XPU devices."""
+@@ -24,6 +58,7 @@ class XPUModelRunner(GPUModelRunner):
+             super().__init__(vllm_config, device)
+         # FIXME: To be verified.
+         self.cascade_attn_enabled = False
++        _register_xpu_drain_at_exit()
+ 
+ 
+ class XPUModelRunnerV2(GPUModelRunnerV2):
+@@ -36,6 +71,7 @@ class XPUModelRunnerV2(GPUModelRunnerV2):
+     ):
+         with _torch_cuda_wrapper():
+             super().__init__(vllm_config, device)
++        _register_xpu_drain_at_exit()
+ 
+ 
+ @contextmanager
