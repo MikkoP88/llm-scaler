@@ -29,15 +29,31 @@ unusable (`No XPU devices are available`). Only a host reboot clears it.
 
 Workarounds:
 - Stop instances gracefully (`docker stop` / Ctrl-C, ~10 s grace) so the
-  worker drain hook (`torch.xpu.synchronize()` + `empty_cache()` at exit)
-  can finish in-flight kernels. Do not use `kill -9` / `docker rm -f` on a
-  running server.
+  worker drain hook (`torch.xpu.synchronize()` + `empty_cache()` at exit,
+  timeout-bounded) can finish in-flight kernels. Do not use `kill -9` /
+  `docker rm -f` on a running server. Verified live: after a 248k-token
+  generation, a SIGTERM teardown produced zero dmesg engine events and a
+  restart on the same boot served requests normally.
 - After any crash or hard kill, reboot the host before starting a new
-  vLLM instance. vLLM now probes the device at startup
+  vLLM instance. vLLM probes the device at startup
   (`VLLM_XPU_STARTUP_PROBE_TIMEOUT_S`, default 60 s) and fails fast with
   this guidance instead of hanging; the worker step watchdog
   (`VLLM_WORKER_STEP_TIMEOUT_S`, default 600 s on XPU) bounds mid-run
-  hangs the same way.
+  hangs the same way. IMPORTANT LIMITATION (verified live): the startup
+  probe catches context-level device loss (hard errors, basic-op hangs)
+  but NOT the post-SIGKILL silent wedge, which only manifests once both
+  TP workers submit real collectives during warmup - on that class the
+  probe passes, startup then hangs with the `shm_broadcast` spam, and a
+  reboot is still the only fix. Graceful shutdown is the primary
+  defense.
+- Do not run multiple concurrent `xpu-smi dump --metrics ALL` loops
+  against the GPUs while serving. Stacked monitoring pollers (observed:
+  8 concurrent dump loops from a broken `pgrep` guard in a launch
+  script) coincide with warmup-time dual engine resets
+  (`UR_RESULT_ERROR_DEVICE_LOST` on the first request). One pair of
+  pollers was harmless; several were not. Guard patterns must match the
+  real process name (`pgrep -f 'xpu-smi dump'`).
 - Note: the AI host gets a NEW DHCP IP on every reboot (observed roaming
-  10.20.3.44 -> .45 -> .46). If the last known IP stops answering after a
-  reboot, probe the next IPs (+1) before assuming the host is down.
+  10.20.3.44 -> .45 -> .46 -> .47). If the last known IP stops answering
+  after a reboot, probe the next IPs (+1, +2) before assuming the host
+  is down.
