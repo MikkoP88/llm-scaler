@@ -16571,7 +16571,7 @@ index 46acc7f..d01e8e1 100644
          state.previous_token_ids = current_token_ids
          return delta_message
 diff --git a/vllm/platforms/xpu.py b/vllm/platforms/xpu.py
-index bd9006f..f2b078c 100644
+index bd9006f..8420278 100644
 --- a/vllm/platforms/xpu.py
 +++ b/vllm/platforms/xpu.py
 @@ -3,6 +3,7 @@
@@ -16582,7 +16582,7 @@ index bd9006f..f2b078c 100644
  from typing import TYPE_CHECKING
  
  import torch
-@@ -28,6 +29,91 @@ else:
+@@ -28,6 +29,79 @@ else:
  
  logger = init_logger(__name__)
  
@@ -16619,37 +16619,19 @@ index bd9006f..f2b078c 100644
 +                data_path,
 +            )
 +
-+    # (b) Device probe with watchdog
++    # (b) Device probe with watchdog. All device ops MUST stay on the
++    # calling (main) thread: initializing XPU/SYCL state on a short-lived
++    # worker thread corrupts the process's device context on Intel L0
++    # (observed as warmup-time engine resets). The watchdog thread only
++    # times the probe and hard-exits if it hangs on a wedged device.
 +    timeout_s = float(
 +        os.environ.get("VLLM_XPU_STARTUP_PROBE_TIMEOUT_S", "60")
 +    )
 +
 +    probe_done_event = threading.Event()
-+    probe_error: Exception = None
-+
-+    def probe_body() -> None:
-+        nonlocal probe_error
-+        try:
-+            if not torch.xpu.is_available():
-+                probe_error = RuntimeError("torch.xpu.is_available() is False")
-+                return
-+            t = torch.zeros(1, 1, dtype=torch.float32, device="xpu")
-+            t.fill_(1.0)
-+            torch.xpu.synchronize()
-+            if t.item() != 1.0:
-+                probe_error = RuntimeError(
-+                    "XPU probe: tensor fill verification failed"
-+                )
-+                return
-+        except Exception as e:  # noqa: BLE001 - report any device failure
-+            probe_error = e
-+
-+    probe_thread = threading.Thread(target=probe_body, name="XpuStartupProbe")
-+    probe_thread.start()
 +
 +    def watchdog() -> None:
-+        probe_thread.join(timeout=timeout_s)
-+        if probe_thread.is_alive() and not probe_done_event.is_set():
++        if not probe_done_event.wait(timeout_s):
 +            logger.error(
 +                "XPU startup probe timed out after %.0fs. %s",
 +                timeout_s,
@@ -16660,21 +16642,27 @@ index bd9006f..f2b078c 100644
 +    wd = threading.Thread(target=watchdog, name="XpuStartupWatchdog", daemon=True)
 +    wd.start()
 +
-+    probe_thread.join()
-+    probe_done_event.set()
-+    wd.join()
-+
-+    if probe_error is not None:
++    try:
++        if not torch.xpu.is_available():
++            raise RuntimeError("torch.xpu.is_available() is False")
++        t = torch.zeros(1, 1, dtype=torch.float32, device="xpu")
++        t.fill_(1.0)
++        torch.xpu.synchronize()
++        if t.item() != 1.0:
++            raise RuntimeError("XPU probe: tensor fill verification failed")
++    except Exception as e:  # noqa: BLE001 - report any device failure
 +        raise RuntimeError(
 +            "XPU startup probe failed: {}. {}".format(
-+                probe_error, _XPU_PROBE_ACTIONABLE_MSG
++                e, _XPU_PROBE_ACTIONABLE_MSG
 +            )
-+        )
++        ) from e
++    finally:
++        probe_done_event.set()
 +
  
  class XPUPlatform(Platform):
      _enum = PlatformEnum.XPU
-@@ -61,6 +147,42 @@ class XPUPlatform(Platform):
+@@ -61,6 +135,42 @@ class XPUPlatform(Platform):
              "only NHD layout is supported by XPU attention kernels."
          )
  
@@ -16717,7 +16705,7 @@ index bd9006f..f2b078c 100644
          # TurboQuant KV cache: route directly to TQ backend
          kv_cache_dtype = attn_selector_config.kv_cache_dtype
          if kv_cache_dtype is not None and kv_cache_dtype.startswith("turboquant_"):
-@@ -72,8 +194,17 @@ class XPUPlatform(Platform):
+@@ -72,8 +182,17 @@ class XPUPlatform(Platform):
              logger.info_once("Using XPU MLA Sparse backend.")
              return AttentionBackendEnum.XPU_MLA_SPARSE.get_path()
          if attn_selector_config.use_mla:
@@ -16737,7 +16725,7 @@ index bd9006f..f2b078c 100644
          if selected_backend == AttentionBackendEnum.TRITON_ATTN:
              logger.info_once("Using Triton backend.")
              return AttentionBackendEnum.TRITON_ATTN.get_path()
-@@ -130,6 +261,12 @@ class XPUPlatform(Platform):
+@@ -130,6 +249,12 @@ class XPUPlatform(Platform):
          Set the device for the current platform.
          """
          torch.xpu.set_device(device)
@@ -16750,7 +16738,7 @@ index bd9006f..f2b078c 100644
  
      @classmethod
      def manual_seed_all(cls, seed: int) -> None:
-@@ -169,12 +306,23 @@ class XPUPlatform(Platform):
+@@ -169,12 +294,23 @@ class XPUPlatform(Platform):
      def get_static_graph_wrapper_cls(cls) -> str:
          return "vllm.compilation.cuda_graph.CUDAGraphWrapper"
  
@@ -16775,7 +16763,7 @@ index bd9006f..f2b078c 100644
  
          compilation_config = vllm_config.compilation_config
          if compilation_config.compile_sizes is None:
-@@ -195,17 +343,22 @@ class XPUPlatform(Platform):
+@@ -195,17 +331,22 @@ class XPUPlatform(Platform):
                  "XPU Graph is disabled by environment variable, "
                  "please set VLLM_XPU_ENABLE_XPU_GRAPH=1 to enable it."
              )
@@ -16805,7 +16793,7 @@ index bd9006f..f2b078c 100644
              ):
                  compilation_config.cudagraph_mode = CUDAGraphMode.PIECEWISE
                  logger.warning(
-@@ -213,6 +366,106 @@ class XPUPlatform(Platform):
+@@ -213,6 +354,106 @@ class XPUPlatform(Platform):
                      "falling back to PIECEWISE graph mode on XPU platform."
                  )
  
@@ -16912,7 +16900,7 @@ index bd9006f..f2b078c 100644
          # Disable fusion passes not yet supported on XPU.
          pass_config = compilation_config.pass_config
          fusion_passes_to_disable = {
-@@ -235,6 +488,14 @@ class XPUPlatform(Platform):
+@@ -235,6 +476,14 @@ class XPUPlatform(Platform):
  
          # check and update parallel config
          parallel_config = vllm_config.parallel_config
@@ -16927,7 +16915,7 @@ index bd9006f..f2b078c 100644
          # Only override worker_cls if it's still the default "auto"
          # This allows custom workers (like vllm-omni workers) to be used on XPU
          if parallel_config.worker_cls == "auto":
-@@ -259,7 +520,6 @@ class XPUPlatform(Platform):
+@@ -259,7 +508,6 @@ class XPUPlatform(Platform):
          from vllm.model_executor.layers.attention_layer_base import (
              AttentionLayerBase,
          )
@@ -16935,7 +16923,7 @@ index bd9006f..f2b078c 100644
  
          cache_config = vllm_config.cache_config
          # special fix for GDN since kernel only supports block size dividable by 64
-@@ -277,9 +537,14 @@ class XPUPlatform(Platform):
+@@ -277,9 +525,14 @@ class XPUPlatform(Platform):
  
          if kernel_block_size is None:
              return
