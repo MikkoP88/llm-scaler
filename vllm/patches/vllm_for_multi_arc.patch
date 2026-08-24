@@ -24213,18 +24213,19 @@ index b693adb..2efc90d 100644
          _zero_kv_blocks_kernel[grid](
              seg_addrs,
 diff --git a/vllm/v1/worker/xpu_model_runner.py b/vllm/v1/worker/xpu_model_runner.py
-index f93d043..f5b8509 100644
+index f93d043..5921fb7 100644
 --- a/vllm/v1/worker/xpu_model_runner.py
 +++ b/vllm/v1/worker/xpu_model_runner.py
-@@ -1,5 +1,7 @@
+@@ -1,5 +1,8 @@
  # SPDX-License-Identifier: Apache-2.0
  # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
 +import atexit
 +import logging
++import threading
  from contextlib import contextmanager
  
  import torch
-@@ -11,6 +13,38 @@ from vllm.v1.worker.gpu.model_runner import (
+@@ -11,6 +14,51 @@ from vllm.v1.worker.gpu.model_runner import (
  )
  from vllm.v1.worker.gpu_model_runner import GPUModelRunner
  
@@ -24243,8 +24244,21 @@ index f93d043..f5b8509 100644
 +    queue here keeps clean shutdowns actually clean.
 +    """
 +    try:
-+        torch.xpu.synchronize()
-+        torch.xpu.empty_cache()
++        # A synchronize() on a device-lost/wedged context can block forever
++        # instead of raising (observed live on xe 6.17). Run the drain in a
++        # daemon thread and abandon it if it does not finish quickly.
++        drain = threading.Thread(
++            target=lambda: (torch.xpu.synchronize(), torch.xpu.empty_cache()),
++            daemon=True,
++        )
++        drain.start()
++        drain.join(timeout=15)
++        if drain.is_alive():
++            logger.warning(
++                "XPU shutdown drain did not finish in 15s (device wedged?); "
++                "abandoning it. The host may need a reboot before the next "
++                "vLLM start.",
++            )
 +    except Exception:
 +        logger.warning(
 +            "XPU shutdown drain failed (device may already be wedged); "
@@ -24263,7 +24277,7 @@ index f93d043..f5b8509 100644
  
  class XPUModelRunner(GPUModelRunner):
      """A model runner for XPU devices."""
-@@ -24,6 +58,7 @@ class XPUModelRunner(GPUModelRunner):
+@@ -24,6 +72,7 @@ class XPUModelRunner(GPUModelRunner):
              super().__init__(vllm_config, device)
          # FIXME: To be verified.
          self.cascade_attn_enabled = False
@@ -24271,7 +24285,7 @@ index f93d043..f5b8509 100644
  
  
  class XPUModelRunnerV2(GPUModelRunnerV2):
-@@ -36,6 +71,7 @@ class XPUModelRunnerV2(GPUModelRunnerV2):
+@@ -36,6 +85,7 @@ class XPUModelRunnerV2(GPUModelRunnerV2):
      ):
          with _torch_cuda_wrapper():
              super().__init__(vllm_config, device)
