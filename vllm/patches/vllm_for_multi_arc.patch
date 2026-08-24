@@ -16571,7 +16571,7 @@ index 46acc7f..d01e8e1 100644
          state.previous_token_ids = current_token_ids
          return delta_message
 diff --git a/vllm/platforms/xpu.py b/vllm/platforms/xpu.py
-index bd9006f..fef90e6 100644
+index bd9006f..f2b078c 100644
 --- a/vllm/platforms/xpu.py
 +++ b/vllm/platforms/xpu.py
 @@ -3,6 +3,7 @@
@@ -16633,7 +16633,7 @@ index bd9006f..fef90e6 100644
 +            if not torch.xpu.is_available():
 +                probe_error = RuntimeError("torch.xpu.is_available() is False")
 +                return
-+            t = torch.xpu.zeros(1, 1, dtype=torch.float32)
++            t = torch.zeros(1, 1, dtype=torch.float32, device="xpu")
 +            t.fill_(1.0)
 +            torch.xpu.synchronize()
 +            if t.item() != 1.0:
