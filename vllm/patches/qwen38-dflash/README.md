@@ -4,6 +4,11 @@ Achieves **72.2 tok/s median (85.9 peak)** on the isolated C1 benchmark
 (temp=0, pp=0, n=16) on 2× Intel Arc Pro B70 (TP=2), vs 32.4 tok/s FP8
 no-spec and 54.67 tok/s FP8+MTP2 (dspark image, graphs=0).
 
+End-to-end single-stream serving (adv:v9, graphs on, spec k=4): a
+512-token greedy generation completes in **8 s wall** (~64 tok/s
+including prefill) — **2.0x the rmacy v14/v15 recipe** (15 s), which
+serves the same drafter eager. Full matrix below.
+
 ## Contents
 
 - `Dockerfile` — retrofit build: copies the five fixed DSpark/DFlash files
@@ -23,6 +28,9 @@ All five python files are byte-identical to the validated
 | Image | graphs | gmu | len | seqs | dtype | Result |
 |---|---|---|---|---|---|---|
 | `llm-scaler-vllm-adv:v8` | 1 | 0.8 | 64000 | 64 | bf16 | coherent greedy; acceptance 59.5-65%, mean accepted length 3.38, ~63 tok/s single stream (512 tok / 8.1 s) |
+| `llm-scaler-vllm-adv:v9` | 1 | 0.8 | 64000 | 64 | bf16, no spec | coherent greedy; 512 tok / 15 s, 1536 / 47 s (~34 tok/s) |
+| `llm-scaler-vllm-adv:v9` | 1 | 0.8 | 64000 | 64 | bf16 + dflash k=4 | coherent; 512 tok / 8 s, 1536 / 23 s; mean accepted length 2.77-4.17; greedy byte-identical to no-spec |
+| `llm-scaler-vllm-adv:v9` | 1 | 0.8 | 64000 | 64 | bf16 + dflash k=6 | coherent; 512 tok / 7 s, 1536 / 23 s; greedy byte-identical to k=4 |
 | `qwen38-fp8-dspark:v8` | 0 | 0.90 | 8192 | 1 | bf16 | coherent greedy (rmacy serve.sh @6e63e9e verbatim) |
 
 `serve.sh` picks the row matching `IMAGE` automatically.
@@ -32,6 +40,40 @@ this stack: the dflash eager drafting loop reuses a grow-only bias scratch
 buffer (`dflash.py`) so it no longer churns the XPU caching allocator and
 wedges the xe engines during piecewise capture — the historical reason
 `VLLM_XPU_ENABLE_XPU_GRAPH=0` was required no longer applies to it.
+Note the opposite constraint applies to TARGET-only bf16 serving on
+adv:v4-v9: compile mode + `VLLM_XPU_ENABLE_XPU_GRAPH=0` silently corrupts
+TP output there (KNOWN_ISSUES #04, fixed by 28ff055 / adv:v10) — keep
+graphs on, or use adv:v10+.
+
+## Measured speed matrix (v9 vs rmacy v14, "Write a html car game." prompt, greedy, ignore_eos, wall clock)
+
+| serving stack | 512 tok | 1536 tok | tok/s @512 |
+|---|---|---|---|
+| v9 graphs, bf16, no spec | 15 s | 47 s | 34 |
+| **v9 graphs, bf16, dflash k=4** | **8 s** | **23 s** | **64** |
+| v9 graphs, bf16, dflash k=6 | 7 s | 23 s | 73 |
+| rmacy v14 eager, dspark spec | 15 s | 45 s | 34 |
+| rmacy v14 eager, no spec | 40 s | 114 s | 13 |
+
+XPU graphs + dflash spec is **2.0x** the rmacy always-spec recipe and
+**~2.6x** rmacy target-only. The two stacks carry the same vllm build
+(0.21.1.dev0+gad7125a43); the delta is graphs (rmacy serves eager) —
+their recipe always runs spec decode (target M=k+1), which both masks
+the KNOWN_ISSUES #04 corruption cell and never executes the M==1 decode
+paths the ESIMD fusions target.
+
+### k-sweep (v9, graphs, single stream)
+
+| k | 512 tok | 1536 tok | mean accepted length |
+|---|---|---|---|
+| 4 | 8 s | 23 s | 2.77-4.17 |
+| 5 | 10 s | 32 s | 2.85-3.31 |
+| 6 | 7 s | 23 s | greedy identical to k=4 |
+
+k=4 and k=6 tie within run-to-run noise (byte-identical greedy output);
+k=5 is dominated — drafter-fp8-v5 acceptance does not grow past 4 draft
+positions, so the extra verify cost is pure overhead. Recommend k=4
+(default; matches the C1 benchmark optimum).
 
 ## The kernel readout fix (why this matters)
 
@@ -60,11 +102,13 @@ queries under XPU graphs on this build:
 - bf16 query: `TORCH_CHECK(query.scalar_type() == torch::kHalf)` at
   `custom-esimd-kernels-vllm/csrc/eagle/eagle.sycl:444` — bf16 target-only
   (no drafter) serving crashes on the first decode step.
-- fp16 query in eager mode (`VLLM_XPU_ENABLE_XPU_GRAPH` unset/0): the
-  kernel returns garbage on the llm-scaler build (qwen3.8-27b eager fp16
-  decode produces incoherent text while graph-replayed steps with identical
-  weights/config are correct).
-- Speculative decoding hides both: the verify pass runs with
+- fp16 query: coherent in every mode re-tested on v9 (compile, true
+  eager, graphs on/off). An earlier "eager fp16 garbage" observation on
+  v8 is superseded — all reproducible silent garbage on the v4-v9
+  lineage turned out to be an unrelated TP all_reduce defect that only
+  needs compile mode + bf16 + graphs off (KNOWN_ISSUES #04), and it
+  corrupts bf16 serving regardless of the page-attn insert.
+- Speculative decoding hides the crash: the verify pass runs with
   `max_query_len = k+1 > 1`, which bypasses this code path entirely.
 
 Fixed in `vllm/patches/vllm_for_multi_arc.patch` (`PAGED_ATTN_ESIMD_INSERTED_v1`
@@ -72,6 +116,14 @@ gate): the insert now additionally requires `query.dtype == torch.float16`
 and `VLLM_XPU_ENABLE_XPU_GRAPH` enabled; everything else routes to
 `flash_attn_varlen_func`. `DISABLE_ESIMD_PAGE_ATTN=1` remains a manual
 opt-out.
+
+Related, same lineage: with the page-attn insert gated off, TRUE-eager
+bf16 (`--enforce-eager`) instead trips a different, correctly-guarded
+fp16-only fusion: `esimd_norm_gemv_fp8_blockscale: norm inputs must be
+fp16` (M==1 GDN out-proj norm+GEMV). That one is loud, not silent —
+work around it with `-e DISABLE_ESIMD_GDN_OUTPROJ=1`, or just serve
+with graphs on. The silent compile-mode bf16 corruption itself is
+KNOWN_ISSUES #04, fixed by 28ff055 (adv:v10).
 
 ## Quality
 
@@ -92,8 +144,11 @@ divergence.
 
 - On builds without the ESIMD gate fix (this repo prior to the fix commit,
   and stock dspark images): bf16 target-only serving crashes at the ESIMD
-  kernel assert; eager fp16 decode returns garbage on the llm-scaler
-  lineage. Use the fixed image, or spec decoding, or
+  kernel assert; use the fixed image, spec decoding, or
   `DISABLE_ESIMD_PAGE_ATTN=1`.
+- On adv images v4-v9 (07827c0..c10c7b2): bf16 target-only serving with
+  compile mode and `VLLM_XPU_ENABLE_XPU_GRAPH=0` silently returns garbage
+  — KNOWN_ISSUES #04. Keep graphs on, use `--dtype float16`, or use
+  adv:v10+ (28ff055).
 - Adaptive block truncation (DSPARK_ADAPTIVE_BLOCK=1) runs but is slower
   than fixed k=4 on single-request workloads.

@@ -124,6 +124,33 @@ max_model_len tiers (auto: 256 for 262k) and lets the kernels
 re-partition live context at every replay. Full-graph capture AND
 split-KV parallelism at 117k context, simultaneously.
 
+## DSpark/dflash speculative decode (qwen3.8-27b-fp8, 64k ctx, adv images)
+
+Separate workload from the TQ champion above: bf16 + `--block-size 64`
++ `--max-model-len 64000` + `--async-scheduling` with the DSpark drafter
+(`/models/drafter-fp8-v5`), full config in
+`patches/qwen38-dflash/serve.sh` and README. Wall clock, single stream,
+greedy, "Write a html car game." prompt:
+
+| serving stack | 512 tok | 1536 tok | tok/s @512 |
+|---|---|---|---|
+| v9 XPU graphs, no spec | 15 s | 47 s | 34 |
+| **v9 XPU graphs + dflash k=4** | **8 s** | **23 s** | **64** |
+| v9 XPU graphs + dflash k=6 | 7 s | 23 s | 73 |
+| rmacy v14 eager + dspark spec | 15 s | 45 s | 34 |
+| rmacy v14 eager, no spec | 40 s | 114 s | 13 |
+
+Graphs+spec is 2.0x the rmacy always-spec recipe on identical hardware
+and vllm build. k-sweep: k=4 and k=6 tie (byte-identical greedy, 7-8 s
+@512); k=5 is dominated (10 s/32 s, acceptance does not grow past 4
+draft positions). Mean accepted length k=4: 2.77-4.17. Greedy spec
+output is byte-identical to no-spec on v9.
+
+CAUTION on adv images v4-v9: bf16 serving with compile mode +
+`VLLM_XPU_ENABLE_XPU_GRAPH=0` silently corrupts TP output (KNOWN_ISSUES
+#04, introduced by 07827c0, fixed by 28ff055 in adv:v10). Keep graphs
+on, or use v10+.
+
 ## Operational notes
 
 - Reboot the host after any GPU engine reset before starting vLLM again
@@ -132,8 +159,10 @@ split-KV parallelism at 117k context, simultaneously.
   same recovery protocol applies.
 - Image lineage: v6 = stock fork build; v7 = + TQ stage-1 knob envs;
   v8 = v7 + graph-safe splits backend (turboquant_attn.py, commit
-  1c41a08). v8 piecewise-default behavior is byte-identical to v6
-  (k0_base cross-check 29.05/17.46 vs 29.02/17.45).
+  1c41a08); v9 = v8 + ESIMD page-attn fp16+graphs gate (c10c7b2);
+  v10 = v9 + all_reduce compile-bounce gate (28ff055, fixes
+  KNOWN_ISSUES #04). v8 piecewise-default behavior is byte-identical
+  to v6 (k0_base cross-check 29.05/17.46 vs 29.02/17.45).
 - `--cudagraph-mode` is not a flag; use
   `--compilation-config '{"cudagraph_mode":"FULL_DECODE_ONLY"}'`.
   When passing through nested `bash -c`, keep the value single-quoted
