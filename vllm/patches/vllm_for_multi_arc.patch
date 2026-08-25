@@ -3561,7 +3561,7 @@ index 209005c..fc98c88 100644
  
  
  class XpuCommunicator(DeviceCommunicatorBase):
-@@ -40,10 +130,144 @@ class XpuCommunicator(DeviceCommunicatorBase):
+@@ -40,10 +130,151 @@ class XpuCommunicator(DeviceCommunicatorBase):
  
                  self.all2all_manager = AgRsAll2AllManager(self.cpu_group)
                  logger.info("Using AgRs manager on XPU device.")
@@ -3573,7 +3573,14 @@ index 209005c..fc98c88 100644
 -        output = input_.clone()
 +        if os.environ.get("SKIP_ALL_REDUCE") == "1":
 +            return input_
-+        if torch.compiler.is_compiling():
++        # ALLREDUCE_BOUNCE_FIX_v1: only bounce off the custom op when XPU
++        # graphs are actually enabled. With graphs off, the op's XPU
++        # registration is not wired for every dtype: bf16 TP sums silently
++        # corrupt under torch.compile (images v4-v9 served eager+bf16 as
++        # deterministic garbage; fp16 and --enforce-eager were fine).
++        if torch.compiler.is_compiling() and os.environ.get(
++            "VLLM_XPU_ENABLE_XPU_GRAPH", "0"
++        ) not in ("", "0"):
 +            # Bounce the collective off the registered `vllm::all_reduce`
 +            # custom op while tracing, so dynamo emits a single fx node
 +            # instead of inlining this function. platforms/xpu.py registers
