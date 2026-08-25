@@ -149,7 +149,12 @@ output is byte-identical to no-spec on v9.
 CAUTION on adv images v4-v9: bf16 serving with compile mode +
 `VLLM_XPU_ENABLE_XPU_GRAPH=0` silently corrupts TP output (KNOWN_ISSUES
 #04, introduced by 07827c0, fixed by 28ff055 in adv:v10). Keep graphs
-on, or use v10+.
+on, or use v10+. adv:v10 battery re-validated everything: the
+previously-garbage compile+graphs-off arm is coherent (41 s @512 tok,
+~12 tok/s — same territory as rmacy eager; graphs remain the
+recommended mode at 2.7x), graphs+spec k=4 is 8 s/24 s with greedy
+output byte-identical to v9 (acceptance 2.82-3.29), and the TQ fp16
+champion is unregressed (15 s @512, grid=256).
 
 ## Operational notes
 

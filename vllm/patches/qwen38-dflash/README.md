@@ -31,6 +31,8 @@ All five python files are byte-identical to the validated
 | `llm-scaler-vllm-adv:v9` | 1 | 0.8 | 64000 | 64 | bf16, no spec | coherent greedy; 512 tok / 15 s, 1536 / 47 s (~34 tok/s) |
 | `llm-scaler-vllm-adv:v9` | 1 | 0.8 | 64000 | 64 | bf16 + dflash k=4 | coherent; 512 tok / 8 s, 1536 / 23 s; mean accepted length 2.77-4.17; greedy byte-identical to no-spec |
 | `llm-scaler-vllm-adv:v9` | 1 | 0.8 | 64000 | 64 | bf16 + dflash k=6 | coherent; 512 tok / 7 s, 1536 / 23 s; greedy byte-identical to k=4 |
+| `llm-scaler-vllm-adv:v10` | 1 | 0.8 | 64000 | 64 | bf16 + dflash k=4 | coherent; 512 tok / 8 s, 1536 / 24 s; greedy byte-identical to v9 k4; acceptance 2.82-3.29 |
+| `llm-scaler-vllm-adv:v10` | 0 | 0.8 | 64000 | 64 | bf16, no spec (compile mode, graphs OFF) | coherent — the v4-v9 silent-garbage cell, fixed by 28ff055; 512 tok / 41 s (~12 tok/s; graphs are still 2.7x faster) |
 | `qwen38-fp8-dspark:v8` | 0 | 0.90 | 8192 | 1 | bf16 | coherent greedy (rmacy serve.sh @6e63e9e verbatim) |
 
 `serve.sh` picks the row matching `IMAGE` automatically.
@@ -43,7 +45,10 @@ wedges the xe engines during piecewise capture — the historical reason
 Note the opposite constraint applies to TARGET-only bf16 serving on
 adv:v4-v9: compile mode + `VLLM_XPU_ENABLE_XPU_GRAPH=0` silently corrupts
 TP output there (KNOWN_ISSUES #04, fixed by 28ff055 / adv:v10) — keep
-graphs on, or use adv:v10+.
+graphs on, or use adv:v10+. adv:v10 re-validates the full battery: the
+previously-garbage arm is now coherent, graphs+spec k=4 output is
+byte-identical to v9 (8 s @512 tok), and the TQ champion is unregressed
+(15 s @512, grid=256).
 
 ## Measured speed matrix (v9 vs rmacy v14, "Write a html car game." prompt, greedy, ignore_eos, wall clock)
 

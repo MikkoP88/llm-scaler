@@ -90,7 +90,11 @@ additionally requires `VLLM_XPU_ENABLE_XPU_GRAPH` enabled, so
 graphs-off compile mode falls through to the plain oneCCL all_reduce
 like pre-07827c0 builds. The env read inside the compiled branch was
 probe-verified: dynamo evaluates it at trace time and takes the
-correct branch in both modes.
+correct branch in both modes. Validated on the built v10 image: the
+previously-garbage arm returns coherent greedy output (512 tok in
+41 s, ~12 tok/s), graphs+spec k=4 output is byte-identical to v9
+(8 s @512), and the TQ fp16 champion is unregressed (15 s @512,
+grid=256).
 
 Workarounds on v4-v9 images: serve with `VLLM_XPU_ENABLE_XPU_GRAPH=1`
 (recommended, also fastest), or `--dtype float16`, or `--enforce-eager`
