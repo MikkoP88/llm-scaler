@@ -20928,7 +20928,7 @@ index 3adaf26..2c82e02 100644
  from typing import Any
  
  import torch
-@@ -19,6 +20,16 @@ from vllm.v1.attention.ops.triton_decode_attention import (
+@@ -19,6 +20,25 @@ from vllm.v1.attention.ops.triton_decode_attention import (
      _fwd_kernel_stage2,
  )
  
@@ -20938,6 +20938,15 @@ index 3adaf26..2c82e02 100644
 +# with a conservative 4; larger tiles amortize the dependent
 +# block-table -> slot address -> key -> score -> value load chain that
 +# dominates at deep context with many KV splits.
++#
++# Measured on 2x Arc Pro B70 (TP=2, qwen3.8-27b fp8, 117k-token deep
++# decode, steady tok/s vs defaults 4/1): BLOCK_KV=16 -> -72% deep,
++# BLOCK_KV=32 -> -83% deep, 16+2 warps -> -20% deep, and 32+2 warps is
++# FATAL (EngineDeadError on first request, GPU engine resets). The wide
++# tiles spill registers / starve latency hiding on Xe2 at num_warps=1,
++# and adaptive KV splits multiply the effect at deep context. The
++# shipped defaults (4 / 1 warp) are optimal on this hardware; do not
++# raise BLOCK_KV past 8 without re-validating deep-context stability.
 +_TQ_BLOCK_KV = max(1, int(os.environ.get("VLLM_TQ_BLOCK_KV", "4") or 4))
 +_TQ_STAGE1_WARPS = max(1, int(os.environ.get("VLLM_TQ_STAGE1_WARPS", "1") or 1))
 +_TQ_STAGE1_STAGES = max(1, int(os.environ.get("VLLM_TQ_STAGE1_STAGES", "1") or 1))
