@@ -20183,7 +20183,7 @@ index 4b8b86d..bba05c8 100755
      ) -> torch.Tensor:
          """Forward pass with FlashAttention.
  
-@@ -806,6 +1058,166 @@ class FlashAttentionImpl(AttentionImpl):
+@@ -806,6 +1058,183 @@ class FlashAttentionImpl(AttentionImpl):
                      if self.sliding_window is not None
                      else None
                  )
@@ -20213,6 +20213,23 @@ index 4b8b86d..bba05c8 100755
 +                    # seqlen>window -> progressive garbage on long context.
 +                    # Route them to flash_attn_varlen_func (passes window_size).
 +                    and self.sliding_window[0] == -1
++                    # page_attn_decode is fp16-only and graphs-only:
++                    #   - bf16 query: the kernel TORCH_CHECKs query==kHalf,
++                    #     so a bf16 serve (qwen3.8 --dtype bfloat16) crashes
++                    #     at eagle.sycl entry on the first decode step.
++                    #   - fp16 query in EAGER mode (VLLM_XPU_ENABLE_XPU_GRAPH
++                    #     unset/0): the kernel returns garbage on this build
++                    #     (verified: qwen3.8-27b eager fp16 decode produces
++                    #     incoherent text while graph-replayed steps with the
++                    #     identical weights/config are correct).
++                    # Restrict to the only validated configuration (fp16
++                    # query under XPU graphs); everything else falls through
++                    # to flash_attn_varlen_func, which handles bf16/eager
++                    # correctly. DISABLE_ESIMD_PAGE_ATTN=1 remains a manual
++                    # opt-out.
++                    and query.dtype == torch.float16
++                    and os.environ.get(
++                        "VLLM_XPU_ENABLE_XPU_GRAPH", "0") not in ("", "0")
 +                ):
 +                    try:
 +                        eagle_ops = importlib.import_module(
@@ -20350,7 +20367,7 @@ index 4b8b86d..bba05c8 100755
                  flash_attn_varlen_func(
                      q=query[:num_actual_tokens],
                      k=key_cache,
-@@ -828,6 +1240,9 @@ class FlashAttentionImpl(AttentionImpl):
+@@ -828,6 +1257,9 @@ class FlashAttentionImpl(AttentionImpl):
                      v_descale=v_descale,
                      num_splits=attn_metadata.max_num_splits,
                      s_aux=self.sinks,
