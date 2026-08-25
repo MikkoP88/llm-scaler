@@ -20615,7 +20615,7 @@ index 0aeb33a..4598d5a 100644
              use_alibi_sqrt=self.use_alibi_sqrt,
              window_size=self.sliding_window,
 diff --git a/vllm/v1/attention/backends/turboquant_attn.py b/vllm/v1/attention/backends/turboquant_attn.py
-index 53684b4..f78c934 100644
+index 53684b4..c1ced70 100644
 --- a/vllm/v1/attention/backends/turboquant_attn.py
 +++ b/vllm/v1/attention/backends/turboquant_attn.py
 @@ -18,6 +18,7 @@ Per-head per-position slot layout:
@@ -20656,15 +20656,22 @@ index 53684b4..f78c934 100644
  
  def _build_hadamard(d: int, device_str: str) -> torch.Tensor:
      """Orthonormal Hadamard matrix (Sylvester construction), cached per (d, device).
-@@ -295,6 +305,61 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
+@@ -295,6 +305,106 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
              vllm_config.attention_config.tq_max_kv_splits_for_cuda_graph
          )
  
 +        # Adaptive split-KV scaling for long contexts. Under PIECEWISE
 +        # XPU graphs (and eager mode) attention is a splitting op that
 +        # runs OUTSIDE the captured pieces (see platforms/xpu.py
-+        # splitting_ops), so the launch grid may vary per batch. Only
-+        # full-decode capture modes require a constant grid.
++        # splitting_ops), so the launch grid may vary per batch. Under
++        # full-decode capture modes the attention kernel is captured and
++        # the grid must stay constant -- but both TQ stages derive each
++        # split's [start, end) range from the seq_lens DEVICE tensor
++        # (same cdiv formula in stage1 and stage2) and skip inactive
++        # splits, so a fixed oversized grid is graph-safe: at replay the
++        # fixed split count simply re-partitions whatever the live
++        # context length is. Size the fixed grid to the adaptive tier
++        # the model's max context would select.
 +        from vllm.config import CUDAGraphMode
 +
 +        adaptive_env = os.environ.get("VLLM_TQ_ADAPTIVE_KV_SPLITS", "1")
@@ -20677,15 +20684,48 @@ index 53684b4..f78c934 100644
 +        except ValueError:
 +            self._tq_max_kv_splits = 256
 +        graph_mode = vllm_config.compilation_config.cudagraph_mode
-+        self._tq_adaptive_splits = adaptive_env == "1" and graph_mode not in (
++        full_capture = graph_mode in (
 +            CUDAGraphMode.FULL_DECODE_ONLY,
 +            CUDAGraphMode.FULL_AND_PIECEWISE,
 +        )
++        self._tq_adaptive_splits = adaptive_env == "1" and not full_capture
++
++        if full_capture:
++            try:
++                env_g = int(os.environ.get("VLLM_TQ_GRAPH_KV_SPLITS", "0") or 0)
++            except ValueError:
++                env_g = 0
++            if env_g > 0:
++                self._tq_graph_kv_splits = max(
++                    1, min(env_g, self._tq_max_kv_splits)
++                )
++            else:
++                max_len = vllm_config.model_config.max_model_len
++                if max_len <= 16384:
++                    tier = 1
++                elif max_len <= 49152:
++                    tier = 2
++                elif max_len <= 131072:
++                    tier = 4
++                else:
++                    tier = 8
++                self._tq_graph_kv_splits = min(
++                    self.max_num_kv_splits * tier, self._tq_max_kv_splits
++                )
++            logger.info(
++                "TurboQuant graph-fixed KV splits: grid=%d (device-side "
++                "split masking; VLLM_TQ_GRAPH_KV_SPLITS overrides).",
++                self._tq_graph_kv_splits,
++            )
++        else:
++            self._tq_graph_kv_splits = self.max_num_kv_splits
++
 +        if adaptive_env == "1" and not self._tq_adaptive_splits:
-+            logger.warning(
-+                "TurboQuant adaptive KV splits disabled: cudagraph_mode=%s "
-+                "captures attention (grid must stay constant).",
++            logger.info(
++                "TurboQuant adaptive KV splits ladder inactive under "
++                "cudagraph_mode=%s; using graph-fixed split grid=%d.",
 +                graph_mode,
++                self._tq_graph_kv_splits,
 +            )
 +        elif self._tq_adaptive_splits:
 +            logger.info(
@@ -20696,14 +20736,19 @@ index 53684b4..f78c934 100644
 +            )
 +
 +    def _effective_kv_splits(self, max_seq_len: int) -> int:
-+        """Scale split-KV parallelism with context length (eager attn only).
++        """Split-KV parallelism for this step.
 +
-+        With fixed splits each program walks seq_len/splits KV positions;
-+        at 40k+ contexts that serial walk dominates decode time. Scaling
-+        the split count keeps per-program work bounded.
++        Eager/PIECEWISE (attention outside the captured pieces): scale
++        the split count with the live context length -- with fixed splits
++        each program walks seq_len/splits KV positions, and at 40k+
++        contexts that serial walk dominates decode time.
++
++        Full-decode capture: return the constant graph grid; the kernels
++        re-partition the live context device-side at replay, so deep
++        contexts still get full split parallelism without a dynamic grid.
 +        """
 +        if not self._tq_adaptive_splits or max_seq_len <= 0:
-+            return self.max_num_kv_splits
++            return self._tq_graph_kv_splits
 +        base = self.max_num_kv_splits
 +        if max_seq_len <= 16384:
 +            splits = base
@@ -20718,7 +20763,7 @@ index 53684b4..f78c934 100644
      def _flash_attn_varlen(
          self,
          q: torch.Tensor,
-@@ -744,10 +809,31 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
+@@ -744,10 +854,31 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
          # Use WorkspaceManager for dequant buffers.
          # Shared across all layers — saves 60× memory at long context.
          # Required for CUDA Graph capture (per-layer growth incompatible with CG).
@@ -20754,7 +20799,7 @@ index 53684b4..f78c934 100644
          # Skip .zero_() — kernel writes all positions up to cached_len,
          # and we only read [:cached_len] afterwards.
          k_cached = k_buf[:, :, :alloc_len, :]
-@@ -870,18 +956,30 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
+@@ -870,18 +1001,30 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
          # Falls back to kernel-internal allocation if workspace unavailable.
          B = query.shape[0]
          D = self.head_size
@@ -20793,7 +20838,7 @@ index 53684b4..f78c934 100644
  
          result = triton_turboquant_decode_attention(
              query=query,
-@@ -901,6 +999,6 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
+@@ -901,6 +1044,6 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
              output_buf=output_buf,
              lse_buf=lse_buf,
              buf_holder=layer,
