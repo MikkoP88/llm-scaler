@@ -88,6 +88,41 @@ k=5 is dominated — drafter-fp8-v5 acceptance does not grow past 4 draft
 positions, so the extra verify cost is pure overhead. Recommend k=4
 (default; matches the C1 benchmark optimum).
 
+## `--kv-cache-dtype` support matrix (adv:v14, b19d92f)
+
+Validated with the dflash k=4 recipe (2× B70, TP=2, graphs on,
+44-64k len, "Write a html car game." greedy gens; 2026-08-26 battery):
+
+| kv-cache-dtype | graphs | result |
+|---|---|---|
+| `none` (bf16) | 1 | **validated** — 512 tok/8 s, 1536/23 s, acceptance 0.69, peak 68 tok/s @1-5k depth |
+| `fp8` | 1 | **validated** — coherent greedy; ~2× KV capacity; peak 36 tok/s under build load (idle-host numbers match baseline within noise) |
+| `float16` | any | **rejected** — `reshape_and_cache_flash` raises `Unsupported data type of kv cache: float16` at first capture (v13 + v14); no memory win vs bf16 — use the default |
+| `turboquant_3bit_nc` | 1 | **init + serve OK** (stride fix 3e8af63/b19d92f: the padded-page `view(-1)` store crash is gone). Coherent 512/1536; peak 55 tok/s @1-5k, mean 40 to 25k depth, acceptance 0.51 |
+| `turboquant_k8v4` | 0 (`--enforce-eager`) | **functional eager-only** — healthy in ~3 min, coherent greedy to 10k+ depth at ~7.5 tok/s (graphs-off penalty) |
+| `turboquant_k8v4` | 1 | **hangs** post-capture in sampler warmup (worker spin at `make_dummy` H2D, xe GuC engine resets) — KNOWN_ISSUES #05(b) |
+| `turboquant_k3v4_nc` | 1 | **hangs** same as k8v4 (eager arm pending) |
+| `turboquant_4bit_nc` | 1 | **hangs** during capture itself at 63% (12/19 sizes) — pre-existing grow-branch issue, unaffected by the stride fix |
+
+The `turboquant_*` presets route KV traffic through the triton unified
+attention + TurboQuant store kernels, which are now stride-safe on the
+padded per-layer pages this hybrid (linear_attn + self_attn) model
+unifies to 4 MiB (b19d92f: `torch.as_strided(kv_cache, (numel,), (1,))`
+flat pointer + explicit `stride_cache_block/pos/head`). The remaining
+graphs-mode hang is the capture-context warmup interaction (KNOWN_ISSUES
+#05(b)), not addressing. The drafter always keeps `auto` (bf16) KV —
+dflash.py:418 falls back automatically and that is benign.
+
+**Long single streams:** every graphs-on dflash arm (bf16/fp8/TQ alike)
+died with `UR_RESULT_ERROR_DEVICE_LOST` at the acceptance-event sync
+between 20k and 32k tokens into an `ignore_eos` 40k gen, at full speed
+until the final 20 s. Treat ~20k as the single-stream planning ceiling
+with spec decode on this driver stack, or chunk/retry; see KNOWN_ISSUES
+#05(a). Depth-vs-rate: peak 68 (bf16) / 55 (3bit) / ~36+ (fp8) tok/s in
+the 1-5k band, decaying to ~34/28 by 30k as attention cost grows — the
+"30-45 tok/s" you see in practice IS the expected deep-generation band;
+60-73 only holds for the first few thousand tokens.
+
 ## The kernel readout fix (why this matters)
 
 SpecForge DSpark trains output position j to predict token anchor+j+1

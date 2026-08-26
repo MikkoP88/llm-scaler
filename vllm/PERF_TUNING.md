@@ -160,6 +160,35 @@ AR custom op out-of-place via input clone — it corrupted PIECEWISE
 graphs-ON serving (the alias return is load-bearing there; see
 KNOWN_ISSUES #04) and is reverted; do not use the v11 image.
 
+### adv:v14 (b19d92f): kv-cache-dtype matrix + depth-vs-rate
+
+`--kv-cache-dtype` with dflash k=4, idle host (full matrix and failure
+modes in `patches/qwen38-dflash/README.md`; KNOWN_ISSUES #05):
+
+| dtype | 512 tok | 1536 tok | notes |
+|---|---|---|---|
+| none (bf16) | 8 s | 23 s | acceptance 0.69 — matches v12/v9 champion |
+| fp8 | — | — | validated coherent; ~2× KV capacity |
+| turboquant_3bit_nc | 40 s cold / 9 s warm | 28 s | acceptance 0.51 |
+| turboquant_k8v4 eager | 105 s cold / 70 s | 213 s | graphs hang; eager = ~7.5 tok/s |
+| float16 | n/a | n/a | rejected by reshape_and_cache_flash |
+
+Deep-generation rate (single stream, `ignore_eos`, graphs on):
+
+| depth band | bf16 none | TQ 3bit_nc |
+|---|---|---|
+| 1-5k | 68 tok/s (max 72) | 55 (max 73.5) |
+| 5-15k | 55-66 | 42-49 |
+| 15-25k | 44-51 | 35-39 |
+| 25-32k | 34-42 | died at 25.3k |
+
+All graphs-on arms died with xe DEVICE_LOST at 20-32k depth (dtype-
+independent; KNOWN_ISSUES #05(a)). The practical planning numbers:
+60-73 tok/s only for the first ~5k tokens; 30-45 tok/s is the normal
+sustained deep band; plan single streams ≤20k or chunk/retry. The v13
+"31.5 tok/s Avg generation" report was this depth decay plus concurrent
+build load — not a regression.
+
 ## Operational notes
 
 - Reboot the host after any GPU engine reset before starting vLLM again

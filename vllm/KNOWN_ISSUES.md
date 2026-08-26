@@ -152,3 +152,67 @@ TORCH_CHECK in the M==1 GDN out-proj fusion — a separate, loud,
 correctly-guarded fp16-only fusion). Do NOT use `--dtype float16` as a
 workaround: fp16 is equally corrupted under compile+graphs-off, just with
 a different garbage flavor.
+
+## 05 — xe DEVICE_LOST family: spec-decode long streams, host-load cascades,
+and TurboQuant graph-capture warmup (adv:v13/v14, b19d92f)
+
+Three failure modes, one root signature — `UR_RESULT_ERROR_DEVICE_LOST`
+(error 20) surfacing at `num_accepted_tokens_event.synchronize()` in the
+dflash verify loop — plus one dtype-gate crash. Observed on 2× Arc Pro
+B70, TP=2, adv:v14 image, xe driver, 2026-08-26 batteries.
+
+### (a) Single-stream dflash generation dies at 20-32k tokens (depth, not
+dtype)
+
+Three arms, graphs ON, `--max-model-len 64000`, `ignore_eos` single-request
+40k gens:
+
+| arm | kv dtype | died at | mean tok/s to death |
+|---|---|---|---|
+| k14 | none (bf16) | 32,395 | 48.5 (peak 68 @1-5k) |
+| kv3b | turboquant_3bit_nc | 25,279 | 40.3 (peak 55 @1-5k) |
+| kvf13 | fp8 (concurrent build load) | ~20,275 | 27.4 (peak 36) |
+
+All three run at full speed until the last ~20 s (38 → 2.5 → 0 tok/s
+windows), then the worker raises DEVICE_LOST at the acceptance-event sync;
+`xpu-smi` still reports "normal". The depth varies (20-32k), so treat ~20k
+as the safe single-stream planning number with dflash + graphs on this
+driver stack. 512/1536-token gens and idle-host serving to 15k+ are
+unaffected. A concurrent docker build (57 compile jobs, load 42) reliably
+triggers the same DEVICE_LOST across ALL serving arms within minutes — do
+not build images while serving; the GPUs recover by themselves once host
+load ends (verified by post-build matmul probe).
+
+### (b) TurboQuant padded presets wedge in post-capture warmup (graphs ON)
+
+With b19d92f (stride-safe flat view in `triton_turboquant_store`) the
+historical `view(-1)` crash on padded KV pages is gone and graph capture
+COMPLETES — but `turboquant_k8v4` and `turboquant_k3v4_nc` then hang in
+`compile_or_warm_up_model` → `_dummy_sampler_run` → `make_dummy`
+(metadata.py:41, a 64-int32 H2D copy): the queue is already poisoned by a
+faulted kernel from the preceding eager `_dummy_run` (320 tokens = 64 reqs
+× 5, a shape never captured). py-spy shows both workers spinning at 87%
+CPU on that line; host dmesg shows GuC engine resets (bcs+ccs, both GPUs).
+`turboquant_4bit_nc` (grow branch, code path untouched by b19d92f) hangs
+earlier, DURING capture at 63% (12/19 sizes) — so this hang family
+pre-dates the stride fix, which merely unmasked it for the padded presets.
+
+`--enforce-eager` sidesteps the warmup hang: k8v4 comes healthy in ~3 min
+and generates COHERENT greedy text (adv:v14e battery). The triton TQ
+store/read kernels are stride-correct on padded pages — the
+incompatibility is specifically the PIECEWISE-capture-context +
+eager-collective warmup, the same interaction `xpu.py:443` warns about
+for large capture lists.
+
+### (c) `--kv-cache-dtype float16` is rejected outright
+
+`reshape_and_cache_flash` (flash-attn KV write op, upstream csrc compiled
+in-image) raises `RuntimeError: Unsupported data type of kv cache: float16`
+during first capture on both v13 and v14. Supported: bf16 (default with
+dtype none), fp8. fp16 offers no memory advantage over bf16 anyway — use
+the default, or fp8 for 2× KV capacity (validated coherent to 15k+).
+
+Workarounds: for >20k single streams, chunk the generation or retry the
+request (engine restarts in ~5 min); fp8 KV + dflash is the best validated
+capacity/speed point; TQ presets only with `--enforce-eager` (≈7.5 tok/s
+single stream — debugging only, graphs are ~9× faster).
