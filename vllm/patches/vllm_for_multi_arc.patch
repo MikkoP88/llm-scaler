@@ -21234,7 +21234,37 @@ index 3ad2d41..a3f234d 100644
  def triton_turboquant_store(
      key: torch.Tensor,  # [N, H, D] — raw keys (post-RoPE)
      value: torch.Tensor,  # [N, H, D] — raw values
-@@ -410,19 +434,37 @@ def triton_turboquant_store(
+@@ -378,6 +402,20 @@ def triton_turboquant_store(
+ 
+     block_grp = triton.next_power_of_2(D // 8) if D >= 8 else 1
+ 
++    # Padded KV pages (page-size unification across KV cache groups, e.g.
++    # with a GDN drafter) make the per-layer cache tensor non-contiguous:
++    # each block's slot data is compact but blocks sit a full padded page
++    # apart. The Triton kernels compute every offset from the strides
++    # above, so they only need a flat 1-D uint8 pointer view over the same
++    # storage. as_strided keeps the tensor's storage_offset; view() raises
++    # on non-contiguous input and reshape() would silently copy (dropping
++    # the writes).
++    kv_flat = (
++        kv_cache.view(-1)
++        if kv_cache.is_contiguous()
++        else torch.as_strided(kv_cache, (kv_cache.numel(),), (1,))
++    )
++
+     # ── FP8 PATH: in-kernel FP8 cast + scatter via fp8 kernel ──
+     if key_fp8:
+         k_flat = key.reshape(NH, D).contiguous()
+@@ -389,7 +413,7 @@ def triton_turboquant_store(
+         _tq_fused_store_fp8[grid](
+             k_flat,
+             v_flat,
+-            kv_cache.view(-1),
++            kv_flat,
+             slot_mapping,
+             stride_cache_block=stride_block,
+             stride_cache_pos=stride_pos,
+@@ -410,22 +448,40 @@ def triton_turboquant_store(
          return
  
      # ── MSE PATH: external GEMM + fused bucketize/pack kernel ──
@@ -21279,7 +21309,11 @@ index 3ad2d41..a3f234d 100644
 +        norms_arg,
          v_flat,
          midpoints,
-         kv_cache.view(-1),
+-        kv_cache.view(-1),
++        kv_flat,
+         slot_mapping,
+         stride_cache_block=stride_block,
+         stride_cache_pos=stride_pos,
 diff --git a/vllm/v1/attention/ops/triton_unified_attention.py b/vllm/v1/attention/ops/triton_unified_attention.py
 index 1774f1b..c06c72c 100644
 --- a/vllm/v1/attention/ops/triton_unified_attention.py
