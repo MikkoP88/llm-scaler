@@ -3574,10 +3574,10 @@ index 209005c..fc98c88 100644
 +        if os.environ.get("SKIP_ALL_REDUCE") == "1":
 +            return input_
 +        # ALLREDUCE_BOUNCE_FIX_v1: only bounce off the custom op when XPU
-+        # graphs are actually enabled. With graphs off, the op's XPU
-+        # registration is not wired for every dtype: bf16 TP sums silently
-+        # corrupt under torch.compile (images v4-v9 served eager+bf16 as
-+        # deterministic garbage; fp16 and --enforce-eager were fine).
++        # graphs are actually enabled. With graphs off, inductor lowers the
++        # AR pieces with static memory planning and the op's aliased return
++        # (see FIX_v2 in parallel_state.py) corrupts TP output under
++        # torch.compile (KNOWN_ISSUES #04; adv images v4-v9, both dtypes).
 +        if torch.compiler.is_compiling() and os.environ.get(
 +            "VLLM_XPU_ENABLE_XPU_GRAPH", "0"
 +        ) not in ("", "0"):
@@ -3718,7 +3718,26 @@ diff --git a/vllm/distributed/parallel_state.py b/vllm/distributed/parallel_stat
 index 58c49c0..0c21e39 100644
 --- a/vllm/distributed/parallel_state.py
 +++ b/vllm/distributed/parallel_state.py
-@@ -471,15 +471,16 @@ class GroupCoordinator:
+@@ -130,6 +130,18 @@ def all_reduce(tensor: torch.Tensor, group_name: str) -> torch.Tensor:
+ def all_reduce(tensor: torch.Tensor, group_name: str) -> torch.Tensor:
+     assert group_name in _groups, f"Group {group_name} is not found."
+     group = _groups[group_name]()
+     if group is None:
+         raise ValueError(f"Group {group_name} is destroyed.")
++    # ALLREDUCE_BOUNCE_FIX_v2: torch custom ops must be out-of-place: the
++    # schema declares mutates_args=[] and all_reduce_fake returns
++    # torch.empty_like. The XPU device communicator reduces IN PLACE and
++    # returns the input alias, so under torch.compile inductor's memory
++    # planner treats the op input as dead ("# reuse") and hands its storage
++    # to the next kernel, which then reads and writes the same buffer:
++    # deterministic garbage from the first prefill token (KNOWN_ISSUES #04).
++    # Clone on XPU so the op returns a genuinely fresh tensor on every
++    # inductor-lowered path. Eager XPU callers never dispatch this op, so
++    # the clone only costs compiled paths (one clone per AR).
++    if tensor.device.type == "xpu":
++        tensor = tensor.clone()
+     return group._all_reduce_out_place(tensor)
+@@ -471,15 +483,16 @@ class GroupCoordinator:
  
          # only cuda uses this function,
          # so we don't abstract it into the base class

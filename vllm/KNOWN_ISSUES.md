@@ -58,47 +58,79 @@ Workarounds:
   after a reboot, probe the next IPs (+1, +2) before assuming the host
   is down.
 
-# 04. Silent bf16 TP Corruption in Compile Mode with XPU Graphs Disabled (adv images v4-v9)
-Serving qwen3.8-27b-fp8 TP=2 with `--dtype bfloat16` and
-`VLLM_XPU_ENABLE_XPU_GRAPH` unset/0 (but without `--enforce-eager`)
-returned deterministic garbage from the very first token
-("6?/900922992119999/222224/...") while `/health` stayed green. The
-corruption is in PREFILL: every config produced byte-identical garbage,
-i.e. the hidden state is wrong before decode even starts.
+# 04. Silent TP Corruption When the all_reduce Custom Op Runs Under Inductor-Lowered Pieces with XPU Graphs Disabled (adv images v4-v9)
+Serving qwen3.8-27b-fp8 TP=2 with `VLLM_XPU_ENABLE_XPU_GRAPH` unset/0 (but
+without `--enforce-eager`) returned deterministic garbage from the very first
+token while `/health` stayed green. The corruption is in PREFILL: every config
+produced byte-identical garbage, i.e. the hidden state is wrong before decode
+even starts.
 
-Root cause (bisected v2 good -> v4 bad, images dated 2026-08-23; only
-fork commit in that window is 07827c0): `XpuCommunicator.all_reduce`
-gained a `torch.compiler.is_compiling()` bounce onto the registered
-`torch.ops.vllm.all_reduce` custom op, so dynamo emits one fx node
-instead of inlining the collective. That bounce exists to keep oneCCL
-out of captured XPU-graph pieces — but it also fires when graphs are
-DISABLED, where the op's XPU registration is not exercised the same
-way, and bf16 TP sums silently corrupt.
+## True root cause (proven by instrumented run + inductor codegen, 2026-08-26)
 
-Exact trigger cell (all three required, everything measured on v9):
-torch.compile active (no `--enforce-eager`) x `bfloat16` x
-`VLLM_XPU_ENABLE_XPU_GRAPH=0`. Exonerated by measurement: fp16+compile
-(coherent), bf16+`--enforce-eager`+ESIMD switches off (coherent),
-graphs on (coherent), async-scheduling on/off (garbage either way),
-every `DISABLE_ESIMD_*` fusion switch (garbage with all 13 off), and
-request count M=1/2/5 (garbage at all M). rmacy v14/v15 ship the same
-vllm 0.21.1.dev0+gad7125a43 build WITHOUT the fork patch and never
-reproduce it.
+Fork commit 07827c0 added a `torch.compiler.is_compiling()` bounce in
+`XpuCommunicator.all_reduce` onto the registered `torch.ops.vllm.all_reduce`
+custom op, and removed the `output = input_.clone()` so the underlying oneCCL
+all-reduce runs in place and the function returns the INPUT tensor itself.
+That breaks the custom-op contract the op was registered under: the schema
+declares `mutates_args=[]` (pure) and the fake impl returns
+`torch.empty_like(tensor)` — i.e. "returns a fresh tensor, does not touch the
+input". The XPU runtime path returns an alias and mutates the input.
+
+Under `VLLM_XPU_ENABLE_XPU_GRAPH=0`, the AR-containing pieces are lowered by
+inductor into generated wrappers with static memory planning
+(`TORCHINDUCTOR_CACHE_DIR/**/c*.py`). The planner TRUSTS the op contract: it
+marks the op's input storage dead after the call and hands it to the next
+buffer (`buf22 = buf17; del buf17  # reuse`). At runtime the op returns that
+very storage, so the next fused kernel gets the SAME buffer as both input and
+output, e.g. (measured, v9 image):
+
+    buf18 = torch.ops.vllm.all_reduce.default(buf17, 'tp:0')   # returns buf17!
+    buf20 = buf18; del buf18  # reuse
+    buf22 = buf17; del buf17  # reuse        # == buf20's storage
+    triton_red_fused_..._rms_norm_t_5.run(buf20, ..., buf22, ...)  # READS and WRITES same memory
+    extern_kernels.mm(buf22, ...)            # then reads the clobbered workspace
+
+A fused kernel reading and writing identical memory corrupts the hidden state
+deterministically for every token, prefill included → byte-identical garbage
+from token 1.
+
+Instrumented proof (4-arm run, sitecustomize wrapping
+`GroupCoordinator._all_reduce_out_place`, trace-transparent):
+- All 698 op-path AR calls show `alias=True` (output data_ptr == input
+  data_ptr) — yet partial sums are numerically SANE and identical on both TP
+  ranks. The collective itself is CORRECT; the corruption happens when the
+  consumer kernel reads the aliased buffer that inductor already reassigned.
+- Graphs ON (coherent): same op, same alias — but the stack shows the op is
+  invoked from dynamo-split MODEL frames (`eval_frame.py<qwen3_next.py<...`),
+  NOT from an inductor-generated wrapper: eager tensor semantics, no static
+  memory plan, so the aliased return is harmless. Immunity is a property of
+  the execution path, not of the op.
+- v10 (28ff055 gate): 0 op-path calls with graphs off (all ARs eager) —
+  coherent, matching the codegen-free path.
+
+## Trigger cell (corrected)
+
+torch.compile active (no `--enforce-eager`) x `VLLM_XPU_ENABLE_XPU_GRAPH=0`.
+BOTH dtypes corrupt: bf16 yields digit-salad ("6?/900922992119999/..."),
+fp16 yields multilingual word-salad — the earlier "fp16+compile coherent"
+exoneration does NOT hold under the dflash serve config (the classify()
+letter-ratio heuristic also false-positived on CJK/Cyrillic garbage).
+`--enforce-eager` is immune (no compile). rmacy v14/v15 ship vllm
+0.21.1.dev0+gad7125a43 WITHOUT the fork patch and never reproduce it.
 
 Fixed by 28ff055 (image `llm-scaler-vllm-adv:v10`): the bounce now
-additionally requires `VLLM_XPU_ENABLE_XPU_GRAPH` enabled, so
-graphs-off compile mode falls through to the plain oneCCL all_reduce
-like pre-07827c0 builds. The env read inside the compiled branch was
-probe-verified: dynamo evaluates it at trace time and takes the
-correct branch in both modes. Validated on the built v10 image: the
-previously-garbage arm returns coherent greedy output (512 tok in
-41 s, ~12 tok/s), graphs+spec k=4 output is byte-identical to v9
-(8 s @512), and the TQ fp16 champion is unregressed (15 s @512,
-grid=256).
+additionally requires `VLLM_XPU_ENABLE_XPU_GRAPH` enabled, so graphs-off
+compile mode falls through to the plain oneCCL all_reduce like pre-07827c0
+builds. Validated on v10 (coherent, and instrumented: zero op dispatches).
+Follow-up hardening (v11): the op's XPU path is made genuinely out-of-place
+(clone) so the custom-op contract holds on any future inductor-lowered path
+— see ALLREDUCE_BOUNCE_FIX_v2 in the patch.
 
 Workarounds on v4-v9 images: serve with `VLLM_XPU_ENABLE_XPU_GRAPH=1`
-(recommended, also fastest), or `--dtype float16`, or `--enforce-eager`
-plus `-e DISABLE_ESIMD_GDN_OUTPROJ=1` (needed because true-eager bf16
-otherwise trips the `esimd_norm_gemv_fp8_blockscale: norm inputs must
-be fp16` TORCH_CHECK in the M==1 GDN out-proj fusion — a separate,
-loud, correctly-guarded fp16-only fusion).
+(recommended, also fastest), or `--enforce-eager` plus
+`-e DISABLE_ESIMD_GDN_OUTPROJ=1` (needed because true-eager bf16 otherwise
+trips the `esimd_norm_gemv_fp8_blockscale: norm inputs must be fp16`
+TORCH_CHECK in the M==1 GDN out-proj fusion — a separate, loud,
+correctly-guarded fp16-only fusion). Do NOT use `--dtype float16` as a
+workaround: fp16 is equally corrupted under compile+graphs-off, just with
+a different garbage flavor.
