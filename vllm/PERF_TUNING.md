@@ -146,15 +146,19 @@ and vllm build. k-sweep: k=4 and k=6 tie (byte-identical greedy, 7-8 s
 draft positions). Mean accepted length k=4: 2.77-4.17. Greedy spec
 output is byte-identical to no-spec on v9.
 
-CAUTION on adv images v4-v9: bf16 serving with compile mode +
-`VLLM_XPU_ENABLE_XPU_GRAPH=0` silently corrupts TP output (KNOWN_ISSUES
-#04, introduced by 07827c0, fixed by 28ff055 in adv:v10). Keep graphs
-on, or use v10+. adv:v10 battery re-validated everything: the
-previously-garbage compile+graphs-off arm is coherent (41 s @512 tok,
-~12 tok/s — same territory as rmacy eager; graphs remain the
-recommended mode at 2.7x), graphs+spec k=4 is 8 s/24 s with greedy
-output byte-identical to v9 (acceptance 2.82-3.29), and the TQ fp16
-champion is unregressed (15 s @512, grid=256).
+CAUTION on adv images v4-v9: serving with compile mode +
+`VLLM_XPU_ENABLE_XPU_GRAPH=0` silently corrupts TP output in BOTH
+dtypes (KNOWN_ISSUES #04, introduced by 07827c0, fixed by 28ff055 in
+adv:v10). Keep graphs on, or use v10+. adv:v10 and adv:v12 batteries
+re-validated everything: the previously-garbage compile+graphs-off arm
+is coherent (41-42 s @512 tok, ~12 tok/s — same territory as rmacy
+eager; graphs remain the recommended mode at 2.7x), graphs+spec k=4 is
+8 s/23-24 s with greedy output byte-identical across v9/v10/v12
+(acceptance 2.8-3.6), and the TQ fp16 champion is unregressed (15 s
+@512, grid=256). adv:v11 (108cfdd) was a brief experiment making the
+AR custom op out-of-place via input clone — it corrupted PIECEWISE
+graphs-ON serving (the alias return is load-bearing there; see
+KNOWN_ISSUES #04) and is reverted; do not use the v11 image.
 
 ## Operational notes
 
@@ -166,8 +170,15 @@ champion is unregressed (15 s @512, grid=256).
   v8 = v7 + graph-safe splits backend (turboquant_attn.py, commit
   1c41a08); v9 = v8 + ESIMD page-attn fp16+graphs gate (c10c7b2);
   v10 = v9 + all_reduce compile-bounce gate (28ff055, fixes
-  KNOWN_ISSUES #04). v8 piecewise-default behavior is byte-identical
-  to v6 (k0_base cross-check 29.05/17.46 vs 29.02/17.45).
+  KNOWN_ISSUES #04); v11 = v10 + out-of-place AR op clone (108cfdd) —
+  REGRESSION, corrupted PIECEWISE graphs-on serving, do not use;
+  v12 = v10 semantics restored (748b972, current recommended). v8
+  piecewise-default behavior is byte-identical to v6 (k0_base
+  cross-check 29.05/17.46 vs 29.02/17.45); v12 spec k=4 greedy is
+  byte-identical to v9 and v10. Minor note: the graphs-on nospec arm
+  reads ~18 s @512 on v10/v11/v12 vs 15 s once on v9 (reproducible,
+  nospec arm only; the spec k=4 and TQ champion arms are at full v9
+  parity).
 - `--cudagraph-mode` is not a flag; use
   `--compilation-config '{"cudagraph_mode":"FULL_DECODE_ONLY"}'`.
   When passing through nested `bash -c`, keep the value single-quoted
