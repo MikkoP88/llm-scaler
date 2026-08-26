@@ -122,9 +122,27 @@ Fixed by 28ff055 (image `llm-scaler-vllm-adv:v10`): the bounce now
 additionally requires `VLLM_XPU_ENABLE_XPU_GRAPH` enabled, so graphs-off
 compile mode falls through to the plain oneCCL all_reduce like pre-07827c0
 builds. Validated on v10 (coherent, and instrumented: zero op dispatches).
-Follow-up hardening (v11): the op's XPU path is made genuinely out-of-place
-(clone) so the custom-op contract holds on any future inductor-lowered path
-— see ALLREDUCE_BOUNCE_FIX_v2 in the patch.
+
+A follow-up attempt to harden the op itself (adv:v11, 108cfdd:
+`ALLREDUCE_BOUNCE_FIX_v2`, cloning the input inside the op so the
+custom-op out-of-place contract would hold on any future inductor-lowered
+path) was a REGRESSION and is REVERTED. v11 battery evidence: PIECEWISE
+graphs-ON serving (the only regime where the op is dispatched, thanks to
+the v1 gate) corrupted in both nospec and spec k=4 arms (multilingual
+word salad, spec acceptance collapsed to 0.0%), while graphs-off (gate,
+no op dispatch) and the fp16 FULL_DECODE_ONLY champion stayed coherent.
+Instrumented v11: op-path AR outputs read as 0.0 in 672/690 calls (vs
+sane values on v9/v10), direct-path ARs sane, corruption deterministic
+(byte-identical garbage across arms). Mechanism: under PIECEWISE XPU
+graphs the op executes EAGERLY in the gap between captured pieces, once
+per step; a fresh clone is freed every step (address cycling) and its
+contents do not reliably reach the next captured piece, whereas the
+alias return writes the stable activation buffer that the piece graph
+was captured against. Under FULL capture the op body runs only at
+capture time and the clone's address is frozen for every replay, which
+is why the champion arm survived. Conclusion: the alias return is
+LOAD-BEARING under PIECEWISE; the op must stay in-place/aliasing and
+rely on the v1 gate for compile-safety.
 
 Workarounds on v4-v9 images: serve with `VLLM_XPU_ENABLE_XPU_GRAPH=1`
 (recommended, also fastest), or `--enforce-eager` plus

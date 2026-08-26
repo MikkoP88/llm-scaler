@@ -3561,7 +3561,7 @@ index 209005c..fc98c88 100644
  
  
  class XpuCommunicator(DeviceCommunicatorBase):
-@@ -40,10 +130,151 @@ class XpuCommunicator(DeviceCommunicatorBase):
+@@ -40,10 +130,155 @@ class XpuCommunicator(DeviceCommunicatorBase):
  
                  self.all2all_manager = AgRsAll2AllManager(self.cpu_group)
                  logger.info("Using AgRs manager on XPU device.")
@@ -3576,8 +3576,12 @@ index 209005c..fc98c88 100644
 +        # ALLREDUCE_BOUNCE_FIX_v1: only bounce off the custom op when XPU
 +        # graphs are actually enabled. With graphs off, inductor lowers the
 +        # AR pieces with static memory planning and the op's aliased return
-+        # (see FIX_v2 in parallel_state.py) corrupts TP output under
-+        # torch.compile (KNOWN_ISSUES #04; adv images v4-v9, both dtypes).
++        # corrupts TP output under torch.compile (KNOWN_ISSUES #04; adv
++        # images v4-v9, both dtypes). NOTE: the alias return is LOAD-BEARING
++        # under PIECEWISE XPU graphs - the op runs eagerly between captured
++        # pieces and must write the stable activation buffer, not a fresh
++        # clone (a clone was tried in adv:v11 and corrupted graphs-on
++        # serving; reverted).
 +        if torch.compiler.is_compiling() and os.environ.get(
 +            "VLLM_XPU_ENABLE_XPU_GRAPH", "0"
 +        ) not in ("", "0"):
@@ -3718,26 +3722,7 @@ diff --git a/vllm/distributed/parallel_state.py b/vllm/distributed/parallel_stat
 index 58c49c0..0c21e39 100644
 --- a/vllm/distributed/parallel_state.py
 +++ b/vllm/distributed/parallel_state.py
-@@ -130,6 +130,18 @@ def all_reduce(tensor: torch.Tensor, group_name: str) -> torch.Tensor:
- def all_reduce(tensor: torch.Tensor, group_name: str) -> torch.Tensor:
-     assert group_name in _groups, f"Group {group_name} is not found."
-     group = _groups[group_name]()
-     if group is None:
-         raise ValueError(f"Group {group_name} is destroyed.")
-+    # ALLREDUCE_BOUNCE_FIX_v2: torch custom ops must be out-of-place: the
-+    # schema declares mutates_args=[] and all_reduce_fake returns
-+    # torch.empty_like. The XPU device communicator reduces IN PLACE and
-+    # returns the input alias, so under torch.compile inductor's memory
-+    # planner treats the op input as dead ("# reuse") and hands its storage
-+    # to the next kernel, which then reads and writes the same buffer:
-+    # deterministic garbage from the first prefill token (KNOWN_ISSUES #04).
-+    # Clone on XPU so the op returns a genuinely fresh tensor on every
-+    # inductor-lowered path. Eager XPU callers never dispatch this op, so
-+    # the clone only costs compiled paths (one clone per AR).
-+    if tensor.device.type == "xpu":
-+        tensor = tensor.clone()
-     return group._all_reduce_out_place(tensor)
-@@ -471,15 +483,16 @@ class GroupCoordinator:
+@@ -471,15 +471,16 @@ class GroupCoordinator:
  
          # only cuda uses this function,
          # so we don't abstract it into the base class

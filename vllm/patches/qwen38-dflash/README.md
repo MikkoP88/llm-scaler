@@ -107,12 +107,15 @@ queries under XPU graphs on this build:
 - bf16 query: `TORCH_CHECK(query.scalar_type() == torch::kHalf)` at
   `custom-esimd-kernels-vllm/csrc/eagle/eagle.sycl:444` — bf16 target-only
   (no drafter) serving crashes on the first decode step.
-- fp16 query: coherent in every mode re-tested on v9 (compile, true
-  eager, graphs on/off). An earlier "eager fp16 garbage" observation on
-  v8 is superseded — all reproducible silent garbage on the v4-v9
-  lineage turned out to be an unrelated TP all_reduce defect that only
-  needs compile mode + bf16 + graphs off (KNOWN_ISSUES #04), and it
-  corrupts bf16 serving regardless of the page-attn insert.
+- fp16 query: coherent in every mode re-tested on v9 (true eager, graphs
+  on/off). An earlier "eager fp16 garbage" observation on v8 is
+  superseded — all reproducible silent garbage on the v4-v9 lineage
+  turned out to be an unrelated TP all_reduce defect triggered by
+  compile mode + graphs off in BOTH dtypes (KNOWN_ISSUES #04; the
+  instrumented 4-arm run showed fp16 word-salad too, so the earlier
+  "fp16+compile coherent" exoneration was a classify() false positive
+  on multilingual garbage), and it corrupts serving regardless of the
+  page-attn insert.
 - Speculative decoding hides the crash: the verify pass runs with
   `max_query_len = k+1 > 1`, which bypasses this code path entirely.
 
@@ -151,9 +154,11 @@ divergence.
   and stock dspark images): bf16 target-only serving crashes at the ESIMD
   kernel assert; use the fixed image, spec decoding, or
   `DISABLE_ESIMD_PAGE_ATTN=1`.
-- On adv images v4-v9 (07827c0..c10c7b2): bf16 target-only serving with
-  compile mode and `VLLM_XPU_ENABLE_XPU_GRAPH=0` silently returns garbage
-  — KNOWN_ISSUES #04. Keep graphs on, use `--dtype float16`, or use
-  adv:v10+ (28ff055).
+- On adv images v4-v9 (07827c0..c10c7b2): target-only serving with
+  compile mode and `VLLM_XPU_ENABLE_XPU_GRAPH=0` silently returns
+  garbage in BOTH dtypes — KNOWN_ISSUES #04. Keep graphs on, use
+  `--enforce-eager` with `-e DISABLE_ESIMD_GDN_OUTPROJ=1`, or use
+  adv:v10+ (28ff055). Do NOT use `--dtype float16` as a workaround —
+  fp16 corrupts the same way, just with a different garbage flavor.
 - Adaptive block truncation (DSPARK_ADAPTIVE_BLOCK=1) runs but is slower
   than fixed k=4 on single-request workloads.
