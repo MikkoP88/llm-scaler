@@ -24232,7 +24232,7 @@ index 98b2fbf..2a0eaa3 100644
                      # The allocation respects the backend-defined stride order
                      # to ensure the semantic remains consistent for each
                      # backend. We first obtain the generic kv cache shape and
-@@ -6746,20 +6945,25 @@ class GPUModelRunner(
+@@ -6746,20 +6945,40 @@ class GPUModelRunner(
                          for i in range(len(kv_cache_stride_order))
                      ]
  
@@ -24250,6 +24250,21 @@ index 98b2fbf..2a0eaa3 100644
 +                        # MambaSpec handling below.
                          dtype_size = get_dtype_size(dtype)
                          page_stride = kv_cache_spec.page_size_bytes // dtype_size
++                        # Page-size unification can grow block_size (e.g. a
++                        # TurboQuant target page raised to match GDN pages),
++                        # so one padded page spans num_blocks_per_kv_block
++                        # kernel blocks. Give each kernel block an equal
++                        # share of the padded page: using the full padded
++                        # page as the per-block stride overflows the
++                        # allocation by exactly that factor (dflash +
++                        # turboquant_4bit_nc crash: setStorage wanting 16x
++                        # the allocated storage).
++                        if num_blocks_per_kv_block > 1:
++                            assert page_stride % num_blocks_per_kv_block == 0, (
++                                "padded KV page not divisible by kernel "
++                                "blocks per page"
++                            )
++                            page_stride //= num_blocks_per_kv_block
                          strides = list(torch.empty(kv_cache_shape).stride())
 -                        strides[inv_order[0]] = page_stride
 +                        if kv_cache_shape[inv_order[0]] == 2:
