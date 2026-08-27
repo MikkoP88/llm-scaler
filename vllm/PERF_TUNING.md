@@ -206,6 +206,36 @@ whitespace collapse). The v13 "31.5 tok/s Avg generation" report was
 depth decay plus concurrent build load — not a regression. 512/1536
 gens remain rock-solid everywhere.
 
+### Sampling temperature vs dflash throughput (v16/v16b, 2026-08-27)
+
+The dflash drafter is greedy; the target's sampling temperature
+controls draft/target agreement, and deep throughput scales with it.
+`/v1/chat/completions`, "Write a html car game.", forced 40k gens
+(`min_tokens == max_tokens`, top_k 20 top_p 0.95 pinned), base recipe,
+one boot per arm, zero resets across the whole battery (~265k tokens):
+
+| temperature | 40k WALL | tok/s | late-window acceptance (per-position) |
+|---|---|---|---|
+| 0.0 greedy | 999 s | 40.0 | 4.88-4.93 (0.94-1.0 across all 4) |
+| 0.3 | 1154 s | 34.7 | 4.5-4.8 (0.85-0.99) |
+| 0.6 | 1114 s | 35.9 | 2.6-3.4, content-drifty |
+| 0.8 | 1400 s | 28.6 | 1.9-4.5, content-drifty |
+| 1.0 | 1613 s | 24.8 | 1.6-1.9 (0.37/0.15/0.07/0.01) |
+
+Sampled acceptance is content-dependent (drifts up when the text enters
+repetitive structure); WALL clock is the stable metric. Chat-endpoint
+deep rates run below the v15b completions numbers (40 vs 57 tok/s greedy
+@40k) — endpoint/template + cold-first-gen overhead; the curve shape is
+what matters.
+
+Default-sampling trap: with `--generation-config auto` (the default),
+chat requests that omit `temperature` silently inherit the model's
+generation_config.json (temp 1.0/top_k 20/top_p 0.95) — bottom of the
+curve AND the PyTorch-native topk_topp sampler fallback (eager kernels
+every step). Fix server-side with `--generation-config default`, or
+per-request `"temperature": 0.0`. If diversity is required, temp <= 0.6
+keeps deep throughput >= ~35 tok/s.
+
 ## Operational notes
 
 - Reboot the host after any GPU engine reset before starting vLLM again

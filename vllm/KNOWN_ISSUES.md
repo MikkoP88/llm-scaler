@@ -209,6 +209,24 @@ PIECEWISE graphs ON, dflash k=4, no `--enforce-eager`):
   triggers DEVICE_LOST across ALL serving arms within minutes — do not
   build images while serving; the GPUs recover by themselves once host
   load ends (verified by post-build matmul probe).
+- USER PRODUCTION CRASH 2026-08-27 09:51 (same env/flags/clean boot as
+  v15b, `docker inspect`-verified env identity): a 20-min
+  `/v1/chat/completions` session using the model's generation_config
+  sampling defaults (temp 1.0/top_k 20/top_p 0.95, acceptance 1.55-2.9)
+  died with the classic signature — single ccs engine reset on one GPU
+  then a ccs+bcs cascade, DEVICE_LOST at the acceptance-event sync. The
+  v16 battery (same day, fresh reboot) REPLAYED that workload exactly
+  (chat endpoint, default sampling, 15k gen -> 210 s idle -> 40k gen)
+  plus greedy/temp-sweep controls: 6 healthy serves, ~265k generated
+  tokens, ZERO resets, all COHERENT. Verdict: the crash is NOT
+  workload-deterministic — it is the random instance-level xe fault
+  family (same distribution as the boot wedge, which itself hit 2/8
+  serves that day). Sampling defaults are a THROUGHPUT hazard (see
+  PERF_TUNING temp curve), not a proven stability hazard. Operational
+  protocol above (reboot after any reset; retry bad boots/serves)
+  remains the mitigation; for long-lived production serves, a supervisor
+  that relaunches after DEVICE_LOST + enforced host reboot is the
+  practical answer until the driver-level race is pinned.
 
 **Operational fix (validated):** (1) reboot the host after ANY xe engine
 reset before serving again — never chain arms on a reset host; (2) if a
