@@ -161,10 +161,11 @@ Three failure modes, one root signature — `UR_RESULT_ERROR_DEVICE_LOST`
 dflash verify loop — plus one dtype-gate crash. Observed on 2× Arc Pro
 B70, TP=2, adv:v14 image, xe driver, 2026-08-26 batteries.
 
-### (a) Single-stream long generation dies mid-flight (mode-dependent depth)
+### (a) Single-stream long generation dies mid-flight — RESOLVED 2026-08-27 (v15/v15b batteries)
 
-All arms `--max-model-len 64000`, `ignore_eos` single-request 40k gens
-(10k for the eager arms), idle host unless noted:
+The v14 result table (kept below for the record) was a compound artifact
+of host-state accumulation, a random boot-time wedge, and a request-layer
+early-finish bug — NOT an intrinsic graphs-mode depth limit:
 
 | arm | mode | died at | signature |
 |---|---|---|---|
@@ -175,15 +176,50 @@ All arms `--max-model-len 64000`, `ignore_eos` single-request 40k gens
 | tq4e | eager + dflash, 4bit_nc | ~4,336 | engine death mid-10k |
 | k8e / k3e | eager + dflash, k8v4/k3v4_nc | completed 10k | coherent head+tail |
 
-All the graphs-mode deaths run at full speed until the last ~20 s
-(38 → 2.5 → 0 tok/s windows); `xpu-smi` still reports "normal". The depth
-varies wildly by mode (2.9k without spec, 20-32k with), so no graphs-mode
-configuration on this driver stack should be trusted past a few thousand
-tokens of a single `ignore_eos` stream; 512/1536-token gens are
-rock-solid. A concurrent docker build (57 compile jobs, load 42) reliably
-triggers DEVICE_LOST across ALL serving arms within minutes — do not
-build images while serving; the GPUs recover by themselves once host load
-ends (verified by post-build matmul probe).
+v14 forensics: every graphs-mode death showed the worker blocking ~5 s
+after a xe "Engine reset" in dmesg, then `UR_RESULT_ERROR_DEVICE_LOST` at
+`num_accepted_tokens_event.synchronize()` (the first blocking sync — an
+observation point, not the cause), then exactly 300 s of dead air
+(shm_broadcast RPC read timeout) → `TimeoutError: RPC call to
+sample_tokens timed out` → HTTP 500. Critically, the v14 battery ran all
+six arms back-to-back on one boot with engine resets in between and NO
+host reboots — violating #03's recovery protocol.
+
+v15/v15b (2026-08-27, fresh reboot per reset, `--max-model-len 80000`,
+PIECEWISE graphs ON, dflash k=4, no `--enforce-eager`):
+
+- **ctl arm (v14 recipe verbatim): ZERO deaths.** 18 min continuous
+  spec-decode, 0 resets, 0 DEVICE_LOST, clean SIGTERM teardown. The
+  request returned early at ~23.5k/40k tokens with HTTP 200 — see (d);
+  the engine never faulted.
+- **v15b forced validation (min_tokens pinned, same boot): 40,000-token
+  gen finish=length WALL=700 s (57 tok/s avg) AND a 76,000-token
+  full-window gen finish=length WALL=1880 s (40 tok/s avg), both
+  COHERENT head+tail, then a 512-token gen at 8 s — zero resets across
+  all 116k generated tokens.** Spec acceptance held at depth (mean
+  4.7-5.0, per-position 90-100%). KV peaked at 53% (143,808-token pool).
+- Random **boot-time wedge (~3/9 serves)**: hangs right after "Graph
+  capturing finished", worker spins at ~80% CPU, health never greens;
+  killing it leaves 4 engine resets. Hits the base config on fresh
+  reboots too (2 consecutive), and is the same signature as v14's TQ
+  warmup hangs (b). Recovery: reboot + relaunch (~2/3 of boots healthy).
+  Mechanism suspect: oneCCL race at the first eager collective after
+  graph capture.
+- A concurrent docker build (57 compile jobs, load 42) still reliably
+  triggers DEVICE_LOST across ALL serving arms within minutes — do not
+  build images while serving; the GPUs recover by themselves once host
+  load ends (verified by post-build matmul probe).
+
+**Operational fix (validated):** (1) reboot the host after ANY xe engine
+reset before serving again — never chain arms on a reset host; (2) if a
+serve wedges post-capture, count it as a bad boot: kill, reboot, retry;
+(3) for deep single streams set `min_tokens == max_tokens` (see (d));
+(4) keep the v14 base env unchanged — the "fix levers" all failed
+empirically: `VLLM_XPU_ALLOW_COMM_IN_GRAPH=1` → GARBAGE output with AND
+without spec (NaN hazard confirmed, acceptance 0.0); L0 legacy adapter
+(`SYCL_UR_USE_LEVEL_ZERO_V2=0` + `UR_L0_V2_FORCE_DISABLE_COPY_OFFLOAD=1`)
+→ coherent but 6 tok/s (4× slower); `CCL_ZE_IPC_EXCHANGE=pidfd` →
+post-capture wedge on every attempt (unbootable; keep drmfd).
 
 ### (b) TurboQuant padded presets wedge in post-capture warmup (graphs ON)
 
@@ -214,9 +250,26 @@ during first capture on both v13 and v14. Supported: bf16 (default with
 dtype none), fp8. fp16 offers no memory advantage over bf16 anyway — use
 the default, or fp8 for 2× KV capacity (validated coherent to 15k+).
 
-Workarounds: keep interactive requests at ≤1536 tokens (rock-solid in
-every healthy mode); for longer needs, chunk the generation and retry on
-engine death (restart ~5 min); fp8 KV + dflash is the best validated
-capacity/speed point; TQ presets only with `--enforce-eager` (7-7.5 tok/s
-single stream, spec acceptance ~1-2% — debugging only, graphs are ~9×
-faster).
+### (d) `ignore_eos` long gens can return early with HTTP 200 (EOS leaks through the dflash path)
+
+Discovered in the v15 battery: `ignore_eos: true` 40k requests returned
+`200 OK` after ~19-24k tokens (three independent configs: base,
+in-graph-collectives, L0-legacy), text ending in a run of hundreds of
+newlines (greedy whitespace collapse at depth), decode still healthy. The
+engine never faulted — the sequence was simply FINISHED early; the stop
+decision slips past `ignore_eos` somewhere in the dflash/async-scheduling
+finish path. Not fixed in code yet.
+
+Workaround (validated in v15b): set `min_tokens` equal to `max_tokens` in
+the request. Both 40k and 76k gens then return `finish=length` with
+exactly the requested `completion_tokens`, coherent end-to-end. Any
+client doing deep `ignore_eos` generation should pin `min_tokens`.
+
+Workarounds (section 05 footer): interactive requests ≤1536 tokens are
+rock-solid in every healthy mode; deep single streams are safe on a
+clean host with graphs ON (76k full-window validated) — pin
+`min_tokens`, and follow the (a) operational protocol (reboot after any
+reset; retry bad boots). fp8 KV + dflash is the best validated
+capacity/speed point; TQ presets only with `--enforce-eager` (7-7.5
+tok/s single stream, spec acceptance ~1-2% — debugging only, graphs are
+~9× faster).

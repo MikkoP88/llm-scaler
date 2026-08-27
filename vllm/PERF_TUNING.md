@@ -185,13 +185,26 @@ Deep-generation rate (single stream, `ignore_eos`, graphs on):
 | 25-32k | 34-42 | died at 25.3k |
 
 No graphs-mode arm — with or without spec — completed a 40k single
-stream (dflash arms die with xe DEVICE_LOST at 20-32k; the no-spec
-control wedged at 2.9k; KNOWN_ISSUES #05(a)). Only eager k8v4/k3v4_nc
-completed their 10k gens. The practical planning numbers: 60-73 tok/s
-only for the first ~5k tokens; 30-45 tok/s is the normal sustained deep
-band; keep interactive single streams ≤1536 (rock-solid) and chunk/retry
-longer ones. The v13 "31.5 tok/s Avg generation" report was this depth
-decay plus concurrent build load — not a regression.
+stream in the v14 battery (dflash arms died with xe DEVICE_LOST at
+20-32k; the no-spec control wedged at 2.9k; KNOWN_ISSUES #05(a)). Only
+eager k8v4/k3v4_nc completed their 10k gens.
+
+REVISED 2026-08-27 (v15/v15b batteries, #05(a) RESOLVED): the v14
+result was host-state accumulation (six arms chained on one boot across
+engine resets, no reboots) + a random ~1/3 boot-time warmup wedge + the
+`ignore_eos` early-finish leak (#05d) — NOT a graphs-mode depth limit.
+On a freshly rebooted host, base recipe @ `--max-model-len 80000`,
+PIECEWISE graphs, dflash k=4: a forced 40k gen completed in 700 s
+(**57 tok/s average**), and a forced full-window 76k gen in 1880 s
+(**40 tok/s average**), both coherent head+tail, spec acceptance 4.7-5.0
+held at depth, ZERO engine resets across 116k generated tokens on one
+boot, and a post-deep 512 gen still at 8 s. Deep-stream protocol:
+reboot after any xe reset; retry a wedged boot (post-capture hang on
+~1/3 of serves); pin `min_tokens == max_tokens` in the request (plain
+`ignore_eos` returns HTTP 200 early at ~19-24k tokens on greedy
+whitespace collapse). The v13 "31.5 tok/s Avg generation" report was
+depth decay plus concurrent build load — not a regression. 512/1536
+gens remain rock-solid everywhere.
 
 ## Operational notes
 
