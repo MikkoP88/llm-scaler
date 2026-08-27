@@ -161,7 +161,7 @@ Three failure modes, one root signature — `UR_RESULT_ERROR_DEVICE_LOST`
 dflash verify loop — plus one dtype-gate crash. Observed on 2× Arc Pro
 B70, TP=2, adv:v14 image, xe driver, 2026-08-26 batteries.
 
-### (a) Single-stream long generation dies mid-flight — RESOLVED 2026-08-27 (v15/v15b batteries)
+### (a) Single-stream long generation dies mid-flight — v15/v15b clean-boot batteries passed; RANDOM recurrence confirmed 2026-08-27 (see addendum)
 
 The v14 result table (kept below for the record) was a compound artifact
 of host-state accumulation, a random boot-time wedge, and a request-layer
@@ -239,6 +239,37 @@ without spec (NaN hazard confirmed, acceptance 0.0); L0 legacy adapter
 → coherent but 6 tok/s (4× slower); `CCL_ZE_IPC_EXCHANGE=pidfd` →
 post-capture wedge on every attempt (unbootable; keep drmfd).
 
+ADDENDUM 2026-08-27 16:52 (recurrence, driver-decoded): a healthy 0.75
+serve (fresh boot, 14 min into a single-stream prompt test, 28.9k
+tokens, spec acceptance mean 3.81 / 70.2% — normal operation) died
+exactly per this signature: ccs engine reset on GPU0 →
+`UR_RESULT_ERROR_DEVICE_LOST` (error 20) at
+`num_accepted_tokens_event.synchronize()` → request hung (tokens
+frozen, health still 200, workers spinning 90/83%). First-ever Xe
+devcoredump captured for this family
+(`/root/telemetry/captures/2026-08-27_165243_reset_1/`, 516 kB):
+`Reason: LR job cleanup, guc_id=28`, hung job seqno=3194 finished=0,
+context ccs28 timeslice=1 ms / preempt-timeout=640 ms, schedule state
+0x250 = DESTROYED|RESET|BANNED (bits decoded against xe_guc_submit.c).
+Mechanism: oneCCL's spin-wait collective kernels run on LR-flagged
+(no-job-timeout) ze queues; a spin kernel that cannot be preempted
+while the same rank's main compute queue has runnable work trips the
+640 ms GuC preempt timeout → context ban → engine reset → DEVICE_LOST
+for both ranks. GPU wait kernels cannot sleep/yield (no oneCCL env
+changes this); xe 6.17 exposes NO preempt/timeslice module params
+(only `force_execlist`, untested and needs reboot). The trigger is any
+>640 ms host-side peer-late window; GC is already frozen by vLLM, so
+the leading remaining source is XPU caching-allocator slow paths under
+fragmentation/memory pressure (matches xpu.py's capture-size-cap
+rationale and the dflash scratch-churn comments). Fixes shipped
+2026-08-27 (patches/qwen38-dflash/dflash.py, hot-applied to adv:v14):
+(1) DFLASH_STALL guard logging any propose() >150 ms so the next
+occurrence pinpoints the phase; (2) grow-only scratch for the markov
+latent gather (per-step allocator churn removed); (3) serve env
+`PYTORCH_XPU_ALLOC_CONF=expandable_segments:True` (torch 2.11 XPU
+allocator) to eliminate fragmentation-driven alloc stalls. Workload-
+random: v15b's clean 116k tokens were protocol luck, not a fix.
+
 ### (b) TurboQuant padded presets wedge in post-capture warmup (graphs ON)
 
 With b19d92f (stride-safe flat view in `triton_turboquant_store`) the
@@ -283,11 +314,63 @@ the request. Both 40k and 76k gens then return `finish=length` with
 exactly the requested `completion_tokens`, coherent end-to-end. Any
 client doing deep `ignore_eos` generation should pin `min_tokens`.
 
+### (e) Startup wedge at the FIRST TP collective — UR error 39 (OUT_OF_DEVICE_MEMORY) — RESOLVED 2026-08-27 (`--gpu-memory-utilization 0.75`)
+
+Symptom ("vllm shut down but docker running"): a fresh serve gets
+through graph capture, then health never greens; one VLLM::Worker spins
+at 65-101% CPU; every 60 s exactly one
+`shm_broadcast.py:681 No available shared memory broadcast block found
+in 60 seconds` line repeats forever; the container stays alive because
+PID 1 is bash (serve is a docker-exec child). Hit on ~1/4-1/3 of serve
+launches at `--gpu-memory-utilization 0.8` (4 occurrences on
+2026-08-27, zero workload required — fires before any prompt arrives).
+
+Golden evidence (live capture, instrumented serve at 0.8,
+`/root/telemetry/captures/` on the benchmark host):
+
+```
+RuntimeError: level_zero backend failed with error: 39
+(UR_RESULT_ERROR_OUT_OF_DEVICE_MEMORY)
+  ... tensor_model_parallel_all_reduce
+  File ".../vocab_parallel_embedding.py", line 489, in forward
+  ... drafter.load_model -> embed_input_ids(dummy)   [dflash drafter warmup]
+```
+
+i.e. the FIRST oneCCL TP all-reduce on a fresh L0 context collides
+with the device-memory ceiling. One rank dies at that first
+collective; the peer rank spin-blocks inside oneCCL forever (~80% CPU)
+— that IS the wedge. The 60-second shm_broadcast line is the
+reader-side poll heartbeat of that one-sided deadlock, NOT a stream of
+new errors. The driver later reaps the orphaned GPU work
+(`Kernel-submitted job timed out ... in no process [-1]` → xe engine
+resets) — the "4 resets after killing a wedged serve" signature,
+linking this family to #03's reset-recovery protocol.
+
+One mechanism, three costumes: (1) error-39 crash + wedge; (2) silent
+wedge (same spin, no surfaced error); (3) post-kill engine-reset
+cascade.
+
+Fix (validated 2026-08-27): `--gpu-memory-utilization 0.75` leaves
+oneCCL/L0 scratch headroom for the first collective. The
+first-collective window is slow (~3 min, up to 3 transient
+shm_broadcast 60 s timeouts) but COMPLETES → healthy serve (99.99%
+GPU util, 183 W under load). Scope: 0.75 fixes ONLY the startup wedge
+— a mid-flight GuC long-runner reset (family (a), see addendum below)
+still struck 14 min into the first 0.75 test, at 28.9k tokens. Cost: KV
+pool 143,808 → 112,479 tokens (~22% smaller, still 1.4× the 80k
+max-model-len window).
+
+Deeper candidate fix (fork, not yet implemented): run one dummy TP
+all-reduce BEFORE loading weights (while device memory is still free)
+to pre-allocate the oneCCL scratch arena, restoring 0.8 utilization.
+
 Workarounds (section 05 footer): interactive requests ≤1536 tokens are
 rock-solid in every healthy mode; deep single streams are safe on a
 clean host with graphs ON (76k full-window validated) — pin
 `min_tokens`, and follow the (a) operational protocol (reboot after any
-reset; retry bad boots). fp8 KV + dflash is the best validated
+reset; retry bad boots). A serve that wedges in the first ~5 min at 0.8 utilization is (e) —
+kill, reboot the host, relaunch at 0.75; never retry a wedge on an
+un-rebooted host (pending resets poison it, #03). fp8 KV + dflash is the best validated
 capacity/speed point; TQ presets only with `--enforce-eager` (7-7.5
 tok/s single stream, spec acceptance ~1-2% — debugging only, graphs are
 ~9× faster).

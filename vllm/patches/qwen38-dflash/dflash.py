@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
 
 import os
+import time
 from typing import Any
 
 import torch
@@ -131,6 +132,7 @@ class DFlashProposer(SpecDecodeBaseProposer):
             self._markov_prev_tokens = next_token_ids
         else:
             self._markov_prev_tokens = None
+        _t0 = time.monotonic()
         draft_token_ids = super().propose(
             target_token_ids,
             target_positions,
@@ -143,6 +145,21 @@ class DFlashProposer(SpecDecodeBaseProposer):
             num_rejected_tokens_gpu=num_rejected_tokens_gpu,
             slot_mappings=slot_mappings,
         )
+        _propose_dt = time.monotonic() - _t0
+        # Host-side stall guard: the eager oneCCL collectives spin-wait on
+        # LR-flagged ze queues with no job timeout; if the peer rank's host
+        # thread is late by more than the xe GuC preempt timeout (~640 ms),
+        # the wait kernel trips an engine reset (UR error 20 for both
+        # ranks; devcoredump "LR job cleanup"). Catch candidate stall
+        # windows (>150 ms) in the log so the next occurrence pinpoints
+        # which phase exceeded the budget.
+        if _propose_dt > 0.15:
+            logger.warning(
+                "DFLASH_STALL propose() took %.3fs (host-side wall; "
+                "peer-late windows >0.64s trip the xe GuC preempt "
+                "watchdog -> engine reset)",
+                _propose_dt,
+            )
         if (
             self._dspark_adaptive
             and self._draft_confidence is not None
@@ -281,9 +298,36 @@ class DFlashProposer(SpecDecodeBaseProposer):
                 )
                 self._markov_bias_buf = bias_buf
             w2_t = w2.t()
+            # Embedding gather through a grow-only scratch (index_select
+            # with out=): nn.Embedding(x) allocates a fresh tensor per call,
+            # and 4 fresh per-step temporaries churn the XPU caching
+            # allocator — the same slow-path/fragmentation pressure that
+            # wedges the xe engines under PIECEWISE XPU graphs when free
+            # memory runs low (see the _markov_bias_buf note above).
+            w1_w = markov_head.markov_w1.weight
+            latent_buf = getattr(self, "_markov_latent_buf", None)
+            if (
+                latent_buf is None
+                or latent_buf.shape[0] < batch_size
+                or latent_buf.shape[1] != w1_w.shape[1]
+                or latent_buf.dtype != w1_w.dtype
+                or latent_buf.device != w1_w.device
+            ):
+                capacity = (
+                    max(batch_size, latent_buf.shape[0] * 2)
+                    if latent_buf is not None and latent_buf.device == w1_w.device
+                    else batch_size
+                )
+                latent_buf = torch.empty(
+                    (capacity, w1_w.shape[1]),
+                    dtype=w1_w.dtype,
+                    device=w1_w.device,
+                )
+                self._markov_latent_buf = latent_buf
             prev_tokens = self._markov_prev_tokens
             for i in range(num_spec):
-                latent = markov_head.get_prev_embeddings(prev_tokens)
+                latent = latent_buf[:batch_size]
+                torch.index_select(w1_w, 0, prev_tokens.long(), out=latent)
                 bias = bias_buf[:batch_size]
                 torch.mm(latent, w2_t, out=bias)
                 logits[:, i, :].add_(bias)

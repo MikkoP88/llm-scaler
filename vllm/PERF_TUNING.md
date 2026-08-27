@@ -240,6 +240,28 @@ keeps deep throughput >= ~35 tok/s.
 
 - Reboot the host after any GPU engine reset before starting vLLM again
   (see KNOWN_ISSUES.md #03): post-reset boots can wedge mid-decode.
+- dflash spec-decode serving (adv:v14 recipe): use
+  `--gpu-memory-utilization 0.75`, not 0.8 — the first oneCCL TP
+  all-reduce (dflash drafter warmup) needs free device memory for its
+  scratch arena; at 0.8 it dies with UR error 39
+  (OUT_OF_DEVICE_MEMORY) on ~1/4 of serve launches and the peer rank
+  spin-wedges (see KNOWN_ISSUES.md #05(e)). KV pool shrinks
+  143.8k → 112.5k tokens; steady-state throughput unchanged (99.99%
+  GPU util sustained through extended prompt testing).
+- Container recipe pitfalls (2026-08-27): with
+  `CCL_ZE_IPC_EXCHANGE=drmfd` the container MUST bind-mount
+  `/dev/dri/by-path` (privileged alone does not populate it) or every
+  worker dies at oneCCL init (`ze_fd_manager init_device_fds: opendir
+  failed`). Do NOT add `CCL_ATL_SHM=1` or `CCL_ATL_TRANSPORT=mpi` on
+  top of the serve.sh env — they segfault MPI GPU init
+  (`MPIDI_GPU_init_mpl_global`) at first collective. Use the serve.sh
+  env block verbatim.
+- Mid-decode DEVICE_LOST hardening (2026-08-27, see KNOWN_ISSUES
+  #05(a) addendum): serve with
+  `PYTORCH_XPU_ALLOC_CONF=expandable_segments:True` (torch 2.11 XPU
+  allocator) — removes fragmentation-driven alloc stalls that can
+  delay a rank past the 640 ms xe GuC preempt watchdog and reset the
+  engine mid-generation.
 - All fatal configs (c6, k4 32+2warps) died with 4 engine resets -
   same recovery protocol applies.
 - Image lineage: v6 = stock fork build; v7 = + TQ stage-1 knob envs;
