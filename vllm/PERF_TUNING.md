@@ -170,7 +170,9 @@ modes in `patches/qwen38-dflash/README.md`; KNOWN_ISSUES #05):
 | none (bf16) | 8 s | 23 s | acceptance 0.69 — matches v12/v9 champion |
 | fp8 | — | — | validated coherent; ~2× KV capacity |
 | turboquant_3bit_nc | 40 s cold / 9 s warm | 28 s | acceptance 0.51 |
-| turboquant_k8v4 eager | 105 s cold / 70 s | 213 s | graphs hang; eager = ~7.5 tok/s |
+| turboquant_k8v4 eager | 105 s cold / 70 s | 213 s | graphs hang; eager 10k coherent @7.3 tok/s, acceptance ~1-2% |
+| turboquant_k3v4_nc eager | — | — | graphs hang; eager 10k coherent @6.9 tok/s |
+| turboquant_4bit_nc | n/a | n/a | hangs in capture; eager dies at ~4.3k — unusable |
 | float16 | n/a | n/a | rejected by reshape_and_cache_flash |
 
 Deep-generation rate (single stream, `ignore_eos`, graphs on):
@@ -182,12 +184,14 @@ Deep-generation rate (single stream, `ignore_eos`, graphs on):
 | 15-25k | 44-51 | 35-39 |
 | 25-32k | 34-42 | died at 25.3k |
 
-All graphs-on arms died with xe DEVICE_LOST at 20-32k depth (dtype-
-independent; KNOWN_ISSUES #05(a)). The practical planning numbers:
-60-73 tok/s only for the first ~5k tokens; 30-45 tok/s is the normal
-sustained deep band; plan single streams ≤20k or chunk/retry. The v13
-"31.5 tok/s Avg generation" report was this depth decay plus concurrent
-build load — not a regression.
+No graphs-mode arm — with or without spec — completed a 40k single
+stream (dflash arms die with xe DEVICE_LOST at 20-32k; the no-spec
+control wedged at 2.9k; KNOWN_ISSUES #05(a)). Only eager k8v4/k3v4_nc
+completed their 10k gens. The practical planning numbers: 60-73 tok/s
+only for the first ~5k tokens; 30-45 tok/s is the normal sustained deep
+band; keep interactive single streams ≤1536 (rock-solid) and chunk/retry
+longer ones. The v13 "31.5 tok/s Avg generation" report was this depth
+decay plus concurrent build load — not a regression.
 
 ## Operational notes
 

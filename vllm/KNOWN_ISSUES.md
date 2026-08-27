@@ -161,27 +161,29 @@ Three failure modes, one root signature — `UR_RESULT_ERROR_DEVICE_LOST`
 dflash verify loop — plus one dtype-gate crash. Observed on 2× Arc Pro
 B70, TP=2, adv:v14 image, xe driver, 2026-08-26 batteries.
 
-### (a) Single-stream dflash generation dies at 20-32k tokens (depth, not
-dtype)
+### (a) Single-stream long generation dies mid-flight (mode-dependent depth)
 
-Three arms, graphs ON, `--max-model-len 64000`, `ignore_eos` single-request
-40k gens:
+All arms `--max-model-len 64000`, `ignore_eos` single-request 40k gens
+(10k for the eager arms), idle host unless noted:
 
-| arm | kv dtype | died at | mean tok/s to death |
+| arm | mode | died at | signature |
 |---|---|---|---|
-| k14 | none (bf16) | 32,395 | 48.5 (peak 68 @1-5k) |
-| kv3b | turboquant_3bit_nc | 25,279 | 40.3 (peak 55 @1-5k) |
-| kvf13 | fp8 (concurrent build load) | ~20,275 | 27.4 (peak 36) |
+| k14 | graphs + dflash, bf16 KV | 32,395 | DEVICE_LOST at acceptance-event sync |
+| kv3b | graphs + dflash, 3bit_nc | 25,279 | same |
+| kvf13 | graphs + dflash, fp8 (build load) | ~20,275 | same |
+| ns (control) | graphs, NO spec, bf16 KV | 2,889 | `RPC call to sample_tokens timed out`, worker wedged |
+| tq4e | eager + dflash, 4bit_nc | ~4,336 | engine death mid-10k |
+| k8e / k3e | eager + dflash, k8v4/k3v4_nc | completed 10k | coherent head+tail |
 
-All three run at full speed until the last ~20 s (38 → 2.5 → 0 tok/s
-windows), then the worker raises DEVICE_LOST at the acceptance-event sync;
-`xpu-smi` still reports "normal". The depth varies (20-32k), so treat ~20k
-as the safe single-stream planning number with dflash + graphs on this
-driver stack. 512/1536-token gens and idle-host serving to 15k+ are
-unaffected. A concurrent docker build (57 compile jobs, load 42) reliably
-triggers the same DEVICE_LOST across ALL serving arms within minutes — do
-not build images while serving; the GPUs recover by themselves once host
-load ends (verified by post-build matmul probe).
+All the graphs-mode deaths run at full speed until the last ~20 s
+(38 → 2.5 → 0 tok/s windows); `xpu-smi` still reports "normal". The depth
+varies wildly by mode (2.9k without spec, 20-32k with), so no graphs-mode
+configuration on this driver stack should be trusted past a few thousand
+tokens of a single `ignore_eos` stream; 512/1536-token gens are
+rock-solid. A concurrent docker build (57 compile jobs, load 42) reliably
+triggers DEVICE_LOST across ALL serving arms within minutes — do not
+build images while serving; the GPUs recover by themselves once host load
+ends (verified by post-build matmul probe).
 
 ### (b) TurboQuant padded presets wedge in post-capture warmup (graphs ON)
 
@@ -212,7 +214,9 @@ during first capture on both v13 and v14. Supported: bf16 (default with
 dtype none), fp8. fp16 offers no memory advantage over bf16 anyway — use
 the default, or fp8 for 2× KV capacity (validated coherent to 15k+).
 
-Workarounds: for >20k single streams, chunk the generation or retry the
-request (engine restarts in ~5 min); fp8 KV + dflash is the best validated
-capacity/speed point; TQ presets only with `--enforce-eager` (≈7.5 tok/s
-single stream — debugging only, graphs are ~9× faster).
+Workarounds: keep interactive requests at ≤1536 tokens (rock-solid in
+every healthy mode); for longer needs, chunk the generation and retry on
+engine death (restart ~5 min); fp8 KV + dflash is the best validated
+capacity/speed point; TQ presets only with `--enforce-eager` (7-7.5 tok/s
+single stream, spec acceptance ~1-2% — debugging only, graphs are ~9×
+faster).
