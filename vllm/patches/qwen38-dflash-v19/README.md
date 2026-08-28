@@ -1,5 +1,15 @@
 # llm-scaler-vllm-adv:v19 — TQ x drafter enablement + multi-query verify kernel
 
+> **v20 correction (2026-08-28):** v19's headline "healthy TQ spec at 17.56
+> tok/s loses to nospec 32.79" was **wrong** — the v19 bench client counted
+> SSE delta *events* as tokens, and spec decode flushes ~E[len] tokens per
+> event, underreporting every spec cell ~1.9x (nospec cells were correct).
+> TRUE steady rates from the engine SpecDecoding windows: c1 37.8 / c2 36.2 /
+> c3 35.6 / c4 32.6, k-curve on tq4nc k2 39.8 / k4 35.6 / k6 34.9 — **all
+> spec cells beat their nospec twins.** Proof chain, fixed client, and the
+> A2 step-cost decomposition: ../qwen38-dflash-v20/README.md. The engine
+> itself was never at fault; only the client metric was.
+
 `FROM llm-scaler-vllm-adv:v18`. Three-file delta over v18 (which carries the
 #03 boot-fault fix; see ../qwen38-dflash-v18/README.md and the v17/v14 lineage
 there). Goal: make the dflash drafter serve WITH compressed KV and beat the

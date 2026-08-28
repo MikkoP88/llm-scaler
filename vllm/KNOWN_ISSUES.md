@@ -27,6 +27,13 @@ There is no in-host recovery: a sysfs FLR (`echo 1 > /sys/class/drm/cardN/
 device/reset`) disables the mei_gsc firmware and makes both cards
 unusable (`No XPU devices are available`). Only a host reboot clears it.
 
+REBOOT NOTE (2026-08-28): the bench host sits on a fast short-lease DHCP
+network — after every reboot it comes back on a NEW address, typically the
+old IP + 1 (10.20.3.59 -> 10.20.3.60 observed). After issuing the protocol
+reboot, scan for the host at <old IP>+1 (or the /24) instead of assuming the
+address is stable; a new IP also means a new SSH host key
+(`-o StrictHostKeyChecking=accept-new`).
+
 ESCALATION (2026-08-27, v17 battery tail): WARM reboots are sometimes not
 enough. After a long fault-heavy day (3 mid-decode xe faults + 5 protocol
 reboots), the host entered a state where three CONSECUTIVE serve boots
@@ -648,4 +655,39 @@ re-crashes capture).
 **Validation.** nfp8 boots first try: 4096 tokens, steady 33.34 tok/s (the
 fastest nospec cell), zero engine resets; nbf16 re-run on the same image is
 unchanged (33.11 vs 33.10 tok/s) — the bf16 path is untouched.
+
+## 08 — v19 bench client counted SSE delta EVENTS as tokens: every spec-decode
+"steady tok/s" underreported ~1.9x (the "spec loses to nospec" result was an
+artifact)
+(FOUND + FIXED 2026-08-28, adv:v20; measurement bug only — the engine was
+never at fault)
+
+**Symptom.** The v19 car-game matrix read "healthy TQ spec at 17.56 tok/s
+loses to nospec 32.79" and a derived "95 ms/step, 3.15x overhead" — driving
+the whole v19→v20 step-cost reduction plan.
+
+**Root cause.** The client tallied one token per streamed `delta` event. With
+spec decode the detokenizer flushes the whole accepted block per event
+(~E[len] ≈ 1.9 tokens/event), so spec cells underreported by exactly
+tok/event; nospec emits 1 token/event and was correct. Proof chain (all on
+the v19 image): (1) engine `SpecDecoding metrics` windows satisfy
+`emitted = mean_accept_length x drafted/k` and give c3 ≈ 35.6 true tok/s;
+(2) `VLLM_SPEC_TIMING` step instrumentation measured 56-63 ms/step, i.e.
+32-36 tok/s at ~2.0 tok/step — the 95 ms figure was derived FROM the bad
+client number; (3) re-runs with the fixed client reproduce the engine rates
+(bar 32.79 / c3 34.09 vs 35.6 engine / k2 39.90 vs 39.8 engine) while the
+legacy event metric reproduces v19's numbers (17.60 ≈ 17.56) on the same
+runs.
+
+**Fix (v20, `cargame_client.py`).** Request
+`stream_options: {"include_usage": true}` and report `usage.completion_tokens`
+(`tokens_true`), `tok/event`, and true steady = event rate x tok/event, with
+the legacy event metrics kept alongside and a loud fallback warning if the
+server omits usage.
+
+**Lesson.** Never compare throughput across spec/nospec arms using streamed
+event counts; use server-side token counters (`include_usage`, or the engine
+SpecDecoding windows, which remain the authoritative steady source). The
+authoritative steady source for spec cells = serve-log SpecDecoding windows
+(tail-6).
 

@@ -324,7 +324,41 @@ v19 c3/c4 numbers were measured on context-blind graphs and are bracketed):
 (*c2 = 4 xe engine resets mid-cell, #03 family. dspark16 = upstream baseline
 image `ghcr.io/rmacy/qwen38-fp8-dspark:v16`, v16-era defaults; the identical
 config on v19 (c1) is 1.67x faster — the v18/v19 graphs+guards and verify
-work pay for themselves, though not up to nospec yet.)
+work pay for themselves, and c1 is above nospec on true token rates.)
+
+**v20 correction (2026-08-28):** the spec "steady" column above holds client
+SSE-event rates, not token rates — the v19 bench client counted delta
+*events* as tokens, and spec decode flushes ~E[len] tokens per event, so
+every spec cell underreported ~1.9-2.1x. Nospec cells emit 1 token/event and
+were correct. TRUE steady rates from the engine SpecDecoding windows (tail-6):
+c1 **37.8** (+14% vs nbf16 33.10), c2 **36.2** (+8.6% vs nfp8 33.34), c3
+**35.6** (+8.6% vs bar 32.79), c4 **32.6** (parity with nk8v4 32.61); k-curve
+on tq4nc: k2 **39.8** / k4 35.6 / k6 34.9. The fixed true-token client
+(v20) reproduces these. All spec cells already beat their nospec twins.
+
+**v20 shipped-image matrix** (llm-scaler-vllm-adv:v20, 2026-08-28; TRUE
+steady = engine SpecDecoding windows tail-6; client = fixed-client
+steady_true; one boot per cell; all 12 gates PASS, zero resets):
+
+| cell | KV | spec (k) | steady true | client | E[len] | ms/step | vs twin |
+|---|---|---|---|---|---|---|---|
+| bar | tq4nc | no | 32.78 [v19 32.79] | 32.78 | — | — | — |
+| nbf16 | bf16 | no | 33.08 [33.10] | 33.08 | — | — | — |
+| nfp8 | fp8_e4m3 | no | 33.36 [33.34] | 33.36 | — | — | — |
+| nk8v4 | k8v4 | no | 32.60 [32.61] | 32.60 | — | — | — |
+| c1 | bf16 | k4 | **44.0** | 40.66 | 2.19 | 49.6 | +32.9% vs nbf16 |
+| c2 | fp8_e4m3 | k4 | **35.5** | 33.34 | 2.00 | 56.1 | +6.4% vs nfp8 |
+| c3 | tq4nc | k4 | **34.6** | 33.39 | 1.99 | 57.4 | +5.5% vs bar |
+| c4 | k8v4 | k4 | **35.0** | 31.63 | 2.05 | 58.9 | +7.4% vs nk8v4 |
+| k2c1 | bf16 | k2 | **37.4** | 36.15 | 1.81 | 48.4 | +13.1% |
+| k2c2 | fp8_e4m3 | k2 | **34.3** | 32.24 | 1.84 | 53.8 | +2.8% |
+| k2c3 | tq4nc | k2 | **42.5** | 39.97 | 2.01 | 47.1 | **+29.7% vs bar** |
+| k2c4 | k8v4 | k2 | **36.2** | 35.80 | 1.75 | 48.2 | +11.0% |
+
+Headline: **k2c3 (SPEC_K=2, tq4nc) 42.5 tok/s = +29.7% over the user's bar
+config**; c1 (bf16 k4) 44.0 (+32.9%). k4 remains default, `SPEC_K=2` for
+max tok/s on tq4nc/k8v4. Cell notes (intermittent #05(a) re-runs, k2c2
+stall windows, DHCP host moves) in the v20 patch README.
 
 Conclusions:
 
@@ -336,13 +370,13 @@ Conclusions:
   dtypes: c3 8%→25.5% greedy (~2.0 tok/step gross), c4 healthy at 16.10
   (first c4 completion ever). Greedy's earlier "2.25 tok/step healthy" was
   row-0 markov coincidence — the text was garbage all along.
-- **Spec still does not beat nospec at temp 0.3 in this shape.** The blind
-  21.87 was fast only because attending 5 tokens is nearly free; honest
-  verify lands at 17.56 (c3) vs bar 32.79. With ~2.0 tok/step gross,
-  breakeven needs the spec step ≤ ~2x decode; measured ~3-4x on TQ (MQ
-  verify kernel) and ~3x on bf16/fp8 flash — per-step spec overhead
-  dominates, not TQ. See the step-cost decomposition below for the
-  reduction paths.
+- **Spec DOES beat nospec at temp 0.3 in this shape (v20 correction).** The
+  v19 "spec loses" reading was the client event-counting artifact (see the
+  correction note above): true c3 is 35.6 vs bar 32.79 (+8.6%), and k=2
+  reaches 39.8 (+21%). The measured step wall is 56-63 ms, not 95 ms — that
+  figure was derived from the bad client number. The blind-graph 21.87
+  remains invalid for a different reason (context-blind verify, #06). See
+  the corrected step-cost decomposition below.
 - **fp8 nospec needed its own fix (v19c, KNOWN_ISSUES #07):** the ESIMD
   decode fast path D2H-synced `float(layer._k_scale)` inside XPU graph
   capture — fp8 x nospec crashed at boot 4/4 while every other cell booted
@@ -356,56 +390,71 @@ Conclusions:
   linear context scan, same as nospec decode), MQ kernel 32/32 exact.
 
 <!-- SPEC_STEP_COST_ANALYSIS -->
-### Spec step-cost decomposition and reduction paths (2026-08-28)
+### Spec step-cost decomposition — corrected in v20 (2026-08-28)
 
-Measured anchor (c1 bf16, client-side): 19.94 tok/s steady / E[len] 1.89 =
-10.5 steps/s = **95 ms/step** vs the graphed nospec decode step 30.2 ms
-(33.10 tok/s) = **3.15x**. v16-era eager image lands at ~104-108 ms/step
-— graphing verify only recovered ~10%, so the dominant cost is NOT the
-target verify forward.
+**Correction first:** v19's "95 ms/step, 3.15x overhead, spec loses to
+nospec" was a measurement artifact. The v19 bench client counted SSE delta
+*events* as tokens; spec decode flushes ~E[len] tokens per detokenizer event,
+so every spec cell underreported ~1.9x (nospec = 1 token/event, correct).
+Three independent sources agree — engine SpecDecoding counters
+(`emitted = mean_accept_length x drafted/k`), `VLLM_SPEC_TIMING` step-wall
+instrumentation, and a re-run with a true-token client — **all v19 spec cells
+already beat their nospec twins.** The 95 ms figure was derived from the bad
+client number; the true step wall is 56-63 ms.
 
-Where the ~95 ms goes (code-audit, dflash block drafting):
+Measured step split (v20 A2 instrumentation, `VLLM_SPEC_TIMING=1`, c3 shape =
+tq4nc k4, steady state; ms/step):
 
-| segment | mechanism | est. ms |
+| segment | host | device |
 |---|---|---|
-| target verify replay | FULL XPU graph, 5 rows (v19b-safe) | ~30-40 |
-| drafter forward | ONE block pass (all k logits per forward — the markov k-loop is cheap gather+mm), but run EAGER between PIECEWISE cudagraph pieces incl. per-layer oneCCL all-reduces (TP=2) | ~20-35 |
-| drafter context-KV precompute | per-layer Python loops: RMSNorm loop + per-layer cache insert (qwen3_dflash.py) | ~5-15 |
-| proposer/scheduler host work + per-step sync | rejection bookkeeping, draft/accept transfer, ≥1 D2H sync per step | ~10-15 |
+| step wall (propose-to-propose) | 60.8-63.5 | — |
+| verify forward (uniform-decode replay, q=5) | 1.7 | **39.6-41.5** |
+| target logits over verify rows | 0.7 | 2.3 |
+| drafter propose TOTAL | 8.7 | 7.2 |
+| — precompute (context-KV, <=5 tokens) | 0.7 | 0.1 |
+| — drafter forward (5 layers, PIECEWISE) | 6.1 | 3.2 |
+| — greedy (block head + markov loop) | 1.1 | 3.4 |
+| (unattributed glue/scheduler) | ~12 | — |
 
-**Verdict: yes — parity (~33-38 tok/s on c1's shape) is reachable with zero
-impact on any KV dtype**, because every large overhead component lives
-OUTSIDE the KV-dtype-specific target attention:
+Implications:
 
-1. **Full-graph the drafter decode pass** (biggest lever, ~20-30 ms): the
-   drafter input is fixed-shape (1 bonus token -> k logits), ideal for a
-   FULL XPU graph like the target decode; today it runs under PIECEWISE
-   cudagraphs with eager attention glue between pieces
-   (gpu_model_runner.py:2418). Collectives-in-graph have precedent (target
-   decode graphs already capture TP=2 all-reduces). Rollback: env to keep
-   piecewise.
-2. **Batch the per-layer precompute loops** (~5-10 ms): fuse RMSNorm across
-   layers (bmm-style) or capture the precompute in the drafter graph.
-3. **Audit per-step syncs to exactly one** (~3-8 ms): each D2H sync drains
-   the queue and serializes host/device.
-4. **k=6/k=8 cells** (cheap experiment, near-zero risk): with BLOCK
-   drafting the drafter emits k logits in one pass — marginal cost of two
-   more draft rows is ~one wider attention row; E[len] rises with P4/P5.
-   Note k=2 is the WRONG direction here (step cost barely drops, E[len]
-   falls) — unlike sequential-drafter designs.
-5. **TQ-only polish:** MQ kernel warp/tile tuning at depth (1.32x -> ~1.15x
-   single-pass ratio at 16k), `VLLM_TQ_MQ_STAGE1_WARPS/STAGES` envs already
-   exposed. No effect on other dtypes.
-6. **Avoid for now:** async spec decode (`use_async_spec_decode`) overlaps
-   drafting with verification but rests on async scheduling + eager oneCCL
-   spin-waits — exactly the #05 family race surface. Not a first move on
-   XPU.
+- The dominant cost is the verify replay's ~40 ms DEVICE time plus ~12 ms
+  scheduler glue — NOT drafter host time. Full-graphing the propose segment
+  (the previous #1 lever) targets only ~9 ms host time; with parity gates
+  already met on true rates, its capture risk is no longer justified
+  (retained as measured follow-up material in the v20 patch README).
+- **k=2 is the BEST arm — the v19 "k=2 is the WRONG direction" claim is
+  retracted.** The 3-row verify step drops to ~47.8 ms while acceptance stays
+  ~1.9 tokens/step (block drafting quality is k-independent at these depths).
+  True rates on tq4nc: k2 39.8 / k4 35.6 / k6 34.9 tok/s vs nospec bar 32.79.
 
-Cross-dtype safety: levers 1-4 touch only drafter/proposer/scheduler code
-(no target-attention dispatch); any change to shared buffers must preserve
-the seq_lens/block_table replay-refresh contract (see v19 README known
-limits). Breakeven math: with E[len] 1.89, spec wins at step <= 57 ms;
-levers 1-3 alone project ~50-60 ms.
+True-rate matrix re-read from v19 serve logs (engine SpecDecoding windows,
+tail-6 — the authoritative steady source):
+
+| cell | KV | spec | TRUE steady tok/s | nospec twin | verdict |
+|---|---|---|---|---|---|
+| c1 | bf16 | k4 | **37.8** | 33.10 | +14% |
+| c2 | fp8_e4m3 | k4 | **36.2** | 33.34 | +8.6% |
+| c3 | tq4nc | k4 | **35.6** | 32.79 (bar) | +8.6% |
+| c4 | k8v4 | k4 | **32.6** | 32.61 | parity |
+| k2c3 | tq4nc | k2 | **39.8** | 32.79 (bar) | +21% |
+| k6c3 | tq4nc | k6 | 34.9 | 32.79 (bar) | +6.5% |
+
+Remaining reduction paths, in measured order of size (only if more headroom
+is ever needed):
+
+1. Verify replay device time (~40 ms): MQ/flash kernel width at q=5, or a
+   tuned q=3 path — the k2 arm already realizes much of this (47.8 ms step)
+   with zero kernel work.
+2. The ~12 ms unattributed glue (scheduler/rejection bookkeeping): needs a
+   host-side profile (py-spy) to split further; nothing KV-dtype-specific.
+3. Drafter propose host time (~9 ms): full propose-graph capture. Hook
+   documented in v20 (`VLLM_DFLASH_FULL_GRAPH`); NOT implemented — gates
+   already met.
+
+Cross-dtype safety: all remaining levers live outside the KV-dtype-specific
+target attention; any captured op must preserve the seq_lens/block_table
+replay-refresh contract (v19 README known limits).
 <!-- /SPEC_STEP_COST_ANALYSIS -->
 
 ## Operational notes
