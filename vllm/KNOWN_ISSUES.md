@@ -568,3 +568,84 @@ capacity/speed point; TQ presets boot WITH GRAPHS on adv:v17 (26-29
 tok/s single stream, (b) resolved; tq4nc even cleared the 60k longctx)
 — keep k8v4 out of ≈60k-deep contexts (see (b) NEW BOUND); fp8 or bf16
 KV for long-context work.
+
+## 06 — TurboQuant x spec-decode: XPU verify graphs baked context-blind
+(FOUND + FIXED 2026-08-28, adv:v19b; present but unreachable ≤v18 because
+the #05b guard dropped the drafter under TQ)
+
+**Symptom.** With `--kv-cache-dtype turboquant_*` + dflash k=4 +
+`cudagraph_mode FULL_DECODE_ONLY`, generations hallucinate a nonexistent
+context (greedy: "The user just sent a blank message…"; sampled: "user
+just said hello") and spec acceptance collapses (sampled per-position
+0.000; greedy ~8% = row-0 markov coincidences only). Byte-identical
+across boots (seed 0). Nospec TQ serving is perfectly healthy, and the
+drafter is healthy (DFLASH_DEBUG dumps: sane hidden states/logits).
+
+**Root cause (proven by env-gated instrumentation, probes 11-12).**
+Under spec, verify steps run as XPU graph REPLAYS (decode-graph machinery
+at bs×(k+1) tokens). At capture, `build_for_cudagraph_capture` builds
+dummy metadata with `seq_lens == q_len == k+1`, so in
+`_prefill_attention` the raw-KV flash fast path
+(`max_query_len == max_seq_len`) fires and the graph records flash-varlen
+over ONLY the in-batch verify tokens — the KV cache is never read. At
+replay, dynamic buffers (seq_lens/block_table) are refreshed, but Python
+never runs again: every real verify step attends just its 5 tokens, so
+the target is context-blind. This also explains why the v18→v19 verify
+kernel changes never altered the bug (probe8: `VLLM_TQ_MQ_VERIFY=0`
+bit-identical) — the continuation path was never reached. The earlier
+"greedy accepts 2.25 tok/step" read was the blind target's row-0
+agreement with the markov-1 drafter (both condition on the single last
+real token), not health.
+
+**Fix (v19b, `turboquant_attn.py`).** (1) In
+`build_for_cudagraph_capture`, multi-token captures force the
+continuation path (`max_seq_len = max_query_len + 1`, seq_lens_cpu/seq_lens
+bumped) so the graph records the KV-reading kernels instead of the flash
+fast path; decode (q_len==1) graphs are unchanged. (2) The continuation
+call sites derive per-row causal limits from the DYNAMIC `seq_lens`
+buffer (`seq_lens[i:i+1] - (q_len-1)` / `+ arange(q_len)`) instead of
+slicing a static arange with capture-time CPU scalars — captured GPU ops
+re-read the refreshed buffer at replay, so attention extent is always
+the real context length. Rollback: `VLLM_TQ_VERIFY_GRAPH_FIX=0` (not
+recommended — restores the blind graphs); `cudagraph_mode NONE` also
+sidesteps (eager verify is correct but slow).
+
+**Validation.** Deterministic arms that failed identically on 6 boots
+(probes 3-12) all produce correct HTML-car-game text on v19b; acceptance
+8% → 25.5% greedy (49/192, ~2.0 tok/step gross), sampled 21-46%
+windowed, mean acceptance length 1.87-2.85; zero engine resets.
+
+## 07 — fp8 KV x nospec x FULL_DECODE_ONLY: ESIMD decode fast path D2H-syncs
+inside XPU graph capture (boot crash)
+(FOUND + FIXED 2026-08-28, adv:v19c; pre-existing — v19 changed nothing in
+flash_attn.py)
+
+**Symptom.** `--kv-cache-dtype fp8_e4m3` + nospec + `FULL_DECODE_ONLY`
+crashes at boot 4/4 deterministic (262k and 98k maxlen, so not a memory
+issue), while every other nospec cell (bf16, tq4nc, k8v4) boots and fp8+spec
+(c2) boots. Worker dies with `RuntimeError: wait method cannot be used for
+an event associated with a command graph` at `_warmup_and_capture` →
+`_dummy_run` → `flash_attn.py:1136`.
+
+**Root cause.** The ESIMD page-attention decode fast path (fp16 query +
+XPU-graph env) reads the fp8 KV descale factors with
+`_k_scale = float(layer._k_scale)` — `float()` on a device tensor is a D2H
+sync, and any sync inside XPU graph capture raises the command-graph event
+error. bf16 KV takes the else-branch (python `1.0`, no sync) and boots; TQ
+dtypes never enter flash_attn; fp8+spec never captures single-token target
+decode graphs (dflash replaces decode with k+1 verify), so only the
+fp8 x nospec combination hits the sync — deterministically.
+
+**Fix (v19c, `flash_attn.py`).** The scale tensors are static after model
+load, so cache the python floats per layer (`self._esimd_kv_scales`) at the
+first eager call; if capture ever precedes every eager call, skip the ESIMD
+fast path for that capture (falls through to `flash_attn_varlen_func`)
+rather than bake wrong scales into the graph. The kernel-dispatch lines are
+guarded on `eagle_ops is not None` accordingly. Rollback:
+`VLLM_ESIMD_F8_SCALE_FIX=0` restores the original read (A/B only — it
+re-crashes capture).
+
+**Validation.** nfp8 boots first try: 4096 tokens, steady 33.34 tok/s (the
+fastest nospec cell), zero engine resets; nbf16 re-run on the same image is
+unchanged (33.11 vs 33.10 tok/s) — the bf16 path is untouched.
+

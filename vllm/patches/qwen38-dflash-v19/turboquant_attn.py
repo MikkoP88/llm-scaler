@@ -82,6 +82,15 @@ _CONTINUATION_DECODE_THRESHOLD = 128
 _TQ_MQ_VERIFY = os.getenv("VLLM_TQ_MQ_VERIFY", "1") != "0"
 _TQ_MQ_MAX_Q = max(2, int(os.getenv("VLLM_TQ_MQ_MAX_Q", "8") or 8))
 
+# llm-scaler v19b: spec-verify XPU graphs must capture the continuation
+# path (KV-cache-reading kernels), never the raw-KV flash fast path.
+# Capture dummies have seq_len == q_len, so without this the fast path
+# fires at capture and every replay attends ONLY the in-batch verify
+# tokens — the target never sees the cached context (#TQ-blind-verify:
+# near-zero acceptance + "blank message" hallucinations). Decode graphs
+# (q_len == 1) are unaffected. Roll back with VLLM_TQ_VERIFY_GRAPH_FIX=0.
+_TQ_VERIFY_GRAPH_FIX = os.getenv("VLLM_TQ_VERIFY_GRAPH_FIX", "1") != "0"
+
 # Shared grow-only dequant buffers for _continuation_prefill when the
 # workspace manager is locked (PIECEWISE graphs). Full-attention layers
 # execute sequentially, so a single (k, v) pair shared across all layers
@@ -226,9 +235,24 @@ class TurboQuantMetadataBuilder(AttentionMetadataBuilder[TurboQuantMetadata]):
         self, common_attn_metadata: CommonAttentionMetadata
     ) -> TurboQuantMetadata:
         attn_metadata = self.build(0, common_attn_metadata)
-        # Set seq_lens to 1 so CUDA graph capture is fast
-        # (real seq_lens are filled at replay time).
-        attn_metadata.seq_lens.fill_(1)
+        # llm-scaler v19b: multi-token (spec-verify) captures must not take
+        # the raw-KV flash fast path in _prefill_attention. The dummy batch
+        # has seq_len == q_len == num_spec_tokens, so max_query_len ==
+        # max_seq_len would bake flash attention over ONLY the in-batch
+        # verify tokens into the graph; replays then never read the KV
+        # cache (#TQ-blind-verify). Force the continuation path instead —
+        # its kernels derive the attention extent from the dynamic
+        # seq_lens/block_table buffers, which are refreshed at replay.
+        # Keep seq_lens small so capture-time kernel work stays trivial.
+        if _TQ_VERIFY_GRAPH_FIX and attn_metadata.max_query_len > 1:
+            attn_metadata.max_seq_len = attn_metadata.max_query_len + 1
+            if attn_metadata.seq_lens_cpu is not None:
+                attn_metadata.seq_lens_cpu.fill_(attn_metadata.max_query_len + 1)
+            attn_metadata.seq_lens.fill_(attn_metadata.max_query_len)
+        else:
+            # Set seq_lens to 1 so CUDA graph capture is fast
+            # (real seq_lens are filled at replay time).
+            attn_metadata.seq_lens.fill_(1)
         return attn_metadata
 
     def build(self, common_prefix_len, common_attn_metadata, fast_build=False):
@@ -733,15 +757,6 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
         # to avoid per-request host→device tensor creation.
         if not hasattr(self, "_cu_2"):
             self._cu_2 = torch.zeros(2, device=query.device, dtype=torch.int32)
-        # Cache arange on self (avoid per-call kernel launch).
-        _max_seq = attn_metadata.max_seq_len
-        _ac: torch.Tensor | None = getattr(self, "_arange_cache", None)
-        if _ac is None or _ac.shape[0] <= _max_seq:
-            _ac = torch.arange(
-                0, _max_seq + 1, device=query.device, dtype=attn_metadata.seq_lens.dtype
-            )
-            self._arange_cache = _ac
-        _arange_cache: torch.Tensor = _ac
 
         for i in range(num_reqs):
             q_start = qsl[i]
@@ -792,19 +807,25 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
                 if q_len <= _CONTINUATION_DECODE_THRESHOLD:
                     # Fast path: treat each query as a decode request
                     # with incremental seq_lens for causal masking.
-                    # Slice from pre-built arange (no kernel launch)
-                    synth_seq_lens = _arange_cache[cached_len + 1 : seq_len + 1]
+                    # llm-scaler v19b: derive per-row causal limits from the
+                    # DYNAMIC seq_lens buffer (seq_lens[i] - (q_len-1) + row)
+                    # instead of slicing a static arange with capture-time
+                    # CPU scalars. Inside a captured graph the subtraction
+                    # re-executes at replay with the refreshed seq_lens, so
+                    # the attention extent is always the real context length.
                     if _TQ_MQ_VERIFY and 1 < q_len <= _TQ_MQ_MAX_Q:
                         # llm-scaler v19: single multi-query kernel call —
                         # one pass over the compressed KV for all q_len
                         # rows (spec verify / tiny continuation chunk).
-                        # synth_seq_lens[0] = cached_len + 1 is the row-0
-                        # causal limit; the kernel derives the rest.
+                        # Row-0 causal limit is cached_len + 1; the kernel
+                        # derives the remaining rows internally.
                         out = triton_turboquant_mq_decode_attention(
                             query=q_seq,
                             kv_cache=kv_cache,
                             block_table=attn_metadata.block_table[i : i + 1],
-                            q0_seq_lens=synth_seq_lens[:1],
+                            q0_seq_lens=(
+                                attn_metadata.seq_lens[i : i + 1] - (q_len - 1)
+                            ),
                             Pi=Pi,
                             centroids=centroids,
                             scale=self.scale,
@@ -823,11 +844,20 @@ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
                         synth_bt = attn_metadata.block_table[i : i + 1].expand(
                             q_len, -1
                         )
+                        synth_dyn = (
+                            attn_metadata.seq_lens[i : i + 1]
+                            + torch.arange(
+                                q_len,
+                                device=attn_metadata.seq_lens.device,
+                                dtype=attn_metadata.seq_lens.dtype,
+                            )
+                            - (q_len - 1)
+                        )
                         out = triton_turboquant_decode_attention(
                             query=q_seq,
                             kv_cache=kv_cache,
                             block_table=synth_bt,
-                            seq_lens=synth_seq_lens,
+                            seq_lens=synth_dyn,
                             Pi=Pi,
                             centroids=centroids,
                             scale=self.scale,

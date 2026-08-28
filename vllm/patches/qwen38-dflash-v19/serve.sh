@@ -65,12 +65,22 @@ fi
 ENTRY=/opt/venv/bin/vllm
 if [ "${SUPERVISED:-0}" = "1" ]; then ENTRY=/opt/serve_supervised.sh; fi
 
+# Forward vllm env knobs only when explicitly set (empty-string injection
+# would defeat in-code defaults like os.getenv(..., "1") == "1").
+ENV_ARGS=()
+for _v in VLLM_XPU_TQ_SAFE_WARMUP VLLM_XPU_SPEC_SAFE_WARMUP \
+          VLLM_TQ_MQ_VERIFY VLLM_ALLOW_TQ_SPEC \
+          VLLM_TQ_VERIFY_GRAPH_FIX VLLM_ESIMD_F8_SCALE_FIX; do
+  if [ -n "${!_v:-}" ]; then ENV_ARGS+=(-e "${_v}=${!_v}"); fi
+done
+
 exec docker run --rm --name "$NAME" \
   --device /dev/dri/card1 --device /dev/dri/card2 \
   --device /dev/dri/renderD128 --device /dev/dri/renderD129 \
   --mount type=bind,source=/dev/dri/by-path,target=/dev/dri/by-path,readonly \
   --network host --shm-size 32g --ipc=host \
   -e VLLM_ALLOW_LONG_MODEL_LEN=1 \
+  "${ENV_ARGS[@]}" \
   -v "${TARGET_DIR}":/models/target:ro \
   "${DRAFTER_MOUNT[@]}" \
   --entrypoint "$ENTRY" \

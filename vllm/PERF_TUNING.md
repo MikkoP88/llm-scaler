@@ -305,37 +305,108 @@ kernel (one KV pass per verify step instead of 5 synthetic decodes; rollback
 
 <!-- CARGAME_MATRIX_RESULTS_PERF -->
 
-Results (2026-08-28; steady tok/s; P0..P3 = per-position acceptance):
+Results (2026-08-28; steady tok/s; P0..P3 = per-position acceptance; c3/c4
+re-run on the v19b image after the #06 blind-verify-graph fix — the original
+v19 c3/c4 numbers were measured on context-blind graphs and are bracketed):
 
 | cell | KV | spec | maxlen | steady | P0..P3 |
 |---|---|---|---|---|---|
 | bar | tq4nc | no | 262144 | **32.79** | — |
 | nbf16 | bf16 | no | 262144 | 33.10 | — |
-| nfp8 | fp8_e4m3 | no | 262144 | (banked on host) | — |
+| nfp8 | fp8_e4m3 | no | 262144 | 33.34 | — |
 | c1 | bf16 | k4 | 73728 | 19.94 | .45-.55 / .20-.27 / .05-.17 / .03-.07 |
 | c2 | fp8_e4m3 | k4 | 98304 | 19.69* | .47-.55 / .19-.27 / .05-.14 / .03-.06 |
-| c3 | tq4nc | k4 | 98304 | 21.87 | sampled 0.000 all positions; greedy 2.25 tok/step |
-| nk8v4/c4 | k8v4 | no/k4 | — | pending (host recovery) | — |
+| c3 | tq4nc | k4 | 98304 | 17.56 [was 21.87 blind] | .52-.76 / .24-.53 / .08-.33 / .02-.23 |
+| c4 | k8v4 | k4 | 98304 | 16.10 | .41-.52 / mean len 1.67-1.98 |
+| nk8v4 | k8v4 | no | 262144 | 32.61 | — |
+| dspark16 | bf16 (auto) | k4 | 73728 | 11.94 | mean accept len 1.66-2.53 |
 
-(*c2 = 4 xe engine resets mid-cell, #03 family.)
+(*c2 = 4 xe engine resets mid-cell, #03 family. dspark16 = upstream baseline
+image `ghcr.io/rmacy/qwen38-fp8-dspark:v16`, v16-era defaults; the identical
+config on v19 (c1) is 1.67x faster — the v18/v19 graphs+guards and verify
+work pay for themselves, though not up to nospec yet.)
 
 Conclusions:
 
-- **Spec does not beat nospec at temp 0.3 in this shape, even with healthy
-  acceptance.** bf16/fp8 spec ≈ 20 tok/s vs 33 nospec: a k=4 spec step
-  costs ~3x a graphed decode step (drafter + eager 5-row verify under
-  FULL_DECODE_ONLY), so breakeven needs ~65% P0; argmax drafting under
-  sampling tops out ≈ P(target sample == drafter argmax) ≈ 0.5 here.
-- **TQ4nc + spec has a sampled-verify acceptance defect: exactly 0**
-  (4k steps), while greedy on the same server accepted 2.25 tok/step and
-  bf16/fp8 sampled ≈ 22% avg. Argmax path fine → verify distribution fine;
-  the sampled comparison mis-fires under the TQ backend (reproduces the
-  v14-era 1-2%; NOT the v19 MQ kernel — bit-identical to the old path).
-  Bisect probe ready (.tmp-tq/probe_tq_sampling.sh): greedy / temp 0.05
-  unfiltered / canonical / temp 1.0.
-- v19 itself is sound: TQ+spec boots (was silently disabled ≤v18), zero
-  resets in c3, no long-run collapse (buckets 22.1→21.27), MQ kernel
-  32/32 exact + 1.05-1.32x (tq4nc) / 2.2-2.7x (k8v4) per-layer verify.
+- **The v19-era "TQ sampled acceptance = exactly 0" was NOT a sampling bug:
+  the verify XPU graphs were context-blind (KNOWN_ISSUES #06).** v19b
+  (build_for_cudagraph_capture forces the KV-reading continuation path into
+  multi-token captures; per-row causal limits derive from the dynamic
+  seq_lens buffer) restores correct text + healthy acceptance on both TQ
+  dtypes: c3 8%→25.5% greedy (~2.0 tok/step gross), c4 healthy at 16.10
+  (first c4 completion ever). Greedy's earlier "2.25 tok/step healthy" was
+  row-0 markov coincidence — the text was garbage all along.
+- **Spec still does not beat nospec at temp 0.3 in this shape.** The blind
+  21.87 was fast only because attending 5 tokens is nearly free; honest
+  verify lands at 17.56 (c3) vs bar 32.79. With ~2.0 tok/step gross,
+  breakeven needs the spec step ≤ ~2x decode; measured ~3-4x on TQ (MQ
+  verify kernel) and ~3x on bf16/fp8 flash — per-step spec overhead
+  dominates, not TQ. See the step-cost decomposition below for the
+  reduction paths.
+- **fp8 nospec needed its own fix (v19c, KNOWN_ISSUES #07):** the ESIMD
+  decode fast path D2H-synced `float(layer._k_scale)` inside XPU graph
+  capture — fp8 x nospec crashed at boot 4/4 while every other cell booted
+  (bf16 takes the no-sync else-branch; TQ never enters flash_attn; fp8+spec
+  never captures single-token decodes). Cached static scales → nfp8 boots
+  first try at 33.34 (fastest nospec cell); nbf16 unchanged (33.11 vs
+  33.10) on the same image.
+- v19/v19b serving is otherwise sound: TQ+spec boots (silently disabled
+  ≤v18), zero resets in the fixed cells, no depth-scaling collapse (the
+  v18 5x-rescan pathology is gone — c3's decay tracks the MQ kernel's
+  linear context scan, same as nospec decode), MQ kernel 32/32 exact.
+
+<!-- SPEC_STEP_COST_ANALYSIS -->
+### Spec step-cost decomposition and reduction paths (2026-08-28)
+
+Measured anchor (c1 bf16, client-side): 19.94 tok/s steady / E[len] 1.89 =
+10.5 steps/s = **95 ms/step** vs the graphed nospec decode step 30.2 ms
+(33.10 tok/s) = **3.15x**. v16-era eager image lands at ~104-108 ms/step
+— graphing verify only recovered ~10%, so the dominant cost is NOT the
+target verify forward.
+
+Where the ~95 ms goes (code-audit, dflash block drafting):
+
+| segment | mechanism | est. ms |
+|---|---|---|
+| target verify replay | FULL XPU graph, 5 rows (v19b-safe) | ~30-40 |
+| drafter forward | ONE block pass (all k logits per forward — the markov k-loop is cheap gather+mm), but run EAGER between PIECEWISE cudagraph pieces incl. per-layer oneCCL all-reduces (TP=2) | ~20-35 |
+| drafter context-KV precompute | per-layer Python loops: RMSNorm loop + per-layer cache insert (qwen3_dflash.py) | ~5-15 |
+| proposer/scheduler host work + per-step sync | rejection bookkeeping, draft/accept transfer, ≥1 D2H sync per step | ~10-15 |
+
+**Verdict: yes — parity (~33-38 tok/s on c1's shape) is reachable with zero
+impact on any KV dtype**, because every large overhead component lives
+OUTSIDE the KV-dtype-specific target attention:
+
+1. **Full-graph the drafter decode pass** (biggest lever, ~20-30 ms): the
+   drafter input is fixed-shape (1 bonus token -> k logits), ideal for a
+   FULL XPU graph like the target decode; today it runs under PIECEWISE
+   cudagraphs with eager attention glue between pieces
+   (gpu_model_runner.py:2418). Collectives-in-graph have precedent (target
+   decode graphs already capture TP=2 all-reduces). Rollback: env to keep
+   piecewise.
+2. **Batch the per-layer precompute loops** (~5-10 ms): fuse RMSNorm across
+   layers (bmm-style) or capture the precompute in the drafter graph.
+3. **Audit per-step syncs to exactly one** (~3-8 ms): each D2H sync drains
+   the queue and serializes host/device.
+4. **k=6/k=8 cells** (cheap experiment, near-zero risk): with BLOCK
+   drafting the drafter emits k logits in one pass — marginal cost of two
+   more draft rows is ~one wider attention row; E[len] rises with P4/P5.
+   Note k=2 is the WRONG direction here (step cost barely drops, E[len]
+   falls) — unlike sequential-drafter designs.
+5. **TQ-only polish:** MQ kernel warp/tile tuning at depth (1.32x -> ~1.15x
+   single-pass ratio at 16k), `VLLM_TQ_MQ_STAGE1_WARPS/STAGES` envs already
+   exposed. No effect on other dtypes.
+6. **Avoid for now:** async spec decode (`use_async_spec_decode`) overlaps
+   drafting with verification but rests on async scheduling + eager oneCCL
+   spin-waits — exactly the #05 family race surface. Not a first move on
+   XPU.
+
+Cross-dtype safety: levers 1-4 touch only drafter/proposer/scheduler code
+(no target-attention dispatch); any change to shared buffers must preserve
+the seq_lens/block_table replay-refresh contract (see v19 README known
+limits). Breakeven math: with E[len] 1.89, spec wins at step <= 57 ms;
+levers 1-3 alone project ~50-60 ms.
+<!-- /SPEC_STEP_COST_ANALYSIS -->
 
 ## Operational notes
 

@@ -25,6 +25,19 @@ FROM llm-scaler-vllm-adv:v18
 #      verify fast-branch dispatches 1 < q_len <= 8 to the MQ kernel
 #      (single call, no per-row expand). VLLM_TQ_MQ_VERIFY=0 rolls
 #      back to the v18 synthetic-decode path (kept verbatim).
+#      v19b (2026-08-28, #06): build_for_cudagraph_capture forces the
+#      continuation path for multi-token captures (the raw-KV flash fast
+#      path at dummy seq_lens==q_len baked context-blind verify graphs);
+#      MQ/synthetic per-row extents derive from the dynamic seq_lens
+#      buffer. VLLM_TQ_VERIFY_GRAPH_FIX=0 rolls back.
+#
+#   4. vllm/v1/attention/backends/flash_attn.py (v19c, #07): the ESIMD
+#      decode fast path did float(layer._k/_v_scale) - a D2H sync that
+#      aborts XPU graph capture for fp8 KV x nospec x FULL_DECODE_ONLY
+#      (boot crash, 4/4 deterministic). Static load-time scales are now
+#      cached as python floats at the first eager call; uncached capture
+#      skips the fast path instead of baking wrong scales.
+#      VLLM_ESIMD_F8_SCALE_FIX=0 restores the original read for A/B.
 #
 # v18 lineage (inherited): #03 boot-fault fix (VLLM_XPU_SPEC_SAFE_WARMUP),
 # #05b/#05d/#05e, dflash cold-start guard, canonical XPU serving ENV.
@@ -32,14 +45,17 @@ FROM llm-scaler-vllm-adv:v18
 COPY config_vllm.py /opt/venv/lib/python3.12/site-packages/vllm/config/vllm.py
 COPY turboquant_attn.py /opt/venv/lib/python3.12/site-packages/vllm/v1/attention/backends/turboquant_attn.py
 COPY triton_turboquant_decode.py /opt/venv/lib/python3.12/site-packages/vllm/v1/attention/ops/triton_turboquant_decode.py
+COPY flash_attn.py /opt/venv/lib/python3.12/site-packages/vllm/v1/attention/backends/flash_attn.py
 
 RUN SP=/opt/venv/lib/python3.12/site-packages && \
     grep -q 'VLLM_ALLOW_TQ_SPEC", "1"' $SP/vllm/config/vllm.py && \
     grep -q 'def triton_turboquant_mq_decode_attention' $SP/vllm/v1/attention/ops/triton_turboquant_decode.py && \
     grep -q 'triton_turboquant_mq_decode_attention' $SP/vllm/v1/attention/backends/turboquant_attn.py && \
+    grep -q '_esimd_kv_scales' $SP/vllm/v1/attention/backends/flash_attn.py && \
     find $SP/vllm/v1/attention $SP/vllm/config -name "__pycache__" -type d -prune -exec rm -rf {} + 2>/dev/null; \
     python -m py_compile \
       $SP/vllm/config/vllm.py \
       $SP/vllm/v1/attention/backends/turboquant_attn.py \
-      $SP/vllm/v1/attention/ops/triton_turboquant_decode.py && \
-    python -c "from vllm.v1.attention.ops.triton_turboquant_decode import triton_turboquant_mq_decode_attention; from vllm.v1.attention.backends.turboquant_attn import TurboQuantAttentionBackend; print('v19 imports OK')"
+      $SP/vllm/v1/attention/ops/triton_turboquant_decode.py \
+      $SP/vllm/v1/attention/backends/flash_attn.py && \
+    python -c "from vllm.v1.attention.ops.triton_turboquant_decode import triton_turboquant_mq_decode_attention; from vllm.v1.attention.backends.turboquant_attn import TurboQuantAttentionBackend; from vllm.v1.attention.backends.flash_attn import FlashAttentionBackend; print('v19 imports OK')"

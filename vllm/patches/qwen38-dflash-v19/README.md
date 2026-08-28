@@ -8,7 +8,7 @@ user's superior target-only TQ config on the canonical car-game test.
 ## Why (user-visible symptom)
 
 With `--kv-cache-dtype turboquant_4bit_nc` the drafter silently never engaged
-(and with fp8_e4m3 it engaged but was slow, with long-run speed drops). Two
+(and with fp8_e4m3 it engaged but was slow, with long-run speed drops). Three
 root causes:
 
 1. **Our own #05b guard disabled it.** v14-era `config/vllm.py` nulled
@@ -22,6 +22,18 @@ root causes:
    the ENTIRE compressed context. Cost grew with depth -> the long-run
    collapse. fp8/bf16 KV verify uses multi-token flash-attn, which is why
    spec worked there.
+3. **v19b (2026-08-28): the verify GRAPHS were context-blind.** Under
+   `FULL_DECODE_ONLY` XPU graphs, spec-verify steps are captured at bs×(k+1)
+   dummy shape where `seq_lens == q_len == 5`, so `_prefill_attention`'s
+   raw-KV flash fast path (`max_query_len == max_seq_len`) fired AT CAPTURE
+   and got baked into the graph: replays attended ONLY the 5 in-batch
+   verify tokens and never read the KV cache. Symptom: deterministic
+   "user just sent a blank message" hallucinations + ~8% greedy / 0%
+   sampled acceptance (the target was blind; greedy's apparent 2.25
+   tok/step was row-0 markov coincidence with the drafter). This bug was
+   unreachable ≤v18 (#05b guard) and explains why probe8's MQ-kernel
+   rollback was bit-identical — the continuation path was never reached.
+   See KNOWN_ISSUES.md #06 for the full instrumentation chain.
 
 ## Changes vs v18
 
@@ -30,6 +42,8 @@ root causes:
 | #05b revision: allow TQ x spec | config/vllm.py | `VLLM_ALLOW_TQ_SPEC` default 0 -> 1; drafter serves WITH turboquant KV; rollback restores target-only | `VLLM_ALLOW_TQ_SPEC` (1) |
 | Multi-query verify kernel (additive) | triton_turboquant_decode.py | `_tq_mq_decode_stage1` + `_tq_mq_fwd_stage2` + launcher: ONE pass over the compressed KV per (head, split) scores all q_len query rows per shared tile (flash-decoding style; per-row causal limits `q0 + j`; blind split-combine via lse=-inf zero weights). Existing kernels untouched | `VLLM_TQ_MQ_STAGE1_WARPS` (1), `VLLM_TQ_MQ_STAGE1_STAGES` (1) |
 | Verify fast-path dispatch | turboquant_attn.py | Continuation branch: `1 < q_len <= 8` -> single MQ kernel call instead of q_len synthetic single-token decodes; v18 path kept verbatim as rollback | `VLLM_TQ_MQ_VERIFY` (1), `VLLM_TQ_MQ_MAX_Q` (8) |
+| v19b: replay-safe verify graphs (#06 fix) | turboquant_attn.py | `build_for_cudagraph_capture` forces the continuation path for multi-token captures (fast path can no longer be baked into verify graphs); MQ/synthetic per-row causal limits derive from the DYNAMIC `seq_lens` buffer (`seq_lens[i:i+1]-(q_len-1)` / `+arange`) instead of a static arange slice, so replayed extents track the real context | `VLLM_TQ_VERIFY_GRAPH_FIX` (1) |
+| v19c: capture-safe fp8 KV scales (#07 fix) | flash_attn.py | ESIMD decode fast path cached `float(layer._k/_v_scale)` per layer (static after load) instead of a per-call D2H sync that aborted XPU graph capture for fp8 KV x nospec (boot crash, 4/4); uncached capture skips the fast path (varlen fallback) rather than bake wrong scales | `VLLM_ESIMD_F8_SCALE_FIX` (1) |
 
 ## Numerics validation (standalone, in-container: `test_tq_mq_numerics.py`)
 
@@ -78,57 +92,55 @@ Long-context (262k+) + spec needs the drafter KV quantized too (follow-up).
 <!-- CARGAME_MATRIX_RESULTS -->
 
 Results (steady tok/s = last-50% mean; acceptance = per-position P0..P3 from
-the serve-log SpecDecoding windows; 2026-08-28, one boot per cell, monitor3):
+the serve-log SpecDecoding windows; 2026-08-28, one boot per cell, monitor3;
+c3/c4 re-run on the v19b image — earlier v19 numbers for those cells were
+measured on the context-blind graphs and are kept in brackets for reference):
 
 | cell | KV | spec | maxlen | steady tok/s | acceptance P0/P1/P2/P3 | note |
 |---|---|---|---|---|---|---|
 | bar | turboquant_4bit_nc | no | 262144 | **32.79** | — | user's superior config: the number to beat |
 | nbf16 | bf16 | no | 262144 | 33.10 | — | nospec bf16 baseline |
-| nfp8 | fp8_e4m3 | no | 262144 | (banked on host — see below) | — | completed before c2 |
-| c1 | bf16 | k4 | 73728 | 19.94 | .45-.55 / .20-.27 / .05-.17 / .03-.07 | healthy acceptance |
+| nfp8 | fp8_e4m3 | no | 262144 | 33.34 | — | v19c (#07): booted first try after the scale-sync fix (was 4/4 boot crashes); fastest nospec cell; nbf16 re-run on the same image unchanged (33.11 vs 33.10) |
+| c1 | bf16 | k4 | 73728 | 19.94 | .45-.55 / .20-.27 / .05-.17 / .03-.07 | healthy acceptance (no TQ, unaffected by #06) |
 | c2 | fp8_e4m3 | k4 | 98304 | 19.69* | .47-.55 / .19-.27 / .05-.14 / .03-.06 | *4 xe engine resets mid-cell (#03 family); tail collapsed to 3 tok/s |
-| c3 | turboquant_4bit_nc | k4 | 98304 | 21.87 | **0.000 / 0.000 / 0.000 / 0.000 (sampled)** | greedy warmup accepted 216/384 ≈ 2.25 tok/step |
-| nk8v4 / c4 | turboquant_k8v4 | no/k4 | — | PENDING | — | host wedged in POST after the #03 protocol reboot |
+| c3 | turboquant_4bit_nc | k4 | 98304 | 17.56 [was 21.87 blind] | .52-.76 / .24-.53 / .08-.33 / .02-.23 windowed; mean len 1.87-2.85 | v19b: correct text, healthy acceptance; steady over 2115 tok |
+| c4 | turboquant_k8v4 | k4 | 98304 | 16.10 | .41-.52 windowed; mean len 1.67-1.98 | v19b: first healthy c4 ever (v19 c4 aborted on 4 resets) |
+| nk8v4 | turboquant_k8v4 | no | 262144 | 32.61 | — | parity with bar within noise |
+| dspark16 | bf16 (auto) | k4 | 73728 | 11.94 | mean accept len 1.66-2.53 | upstream baseline image `ghcr.io/rmacy/qwen38-fp8-dspark:v16` (v16-era defaults, no graph guards): v19 c1 is 1.67x faster on the identical config |
 
 **Findings:**
 
-1. **v19 enablement works, and the verify-bandwidth fix works.** TQ+spec
-   boots, serves, and shows NO long-run speed collapse (c3 buckets
-   22.1 → 21.27 over 3 min; the v18-era depth-scaling rescan is gone). Zero
-   resets in c3. The MQ kernel is bit-identical to the production kernel
-   (32/32 numerics cases).
-2. **The user bar is not met — for two independent reasons.**
-   a. **Acceptance economics:** at temp 0.3 sampled decoding, healthy
-      acceptance (bf16/fp8, P0 ≈ 0.5, mean length 1.85-2.0) yields ~20
-      tok/s vs ~33 nospec: a spec step costs ~3x a decode step (drafter k=4
-      + eager 5-row verify under FULL_DECODE_ONLY graphs), so breakeven
-      needs ~65% P0. Argmax drafting under sampling tops out near P(target
-      sample == drafter argmax) — this serving/test shape cannot reach it
-      at k=4.
-   b. **TQ-specific sampled-verify defect:** turboquant_4bit_nc + spec
-      accepts EXACTLY ZERO drafted tokens under sampling (4k steps,
-      per-position 0.000 across every 10 s window), while the GREEDY warmup
-      on the same server accepted ≈ 2.25 tok/step (healthy). bf16/fp8
-      spec at the same sampling accepts normally (~22% avg). So the TQ
-      attention outputs are distributionally sound (greedy matches, text
-      coherent, kernel numerics exact) but the SAMPLED comparison path
-      mis-fires when the TQ backend serves verify — argmax is unaffected,
-      sampling is fully broken. This reproduces the v14-era "1-2%
-      acceptance" that the #05b guard papered over; it is NOT caused by the
-      v19 MQ kernel (which is bit-identical to the path that showed it
-      before). Bisect probe prepared (`.tmp-tq/probe_tq_sampling.sh`:
-      greedy / temp 0.05 no-filter / canonical / temp 1.0 in one boot) —
-      discriminating "sampled path broken" vs "topk/topp interaction".
-3. **#03 recurrence on fp8+spec bar-shape:** c2 hit 4 xe engine resets
-   (ccs+bcs, both GPUs) mid-generation; the matrix correctly aborted the
-   remaining cells and demanded the protocol reboot. The host then hung in
-   POST (unreachable >20 min; needs a power cycle) — nk8v4/c4/nfp8-numbers
-   pending host recovery.
+1. **v19b restores CORRECTNESS of TQ x spec (the #06 fix).** All
+   deterministic arms that hallucinated identically on six boots
+   (probes 3-12) now produce correct HTML-car-game text; greedy
+   acceptance 8% -> 25.5% (49/192, ~2.0 tok/step gross), sampled
+   21-46% windowed; zero resets; c4 (k8v4) completes healthily for the
+   first time. The earlier "greedy 2.25 tok/step (healthy)" read was the
+   blind target's row-0 markov coincidence — the text was garbage.
+2. **The user speed bar is still NOT met — honest verify costs more
+   than blind verify.** c3 fixed 17.56 vs bar 32.79 (the blind 21.87
+   was "fast" only because attending 5 tokens is nearly free). With
+   healthy acceptance (~2.0 tok/step gross), a TQ spec step must cost
+   <= ~2x a decode step to break even; measured ~3.5-4x (MQ verify
+   kernel + drafter overhead under FULL_DECODE_ONLY). The same ~3x
+   step-cost ratio appears on bf16/fp8 flash verify (c1/c2 ~20 vs ~33
+   nospec), so the gap is dominated by per-step spec overheads, not TQ.
+   Decomposition + reduction paths: see the SPEC_STEP_COST_ANALYSIS
+   section in ../../PERF_TUNING.md (headline: the dflash drafter is
+   BLOCK-drafted in one eager pass under PIECEWISE cudagraphs —
+   full-graphing it, batching the per-layer precompute loops, and a
+   per-step sync audit project ~50-60 ms/step vs the 57 ms breakeven;
+   k=6/8 is the cheap experiment, k=2 is the wrong direction for block
+   drafting).
+3. **#03 recurrence risk stays:** c2's 4-reset tail collapse predates
+   the fix and is unrelated to it (fp8 flash path). Protocol unchanged:
+   reboot after any xe reset.
 
 ## Files
 
 - `Dockerfile` — overlay build + grep guards + py_compile + import checks
-- `config_vllm.py`, `turboquant_attn.py`, `triton_turboquant_decode.py` — overlay set
+- `config_vllm.py`, `turboquant_attn.py`, `triton_turboquant_decode.py`,
+  `flash_attn.py` — overlay set
 - `test_tq_mq_numerics.py` — standalone numerics + micro-bench (mount + docker exec)
 - `bench_cargame.sh` + `cargame_client.py` — canonical car-game cell driver
 - `cargame_matrix.sh` — host matrix runner (one boot per cell, monitor3, graceful teardown, #03 reset gate)
@@ -153,8 +165,12 @@ KV_DTYPE=turboquant_4bit_nc TARGET_DIR=/models/qwen3.8-27b-fp8 DRAFTER_DIR=/mode
 SPEC=0 KV_DTYPE=turboquant_4bit_nc DTYPES=float16 BLOCKSIZE=128 MNBT=8192 MAXLEN=262144 \
   EXTRA_ARGS='--compilation-config {"cudagraph_mode":"FULL_DECODE_ONLY"}' TARGET_DIR=... ./serve.sh
 # rollback arms
-VLLM_TQ_MQ_VERIFY=0 ...   # v18 synthetic-decode verify path
-VLLM_ALLOW_TQ_SPEC=0 ...  # v18 target-only under turboquant
+VLLM_TQ_MQ_VERIFY=0 ...        # v18 synthetic-decode verify path
+VLLM_TQ_VERIFY_GRAPH_FIX=0 ... # v19b off (NOT recommended: restores the
+                               # context-blind verify graphs, KNOWN_ISSUES #06)
+VLLM_ALLOW_TQ_SPEC=0 ...       # v18 target-only under turboquant
+VLLM_ESIMD_F8_SCALE_FIX=0 ...  # v19c off (A/B only: fp8-nospec boot crashes
+                               # return, KNOWN_ISSUES #07)
 ```
 
 ## Known limits
@@ -163,3 +179,6 @@ VLLM_ALLOW_TQ_SPEC=0 ...  # v18 target-only under turboquant
   host before re-serving.
 - The MQ kernel covers q_len <= 8 (dflash k<=7); larger continuation chunks
   fall back to the v128 continuation-decode / flash paths as before.
+- Spec verify graphs rely on the runner refreshing `seq_lens`/`block_table`
+  at replay (it does — same contract the working nospec decode graphs use);
+  any future change to those buffers must preserve it.
