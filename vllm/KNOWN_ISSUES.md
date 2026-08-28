@@ -211,6 +211,16 @@ B70, TP=2, adv:v14 image, xe driver, 2026-08-26 batteries.
 
 ### (a) Single-stream long generation dies mid-flight — v15/v15b clean-boot batteries passed; RANDOM recurrence confirmed 2026-08-27 (see addendum)
 
+RECURRENCE 2026-08-28 (v19 car-game matrix, cell c2 = fp8_e4m3 KV + dflash
+k4, bar-shape fp16/block128/FULL_DECODE_ONLY/maxlen 98304): 4 engine resets
+(ccs guc 23/24 + bcs guc 31/32, BOTH GPUs) mid-generation ~2 min into the
+4096-token sampled run; tail bucket collapsed to 3 tok/s; the same shape on
+bf16 (c1) and turboquant_4bit_nc (c3) was reset-free in the same battery.
+The protocol `shutdown -r now` afterwards did NOT complete — host hung in
+POST (>20 min unreachable, ping sweep found it gone from the subnet) and
+needed a physical power cycle. Add to the #03 playbook: after multi-reset
+events, schedule the reboot via a mind that may have to power-cycle.
+
 The v14 result table (kept below for the record) was a compound artifact
 of host-state accumulation, a random boot-time wedge, and a request-layer
 early-finish bug — NOT an intrinsic graphs-mode depth limit:
@@ -382,6 +392,22 @@ RESOLVED 2026-08-27 (adv:v17, two-part fix in gpu_worker.py / vllm.py):
    dtype on XPU now logs a WARNING and serves target-only
    (`VLLM_ALLOW_TQ_SPEC=1` overrides), instead of wedging in the drafter
    warmup.
+
+   REVISED 2026-08-28 (adv:v19): the auto-disable is now OFF by default —
+   `VLLM_ALLOW_TQ_SPEC` defaults to **1** (`=0` restores target-only). Both
+   original causes are gone: the drafter's own KV is forced unquantized
+   `auto` (dflash.py), and the #05b/#03 warmup skips (items 1/3) protect
+   boot. The remaining TQ+spec perf blocker (5x KV rescan in verify — the
+   "synthetic decode" per-token loop) is fixed by the v19 multi-query
+   verify kernel (`turboquant_attn.py` dispatch + MQ kernels in
+   `triton_turboquant_decode.py`; rollback `VLLM_TQ_MQ_VERIFY=0`). NEW
+   bound discovered with the drafter actually loading under TQ: the
+   drafter's UNCOMPRESSED KV pool is sized by the same max_model_len —
+   ~11.3 GiB/GPU @262144 vs 6.67 GiB free after its fp8 weights — so
+   TQ+spec needs max_model_len ≲118k at gmu 0.8 (measured: 13.48 GiB
+   needed vs 6.67 available; nospec TQ4nc fits 262144 with 4.62x
+   concurrency). Long-context + spec requires quantizing the drafter KV
+   (follow-up).
 
 3. **Generalized in adv:v18** — the post-capture skip is no longer
    TQ-only: `spec_active AND VLLM_XPU_ENABLE_XPU_GRAPH=1` also skips

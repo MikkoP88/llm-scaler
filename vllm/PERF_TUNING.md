@@ -286,6 +286,57 @@ deep10k temp 0.6 = 10000/10000 @ 69.2 tok/s and temp 1.0 @ 67.1 tok/s
 aggregate @ 0.24 s ttft. Graceful teardown after the suite: zero dmesg
 engine events.
 
+## v19 car-game matrix (2026-08-28, canonical user test, adv:v19)
+
+Prompt `"Write a html car game."`, sampling temp 0.3 / top_k 20 / top_p 0.95 /
+min_p 0 / presence 0 / repetition 1.0, max_tokens 4096, streaming, one warmup
+completion first. All cells: dtype float16, block-size 128, mnbt 8192,
+cudagraph FULL_DECODE_ONLY, gmu 0.8. Cells: bar = the user's superior config
+(tq4nc nospec, maxlen 262144); n* = same-KV nospec baselines (maxlen 262144);
+c1-c4 = same-KV dflash k=4 spec (maxlen 73728 for c1-bf16, 98304 otherwise —
+the drafter's UNCOMPRESSED KV pool ~11.3 GiB/GPU @262144 does not fit next to
+its fp8 weights; vLLM-measured: 13.48 GiB needed vs 6.67 available; decode
+speed at ~4k depth is KV-pool-size independent, so the comparison holds).
+Acceptance per KV: spec cell >= matching nospec steady tok/s; headline c3 >=
+bar. v19 changes under test: `VLLM_ALLOW_TQ_SPEC` default 1 (drafter serves
+WITH turboquant KV — was silently dropped ≤v18) + multi-query TQ verify
+kernel (one KV pass per verify step instead of 5 synthetic decodes; rollback
+`VLLM_TQ_MQ_VERIFY=0`).
+
+<!-- CARGAME_MATRIX_RESULTS_PERF -->
+
+Results (2026-08-28; steady tok/s; P0..P3 = per-position acceptance):
+
+| cell | KV | spec | maxlen | steady | P0..P3 |
+|---|---|---|---|---|---|
+| bar | tq4nc | no | 262144 | **32.79** | — |
+| nbf16 | bf16 | no | 262144 | 33.10 | — |
+| nfp8 | fp8_e4m3 | no | 262144 | (banked on host) | — |
+| c1 | bf16 | k4 | 73728 | 19.94 | .45-.55 / .20-.27 / .05-.17 / .03-.07 |
+| c2 | fp8_e4m3 | k4 | 98304 | 19.69* | .47-.55 / .19-.27 / .05-.14 / .03-.06 |
+| c3 | tq4nc | k4 | 98304 | 21.87 | sampled 0.000 all positions; greedy 2.25 tok/step |
+| nk8v4/c4 | k8v4 | no/k4 | — | pending (host recovery) | — |
+
+(*c2 = 4 xe engine resets mid-cell, #03 family.)
+
+Conclusions:
+
+- **Spec does not beat nospec at temp 0.3 in this shape, even with healthy
+  acceptance.** bf16/fp8 spec ≈ 20 tok/s vs 33 nospec: a k=4 spec step
+  costs ~3x a graphed decode step (drafter + eager 5-row verify under
+  FULL_DECODE_ONLY), so breakeven needs ~65% P0; argmax drafting under
+  sampling tops out ≈ P(target sample == drafter argmax) ≈ 0.5 here.
+- **TQ4nc + spec has a sampled-verify acceptance defect: exactly 0**
+  (4k steps), while greedy on the same server accepted 2.25 tok/step and
+  bf16/fp8 sampled ≈ 22% avg. Argmax path fine → verify distribution fine;
+  the sampled comparison mis-fires under the TQ backend (reproduces the
+  v14-era 1-2%; NOT the v19 MQ kernel — bit-identical to the old path).
+  Bisect probe ready (.tmp-tq/probe_tq_sampling.sh): greedy / temp 0.05
+  unfiltered / canonical / temp 1.0.
+- v19 itself is sound: TQ+spec boots (was silently disabled ≤v18), zero
+  resets in c3, no long-run collapse (buckets 22.1→21.27), MQ kernel
+  32/32 exact + 1.05-1.32x (tq4nc) / 2.2-2.7x (k8v4) per-layer verify.
+
 ## Operational notes
 
 - Reboot the host after any GPU engine reset before starting vLLM again
