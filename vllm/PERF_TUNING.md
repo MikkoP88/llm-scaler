@@ -236,18 +236,70 @@ every step). Fix server-side with `--generation-config default`, or
 per-request `"temperature": 0.0`. If diversity is required, temp <= 0.6
 keeps deep throughput >= ~35 tok/s.
 
+## v17/v18 battery matrix (2026-08-27, gates = bench_gen 512/1536 tok prompts)
+
+All arms: TP=2, gmu 0.8, maxlen 64000, graphs ON (v17 ENV; spec arms on
+v18 for the #03 boot-fault fix), one boot per arm, dflash k=4 where
+spec. Single-stream steady tok/s; cold512 = first-request TTFT after
+boot. Acceptance = draft-accepted / drafted over the gate suite.
+
+| arm | KV | drafter | warm512 tok/s | 1536 tok/s | cold512 TTFT | notes |
+|---|---|---|---|---|---|---|
+| v17a2 | bf16 | no | 32.8 | 32.9 | 15.6 s | fastest target-only |
+| v17a3 | fp8 | yes | 19.2 | 19.4 | 12.4 s | lowest latency; ~2.97 tok/step (2036/4136) |
+| v17a4 | fp8 | no | 27.3-27.6 | 27.8 | 11.9 s | longctx 60k @ 17.29 tok/s (beats spec at depth) |
+| v17a5 | k8v4 | auto-disabled | 26.5-28.8 | 25.7 | 12.1 s | graphs-ON boot FIRST EVER (#05b fix) |
+| v17a6 | k8v4 | no | 30.5 | 30.7 | 12.5 s | fastest TQ arm; deep5k 5000/5000 @ 26.65 tok/s |
+| v17a7 | tq4nc | no | 24.6 | 29.4 | 13.5 s | historically-unusable dtype now serves; 60k longctx PASSED @ 15.25 tok/s (100.7 s) |
+| v17a8 | bf16 @ gmu 0.9 | yes | — | — | — | BOOT FAULT (pre-v18, graphs+spec; see KNOWN_ISSUES #03) |
+| v17a9 (v18) | bf16 | yes | 22.0 | 21.6 | 12.9 s | FASTEST spec arm (beats a3 fp8+spec 19.2); ~2.78 tok/step (2118/4744); boot 6 min first-try — the exact config that faulted 4/4 on v17 |
+| rmacy v16 own recipe | bf16 | yes | 11.9 | 12.0 | 12.4 s | conc4_512 ttft 30.5 s (maxseqs=1 serialized); acceptance 47% (3338/7104) |
+
+adv vs baselines (matching cells): adv a3 (fp8+spec) beats rmacy v16's
+own recipe 1.6× on tok/s and ~2-4× on wall for every gate; conc4 on
+rmacy serializes behind maxseqs=1 (30.5 s TTFT) while adv serves
+concurrency natively. b3.1 (intel/llm-scaler-vllm:0.21.0-b3.1) cannot
+load the current drafter at all — its spec registry predates
+`DSparkDraftModel` (has `DFlashDraftModel` only; the DFlash-era
+drafter dir on the host is empty), so no b3.1 spec-parity cell exists.
+b3.1 target-only (SPEC=0, gmu 0.8, both `--generation-config auto`
+and `vllm`) boots healthy — KV pool 310,000 tokens, clean capture —
+but the worker crashes on the FIRST /v1/completions request
+(native exception in `worker_busy_loop`→`execute_model` → HTTP 500
+→ engine death; 0.06 tok/s generated before death; Triton JIT of KV
+kernels still running mid-inference), reproducibly across both
+runs. Zero xe engine resets — a pure b3.1 software crash. NO b3.1
+cell completes a single gate on this workload, spec or target-only;
+every incompatibility is an adv advantage.
+
+Long-context 60k+1536 (KV-depth stress): bf16+spec 235 s wall (a3-era;
+spec loses its edge at depth), fp8 nospec 17.29 tok/s, tq4nc nospec
+15.25 tok/s PASSED, k8v4 FAULTED at 60k (xe reset at end-of-prefill;
+keep k8v4 out of ≈60k contexts). fp8/bf16 are the long-context KV
+choices.
+
+a9 full suite on adv:v18 (default recipe, one boot, ZERO resets
+end-to-end): gates 21.6-22.1 tok/s; 60k longctx PASSED at 138.3 s wall
+(ttft 28.3 s) — 1.7× faster than the a3-era graphs-off spec run (235 s);
+deep10k temp 0.6 = 10000/10000 @ 69.2 tok/s and temp 1.0 @ 67.1 tok/s
+(finish=length, status OK); conc2_512 21.5 tok/s, conc4_512 66.5 tok/s
+aggregate @ 0.24 s ttft. Graceful teardown after the suite: zero dmesg
+engine events.
+
 ## Operational notes
 
 - Reboot the host after any GPU engine reset before starting vLLM again
   (see KNOWN_ISSUES.md #03): post-reset boots can wedge mid-decode.
-- dflash spec-decode serving (adv:v14 recipe): use
-  `--gpu-memory-utilization 0.75`, not 0.8 — the first oneCCL TP
-  all-reduce (dflash drafter warmup) needs free device memory for its
-  scratch arena; at 0.8 it dies with UR error 39
-  (OUT_OF_DEVICE_MEMORY) on ~1/4 of serve launches and the peer rank
-  spin-wedges (see KNOWN_ISSUES.md #05(e)). KV pool shrinks
-  143.8k → 112.5k tokens; steady-state throughput unchanged (99.99%
-  GPU util sustained through extended prompt testing).
+- dflash spec-decode serving (adv:v17+): `--gpu-memory-utilization 0.8`
+  is safe — the #05(e) oneCCL scratch-arena pre-allocation
+  (`VLLM_XPU_PREALLOC_CCL_ARENA=1`, default on) runs one worst-case
+  all-reduce BEFORE KV pool sizing, restoring 0.8 with KV pool 142,317
+  tokens (+26% vs the old 0.75 workaround). The pre-fix advice to run
+  0.75 is retired. With XPU graphs ON (adv:v17 image ENV) plus a
+  drafter, adv:v18 or newer is REQUIRED — v17's eager post-capture
+  spec-shape `_dummy_run` faults the xe ccs engine 4/4 launches
+  (KNOWN_ISSUES #03 root cause; `VLLM_XPU_SPEC_SAFE_WARMUP=1` default
+  in v18).
 - Container recipe pitfalls (2026-08-27): with
   `CCL_ZE_IPC_EXCHANGE=drmfd` the container MUST bind-mount
   `/dev/dri/by-path` (privileged alone does not populate it) or every

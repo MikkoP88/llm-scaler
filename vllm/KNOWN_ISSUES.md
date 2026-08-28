@@ -27,6 +27,54 @@ There is no in-host recovery: a sysfs FLR (`echo 1 > /sys/class/drm/cardN/
 device/reset`) disables the mei_gsc firmware and makes both cards
 unusable (`No XPU devices are available`). Only a host reboot clears it.
 
+ESCALATION (2026-08-27, v17 battery tail): WARM reboots are sometimes not
+enough. After a long fault-heavy day (3 mid-decode xe faults + 5 protocol
+reboots), the host entered a state where three CONSECUTIVE serve boots
+faulted during warmup (ccs resets, GPU1 da:00.0 guc_id=24 twice then GPU0
+b1:00.0 guc_id=38 once), each on a FRESH warm boot — plus `rmmod xe`
+blocked ("in use"), `delayed_fput hogged CPU` kernel warnings, and an
+xpu-smi query hang against the wedged container. The benchmark host is a
+Dell PowerEdge R740 with iDRAC (`/dev/ipmi0`, `ipmitool` preinstalled):
+`ipmitool chassis power cycle` = true COLD power cycle (full GPU power
+drain; Power Restore Policy restores power automatically). Cold-cycle
+whenever a first-serve-after-fresh-warm-reboot faults — do NOT keep
+warm-rebooting into the same wall.
+
+ROOT CAUSE + RESOLUTION (2026-08-27 late, proven by elimination): the
+"3 consecutive boot faults" were NOT host degradation. Discriminators on
+the same host, same GPUs, same drafter weights: rmacy v16 (eager + spec
+active, all gates clean) and adv:v14 (graphs-off + spec active, log
+prints "XPU Graph is disabled by environment variable") both boot
+HEALTHY with zero resets; only adv:v17 + drafter faults (4/4). The v17
+image ENV bakes `VLLM_XPU_ENABLE_XPU_GRAPH=1` — first enabled by the
+~20:55 v17 rebuild (every pre-rebuild arm, incl. healthy spec boots
+a1r/a3, ran graphs-OFF; "graphs-ON first-ever" was a5, post-rebuild).
+With XPU graphs ON + the dflash drafter, the eager post-capture
+`_dummy_run` (max_num_reqs x (k+1) spec tokens — a never-captured
+shape) drives TP collectives that fault the xe ccs engine ~60 s after
+capture → shm_broadcast wedge → boot death. Survives warm AND cold
+reboots because it is in-image, not host state (the cold cycle DID
+clear all host state — a9r3 then faulted identically on the pristine
+host, which is what pinned the cause to the image). graphs-on + nospec
+(a4-a7) is healthy — the spec shapes are required. FIXED in
+llm-scaler-vllm-adv:v18 (gpu_worker.py only): the #05(b) post-capture
+skip is extended from turboquant-KV-only to `spec_active AND
+VLLM_XPU_ENABLE_XPU_GRAPH=1` (knob `VLLM_XPU_SPEC_SAFE_WARMUP`, default
+1) — synthesized hidden states warm the sampler; the captured graphs
+already exercised the kernels. The iDRAC cold-cycle protocol above
+remains valid for genuine host-state wedges (rmmod blocked, xpu-smi
+hang) — but boot faults that persist across a cold cycle are in-image:
+bisect the image before touching the host again.
+
+FIX VALIDATED LIVE (2026-08-28, arm `v17a9_default_spec` on adv:v18):
+the skip fired verbatim ("skipping eager post-capture _dummy_run -
+XPU graphs + speculative drafter - synthesized hidden states (320,
+5120)"), boot healthy first-try in ~6 min, KV pool 142,317, and the
+FULL suite ran zero-reset: gates 21.6-22.1 tok/s, 60k longctx PASSED
+(138.3 s), deep10k @ temp 0.6/1.0 = 69.2/67.1 tok/s, conc4 66.5 tok/s,
+graceful teardown with zero dmesg events. Same host, same env, same
+drafter — the exact recipe that faulted 4/4 on v17.
+
 Workarounds:
 - Stop instances gracefully (`docker stop` / Ctrl-C, ~10 s grace) so the
   worker drain hook (`torch.xpu.synchronize()` + `empty_cache()` at exit,
@@ -54,9 +102,9 @@ Workarounds:
   pollers was harmless; several were not. Guard patterns must match the
   real process name (`pgrep -f 'xpu-smi dump'`).
 - Note: the AI host gets a NEW DHCP IP on every reboot (observed roaming
-  10.20.3.44 -> .45 -> .46 -> .47). If the last known IP stops answering
-  after a reboot, probe the next IPs (+1, +2) before assuming the host
-  is down.
+  10.20.3.44 -> .45 -> .46 -> .47, and .55 -> .56 -> .57 on 2026-08-27).
+  If the last known IP stops answering after a reboot, probe the next
+  IPs (+1, +2) before assuming the host is down.
 
 # 04. Silent TP Corruption When the all_reduce Custom Op Runs Under Inductor-Lowered Pieces with XPU Graphs Disabled (adv images v4-v9)
 Serving qwen3.8-27b-fp8 TP=2 with `VLLM_XPU_ENABLE_XPU_GRAPH` unset/0 (but
@@ -270,6 +318,34 @@ latent gather (per-step allocator churn removed); (3) serve env
 allocator) to eliminate fragmentation-driven alloc stalls. Workload-
 random: v15b's clean 116k tokens were protocol luck, not a fix.
 
+ADDENDUM 2 (2026-08-27 19:49, adv:v17 PRISTINE-BOOT recurrence —
+host-state hypothesis retired): a fresh reboot (0 prior resets, clean
+dmesg), fresh v17 serve (arena pre-alloc #05e live, expandable_segments
+live, dflash grow-only scratch + stall guard live, gmu 0.8, dflash k=4,
+greedy) passed all gates then died 2 min 49 s into a deep40k at
+15,341 tokens with the 16:52 signature verbatim: single ccs reset on
+GPU1 (gpu da:00.0, guc_id=34), health STILL 200, workers spinning
+99.5%/75.3%, BOTH GPUs pegged ~100% util at ~80 W in xpu-smi (the
+oneCCL spin kernels burning both engines), client stream frozen. NO
+DFLASH_STALL line preceded the reset (the only 4 were cold-JIT at
+19:45) — the drafter is exonerated for this instance; the trigger is
+again the collective spin path. Teardown of the wedged serve added the
+documented 3 cleanup resets (1->4). Discriminator verdict: (a) the
+fault is instance-random, NOT accumulated host state — a pristine boot
+does not immunize; (b) all four shipped mitigations (stall guard,
+grow-only scratch, expandable_segments, arena pre-alloc) do NOT
+prevent this family — they fixed the OTHER failure modes (#05b/#05e
+boot wedges), which is why v17 boots 3/3 first-try at gmu 0.8 where
+v14 wedged ~1/4-1/3 of launches; (c) memory pressure shifts the odds
+(v15b 2/2 deep survivals at 0.75 vs v17 0/2 at 0.8, but the 16:52
+death was AT 0.75) — probabilistic, not deterministic. Operational
+posture stands: shallow/interactive serving is rock-solid in every
+healthy mode; deep single streams carry irreducible xe-fault risk
+until the driver race is fixed — bound it with the supervisor
+(serve_supervised.sh) + reboot protocol, and prefer gmu 0.75 for
+deep-stream-only deployments (+26% KV pool at 0.8 is not worth the
+shorter mean-time-to-fault for that workload class).
+
 ### (b) TurboQuant padded presets wedge in post-capture warmup (graphs ON)
 
 With b19d92f (stride-safe flat view in `triton_turboquant_store`) the
@@ -291,6 +367,55 @@ incompatibility is specifically the PIECEWISE-capture-context +
 eager-collective warmup, the same interaction `xpu.py:443` warns about
 for large capture lists.
 
+RESOLVED 2026-08-27 (adv:v17, two-part fix in gpu_worker.py / vllm.py):
+
+1. **TQ-safe warmup** — when `cache_dtype` starts with `turboquant` and
+   `VLLM_XPU_TQ_SAFE_WARMUP=1` (default), the post-capture eager
+   `_dummy_run` (the 64-reqs×5 shape that poisons the queue) is skipped
+   entirely; sampler warmup runs on synthesized zero hidden states
+   instead. `hidden_size` is resolved via `hf_config.get_text_config()`
+   (hybrid configs like `Qwen3_5Config` nest it inside `text_config` —
+   the first cut read `hf_config.hidden_size` directly and crashed
+   cleanly; fixed the same day). If the size cannot be resolved the code
+   falls through to the upstream eager path.
+2. **Spec auto-disable** — requesting a drafter together with a TQ KV
+   dtype on XPU now logs a WARNING and serves target-only
+   (`VLLM_ALLOW_TQ_SPEC=1` overrides), instead of wedging in the drafter
+   warmup.
+
+3. **Generalized in adv:v18** — the post-capture skip is no longer
+   TQ-only: `spec_active AND VLLM_XPU_ENABLE_XPU_GRAPH=1` also skips
+   the eager post-capture `_dummy_run` (knob
+   `VLLM_XPU_SPEC_SAFE_WARMUP`, default 1). The same never-captured
+   spec shape (64 reqs × (k+1)) faults the xe ccs engine even on
+   bf16/fp8 KV once graphs are on — this was the #03 boot-fault
+   cluster (a8/a9/a9r/a9r3, 4/4). See #03 ROOT CAUSE.
+
+Live validation (2026-08-27 battery, arm `v17a5_k8v4_spec`): k8v4 booted
+healthy in 330 s **with graphs ON** — first time ever (every prior boot
+wedged per this section). Gates: warm512 17.8-19.3 s @ 26.5-28.8 tok/s,
+1536 in 59.9 s @ 25.7 tok/s — ~3.7× the historical `--enforce-eager`
+fallback (7.3 tok/s). Auto-disable fired on both launch attempts.
+
+NEW BOUND (same battery): the 60k-token longctx probe (60k prompt +
+1536 gen) on k8v4 tripped the (a) xe-fault family — single ccs engine
+reset (GPU0 b1:00.0, guc_id=29) ~79 s into the probe, right at
+end-of-prefill / start-of-decode at 60k depth, with spec already
+auto-disabled (pure TQ target-only, no drafter in play). Health stayed
+200 (zombie serve), standard teardown + reboot protocol applied.
+Shallow-context serving (≤~2k depth gates) was clean before and after,
+and a continuous 5k-token deep gen on k8v4 in the same battery
+(`v17a6_k8v4_deep5k`) completed 5000/5000 @ 26.65 tok/s with ZERO
+resets. Counter-data point: the SAME 60k longctx probe on
+`turboquant_4bit_nc` (`v17a7_tq4nc_longctx`) PASSED cleanly (wall
+100.7 s, 15.25 tok/s, ttft 32 s, zero resets) — so the extreme-depth
+hazard is k8v4-specific or a random-family hit (n=1 each; the (a)
+family is instance-random), NOT TQ-universal. Conclusion: TQ presets
+are now *bootable and fast* with graphs (both flavors), k8v4 should be
+kept out of ≈60k-deep contexts until more data exists (fp8/bf16 KV are
+validated clean there), and the standard supervisor/reboot protocol
+covers the residual risk.
+
 ### (c) `--kv-cache-dtype float16` is rejected outright
 
 `reshape_and_cache_flash` (flash-attn KV write op, upstream csrc compiled
@@ -308,6 +433,16 @@ newlines (greedy whitespace collapse at depth), decode still healthy. The
 engine never faulted — the sequence was simply FINISHED early; the stop
 decision slips past `ignore_eos` somewhere in the dflash/async-scheduling
 finish path. Not fixed in code yet.
+
+FIXED 2026-08-27 (adv:v17, v1/core/sched/utils.py `check_stop`):
+`ignore_eos` is now a hard guard on every stop branch — the eos check,
+stop_token_ids (default-sampling trap: model generation_config stop
+ids honored only when ignore_eos is false), and the length cap (which
+previously let an early-window finish through). Early/ambiguous
+finishes log `FINISH_DIAG` lines (stop path + token counts) so any
+residual leak is visible in serve logs instead of silent. Client-side
+`min_tokens == max_tokens` pinning remains good hygiene for deep gens
+(it also protects against pre-v17 servers).
 
 Workaround (validated in v15b): set `min_tokens` equal to `max_tokens` in
 the request. Both 40k and 76k gens then return `finish=length` with
@@ -360,9 +495,41 @@ still struck 14 min into the first 0.75 test, at 28.9k tokens. Cost: KV
 pool 143,808 → 112,479 tokens (~22% smaller, still 1.4× the 80k
 max-model-len window).
 
-Deeper candidate fix (fork, not yet implemented): run one dummy TP
+Deeper candidate fix (fork): run one dummy TP
 all-reduce BEFORE loading weights (while device memory is still free)
 to pre-allocate the oneCCL scratch arena, restoring 0.8 utilization.
+
+RESOLVED 2026-08-27 (adv:v17, `VLLM_XPU_PREALLOC_CCL_ARENA=1` default
+on, gpu_model_runner.py load_model start): exactly that fix — a
+min(max_num_batched_tokens, 8192)-token TP all-reduce scratch arena is
+allocated and freed before KV pool sizing. Validated live: 3/3
+first-try healthy boots at `--gpu-memory-utilization 0.8` (previously
+~1/4-1/3 wedge rate) with zero UR39, and KV pool restored to 142,317
+tokens (+26% vs the 0.75 workaround's 112,479 — matches the pre-fix
+0.8 pool exactly, i.e. no hidden memory cost). Scope unchanged: this
+fixes the STARTUP wedge only; the mid-flight (a) family is unaffected
+(see addenda). `--gpu-memory-utilization 0.75` remains available as a
+deep-stream risk-reduction lever.
+
+CEILING NOTE (v17 battery, arm `v17a8_gmu09_spec`): at
+`--gpu-memory-utilization 0.9` graph capture completes (19/19 sizes,
+2.15 GiB, KV pool 204,231 tokens = +43% vs 0.8) but a ccs engine reset
+fires ~60 s AFTER capture in the post-capture warmup collective phase
+(GPU1 da:00.0, guc_id=24), followed by the shm_broadcast 60 s heartbeat
+wedge.
+
+REVISED VERDICT (2026-08-27 late — supersedes the confound note): the
+a8@0.9 fault and the "confounding" a9@0.8 fault are the SAME bug, and
+it is NOT headroom: it is the #03 root cause (XPU graphs + dflash
+drafter; eager post-capture `_dummy_run` on never-captured spec shapes
+→ xe ccs reset). Both arms loaded the drafter on the post-rebuild v17
+image; every healthy 0.8 boot that day either predated the rebuild
+(graphs off) or ran without a drafter. The "post-capture collectives do
+not fit at 0.9" headroom theory is retired; the #05e arena fix itself
+stands (3/3 healthy pre-rebuild boots at 0.8 with the fix, KV pool
++26%). 0.9 is UNTESTED since the v18 fix — the +43% KV pool datapoint
+(capture completed) makes it a worthwhile future cell, now that the
+graphs+spec boot fault is fixed in adv:v18.
 
 Workarounds (section 05 footer): interactive requests ≤1536 tokens are
 rock-solid in every healthy mode; deep single streams are safe on a
@@ -371,6 +538,7 @@ clean host with graphs ON (76k full-window validated) — pin
 reset; retry bad boots). A serve that wedges in the first ~5 min at 0.8 utilization is (e) —
 kill, reboot the host, relaunch at 0.75; never retry a wedge on an
 un-rebooted host (pending resets poison it, #03). fp8 KV + dflash is the best validated
-capacity/speed point; TQ presets only with `--enforce-eager` (7-7.5
-tok/s single stream, spec acceptance ~1-2% — debugging only, graphs are
-~9× faster).
+capacity/speed point; TQ presets boot WITH GRAPHS on adv:v17 (26-29
+tok/s single stream, (b) resolved; tq4nc even cleared the 60k longctx)
+— keep k8v4 out of ≈60k-deep contexts (see (b) NEW BOUND); fp8 or bf16
+KV for long-context work.
