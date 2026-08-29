@@ -701,3 +701,72 @@ SpecDecoding windows, which remain the authoritative steady source). The
 authoritative steady source for spec cells = serve-log SpecDecoding windows
 (tail-6).
 
+## 09 — MTP + cudagraphs: oneCCL allgather segfault inside the eagle_head
+torch.compile warmup (MTP dead with any graphs mode on XPU TP=2)
+(FOUND + FIXED 2026-08-29, adv:v22; user-reported "MTP do not work" on all
+images incl. intel's)
+
+**Symptom.** `--speculative-config {"method":"mtp",...}` with
+`--compilation-config {"cudagraph_mode":"FULL_DECODE_ONLY"}` (or PIECEWISE)
+dies during boot on both TP ranks:
+
+```
+sycl queue_impl::submit_impl -> invoke_barrier ->
+ccl allgatherv_large_su_ring<half> -> ... ->
+c10d ProcessGroupXCCL::allgather_into_tensor_coalesced ->
+all_gather_into_tensor -> pythonFallback (dynamo_eval_custom_code)
+!!!!!!! Segfault encountered !!!!!!!  -> VllmWorker died unexpectedly
+```
+
+**Isolation matrix (v21 image, one boot per cell).** graphs crashed at k=4
+AND k=1; `--enforce-eager` booted at both (E[len] 3.38 @ k4). k, KV dtype,
+TQ, our overlays, parsers: all irrelevant. Raising
+`CCL_SYCL_ALLGATHERV_SMALL_THRESHOLD` did not help (user-tested). Same crash
+on the stock intel image.
+
+**Root cause.** The MTP head classes (`Qwen3_5MTP` + inner
+`Qwen3_5MultiTokenPredictor`) are `@support_torch_compile`-decorated; with
+graphs mode `llm_base_proposer.initialize_cudagraph_keys` forces the drafter
+to PIECEWISE, so the head enters torch.compile (tag `eagle_head`). The
+head's sampling path issues oneCCL allgathers — the full-vocab fp16 logits
+gather (`LogitsProcessor._get_logits/_gather_logits` behind
+`compute_logits().argmax()`) or the padded [batch, 64] gather in
+`get_top_tokens` — from inside dynamo-evaluated code, and that combination
+segfaults. The identical collectives run fine eager (the matrix's eager
+cells). #05 family: eager collectives x compiled regions on oneCCL/xe. The
+TARGET backbone is unaffected (its collectives run inside full XPU graph
+capture, which is validated).
+
+**Fix (v22, `VLLM_XPU_MTP_EAGER_HEAD`, default 1 on XPU, =0 = stock).**
+(1) `qwen3_5_mtp.py`: module-tail `ignore_torch_compile()` on
+`Qwen3_5MultiTokenPredictor`, `Qwen3_5MTP`, `Qwen3_5MoeMTP` — the head never
+compiles. Both decorated classes must carry the key (the decorators
+machinery only skips the exact class holding it; the inner `self.model` is
+separately decorated). (2) `llm_base_proposer.py`:
+`initialize_cudagraph_keys` forces the drafter to NONE for `method=="mtp"`
+(no compiled subgraphs exist to capture piecewise; also selects the
+`direct_eager_inputs` propose fast path). Method-gated: dflash/eagle
+drafters keep PIECEWISE. Effect: target keeps FULL_DECODE_ONLY graphs, the
+single-layer head runs eager — MTP k4 boots and reaches steady 72-76 tok/s
+on the canonical test (2.2x the dflash k2 user config), E[len] 4.2, 0
+resets.
+
+**Observed alongside (NOT a v22 issue, documented for awareness).** On
+2026-08-29 the chat endpoint (any image, incl. v21 replicas, any spec method)
+stopped producing `delta.content` within 4096 tokens: the model's `<think>`
+phase runs past the budget (coherent planning text, no corruption, no
+marker-loss; the fork classifies it under `message.reasoning`). The
+completions endpoint (no chat template) finishes naturally in ~3200-3500
+tokens. Discriminator: v21-image dflash replica same-day reproduced the
+identical profile (0 content events, engine 30-33 tok/s) as v22 —
+environmental/model-behavior shift after the host reboot, not code. Chat
+content-event benches are therefore not comparable across days; use
+`bench_completions.py` or engine SpecDecoding windows.
+
+**Lesson.** Speculative-draft heads that sample through TP-gathered logits
+must not be torch.compile'd on this oneCCL/xe stack; keep drafters eager
+(their device cost is negligible next to the graphed target verify) — and
+gut-check "spec changes output quality" claims with a same-day eager/stock
+replica before blaming the new code.
+
+

@@ -388,6 +388,53 @@ behavior and v20-level throughput. Full root-cause detail and the v21d A/B
 (compressed draft pool was the sole acceptance/throughput regression;
 drafter-fp8-v5 swap is neutral) in the v21 patch README.
 
+**v22 (2026-08-29): MTP with graphs now boots (eager MTP head) — 72-74
+tok/s, ≈2.2x the user's live dflash k2 config.** MTP + graphs (any k, any
+KV dtype, v21 and intel images) died at boot in the `eagle_head`
+torch.compile warmup: the MTP head's sampling path issues oneCCL
+full-vocab allgathers from inside dynamo-evaluated code →
+`allgatherv_large_su_ring<half>` segfault on both ranks (KNOWN_ISSUES
+#09; same #05-family eager-collectives-x-compiled-regions hazard, hitting
+the drafter this time). v22 (patches/qwen38-dflash-v22) keeps the TARGET
+on FULL_DECODE_ONLY decode graphs and runs only the single-layer MTP head
+eager — `ignore_torch_compile()` on the three MTP head classes +
+drafter `CUDAGraphMode.NONE` for `method=="mtp"` — env-gated
+`VLLM_XPU_MTP_EAGER_HEAD` (default 1 on XPU; `0` = stock crash, rollback).
+dflash/eagle drafters are untouched (method-gated).
+
+Measured (completions endpoint — see environmental note below; one boot
+per cell, zero resets everywhere; canonical sampling):
+
+| cell | image | spec | endpoint | steady tok/s | tok/event | E[len] |
+|---|---|---|---|---|---|---|
+| mtpB2 | v22 | mtp k4 graphs | completions | **72.23** | 4.15 | — |
+| mtpB3 | v22 | mtp k4 graphs | completions | **74.31** | 4.19 | — |
+| engine windows | v22 | mtp k4 graphs | SpecDecoding | 66-88 (avg ~77) | — | 4.17-4.44 |
+| t2 dflash k2 (user cfg) | v22 | dflash k2 graphs | chat/engine | 32.5-34.2 engine | 1.77-2.61 | 1.77-2.61 |
+| t2 dflash k2 (x-check) | v22 | dflash k2 graphs | completions | 44.54-45.41 | — | — |
+| v21-repro same-day | v21 | dflash k2 graphs | completions | 45.30 | — | — |
+| t21buser (yesterday) | v21 | dflash k2 graphs | chat | 32.93 | 1.77 | 1.66 |
+| bar | v21 | none | chat | 32.79 | 1.00 | — |
+
+t2 no-regression gate vs 32.93 ±3%: **PASS** (engine 32.5-34.2;
+completions within noise of the same-day v21-image replica 45.30) — the
+`llm_base_proposer.py` edit provably left dflash untouched. Headline:
+**MTP k4 with graphs ≈ 2.2x the user's live dflash k2 and ≈ 2.2x nospec**;
+the eager head costs little (the win is the graphed target verify at
+E[len] ~4.2).
+
+Environmental note (2026-08-29): on the chat endpoint +
+`--reasoning-parser deepseek_r1`, the model's `<think>` phase now exceeds
+4096 tokens on ALL configs — v22 MTP, v21 eager MTP, v22 dflash, and a
+same-day v21-image replica of the user's exact config (0 content events,
+engine 30.4-33.0 tok/s ≈ v22's t2) — so chat-endpoint content-rate
+benches yield 0 events and are not comparable across days. This is
+pre-existing fork MTP behavior (v21 eager A/B identical long-think), not
+a v22 regression; the completions endpoint (no chat template) finishes
+naturally in ~3200-3500 tokens. Use completions-endpoint or engine-window
+numbers for MTP-vs-dflash compares. Full detail in the v22 patch README
+and KNOWN_ISSUES #09.
+
 Conclusions:
 
 - **The v19-era "TQ sampled acceptance = exactly 0" was NOT a sampling bug:
