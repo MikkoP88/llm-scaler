@@ -360,6 +360,34 @@ config**; c1 (bf16 k4) 44.0 (+32.9%). k4 remains default, `SPEC_K=2` for
 max tok/s on tq4nc/k8v4. Cell notes (intermittent #05(a) re-runs, k2c2
 stall windows, DHCP host moves) in the v20 patch README.
 
+**v21 (2026-08-29): spec decode now honors `--kv-cache-dtype` in VRAM —
+draft-pool parity.** v20's k2c3 config could NOT boot at the user's
+`--max-model-len 262144` ("13.09 GiB KV needed vs 6.67 available"): v20's
+own guard rewrote the DRAFT engine's turboquant_* dtype to "auto", forcing
+an uncompressed bf16 drafter pool on top of the compressed target pool —
+nospec booted, spec could not. v21 (patches/qwen38-dflash-v21) keeps the
+turboquant dtype on the draft pool behind a two-regime policy (tq4nc
+target: bf16 draft `<=131072`, `turboquant_k8v4` above — derived from the
+measured 6.67 GiB budget; other dtypes inherit v20 exactly), plus the
+non-causal draft-attention support TQ needed (DFlash draft rows attend the
+full stored context; new NON_CAUSAL mode of the MQ kernel) and two
+mixed-dtype pool-sizing fixes. Final image, all gates PASS, zero resets:
+
+| cell | config | v20 gate | v21 | E[len] |
+|---|---|---|---|---|
+| bar | tq4nc nospec 262144 | 32.78 | **32.79** | — |
+| k2c3 | tq4nc k2 98304 | 39.97 | **39.78** (−0.5%) | 2.18 |
+| c3 | tq4nc k4 98304 | 33.39 | **34.08** (+2.1%) | 1.87 |
+| c2 | fp8 k4 98304 | 33.34 | **34.34** (+3.0%) | 2.12 |
+| t21buser | tq4nc k2 262144 (user cfg) | cannot boot | **32.93** | 1.66 |
+| c2mix | fp8 + k8v4 draft override | crash | **31.42** | 2.30 |
+
+The user's 262144 spec config now boots and edges out its nospec twin
+(32.93 vs 32.79); at `<=131072` the policy keeps the v20 (bf16-draft)
+behavior and v20-level throughput. Full root-cause detail and the v21d A/B
+(compressed draft pool was the sole acceptance/throughput regression;
+drafter-fp8-v5 swap is neutral) in the v21 patch README.
+
 Conclusions:
 
 - **The v19-era "TQ sampled acceptance = exactly 0" was NOT a sampling bug:

@@ -363,6 +363,16 @@ until the driver race is fixed — bound it with the supervisor
 deep-stream-only deployments (+26% KV pool at 0.8 is not worth the
 shorter mean-time-to-fault for that workload class).
 
+ADDENDUM 3 (2026-08-29, v21b bar cell — instance-random, reboot-clean): a
+healthy tq4nc nospec @262144 serve (fresh boot, 2 min into the canonical
+car-game run) died at ~2300/4096 tokens with 4 ccs/bcs engine resets (both
+GPUs) and a frozen stream — the same family, nospec this time. dmesg
+showed GuC 70.44.1 loaded vs the 70.49.4 recommended by the driver
+package (a post-reboot firmware-version drift is suspected but unproven).
+Protocol reboot resolved it cleanly (host DHCP-moved .61 -> .62); the
+subsequent v21c/v21d/v21e chains (12+ serves across all KV dtypes, spec
+and nospec, including 262144 spec cells) ran with ZERO resets.
+
 ### (b) TurboQuant padded presets wedge in post-capture warmup (graphs ON)
 
 With b19d92f (stride-safe flat view in `triton_turboquant_store`) the
