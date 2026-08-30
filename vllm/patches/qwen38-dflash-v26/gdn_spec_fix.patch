@@ -1,0 +1,218 @@
+diff --git a/orig/causal_conv1d.hpp b/fixed/causal_conv1d.hpp
+index b7ba51f..9f2856d 100644
+--- a/orig/causal_conv1d.hpp
++++ b/fixed/causal_conv1d.hpp
+@@ -485,9 +485,10 @@ struct update_states_kernel {
+ // one sequence in a sliding window:
+ //   - q/k/v lanes: load Width-1 prior values from
+ //     conv_states[cache_indices[batch, num_accepted_tokens[batch] - 1]],
+-//     then for every t_local in [0, num_spec_tokens) shift the window left
+-//     by one, load the new input from mixed_qkvz[token_indx[...]], apply the
+-//     conv (+bias +activation) and store to local q/k/v outputs.
++//     then for every t_local in [0, query_start_loc[b+1]-query_start_loc[b])
++//     shift the window left by one, load the new input from
++//     mixed_qkvz[token_indx[...]], apply the conv (+bias +activation) and
++//     store to local q/k/v outputs.
+ //   - z lanes: pure reorder, no conv.
+ //   - b/a lanes: pure reorder.
+ // After processing all tokens we write the trailing Width-1 input values to
+@@ -516,6 +517,7 @@ struct causal_conv1d_spec_kernel {
+       const T* conv_bias,
+       T* conv_states,
+       const int conv_states_stride_0,
++      const int* query_start_loc,
+       const int* token_indx,
+       const int* cache_indices,
+       const int cache_indices_stride_0,
+@@ -542,6 +544,7 @@ struct causal_conv1d_spec_kernel {
+         conv_bias(conv_bias),
+         conv_states(conv_states),
+         conv_states_stride_0(conv_states_stride_0),
++        query_start_loc(query_start_loc),
+         token_indx(token_indx),
+         cache_indices(cache_indices),
+         cache_indices_stride_0(cache_indices_stride_0),
+@@ -627,9 +630,22 @@ struct causal_conv1d_spec_kernel {
+       }
+     }
+ 
++    // -- llm-scaler fix (KNOWN_ISSUES #11 wedge): walk the ACTUAL per-request
++    // token range [query_start_loc[b], query_start_loc[b+1]) instead of a
++    // rectangular b*num_spec_tokens+t_local walk. Ragged spec steps (final
++    // verify steps clamped by the completion budget, drafter steps processing
++    // only the accepted tokens, and cudagraph padding rows) make
++    // spec_token_indx shorter than num_spec_decodes*num_spec_tokens, so the
++    // rectangular walk read past token_indx (garbage global_t -> wild writes
++    // to core_attn_out/z) and wrote q/k/v/b/a rows past spec_token. For full
++    // batches query_start_loc[b] == b*num_spec_tokens, so behavior there is
++    // bit-identical.
++    const int token_start = query_start_loc[batch_id];
++    const int token_count = query_start_loc[batch_id + 1] - token_start;
++
+     // -- b / a reorder (mixed_ba GLOBAL → b_out/a_out LOCAL) ----------------
+-    for (int t_local = 0; t_local < num_spec_tokens; ++t_local) {
+-      const int token_id_local = batch_id * num_spec_tokens + t_local;
++    for (int t_local = 0; t_local < token_count; ++t_local) {
++      const int token_id_local = token_start + t_local;
+       const int global_t = token_indx[token_id_local];
+       if constexpr (ReorderInput) {
+         if (qkvz_elems_id < num_v_heads) {
+@@ -666,8 +682,8 @@ struct causal_conv1d_spec_kernel {
+     if (is_z) {
+       int z_elems_id =
+           k_heads_id * z_dim + qkvz_dim_id - (q_dim + k_dim + v_dim);
+-      for (int t_local = 0; t_local < num_spec_tokens; ++t_local) {
+-        const int token_id_local = batch_id * num_spec_tokens + t_local;
++      for (int t_local = 0; t_local < token_count; ++t_local) {
++        const int token_id_local = token_start + t_local;
+         const int global_t = token_indx[token_id_local];
+ #pragma unroll
+         for (int e = 0; e < elems_per_item; ++e) {
+@@ -689,6 +705,10 @@ struct causal_conv1d_spec_kernel {
+     // num_accepted_tokens == 0.
+     int init_col = num_accepted_tokens[batch_id] - 1;
+     if (init_col < 0) init_col = 0;
++    // llm-scaler fix: also clamp the top. Columns [0, num_spec_tokens) exist
++    // in the cache_indices row (states written by earlier steps), so an
++    // out-of-range accepted count must never index past the row.
++    if (init_col > num_spec_tokens - 1) init_col = num_spec_tokens - 1;
+     const int init_state_id =
+         cache_indices[batch_id * cache_indices_stride_0 + init_col];
+ 
+@@ -724,8 +744,8 @@ struct causal_conv1d_spec_kernel {
+       }
+     }
+ 
+-    for (int t_local = 0; t_local < num_spec_tokens; ++t_local) {
+-      const int token_id_local = batch_id * num_spec_tokens + t_local;
++    for (int t_local = 0; t_local < token_count; ++t_local) {
++      const int token_id_local = token_start + t_local;
+       const int global_t = token_indx[token_id_local];
+ 
+       // Shift window left by 1 (for t_local == 0 the trailing slot is fresh).
+@@ -837,6 +857,7 @@ struct causal_conv1d_spec_kernel {
+   const T* conv_bias;
+   T* conv_states;
+   const int conv_states_stride_0;
++  const int* query_start_loc;
+   const int* token_indx;
+   const int* cache_indices;
+   const int cache_indices_stride_0;
+@@ -911,6 +932,7 @@ void kernel_launcher(
+           conv_bias,
+           conv_states,
+           conv_states_stride_0,
++          query_start_loc,
+           token_indx,
+           cache_indices,
+           cache_indices_stride_0,
+diff --git a/orig/gated_delta_rule.hpp b/fixed/gated_delta_rule.hpp
+index 445ff26..3233edc 100644
+--- a/orig/gated_delta_rule.hpp
++++ b/fixed/gated_delta_rule.hpp
+@@ -310,6 +310,7 @@ struct gated_delta_rule_spec_kernel {
+       const T* dt_bias,
+       StateT* ssm_state,
+       const int ssm_state_stride_0,
++      const int* query_start_loc,
+       const int* token_indx,
+       const int* cache_indices,
+       const int cache_indices_stride_0,
+@@ -330,6 +331,7 @@ struct gated_delta_rule_spec_kernel {
+         dt_bias(dt_bias),
+         ssm_state(ssm_state),
+         ssm_state_stride_0(ssm_state_stride_0),
++        query_start_loc(query_start_loc),
+         token_indx(token_indx),
+         cache_indices(cache_indices),
+         cache_indices_stride_0(cache_indices_stride_0),
+@@ -391,6 +393,10 @@ struct gated_delta_rule_spec_kernel {
+     // init_col = num_accepted_tokens[batch_id] - 1 (clamped to >= 0).
+     int init_col = num_accepted_tokens[batch_id] - 1;
+     if (init_col < 0) init_col = 0;
++    // llm-scaler fix (KNOWN_ISSUES #11 wedge): also clamp the top. Columns
++    // [0, num_spec_tokens) exist in the cache_indices row, so a stale or
++    // garbage accepted count must never index past it.
++    if (init_col > num_spec_tokens - 1) init_col = num_spec_tokens - 1;
+     const int init_state_idx =
+         cache_indices[batch_id * cache_indices_stride_0 + init_col];
+     const StateT* init_state_ptr =
+@@ -407,12 +413,22 @@ struct gated_delta_rule_spec_kernel {
+       }
+     }
+ 
+-    // -- Iterate over the num_spec_tokens tokens of this sequence -------------
+-    for (int t_local = 0; t_local < num_spec_tokens; ++t_local) {
+-      // Local token index inside q/k/v/b/a (which were sized
+-      // num_spec_decodes * num_spec_tokens and ordered by
+-      // spec_query_start_loc).
+-      const int t = batch_id * num_spec_tokens + t_local;
++    // -- Iterate over this request's ACTUAL token range ----------------------
++    // llm-scaler fix (KNOWN_ISSUES #11 wedge): q/k/v/b/a are sized
++    // spec_token (= query_start_loc[num_spec_decodes]) and ordered by
++    // spec_query_start_loc, NOT rectangularly. Walk
++    // [query_start_loc[b], query_start_loc[b+1]): ragged steps (final verify
++    // steps clamped by the completion budget, drafter steps replaying only
++    // the accepted tokens, cudagraph padding rows) have
++    // spec_token_indx shorter than num_spec_decodes*num_spec_tokens, so the
++    // old rectangular t = b*num_spec_tokens+t_local read token_indx and
++    // q/k/v/b/a out of bounds and scattered core_attn_out through a garbage
++    // global_t. For full batches the two indexings coincide.
++    const int token_start = query_start_loc[batch_id];
++    const int token_count = query_start_loc[batch_id + 1] - token_start;
++    for (int t_local = 0; t_local < token_count; ++t_local) {
++      // Local token index inside q/k/v/b/a.
++      const int t = token_start + t_local;
+ 
+       float b_local = b[t * num_v_heads + num_v_heads_id];
+       float beta = act_sigmoid(b_local);
+@@ -537,6 +553,7 @@ struct gated_delta_rule_spec_kernel {
+   const T* dt_bias;
+   StateT* ssm_state;
+   const int ssm_state_stride_0;
++  const int* query_start_loc;
+   const int* token_indx;
+   const int* cache_indices;
+   const int cache_indices_stride_0;
+@@ -616,6 +633,7 @@ void kernel_launcher_spec(
+     const T* dt_bias,
+     StateT* ssm_state,
+     const int ssm_state_stride_0,
++    const int* query_start_loc,
+     const int* token_indx,
+     const int* cache_indices,
+     const int cache_indices_stride_0,
+@@ -641,6 +659,7 @@ void kernel_launcher_spec(
+         dt_bias,
+         ssm_state,
+         ssm_state_stride_0,
++        query_start_loc,
+         token_indx,
+         cache_indices,
+         cache_indices_stride_0,
+@@ -737,6 +756,7 @@ void gated_delta_rule(
+         reinterpret_cast<scalar_t*>(dt_bias.data_ptr()),             \
+         reinterpret_cast<state_scalar_t*>(ssm_state.data_ptr()),     \
+         ssm_state_stride_0,                                          \
++        reinterpret_cast<int*>(query_start_loc->data_ptr()),         \
+         token_indx.has_value()                                       \
+             ? reinterpret_cast<int*>(token_indx->data_ptr())         \
+             : nullptr,                                               \
+diff --git a/orig/gdn_attn_interface.cpp b/fixed/gdn_attn_interface.cpp
+index 22b56de..a4a2ef1 100644
+--- a/orig/gdn_attn_interface.cpp
++++ b/fixed/gdn_attn_interface.cpp
+@@ -213,6 +213,13 @@ void gdn_attention(
+   // (causal_conv1d / gated_delta_rule) likewise walk per-request ranges via
+   // spec_query_start_loc, so a short spec region is handled correctly. Only the
+   // conservation check below is required.
++  // (llm-scaler fix, KNOWN_ISSUES #11: the paragraph above was aspirational
++  // before -- the spec kernels walked a rectangular
++  // batch_id*num_spec_tokens+t_local index over the raggedly-truncated
++  // spec_token_indx and over the spec_token-sized q/k/v/b/a scratch, i.e.
++  // out-of-bounds reads AND writes on every ragged step (final verify steps,
++  // drafter replay steps, cudagraph padding rows). They now really do walk
++  // [spec_query_start_loc[b], spec_query_start_loc[b+1]).)
+   TORCH_CHECK(non_spec_token + spec_token == num_actual_tokens);
+ 
+   // check core_attn_out / z / projected_states_{qkvz,ba} shapes.

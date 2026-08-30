@@ -850,6 +850,52 @@ NOT scheduler loss, NOT GuC-reset residue, NOT host state
 2026-08-30 after instrumented reproduction on v22/v23/v24 boots of the
 rebooted host)
 
+**v26 update (2026-08-30 evening, image adv:v26, host 10.20.3.65).** Two
+results sharpen this entry decisively:
+
+1. **The GDN spec-kernel OOB is real, fixed, and NOT this wedge.** The
+   two XPU GDN spec kernels walked a rectangular `batch_id*k + t_local`
+   index over raggedly-truncated spec buffers (verify-tail 1-of-5,
+   drafter-replay, cudagraph padding rows) — OOB reads/writes that
+   device-fault the GPU deterministically on the exact tail shape
+   (`repro_gdn_spec_oob.py`, `UR_RESULT_ERROR_DEVICE_LOST` + xe ccs
+   engine reset on iteration 0, twice). v26 fixes the walks
+   (`vllm/patches/qwen38-dflash-v26/`, wheel-level regression CLEAN
+   0/50, full-batch outputs bit-identical). The ≥32k serve stall,
+   however, persists unchanged on the fixed wheel.
+
+2. **The wedge requires spec x (any) cudagraphs x ≥32k context.** Arm
+   matrix on v26, probe `wedge_probe.py 32k:3` (MTP k4 tq4nc unless
+   noted): stock FULL_DECODE_ONLY **2/3 wedge**; PIECEWISE **1/3**;
+   k=1 (verify q_len=2) **1/3**; KV `auto`/fp16 **1/3**;
+   `CCL_ENABLE_SYCL_KERNELS=0` **2/3**; `DISABLE_ESIMD_GDN_SPEC=1`
+   **1/3** — everything that keeps graphs wedges. `--enforce-eager`
+   (no compile, no graphs) **0/11 CLEAN**; no-spec + FULL graphs
+   **0/3 CLEAN**. The GDN spec kernels, the ESIMD fused kernel, the TQ
+   kernels and the oneCCL kernel transport are all exonerated as the
+   primary cause; the oneCCL spin kernels seen in the native stacks are
+   the *symptom* (peer-rank collectives that can never complete), not
+   the root. The root lives in the graphed spec pipeline meeting the
+   eager MTP drafter under TP=2 at long context — most plausibly a
+   replay/interleave hazard (captured wait or stale dynamic state on
+   the victim rank's queue) that desynchronizes the ranks; the victim's
+   host then cannot even SUBMIT the post-sample D2H (align-mode
+   `.cpu()`, gpu_model_runner.py:1489 in v26) while the peer runs a
+   step ahead into the eager head (py-spy 3-round capture, 2026-08-30).
+   Wedged requests are lost; the ENGINE itself recovers after the
+   client disconnect and serves subsequent traffic.
+
+**Workarounds (validated 2026-08-30).**
+- Long-context serving (≥32k): run **without spec** (nospec +
+  FULL_DECODE_ONLY graphs) — 0 wedges across the 32k-262k battery AND
+  the fastest arm at long ctx (28.2 tok/s @32k vs 19-25 healthy MTP
+  graphs / 15-20 MTP eager). MTP is a net loss at ≥32k on this setup
+  even when healthy.
+- If MTP must stay on at ≥32k: `--enforce-eager` (0/11 clean) at the
+  cost of decode speed.
+- MTP + graphs remains fine for short contexts (the historical ~4.8k
+  population wedged ~7.5%; 12-token prompts 0/200).
+
 **Corrected verdict.** The original entry below suspected stale GuC-reset
 state (17:36 CCS reset never followed by a host reboot). That is disproven:
 identical behavior on the freshly rebooted host, and the wedges are
@@ -970,10 +1016,16 @@ LONG_CONTEXT_ANALYSIS for the perf curves). Also measured: MTP's draft KV
 pool cuts request KV capacity 23% (869,550 -> 1,130,964 tokens without
 spec; max 262k-request concurrency 3.32x -> 4.31x).
 
-**FINAL UPDATE 2026-08-30 (evening): ten-arm isolation matrix + two live
-py-spy/xpu-smi captures. The wedge is a DEVICE-SIDE kernel spin in the
-GDN spec-state path; no host-side or config knob reaches it. Ship = drop
-`--speculative-config` (only 0-wedge arm, and faster than k=4 everywhere);
+**UPDATE 2026-08-30 (evening, v25 image): ten-arm isolation matrix + two
+live py-spy/xpu-smi captures. Verdict at the time — "the wedge is a
+DEVICE-SIDE kernel spin in the GDN spec-state path; no host-side or
+config knob reaches it" — is SUPERSEDED by the v26 matrix above: fixing
+the GDN spec kernels (v26 wheel) did NOT stop the serve wedge, and
+`--enforce-eager` is 0/11 clean, so a config knob does reach it. The GDN
+spec kernels are exonerated as the primary cause; the trigger surface is
+the graphed spec pipeline x the eager drafter under TP=2 at >=32k. The
+arm table and live captures below remain valid data. Ship = drop
+`--speculative-config` (clean at every length, and fastest at >=32k);
 `k=1` is a validated opt-in for <=32k envelopes only.**
 
 *Calibration correction first:* the wedge-probe filler measures 15.7443
@@ -981,7 +1033,13 @@ tokens/repetition (server-reported: 16,646 reps = 262,081 tokens), 2x the
 7.87 the probe assumed until 2026-08-30. Every "32k" row in the arm table
 below and in the v25 README was actually ~65k of prompt. Conclusions are
 unchanged (k=4 wedges at true 32k as well; see DTP1/MALL rows), but length
-labels before that fix read one octave low.
+labels before that fix read one octave low. (Late correction, 2026-08-30:
+`/tokenize` ground truth on the v26 boot is **16.0 tok/rep** — 16,570 reps
+= 265,138 tokens. The 15.7443 constant was back-computed from an HTTP-400
+"prompt contains at least N" message, which is derived from the context
+limit (`limit+1-max_tokens`), not the true count; lengths after the
+15.7443 fix therefore read ~2% low. Immaterial to every conclusion; the
+262k battery probe was recalibrated to 16.0.)
 
 *Arm matrix (k=4 unless noted; wedge = stream never returns; sequential
 single-stream unless noted):*

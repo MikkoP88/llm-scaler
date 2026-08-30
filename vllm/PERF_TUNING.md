@@ -574,6 +574,30 @@ correct (`<think>` + clean HTML). k=1 matches no-spec speed at 32k and
 beats it by +37% at short ctx, but retains a ~40-50% wedge rate at >=64k
 (KNOWN_ISSUES #11 final update) — hence the ship posture below.
 
+### v26 no-spec full-length battery (2026-08-30 late, adv:v26 = GDN spec kernels fixed)
+
+The shipped v26 image (kernel OOB fix, see `patches/qwen38-dflash-v26/`)
+running the ship-posture arm — no spec + FULL_DECODE_ONLY graphs, tq4nc,
+block 512, mamba ssm fp16 — one boot, sequential battery, 64-token
+decodes. Probe density recalibrated via `/tokenize` (true 16.0 tok/rep;
+the historical 15.7443 constant reads ~2% low), so actual prompt lengths
+are ~33k / ~67k / ~133k / ~262k:
+
+| actual ctx | wedges | real decode tok/s | vs v22-era no-spec |
+|---|---|---|---|
+| ~33k | 0/3 | 27.75 / 27.93 | 27.0 |
+| ~67k | 0/3 | 23.60 / 23.64 | 23.6 |
+| ~133k | 0/2 | 18.45 / 18.49 | 17.9 (at 131k, block 128) |
+| ~262k | 0/1 | 12.71 (TTFT 184.7 s) | 12.3 |
+
+Canonical car-game correctness on the same boot: PASS (coherent HTML +
+canvas, 4096 tokens / 100.3 s = 40.8 tok/s at short ctx). Zero xe
+resets, zero lost requests. Confirms (a) the kernel fix changes nothing
+about long-ctx speed — the decay is the bandwidth-bound full-attn KV
+scan, and (b) the no-spec arm is stable across the entire 262k envelope
+on the fixed image. Wedge arm matrix + the spec-x-graphs-x->=32k
+verdict: KNOWN_ISSUES #11 v26 update.
+
 On the user's MTP arm the ≥32k wedge (#11) is effectively DETERMINISTIC:
 4/4 requests (2x 32k, 2x 131k) wedged at the prefill→decode handoff, engine
 frozen (`run=1`, gtok frozen) until client disconnect; prefix-cache retries
