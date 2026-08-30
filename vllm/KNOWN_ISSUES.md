@@ -953,6 +953,23 @@ reboot. dmesg showed `xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset:
 engine_class=ccs ... guc_id=32` pre-boot. Disproven by reproduction on the
 rebooted host; the reset was incidental.
 
+**Update 2026-08-30 (long-context sweep): the wedge rate climbs with prompt
+length until it is effectively deterministic.** Sequential single-request
+probes with the same flags: ~2k prompt completes (15.0 tok/s); **~32k
+wedged 2/2; ~131k wedged 2/2** — each at the prefill→decode handoff
+(prefill bursts at up to ~13k tok/s inside a 10-s window, then `run=1`,
+`generation_tokens_total` frozen forever). Prefix-cache retries of the same
+prompt ALSO wedge (the retry prefills cheaply via the cached blocks, then
+freezes identically) — client retry alone does not rescue a long prompt; it
+must be served without MTP. Net: with MTP k=4 + TP=2, contexts >= ~32k are
+UNUSABLE (near-100% loss), which upgrades guidance item 2 from
+"loss-intolerable workloads" to "any workload with >= ~16-32k prompts".
+Same prompts on the identical boot minus `--speculative-config`: all
+lengths through 262k complete cleanly (see PERF_TUNING
+LONG_CONTEXT_ANALYSIS for the perf curves). Also measured: MTP's draft KV
+pool cuts request KV capacity 23% (869,550 -> 1,130,964 tokens without
+spec; max 262k-request concurrency 3.32x -> 4.31x).
+
 
 ## 12 — temperature=0 outputs on LARGE CHUNKED prompts are not bit-stable
 run-to-run under MTP (fp near-tie flips); bare prompts ARE stable —
@@ -976,5 +993,33 @@ returns bit-identical quantized KV, and bare-prompt greedy is stable. The
 canonical correctness gate remains: hits land exactly at
 `(floor(n/4096) - 1) * 4096`, warm TTFT improves, and the output is sane,
 coherent text — not cold==warm string equality on large prompts.
+
+
+## 13 — ~65k-token highly-repetitive prompts yield DEGENERATE completions
+(instant-EOS empty text, or a `"!"`-loop) on the no-spec arm; lengths
+131k/262k on the same prompt shape are clean (OBSERVED 2026-08-30,
+adv:v22 NOSPEC boot, TP=2, tq4nc, fp16)
+
+**Observation.** Streaming completions of ~65,069-token prompts (one text
+unit repeated 4066x + a final question, temperature 0.3, top_k 20, top_p
+0.95) returned HTTP 200 with server-side "success": 3 of 4 tries produced
+`finish_reason=stop` after ONE token with EMPTY text
+(`completion_tokens: 1`), and 1 of 4 produced a literal `"!"` repeated for
+all 48 tokens. One ~32k prompt of the same shape hit the instant-EOS form
+once (its retry was normal). ~131k and ~262k prompts of the same shape
+streamed normal, sane text. No engine log errors, no aborts, no
+preemptions; metrics count these as successful stops.
+
+**Reading.** Not a transport or wedge issue (#11-family wedges never return
+anything); the engine genuinely emitted EOS-on-first-token or a degenerate
+loop. Most likely a sampling/logit pathology on an extremely repetitive
+prompt distribution (the model's next-token distribution after thousands of
+identical repetitions is degenerate), not an infra bug — but the length
+asymmetry (65k bad, 131k/262k good) is unexplained. Open isolation steps
+before escalating: repeat with realistic (non-repeating) 65k text; greedy
+temperature 0; bf16 vs fp16; and with mamba align mode off (no prefix
+caching). If real-text 65k prompts also degenerate, suspect the hybrid
+mamba/align state path at the 2^16-token neighborhood instead.
+
 
 

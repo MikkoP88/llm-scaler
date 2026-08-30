@@ -532,6 +532,100 @@ target attention; any captured op must preserve the seq_lens/block_table
 replay-refresh contract (v19 README known limits).
 <!-- /SPEC_STEP_COST_ANALYSIS -->
 
+## LONG_CONTEXT_ANALYSIS — what hurts really-long-context tok/s and why every
+other stream is dragged along (2026-08-30, adv:v22, user's exact serve flags)
+
+Config under test (user's boot, unchanged): TP=2 (2x B70 32GB), fp8 weights
+(14.73 GiB/GPU), GMU 0.8, `--dtype float16`, `--kv-cache-dtype
+turboquant_4bit_nc`, `--block-size 128`, MNBT 8192, `--max-num-seqs 64`,
+`--max-model-len 262144`, `--enable-prefix-caching`, `--async-scheduling`,
+FULL_DECODE_ONLY graphs, MTP k=4. Model = qwen3.5-27B hybrid: 64 layers =
+**48 linear-attention (GDN/mamba) + 16 full-attention** (interval 4), full-attn
+GQA 24q/4kv heads x head_dim 256, mamba state 48 layers x [48,128,128] fp32,
+MoE gates, vocab 248k.
+
+### Engine-level facts (from the boot log + no-spec A/B)
+
+| quantity | MTP k=4 arm | no-spec arm |
+|---|---|---|
+| Available KV memory | 9.25 GiB/GPU | 9.69 GiB/GPU |
+| KV pool (tokens) | **869,550** | **1,130,964** |
+| Max 262k-token requests concurrent | **3.32x** | 4.31x |
+| mamba cache mode | align (forced; experimental) | align (same) |
+| decode graph capture sizes | 16, max bs 128 | 11, max bs 128 |
+| TQ decode-attn KV split grid | graph-fixed 256 | graph-fixed 256 |
+
+MTP's draft KV pool costs **23% of request KV capacity** (−261k tokens) on
+top of its compute effects.
+
+### Measured: decode tok/s vs context (steady, conc=1)
+
+| context | MTP k=4 (user arm) | no-spec |
+|---|---|---|
+| ~2k | 15.0 tok/s (TTFT 1.1 s) | 32.1 tok/s |
+| ~32k | **WEDGED 2/2** (never returns) | 27.0 tok/s |
+| ~65k | — | degenerate output (see #13), 2/2 |
+| ~131k | **WEDGED 2/2** | 17.9 tok/s (TTFT 66.5 s = 1956 tok/s prefill) |
+| ~262k | — | **12.3 tok/s** (TTFT 170.5 s = 1526 tok/s prefill) |
+
+On the user's MTP arm the ≥32k wedge (#11) is effectively DETERMINISTIC:
+4/4 requests (2x 32k, 2x 131k) wedged at the prefill→decode handoff, engine
+frozen (`run=1`, gtok frozen) until client disconnect; prefix-cache retries
+also wedge. So "long-context tok/s" on this arm is mostly **0 or undefined**.
+
+On the clean no-spec arm, long-context decode decays **32.1 → 27.0 → 17.9 →
+12.3 tok/s** (2k→262k, −62%). Cause: the 16 full-attn layers scan the whole
+KV each step (8 KB/token/rank at tq4nc → 2.1 GB/rank read per step at 262k),
+with a graph-FIXED 256-split kernel grid (adaptive ladder inactive under
+FULL_DECODE_ONLY). The 48 linear-attention layers are O(1)/token and do not
+grow. Cold prefill runs at only ~1.5-2.0k tok/s → a 262k prompt is **~170 s
+of engine-monopolizing chunked prefill**.
+
+### Measured: why ALL other streams suffer (no-spec arm, clean)
+
+| stream | condition | result |
+|---|---|---|
+| 109-tok prompt | fired mid 131k-prefill | **TTFT 55.1 s** (waits out every 8192-tok chunk) |
+| 109-tok prompt | during 131k decode (co-decode) | TTFT 0.4 s, 17.7 tok/s (idle: 32.1) |
+| 109-tok prompt | decoding DURING a fresh 131k prefill | TTFT 5.4 s then **1.4 tok/s** (45x idle) |
+| 131k stream | solo | 17.9 tok/s |
+| 131k stream | while another 131k prefills + shorts decode | **4.9 tok/s** |
+| 3x 262k streams | co-resident (pool holds 4) | **0.4 tok/s EACH** |
+| 5x 262k streams | pool = 4.31x max-len | TTFT ladder 173/346/522/696 s (serialized admission; ~0.28 tok/s aggregate useful) |
+
+Mechanisms, ranked:
+
+1. **Chunked-prefill monopoly (the big one).** MNBT=8192 is one chunk = the
+   whole per-step token budget. Each ~170-s long prefill = ~32 steps in which
+   other streams' decode rides mixed steps at ~1 token per multi-second step
+   (1.4 tok/s measured) or waits entirely (55-s TTFT measured). With MTP on,
+   mixed steps additionally lose the k=4 draft (verify needs uniform decode
+   steps), so decoders drop to E[len]=1 AND crawl.
+2. **Shared step clock (batched decode).** Every running sequence advances one
+   engine step at a time; each 262k-ctx seq adds a ~2 GB KV scan to the step.
+   Co-decoding long+short halves the short stream (32→17.7) and co-resident
+   262k streams collapse to 0.4 tok/s each.
+3. **KV capacity cliff.** 869,550 tokens (MTP arm) = 3.32 max-len requests;
+   the 4th+ waits (TTFT ladder above); growth preemption on a hybrid model =
+   full context re-prefill (mamba state cannot be partially restored), i.e.
+   ANOTHER monopoly. Prefix caching retains finished blocks (7-17% residue
+   observed), further shrinking free capacity.
+4. **MTP k=4 tax.** 23% KV capacity + the ≥32k deterministic wedge (#11) +
+   spec-off mixed steps. For long-context workloads it is net-negative here:
+   15.0 vs 32.1 tok/s at 2k, and unusable at ≥32k.
+5. **fp16 compute + fp32 mamba state**: constant per-step costs (align-mode
+   per-step `.cpu()` sync, #11 line) — context-independent, secondary.
+
+### Degenerate long-context outputs (new, #13)
+
+On the no-spec arm, ~65k-token highly-repetitive prompts produced degenerate
+completions 4/4 tries: instant-EOS (`finish_reason=stop`, empty text,
+completion_tokens=1) x3 and a literal `"!"`-loop x1. 32k hit it once (1/2);
+131k/262k were clean. Not an HTTP/engine error — server-side 200 streams.
+Suspect sampling on pathological prompt distributions (repeated identical
+unit) rather than infra; needs isolation (real-text 65k prompts, temp=0)
+before calling it a model/kernel bug.
+
 ## Operational notes
 
 - Reboot the host after any GPU engine reset before starting vLLM again
