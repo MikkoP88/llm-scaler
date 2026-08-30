@@ -136,7 +136,8 @@ decodes, excluding the instant-EOS `ntok=1` artifact):
 | k=1 (verify q_len=2) | MTP k1 | FULL | tq4nc | **1/3** | 27.6 |
 | PIECEWISE capture | MTP k4 | PIECEWISE | tq4nc | **1/3** | 18.6 |
 | compiled MTP head (`VLLM_XPU_MTP_EAGER_HEAD=0`) | MTP k4 | FULL | tq4nc | boot crash | — |
-| **enforce-eager** | MTP k4 | none | tq4nc | **0/11** | 15-20 |
+| comm-out-of-graph (`VLLM_XPU_ALLOW_COMM_IN_GRAPH=0`) | MTP k4 | FULL, colls eager | tq4nc | 0/5 @32-67k, **1/1 @133k** | 9-17 (short-ctx 78) |
+| **enforce-eager** | MTP k4 | none | tq4nc | **0/11 @32k, 0/1 @133k, 0/1 @262k** | 15-20 |
 | **no spec** | none | FULL | tq4nc | **0/3** | 28.2 |
 
 Refined signature (py-spy, 3 rounds over one wedge; consistent with the
@@ -154,7 +155,11 @@ Conclusion: **the serve wedge requires spec x (any) cudagraphs x ≥32k
 context.** It is independent of the GDN spec kernels (fixed here), the
 ESIMD fused kernel, the TQ kernels, and the oneCCL kernel transport.
 The trigger surface is the graphed spec pipeline against the eager
-drafter under TP=2 at long context. Not fixed in v26; tracked as
+drafter under TP=2 at long context. Mechanism identified post-matrix
+via oneCCL debug tracing (captured collective replay vs the drafter's
+interleaved eager collectives — see the Mechanism block in KNOWN_ISSUES
+#11); `VLLM_XPU_ALLOW_COMM_IN_GRAPH=0` clears ≤67k but not 133k, so a
+second long-ctx trigger remains. Not fixed in v26; tracked as
 KNOWN_ISSUES #11 (workarounds there).
 
 **Performance note (32k, first-64-token windows):** nospec+graphs

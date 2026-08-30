@@ -891,10 +891,48 @@ results sharpen this entry decisively:
   the fastest arm at long ctx (28.2 tok/s @32k vs 19-25 healthy MTP
   graphs / 15-20 MTP eager). MTP is a net loss at ≥32k on this setup
   even when healthy.
-- If MTP must stay on at ≥32k: `--enforce-eager` (0/11 clean) at the
-  cost of decode speed.
+- If MTP must stay on at any length: `--enforce-eager` — now validated
+  **clean across the entire envelope** (0/11 @32k, 0/1 @133k, 0/1 @262k),
+  at a heavy decode cost (15-20 tok/s @32k, 2.4-3.8 tok/s @133-262k).
+- `VLLM_XPU_ALLOW_COMM_IN_GRAPH=0` (keep oneCCL out of the graphs) is a
+  PARTIAL fix: 0/5 clean at 32-67k (stock wedges 2/3) but still wedged
+  1/1 at 133k, and decode drops to 9-17 tok/s @32k. Not recommended as
+  a workaround; kept as mechanism evidence (below).
 - MTP + graphs remains fine for short contexts (the historical ~4.8k
   population wedged ~7.5%; 12-token prompts 0/200).
+
+**Mechanism (CCL trace, 2026-08-30 late — adv:v26 + CCL_LOG_LEVEL=debug).**
+oneCCL debug tracing during a live wedge (2/3 at 33k) shows the exact
+interleave. Per spec decode step the EAGER drafter enqueues ~6 small
+collectives — 4x `allreduce 5120 fp16` (the k=4 sequential head
+forwards), `allgather 2560 fp16`, and `allgather 64 fp32` (the
+`get_top_tokens` greedy-sample gather) — while the target's large
+collectives are CAPTURED inside the verify decode graph (never logged at
+step time). At the wedge, both ranks' last logged entry is the *same*
+sample-gather, host-side "done", then total silence: the subsequent
+graph replay's captured collectives never complete, the in-flight
+window fills, and the victim host blocks at the align-mode `.cpu()` D2H
+(gmr:1489) while the peer's queue stalls one op later. Reading: the
+interleaved eager collectives advance oneCCL's device-side
+matching/flag state between replays, and the captured collectives —
+frozen at capture time — eventually spin forever on stale flags.
+This explains every arm: eager-only clean (0/11; no captured colls),
+graphs-only clean (nospec 0/10; no eager colls interleaved), mixed
+wedges with rate scaling by the eager-coll count before each replay
+(0% @12-tok prompts, ~7.5% @4.8k, ~deterministic @≥33k where 5-chunk
+prefills pump eager colls), host barriers (v23-v25) useless, and
+`draft_tensor_parallel_size=1` NOT a fix — the trace under DTP1 is
+coll-identical (the head forwards keep issuing the same ARs/AGs).
+Corroboration: the compiled-drafter boot crash
+(`VLLM_XPU_MTP_EAGER_HEAD=0`, log `v26head0_crash.log`) is the same
+oneCCL ring path segfaulting (`allgatherv_large_su_ring →
+invoke_barrier`) when collectives run inside dynamo-evaluated code.
+`VLLM_XPU_ALLOW_COMM_IN_GRAPH=0` (W3) removes captured colls from the
+equation and indeed clears ≤67k — but wedges once at 133k, so a second
+long-context trigger (independent of comm capture) remains. A true fix
+needs either graph-replay-safe collectives in oneCCL, or a fully
+coll-free drafter step (replicated head / per-domain comm), both
+kernel/stack-level work.
 
 **Corrected verdict.** The original entry below suspected stale GuC-reset
 state (17:36 CCS reset never followed by a host reboot). That is disproven:

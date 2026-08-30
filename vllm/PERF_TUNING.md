@@ -598,6 +598,27 @@ scan, and (b) the no-spec arm is stable across the entire 262k envelope
 on the fixed image. Wedge arm matrix + the spec-x-graphs-x->=32k
 verdict: KNOWN_ISSUES #11 v26 update.
 
+### v26 late-evening arms (2026-08-30): deep-ctx tuning closed out
+
+Three more single-boot arms on adv:v26, all REJECTED — the locked
+config stands:
+
+| arm | change | result @133k | result @262k | verdict |
+|---|---|---|---|---|
+| P1 | `VLLM_TQ_GRAPH_KV_SPLITS=1024` (+MAX=1024; the auto ladder wants 2048 at maxlen 262k but is capped at 256) | **8.88 tok/s** (2x worse than grid 256's 18.45) | 12.09 vs 12.71 | reject — split-combine cost grows with grid; 256 optimal across 64-1024 at every depth |
+| P2 | `--max-num-batched-tokens 16384` (nospec) | TTFT 94.5 s vs 69-73 s | TTFT 198.7 s vs 184.7 s | reject — bigger chunks slow prefill (matches v6-era c10 "no gain") |
+| W3 | `VLLM_XPU_ALLOW_COMM_IN_GRAPH=0` (spec k4 + FULL_DECODE_ONLY) | **WEDGE 1/1** (clean 0/5 at 32-67k) | — | reject as config (mechanism evidence: see #11); decode 9-17 tok/s @32k; short-ctx 78 tok/s (fastest single-stream number yet) |
+| eager-deep | `--enforce-eager` spec k4 | 0/1 wedge, 2.37 tok/s | 0/1 wedge, 3.82 tok/s | correctness workaround only (clean across the whole envelope) |
+
+Take-aways: (1) deep-context decode is NOT under-parallelized — raising
+the KV-split grid hurts; the residual 28→12.7 tok/s decay is the
+implementation-physics floor of scanning 16 full-attn layers' KV at
+tq4nc on B70; (2) chunked-prefill throughput does not improve with
+bigger chunks; (3) the one env that changes the wedge
+(comm-out-of-graph) costs most of the decode speed and still fails at
+133k. The recommended long-ctx serve remains **nospec +
+FULL_DECODE_ONLY + tq4nc + block 512** exactly as locked in v8.
+
 On the user's MTP arm the ≥32k wedge (#11) is effectively DETERMINISTIC:
 4/4 requests (2x 32k, 2x 131k) wedged at the prefill→decode handoff, engine
 frozen (`run=1`, gtok frozen) until client disconnect; prefix-cache retries
