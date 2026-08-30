@@ -560,13 +560,19 @@ top of its compute effects.
 
 ### Measured: decode tok/s vs context (steady, conc=1)
 
-| context | MTP k=4 (user arm) | no-spec |
-|---|---|---|
-| ~2k | 15.0 tok/s (TTFT 1.1 s) | 32.1 tok/s |
-| ~32k | **WEDGED 2/2** (never returns) | 27.0 tok/s |
-| ~65k | — | degenerate output (see #13), 2/2 |
-| ~131k | **WEDGED 2/2** | 17.9 tok/s (TTFT 66.5 s = 1956 tok/s prefill) |
-| ~262k | — | **12.3 tok/s** (TTFT 170.5 s = 1526 tok/s prefill) |
+| context | MTP k=4 (user arm) | MTP k=1 (2026-08-30) | no-spec |
+|---|---|---|---|
+| ~2k | 15.0 tok/s (TTFT 1.1 s) | 45.4 tok/s (canonical cargame) | 32.1 tok/s |
+| ~32k | **WEDGED 2/2** (never returns) | **27.9-30.3 tok/s, 7/7 clean** (TTFT 14.9 s) | 27.0 tok/s |
+| ~65k | — | 22.8-23.6 tok/s, ~50% WEDGE | 23.6 tok/s (filler #13 note) |
+| ~131k | **WEDGED 2/2** | **~50% WEDGE** (survivor 15.1 tok/s, TTFT 158 s concurrent) | 17.9 tok/s (TTFT 66.5 s = 1956 tok/s prefill) |
+| ~262k | — | not tested (wedge-gated) | **12.3 tok/s** (TTFT 170.5 s = 1526 tok/s prefill) |
+
+k=1 detail (v25 image, block512 + mamba-fp16, canonical sampling):
+acceptance E[len] 1.67-1.95, position-0 rate 0.80-0.95; cargame output
+correct (`<think>` + clean HTML). k=1 matches no-spec speed at 32k and
+beats it by +37% at short ctx, but retains a ~40-50% wedge rate at >=64k
+(KNOWN_ISSUES #11 final update) — hence the ship posture below.
 
 On the user's MTP arm the ≥32k wedge (#11) is effectively DETERMINISTIC:
 4/4 requests (2x 32k, 2x 131k) wedged at the prefill→decode handoff, engine
@@ -610,21 +616,33 @@ Mechanisms, ranked:
    full context re-prefill (mamba state cannot be partially restored), i.e.
    ANOTHER monopoly. Prefix caching retains finished blocks (7-17% residue
    observed), further shrinking free capacity.
-4. **MTP k=4 tax.** 23% KV capacity + the ≥32k deterministic wedge (#11) +
-   spec-off mixed steps. For long-context workloads it is net-negative here:
-   15.0 vs 32.1 tok/s at 2k, and unusable at ≥32k.
+4. **MTP tax.** 23% KV capacity + the >=32k wedge (#11) + spec-off mixed
+   steps. k=4 is net-negative here at every length (15.0 vs 32.1 tok/s at
+   2k, wedged at >=32k). k=1 is a genuine win for <=32k-bounded serves
+   (+37% short ctx, parity at 32k) but still wedges ~40-50% at >=64k.
+   **Ship posture (2026-08-30): serve the full 262k envelope WITHOUT
+   `--speculative-config`; opt into k=1 only when the envelope is capped
+   at 32k.**
 5. **fp16 compute + fp32 mamba state**: constant per-step costs (align-mode
    per-step `.cpu()` sync, #11 line) — context-independent, secondary.
 
-### Degenerate long-context outputs (new, #13)
+### Degenerate long-context outputs (RESOLVED, #13 — filler artifact)
 
 On the no-spec arm, ~65k-token highly-repetitive prompts produced degenerate
 completions 4/4 tries: instant-EOS (`finish_reason=stop`, empty text,
 completion_tokens=1) x3 and a literal `"!"`-loop x1. 32k hit it once (1/2);
 131k/262k were clean. Not an HTTP/engine error — server-side 200 streams.
-Suspect sampling on pathological prompt distributions (repeated identical
-unit) rather than infra; needs isolation (real-text 65k prompts, temp=0)
-before calling it a model/kernel bug.
+
+**Resolution (2026-08-30 evening):** the same instant-EOS reproduces on
+no-spec AND k=1, sequential AND concurrent, distinct fillers AND
+cache-hit prefills — uncorrelated with MTP or infra, and probabilistic
+per request (the same varied-filler seed pair was 2/2 clean on one boot,
+`"!"`-loop + instant-EOS on the next). Verdict: distribution collapse on
+low-entropy pattern-dominated filler; the probe filler's CONTENT is
+meaningless at >= ~32k (throughput/wedge numbers remain valid).
+Correctness gates must use natural text (`realistic_probe.py`, host
+/root/build, is the generator — its synthetic output still degenerates
+sometimes, so treat only natural-language prompts as content-clean).
 
 ## Operational notes
 

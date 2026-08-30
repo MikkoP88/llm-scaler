@@ -970,6 +970,81 @@ LONG_CONTEXT_ANALYSIS for the perf curves). Also measured: MTP's draft KV
 pool cuts request KV capacity 23% (869,550 -> 1,130,964 tokens without
 spec; max 262k-request concurrency 3.32x -> 4.31x).
 
+**FINAL UPDATE 2026-08-30 (evening): ten-arm isolation matrix + two live
+py-spy/xpu-smi captures. The wedge is a DEVICE-SIDE kernel spin in the
+GDN spec-state path; no host-side or config knob reaches it. Ship = drop
+`--speculative-config` (only 0-wedge arm, and faster than k=4 everywhere);
+`k=1` is a validated opt-in for <=32k envelopes only.**
+
+*Calibration correction first:* the wedge-probe filler measures 15.7443
+tokens/repetition (server-reported: 16,646 reps = 262,081 tokens), 2x the
+7.87 the probe assumed until 2026-08-30. Every "32k" row in the arm table
+below and in the v25 README was actually ~65k of prompt. Conclusions are
+unchanged (k=4 wedges at true 32k as well; see DTP1/MALL rows), but length
+labels before that fix read one octave low.
+
+*Arm matrix (k=4 unless noted; wedge = stream never returns; sequential
+single-stream unless noted):*
+
+| arm | delta vs user baseline | result |
+|---|---|---|
+| E0 | none | 3/3 WEDGE (~65k real) |
+| E1 | `CCL_ENABLE_SYCL_KERNELS=0` | 2/3+ WEDGE |
+| E2 | `use_local_argmax_reduction:true` | 2/3 WEDGE |
+| E2-bs2 | E2 + 2 concurrent streams (tiny gather ACTIVE) | 5/8 WEDGE |
+| v25 | every-step pre-drafter `torch.xpu.synchronize()` + tiny-gather default | 3/3 WEDGE |
+| NG | `cudagraph_mode NONE` (no graphs at all) | 2/3 WEDGE |
+| DTP1 | `draft_tensor_parallel_size=1` (zero draft collectives) | true-32k 1/3, 64k 0/2, 131k 1/2 WEDGE |
+| MALL | `--mamba-cache-mode all` (async pinned-copy path; no align `.cpu()` D2H, no postprocess_mamba copies) | 2/3 WEDGE |
+| E4 | `--max-num-batched-tokens 4096` | 1/3 WEDGE |
+| K1 | `num_speculative_tokens=1` | **32k 7/7 OK**, 64k 2/3, 131k 1/3 WEDGE |
+
+Refuted causes: oneCCL SYCL-kernel transport (E1), collective size /
+argmax path (E2, E2-bs2), host-side interleave barriers (v23/v24/v25),
+XPU graphs (NG), draft-model collectives (DTP1), the align-mode blocking
+D2H + mamba state copies (MALL), prefill chunk size (E4). What remains is
+the GDN (gated-delta-net linear-attention) spec-state machinery shared by
+target verify and drafter on both ranks.
+
+*Live captures (the mechanism):*
+
+- v25 boot, k=4: py-spy shows BOTH TP ranks blocked at
+  `_update_states_after_model_execute` -> align-mode `.cpu()`
+  (gpu_model_runner.py:1489) — the submit cannot enter an in-flight queue
+  that never drains. Identical stacks at +20 s and +40 s (hard stuck).
+- DTP1 boot, k=4: BOTH ranks blocked while ENQUEUEING
+  `torch.ops._xpu_C.gdn_attention` (`_xpu_ops.py:183`, called from the
+  compiled `qwen3_next.py` forward) — and the wedge formed during the
+  PREFILL chunk of the next probe, not decode.
+- xpu-smi during wedges: Compute Engines 100% AND Copy Engines 100% on
+  both GPUs, but GPU Utilization only 11-22% at ~155 W; worker threads in
+  R state with wchan 0 (user-space spin-wait in a blocked submit).
+
+Reading: a resident kernel spins forever (engines busy, EUs mostly idle);
+the host threads merely block wherever the full in-flight queue happens
+to catch them — which is why the py-spy "stuck line" moves between the
+align `.cpu()` and the GDN enqueue. The spin lives in device code, so
+every host-side fix is unreachable by construction. The engine only
+un-wedges when the client disconnects (running 1->0; the next request
+serves normally), i.e. the request is silently discarded server-side.
+
+*k=1 mitigation (validated):* dropping `num_speculative_tokens` 4 -> 1
+cuts the per-step spec-state surface ~4x. At 32k: 7/7 clean sequential at
+27.9-30.3 tok/s (nospec parity is 27.9); short-ctx canonical car-game
+45.4 tok/s vs 33.2 nospec (+37%), correct `<think>` + clean HTML, healthy
+acceptance (E[len] 1.67-1.95, position-0 rate 0.80-0.95). At >=64k it
+still wedges ~40-50% (64k 2/3, 131k 1/3 across arm + battery), so k=1 is
+NOT a general fix — it is an opt-in for serves bounded to <=32k contexts.
+
+*Operational guidance (final):* for the full 262k envelope, run WITHOUT
+`--speculative-config`. This is also strictly faster than the k=4 baseline
+everywhere (33.2 vs 15.0 tok/s at 2k; 27.9 vs WEDGED at 32k) and restores
+26% KV capacity (see LONG_CONTEXT_ANALYSIS). For <=32k-bounded serves,
+`{"method":"mtp","num_speculative_tokens":1}` is measured-safe and +37% at
+short ctx. Keep client timeouts >=120 s + one retry regardless. A true fix
+needs GPU-side kernel debugging of the GDN spec-state path (kernel
+instrumentation / level-zero debugger), not vLLM-side changes.
+
 
 ## 12 — temperature=0 outputs on LARGE CHUNKED prompts are not bit-stable
 run-to-run under MTP (fp near-tie flips); bare prompts ARE stable —
@@ -1020,6 +1095,32 @@ before escalating: repeat with realistic (non-repeating) 65k text; greedy
 temperature 0; bf16 vs fp16; and with mamba align mode off (no prefix
 caching). If real-text 65k prompts also degenerate, suspect the hybrid
 mamba/align state path at the 2^16-token neighborhood instead.
+
+**RESOLVED 2026-08-30 (evening): prompt-distribution pathology, not infra,
+not MTP.** The isolation steps ran on fresh no-spec and k=1 boots:
+
+- Instant-EOS reproduces on **no-spec** at the same rate as on k=1:
+  sequential 131k 1/1, concurrent 32k x2 1/2 (distinct fillers) and 2/2
+  (shared cached filler). k=1 same-shape battery: 4/6 concurrent. It is
+  uncorrelated with MTP, concurrency, and prefix-cache state.
+- A deliberately varied synthetic filler (seeded non-repeating "operator
+  log" sentences) was clean concurrently on one boot (32k x2 no-spec: 2/2
+  healthy `<think>` completions) — then the SAME two seeds on the next
+  boot degenerated (`"!"`-loop + instant-EOS). Synthetic "log-style" text
+  is still pattern-dominated enough to collapse; only genuinely natural
+  text is trustworthy for content gates. Every degenerate case shares the
+  same factor: low-entropy filler tens of thousands of tokens long, where
+  the model's next-token distribution collapses and tiny numeric
+  differences flip it to EOS or a `"!"` fixation.
+- Practical consequence: any probe/benchmark built from a repeated unit
+  (including this repo's `wedge_probe.py` filler) measures throughput and
+  wedge behavior fine — its completion CONTENT is meaningless at >= ~32k.
+  Correctness gates must use realistic text; `realistic_probe.py` (host
+  /root/build) generates it with a seeded varied-sentence generator.
+
+The 65k-bad / 131k-clean asymmetry of the original observation is simply
+where the distribution collapse crossed the sampling threshold on those
+runs — it is probabilistic per request, not length-deterministic.
 
 
 
