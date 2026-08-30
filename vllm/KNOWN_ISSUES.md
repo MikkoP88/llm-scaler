@@ -770,3 +770,211 @@ gut-check "spec changes output quality" claims with a same-day eager/stock
 replica before blaming the new code.
 
 
+## 10 — "Prefix cache hit rate: 0.0%" under MTP is architectural, not a bug:
+hybrid GDN page unification forces 4096-token prefix granularity on XPU
+(ANALYZED 2026-08-29, adv:v22 live serve; no code defect found — do not
+"fix" the scheduler)
+
+**Symptom.** With `--enable-prefix-caching` + MTP the logged hit rate stays
+0.0% for chat-sized prompts; repeated identical prompts of 2-8k tokens reuse
+nothing, while the same server without speculative decoding shows hits. Old
+logs eventually show non-zero rates only from large-prompt traffic.
+
+**Root cause (proven offline-sim + live-measured).** Not the eagle/MTP
+cache-drop machinery and not an insertion bug: replaying the scheduler's
+`allocate_slots` sequences through the container's real `KVCacheManager` /
+`HybridKVCacheCoordinator` / `MambaManager` (`.tmp-tq/sim_prefix.py`,
+`sim2_prefix.py`, `sim3_prefix.py`) shows blocks insert and look up
+correctly. The engine simply cannot reuse at fine granularity:
+
+1. qwen3.8 is a GDN hybrid; one GDN cache page = one fixed-shape state
+   snapshot (~0.8 MB regardless of token count). The hybrid pool requires
+   equal page bytes per group, so the attention block is raised until its
+   page matches the GDN page: `interface.py:645` "Setting attention block
+   size to 1664 tokens...". The fork's `platforms/xpu.py` pow-2 rewrite
+   (ESIMD paged-attention kernel asserts `isPowerOf2(pageSize)`, #51 family)
+   then lands the live serve at **attn block = GDN block = 4096 tokens**.
+2. `resolve_kv_cache_block_sizes` gives `hash_block_size = 4096` (equal
+   blocks; the mamba back-off and `--hash-block-size` override are moot).
+3. Prefix reuse needs WHOLE physical blocks, so reuse is quantized to 4096
+   tokens. Live ladder probes confirm exactly: 9139-tok pair hits 4096,
+   16340-tok pair hits 8192, 8497/11217 hit 4096, 30413 hits 24576; every
+   size fits `(floor(n/4096) - 1) * 4096` inserted blocks.
+4. MTP (eagle cache-drop) additionally sacrifices ~1 block per lookup
+   (`_mamba_block_aligned_split` cut + match-one-more-then-pop), so prompts
+   < ~8192 tokens net ZERO reuse with MTP while nospec keeps the first
+   4096-token block — the exact "works without MTP" delta the user saw.
+
+**Measured benefit that DOES exist (live, MTP k4 on).** TTFT for repeated
+prefixes: 9.1k prompt 4.20s -> 2.47s (4096 hit), 16.3k prompt 7.19s ->
+3.86s (8192 hit), 30.4k 17.1s -> 4.7s (24576 hit). Prefill ~2k tok/s.
+
+**Levers assessed.** (a) Scheduler/KV-manager patch: none sane — hash ==
+block == 4096 is already optimal given the page size; the eagle pop/cut is
+upstream correctness machinery. (b) Finer `--hash-block-size`: proven no-op
+(sim2 Run B: hash 128 with 4096 blocks still 0 for small prompts). (c) Real
+lever = shrink the negotiated page: ESIMD kernel accepting mult-of-64
+instead of pow-2 pages (1664-token blocks ≈ 2.5x finer reuse) — kernel
+surgery, high risk, not undertaken. (d) Halving per-token attn page bytes
+(e.g. different KV dtype) halves granularity but costs accuracy. Practical
+guidance: contexts > ~8k get real MTP-compatible reuse today; chat-sized
+multi-turn traffic structurally cannot on this model+XPU stack.
+
+**Lesson.** On hybrid-SSM models the prefix-cache granularity is set by the
+SSM state-page size, not by `--block-size`; before chasing scheduler bugs,
+ladder-probe the live hit quantization (unique blob pairs per size) and
+check the boot log's page-negotiation lines (`Setting attention block size
+to N tokens`, `Padding mamba page size`).
+
+**Comprehensive validation (2026-08-29 evening, live serve, MTP k4).**
+- Ladder floors 0-16: `(floor(n/4096)-1)*4096` held EXACTLY at every size
+  (9/9 rows: 1938/4818 -> 0; 9618/10258 -> 4096; 13618 -> 8192; 17298 ->
+  12288; 24818 -> 20480; 32978 -> 28672).
+- Cross-request share (11.7k common prefix, different suffixes): 2nd request
+  hit 4096 and answered its own question - sharing works, outputs correct.
+- Multi-turn chain (5 turns, +4.2k each): each turn reused exactly what the
+  previous turn cached (4096/8192/12288/16384); warm TTFT stayed FLAT at
+  ~3.7-4.4s while cold grew 3.7 -> 11.3s (61% cut at 25k context).
+- Correctness: greedy (temp 0) 64-tok outputs IDENTICAL cold vs warm vs
+  control; 4 concurrent same-prompt requests produced 4 identical outputs
+  (zero errors). Decode speed unaffected; only prefill shortens.
+Conclusion: reuse is CORRECT and beneficial at the architectural granularity;
+the 0% chat-traffic rate stands as granular, not broken. (Stalls seen during
+this campaign are #11, unrelated to caching.)
+
+
+## 11 — MTP + TP=2 + large prompts: ~7.5% of requests WEDGE INSIDE THE
+ENGINE forever (oneCCL spin-clog, #05 family, prefill/verify variant);
+NOT scheduler loss, NOT GuC-reset residue, NOT host state
+(FOUND 2026-08-29, live serve adv:v22 MTP k4; CORRECTED VERDICT
+2026-08-30 after instrumented reproduction on v22/v23/v24 boots of the
+rebooted host)
+
+**Corrected verdict.** The original entry below suspected stale GuC-reset
+state (17:36 CCS reset never followed by a host reboot). That is disproven:
+identical behavior on the freshly rebooted host, and the wedges are
+reproducible on demand with sequential ~4.8k-token prompts. The earlier
+belief that wedged requests "eventually complete server-side" is also
+wrong — that was a misread of the success counter (neighboring requests
+ticking). A wedged request NEVER finishes: it sits `Running` with KV
+allocated until the client disconnects, and even then is freed without
+being counted as aborted.
+
+**Symptom (precise).** With the user's flags (TP=2, `--enable-prefix-caching`,
+MTP k=4, `--kv-cache-dtype turboquant_4bit_nc`, `--async-scheduling`,
+FULL_DECODE_ONLY graphs): ~7.5% of ~4.8k-token-prompt requests never return
+(streaming and non-streaming equally). Normal latency is a flat 2.2 s — the
+loss is all-or-nothing, not tail latency. 12-token prompts never wedge
+(0/200); ~740-token single-block prompts almost never wedge. Serve log and
+dmesg completely clean; no xe reset fires.
+
+**In-engine signature (metrics).** `vllm:num_requests_running=1` frozen for
+90-600+ s; `time_to_first_token` count already incremented (prefill done,
+decode started); `request_success_total` frozen in ALL reasons (no stop, no
+length, no abort, no error); freed only when the client disconnects — and
+then still without abort accounting.
+
+**py-spy during the wedge (native, multiple catches).** Both TP workers
+"active":
+
+- v22: TP0 spinning in `ur_command_list_manager::appendUSMMemcpy` — the
+  align-mode `.cpu()` D2H in `_update_states_after_model_execute`
+  (gpu_model_runner.py:1476/1483/1502 across builds) cannot be SUBMITTED
+  (in-flight queue never drains); TP1 either a step ahead polling
+  `urEventGetInfo` in `_calc_spec_decode_metadata` or inside the MTP head's
+  vocab all-gather (`qwen3_5_mtp.py:476 -> _gather_logits ->
+  ProcessGroupXCCL._allgather_base`).
+- v23/v24: BOTH ranks stuck at the same `.cpu()` submission — the clog is
+  symmetric and forms upstream of the drafter seam.
+- xpu-smi during the wedge: both GPUs Compute+Copy engines 100%, EU ~11%
+  active / ~56% stall — oneCCL spin-wait kernels resident. No competing
+  queue work at this seam => the 640 ms GuC preempt timeout documented in
+  #05 never fires: no reset, no DEVICE_LOST, eternal spin.
+
+**Isolation matrix (v22 image, ~4.8k prompts, 80 reqs/cell).** BASE 6/80;
+no `--async-scheduling` 6/80; `--max-num-batched-tokens 4096` 1/80;
+`--mamba-cache-mode all` 2/80 — **but see the correction below**;
+`--speculative-config` OFF **0/80**. MTP is the trigger. The
+`mamba-cache-mode all` cell is INVALID as a delta:
+`model_executor/models/config.py:438-446` coerces `all` -> `align` for
+hybrid models without `supports_mamba_prefix_caching`, so BASE and that
+cell ran the same mode (2/80 vs 6/80 is noise at this n).
+
+**Mechanism.** The ranks' XPU streams mutually clog on oneCCL
+non-preemptible spin-wait kernels (kernel transport, `CCL_ENABLE_SYCL_KERNELS=1`,
+TP=2). Every wedge stack shows hosts blocked submitting a tiny post-sample
+D2H (`appendUSMMemcpy`) — the victim, not the culprit: the in-flight window
+is full of collective kernels that never retire. This is the documented #05
+peer-late race family; the MTP head's eager collectives interleaved with the
+target's (graphed verify / eager prefill) collectives create the crossing.
+
+**Fix attempts — both disproven live (kept as negative results).**
+
+- v23 `qwen38-dflash-v23`: one-sided `torch.xpu.synchronize()` before the
+  drafter on steps >= 512 tokens. The fast rank drains and proceeds alone
+  into the head's all-gather; the slow rank never reaches the barrier (it
+  is stuck upstream in the `.cpu()`). No effect on the wedge rate.
+- v24 `qwen38-dflash-v24`: true rendezvous — drain + gloo `cpu_group`
+  barrier before the drafter. No effect either: on v24 wedges BOTH ranks
+  are stuck upstream of the rendezvous (which is never reached), inside
+  the verify/decode step's post-sample path. The clog forms in the
+  target/verify/drafter collectives themselves; no host-side barrier
+  placed at the drafter seam can reach it.
+- First-pass "0 lost" validation batches were INVALID: `loss_rate2.py` arg
+  2 is prompt REPS, not timeout — `80 45` measured ~740-token prompts (a
+  population that does not wedge). Valid probes: REPS=300 (~4.8k).
+
+**What does work (validated on every boot).** Prefix caching + MTP itself:
+warm hits land exactly at `(floor(n/4096) - 1) * 4096` (block size
+negotiates to 4096 under tq4nc on this hybrid), warm TTFT 2.3-3.2x faster
+than cold; canonical car-game output clean; zero resets. The wedge is
+independent of prefix caching (it needs MTP + large prompts + TP>1).
+
+**Operational guidance (current).**
+
+1. Clients: timeouts >= 120 s + one retry. Every observed retry recovered
+   immediately; the orphaned duplicate is harmless and pre-warms the cache.
+2. Large-prompt-heavy, loss-intolerant workloads: drop
+   `--speculative-config` (only measured-clean arm, 0/80; costs ~1.65x
+   decode speed).
+3. `VLLM_WORKER_STEP_TIMEOUT_S` (StepWatchdog, 600 s default on XPU) will
+   eventually kill a wedged worker; most wedges are "resolved" earlier by
+   the client disconnect.
+4. A real fix likely requires upstream work: preemption/timeout for oneCCL
+   spin-wait kernels, or collective-order hardening between graphed verify
+   and eager MTP-head collectives (the #05 thread). Removing the align-mode
+   `.cpu()` sync (upstream TODO) would only move the victim line, not the
+   clog.
+
+**Original entry (superseded, kept for the timeline).** Sporadic
+multi-minute stalls on the 17:54 boot (~12 of ~120 requests, in windows);
+suspected the 17:36 GuC CCS engine reset was never cleared by a host
+reboot. dmesg showed `xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset:
+engine_class=ccs ... guc_id=32` pre-boot. Disproven by reproduction on the
+rebooted host; the reset was incidental.
+
+
+## 12 — temperature=0 outputs on LARGE CHUNKED prompts are not bit-stable
+run-to-run under MTP (fp near-tie flips); bare prompts ARE stable —
+prefix-cache correctness checks must not compare full greedy text
+(OBSERVED 2026-08-30, adv:v22-v24 MTP k4, TP=2)
+
+**Observation.** Same 8.3k-token prompt, `temperature=0`, sent 2-4x
+sequentially: texts diverge after 55-215 chars (e.g. "reasonably polished
+**but** not too long" vs "reasonably polished**:** player car, oncoming
+cars, score") and can differ in length — including warm-vs-warm (identical
+prompt, identical 4096-token prefix-cache reuse, back-to-back). A 7-token
+bare prompt is 4/4 identical under the same serve. One 8.3k cold/warm pair
+did match exactly, so the divergence is probabilistic per run.
+
+**Reading.** Greedy argmax flips on fp16 near-ties when kernel reduction
+order varies between runs; large prompts chunk through differently-shaped
+batches (8335 tokens = 8192 + 143 chunk split; mamba align postprocessing;
+spec verify shapes), and MTP's draft/verify path amplifies any single flip
+through the autoregressive chain. NOT a prefix-cache corruption: the cache
+returns bit-identical quantized KV, and bare-prompt greedy is stable. The
+canonical correctness gate remains: hits land exactly at
+`(floor(n/4096) - 1) * 4096`, warm TTFT improves, and the output is sane,
+coherent text — not cold==warm string equality on large prompts.
+
+
