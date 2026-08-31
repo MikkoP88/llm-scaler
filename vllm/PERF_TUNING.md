@@ -646,6 +646,35 @@ KNOWN_ISSUES #13 — which mimics a serve failure). Full matrix + mechanism:
 KNOWN_ISSUES #11 v27 update.
 
 
+### v28dbg long-ctx arithmetic (2026-08-31): the "physics floor" verdict is
+### REFUTED — decode-attn is latency/occupancy-bound with 3-10x headroom,
+### and MTP cannot win at depth
+
+From the v28dbg long-exposure runs (2048-token ignore_eos @ ~65k fox, k4 +
+`VLLM_XPU_ALLREDUCE_VIA_ALLGATHER=1`, two boots x 4 iters, all clean):
+
+- 473-493 SSE chunks per 2048 tokens => **4.32 tok/chunk** acceptance at 65k;
+  steady wall 137-142 s => 3.46 steps/s => **289 ms/step**, true decode rate
+  **14.9 tok/s** (note: `long_exp.py`'s "tok/s" column prints chunks/s).
+- Per accepted token: 289/4.32 = **67 ms/token (k4)** vs nospec graphs
+  **42.4 ms/token** (23.6 tok/s @ 67k) => **spec is 1.58x SLOWER per token
+  at depth**. Mechanism: each draft token costs a FULL drafter-KV scan at
+  context depth (drafter KV is fp16 — same order of bytes/token as the tq4nc
+  target KV), verify adds the target scan => ~5 full-context reads per
+  4.32 accepted tokens (4 x 42 + overhead ≈ the observed 289 ms). **KV scans
+  are not amortized across draft tokens** — that is the whole story; no
+  acceptance-rate tuning can overcome a 5/4.32 scan multiplier.
+- Roofline check (nospec @ 262k): 12.3 tok/s x ~2.1 GB/step/rank ≈ **26 GB/s
+  effective KV read** — two orders of magnitude below B70 HBM class. The
+  v26 "implementation-physics floor" take-away above is WRONG: the decay is
+  the graph-FIXED 256-split tq4nc decode-attention kernel being
+  latency/occupancy-bound (a tree of small split-combine launches), not
+  bandwidth. Config levers are exhausted (split grid 1024 = 2x worse, MNBT
+  16384 rejected, block 512 locked) — the remaining long-ctx lever that
+  changes the curve's SHAPE is a kernel rewrite (fused/vectorized streaming
+  decode-attn, larger per-split tiles or a persistent kernel): plausibly
+  3-10x at 131-262k, and it lifts BOTH arms (spec included).
+
 On the user's MTP arm the ≥32k wedge (#11) is effectively DETERMINISTIC:
 4/4 requests (2x 32k, 2x 131k) wedged at the prefill→decode handoff, engine
 frozen (`run=1`, gtok frozen) until client disconnect; prefix-cache retries

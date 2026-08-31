@@ -1172,6 +1172,53 @@ verdicts.*
    testing. A wedge HANGS and never returns. Long-ctx canonicals must
    use varied fillers (`patches/qwen38-dflash-v27/canonical32k.py`).
 
+*v28dbg update (2026-08-31, flight-recorder session): instrumentation for
+the graph-replay-level debugging exists now, and the residual's surface is
+narrower than "graphs".*
+
+1. **The spec path never runs full-graph replay.** With FULL_DECODE_ONLY +
+   MTP, `CudaGraphManager.run_fullgraph` executed **0 times** across two
+   full boots (flight-recorder markers) while each rank logged 43,552 eager
+   `all_reduce` calls. The graphs surface under spec = torch.compile
+   PIECEWISE captured pieces + EAGER oneCCL collectives between them —
+   platforms/xpu.py (~370-400) adds `vllm::all_reduce` to `splitting_ops`
+   unless `VLLM_XPU_ALLOW_COMM_IN_GRAPH=1`, so collectives are excluded
+   from pieces BY DEFAULT (and the historical "comm-out-of-graph" arm was a
+   no-op). The graphs-x-spec residual therefore lives at the
+   piece-replay x eager-collective x allocator boundary — captured-
+   collective replay was already convicted and is not in the path.
+2. **Flight recorder** (`patches/qwen38-dflash-v28dbg`, image
+   `llm-scaler-vllm-adv:v28dbg`, zero-config, `VLLM_XPU_FR=0` kills it):
+   `fr.py` at site-packages root writes timestamped phase markers (replay
+   begin/end, AR begin/end, AG begin/end) to `/tmp/fr_<pid>.log`. EVERY
+   call site is `torch.compiler.is_compiling()`-guarded — dynamo traces
+   through `all_reduce` during profile_run and faults on file I/O /
+   f-string tensor methods otherwise (verified boot crash, fixed). Healthy
+   baseline (2 ranks x 2 boots): exact AR begin/end pairing (43,552/43,552,
+   zero orphans), ~200 us per eager AR with ~3 ms piece-replay gaps.
+3. **Decision rule at the next live wedge** (tail of `/tmp/fr_*.log`):
+   last line `AR begin` with no `AR end` => the eager collective itself
+   hangs (on the VIA path that is `all_gather`); `AR end` then silence =>
+   a replayed/compiled piece spins on device. Host-side watcher
+   (`patches/qwen38-dflash-v27/frw3.sh` -> host /root/build) auto-captures
+   xpu-smi + py-spy + fr tails on a 50 s /metrics stall into
+   /root/build/wedge_cap/ — run it next to any wedge-susceptible boot.
+4. **Boot-lottery behavior (rate evidence):** two fresh k4+VIA boots
+   (incl. one deliberate re-roll) ran the whole battery clean — short-ctx
+   10/10, 65k probes 14/14, 2048-token ignore_eos 4/4 (twice), concurrent
+   2-stream 20/20 (twice) — vs ~1/2 wedge rate on the same shape the night
+   before. Susceptibility looks decided per-boot at capture time (piece
+   layout / allocator state); a clean battery bounds only that boot.
+5. **Untried levers for the next wedge session** (deferred — no
+   discriminating power against tonight's clean control): ALLOC
+   (`PYTORCH_XPU_ALLOC_CONF=expandable_segments:False`; boot pins True and
+   the VIA path clones ~1 buffer per AR against the load-bearing
+   stable-activation aliasing), CAPCOMM (`VLLM_XPU_ALLOW_COMM_IN_GRAPH=1`),
+   NOASYNC (`--async-scheduling` off). Also from a crash log: large default
+   capture lists "intermittently fault the xe engine
+   (UR_RESULT_ERROR_DEVICE_LOST) during PIECEWISE capture with eager
+   collectives" — this tree caps default capture sizes to <=128.
+
 *Operational guidance (final, supersedes the k=1 paragraph above):* for
 the full 262k envelope run WITHOUT `--speculative-config` (nospec +
 FULL_DECODE_ONLY graphs: canonical PASS, 0/10 probes, fastest >=65k

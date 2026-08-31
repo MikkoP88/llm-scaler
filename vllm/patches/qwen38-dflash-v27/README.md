@@ -102,6 +102,24 @@ Conclusions:
   canonical-grade long-ctx probe.
 - `serve.sh` — unchanged from v26.
 
+Wedge-chase probes (2026-08-31 session; all stream, all exit 7 on a
+watchdog timeout = WEDGE):
+
+- `wedge_repro.py` — short-ctx canonical loop (90 s watchdog); the control
+  probe (10/10 clean on k1+VIA => hazard <1.7e-4/step short-ctx).
+- `deep_repro.py` / `deep_repro_fox.py` — ~65k probes, varied-marker vs FOX
+  filler (the historical rate-raiser), 128 tokens, 120 s watchdog.
+- `long_exp.py` — 2048-token ignore_eos generation @ selectable ctx
+  (65k/131k/262k dict); max per-request step exposure. NOTE its printed
+  "tok/s" column is actually chunks/s (steps/s); true rate = tokens/wall.
+- `conc_repro.py` — 2 concurrent streams (65k + 32k), the E2-bs2 historical
+  rate-raiser; first stream to time out records the WEDGE.
+- `fr_watcher.sh` / `frw3.sh` — HOST-side in-flight capture: on a 50 s
+  /metrics stall, grabs xpu-smi (both GPUs), py-spy dumps of both TP
+  workers, engine-log tail, and the v28dbg flight-recorder tails into
+  /root/build/wedge_cap/. frw3.sh is the fixed restage (fr_watcher.sh
+  staging collided with a directory once; use frw3).
+
 ## Build
 
 ```
