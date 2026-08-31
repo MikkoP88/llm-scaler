@@ -1314,6 +1314,26 @@ now attributable to the IPC handle-exchange path.*
    Next untried cells: pidfd exchange, `VLLM_XPU_MAX_CAPTURE_SIZE=0`,
    verify-region-only capture disable (needs image change).
 
+*v29c update (2026-08-31 evening): all three "next untried cells" are CLOSED,
+and every wedge datapoint above is now known to be a k=4 datapoint.*
+
+11. **pidfd**: unsupported by this oneCCL build —
+   `|CCL_WARN| pidfd is not supported, fallbacks to drmfd exchange mode` on
+   both TP workers at init (silent fallback). Only drmfd and sockets are real
+   exchange paths here. **MAX_CAPTURE_SIZE=0**: semantics are UNCAPPED (0
+   disables the size cap => full 51-size list), not "no capture" — more
+   capture cannot help, and that list carries the documented xe-engine
+   DEVICE_LOST boot-fault risk. **Verify-region capture disable**: moot —
+   see #12's v29c update: piece capture + k4 corrupts numerics at bs=1 in the
+   smallest pieces (any list serving bs=1 is affected). **k3 verdict is in**
+   (`/root/build/prov_k3.out`): k3 ALSO wedges under the standard
+   provocation — fox iter 1 WEDGE (wall 158.1 s, stalled 120 s, ~65k
+   prefill->decode handoff), long_exp RC=7 (iter 1 wedge at 122.3 s), frw5
+   capture `w181259` shows BOTH workers parked at `gmr:1489` — the k4
+   wedge signature. The hypothesized collapse is REFUTED: **the #11 wedge
+   is k-AGNOSTIC (k3 and k4 both wedge at >=32k); the #12 corruption is
+   k4-ONLY** — two distinct defects that upstream must ticket separately.
+
 *Operational guidance (final, supersedes the k=1 paragraph above):* for
 the full 262k envelope run WITHOUT `--speculative-config` (nospec +
 FULL_DECODE_ONLY graphs: canonical PASS, 0/10 probes, fastest >=65k
@@ -1328,6 +1348,15 @@ timeout+retry discipline below. A true graphs+spec fix needs
 graph-replay-level debugging (allocator/replay interaction or a captured
 kernel with data-dependent termination), not vLLM-side configuration.
 Keep client timeouts >=120 s + one retry regardless.
+
+*v29c guidance addendum:* graphs + MTP **k4 is convicted on NUMERICS** (see
+#12 v29c) — never serve it in any transport, even where it doesn't wedge.
+graphs + **k<=3** is deterministic on every short-ctx probe (k1/k2/k3
+bit-stable, logprobs == eager reference) BUT k3 wedges under the standard
+provocation at 65k exactly like k4 (prov_k3: FOX_RC=7, LONGEXP_RC=7,
+w181259 both workers at `gmr:1489`) — the #11 wedge is k-agnostic, so the
+spec opt-in guidance does NOT widen: **k=1 only, short ctx, unchanged**.
+The k<=3 numerics result matters for root-cause separation, not for ops.
 
 
 ## 12 — temperature=0 outputs on LARGE CHUNKED prompts are not bit-stable
@@ -1352,6 +1381,49 @@ returns bit-identical quantized KV, and bare-prompt greedy is stable. The
 canonical correctness gate remains: hits land exactly at
 `(floor(n/4096) - 1) * 4096`, warm TTFT improves, and the output is sane,
 coherent text — not cold==warm string equality on large prompts.
+
+*v29c update (2026-08-31 evening) — UPGRADED to a k4-specific replay defect;
+the "fp near-tie" reading above is superseded, and "bare prompts ARE stable"
+no longer holds on current images:*
+
+- **graphs + MTP k4 corrupts temp-0 output** on a 6-token BARE prompt:
+  identical requests cycle between 2-3 execution paths whose logits differ at
+  NAT level (top-1 logprob for the same position: -0.099 / -0.294 / -1.598;
+  the top token itself can flip ' Paris' -> 'The'), producing
+  fluent-but-unrelated continuations and — after the boot accumulates ~40
+  probes — degenerate repetition (' France France France...'). Found by
+  accident during the pidfd arm's sanity check; characterized with
+  `coh_probe.sh` (8x temp-0 first-token + 6x 40-tok + 3x logprobs=5).
+- **The boundary is exactly k4.** v27 image, default graphs, k=1/2/3: P1
+  distinct=1, top-1 -0.451 bit-stable, equal to the compile-no-capture
+  reference (-0.453). k4 corrupt. Padding refuted as the trigger (k1 bs=3
+  6-rows->padded-8-piece clean; k2 bs=1 3-rows->padded-4-piece clean) — the
+  boundary tracks draft-token count, implicating multi-draft-position spec
+  machinery (GDN state / verify mask) under captured replay.
+- **Byte-reproducible**: same responses in the same order across boots,
+  across v27 AND v29 images, and across capture lists [1..128] vs [1,2,4,8] —
+  a deterministic function of request ordinal, i.e. the scheduler alternates
+  among 2-3 paths and at least one computes wrong logits. temp 0 IS honored
+  (high-margin 40-token prompt: 6/6 identical even on corrupt boots).
+- **Capture is necessary** (`VLLM_XPU_ENABLE_XPU_GRAPH=0` + k4 = deterministic
+  E1 reference) and **bs>=2 above the capture list falls back to eager and is
+  clean** (2 concurrent k4 requests on a [1,2,4,8] boot: both return the
+  reference continuation ' Paris.\nThe capital of Germany...').
+- **Retrospective**: #12's original large-chunked-prompt divergences were
+  observed at k4 on adv:v22-v24 — in today's light they were probably this
+  same corruption, not benign near-ties. Every graphs+k4 arm in v25-v29
+  measured wedges/throughput only; output text was never gated. **Dating:
+  adv:v24 reproduces the corruption byte-for-byte** (same 8 responses, same
+  logprobs) — not a v25-v27 regression; the original "bare prompt stable
+  4/4" was a small-sample artifact of per-request-ordinal path cycling. The
+  defect is at least as old as v24 / this stack generation.
+- **Prod impact**: NONE as running (prod = nospec). Guidance: never serve
+  graphs+k4; k<=3 + graphs passes every short-ctx determinism probe but k3
+  WEDGES at 65k under the standard provocation exactly like k4 (prov_k3:
+  FOX_RC=7, LONGEXP_RC=7, w181259 both workers at `gmr:1489`) — the wedge
+  (#11) is k-agnostic, this corruption is k4-only; two distinct defects.
+  The eager+MTP-k4 option in the #11 guidance remains valid and is
+  deterministic (compile-free). Repro: 3 curls, see README v29c section.
 
 
 ## 13 — ~65k-token highly-repetitive prompts yield DEGENERATE completions

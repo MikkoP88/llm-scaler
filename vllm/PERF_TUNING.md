@@ -725,6 +725,33 @@ FULL_DECODE_ONLY). The 48 linear-attention layers are O(1)/token and do not
 grow. Cold prefill runs at only ~1.5-2.0k tok/s → a 262k prompt is **~170 s
 of engine-monopolizing chunked prefill**.
 
+### v29c k-sweep determinism (2026-08-31 evening): k<=3 clean, k4 corrupt
+
+The v29b throughput table above needs one asterisk: **its graphs+drmfd and
+graphs+sockets rows (14.6-15.0 tok/s) were all k4, and k4 + capture corrupts
+output** (KNOWN_ISSUES #12 v29c: temp-0 logit paths diverge at nat level;
+degenerate text as boots age). Those numbers are valid as *throughput of a
+config you must not serve*. The only v29b row that is both deterministic and
+shippable is compile-no-capture 8.0-9.4 tok/s.
+
+k-sweep (v27 image, default graphs <=128, drmfd, `coh_probe.sh`):
+
+| spec k | temp-0 P1 distinct | top-1 logprob x3 | verdict |
+|---|---|---|---|
+| 1 | 1 | -0.451 bit-stable | clean (== eager reference within 2e-3) |
+| 2 | 1 | -0.451 bit-stable | clean |
+| 3 | 1 | -0.451 bit-stable | clean at short ctx; WEDGES at 65k (prov_k3: FOX_RC=7, LONGEXP_RC=7) |
+| 4 | 2-3 cycling | -0.099/-0.294/-1.598 | CORRUPT — never serve |
+| 4, no capture (E1) | 1 | -0.453 bit-stable | clean, 8.0-9.4 tok/s |
+| 4, bs=2 over capture list | 1 | — | clean (eager fallback) |
+
+Deterministic-config throughput frontier after v29c: nospec+graphs (prod),
+eager+k4 (48.4 tok/s short-ctx), compile-no-capture+k4 (8.0-9.4), and
+graphs+k<=3 (deterministic at short ctx but k3 wedge-convicted at 65k,
+prov_k3 — so it is NOT a long-ctx option; its short-ctx tok/s was never
+canonically measured and stays unmeasured given the k=1-only opt-in
+guidance).
+
 ### Measured: why ALL other streams suffer (no-spec arm, clean)
 
 | stream | condition | result |

@@ -12,6 +12,13 @@ measurement. No graphs+MTP arm is certifiable as a fix; v29 ships the
 evidence, the transport characterization, and an auto-recovery watcher.
 Production stays on the v27 nospec config.
 
+**v29c follow-up (same day, Tier-2 cells): the pidfd cell is closed
+(unsupported by this oneCCL build), and a NEW defect bigger than the wedge was
+found: piece capture + MTP k4 CORRUPTS OUTPUT — identical temp-0 requests
+cycle between 2-3 numerically different execution paths (top-1 logprob swings
+up to 1.5 nats, top token can flip). k<=3 + graphs is bit-stable CLEAN; the
+boundary is exactly k4. See the v29c section below.**
+
 ## What the image changes (vs v28dbg)
 
 | Tag | File | Change | Off-switch |
@@ -134,8 +141,102 @@ gloo/nccl/**xccl**/ucc/mpi). Serve env: `CCL_ZE_IPC_EXCHANGE=drmfd`
   record (wedge at prefill->decode handoff).
 
 
+## v29c Tier-2 follow-up (2026-08-31 evening): pidfd closed; graphs x k4 temp-0 OUTPUT CORRUPTION — k<=3 clean
+
+Follow-up session running the "cheap untested cells" plan. The headline is a
+NEW defect, bigger than #11's wedge: **piece capture + MTP k4 corrupts the
+target forward pass.** Identical temp-0 requests cycle between 2-3 numerically
+different execution paths — some compute grossly wrong logits (top token can
+flip ' Paris'->'The', top-1 logprob swings -0.05..-1.6 nats), yielding
+fluent-but-unrelated continuations and, as the boot ages, degenerate
+repetition (' France France France...'). Every graphs+k4 arm in v25-v29
+history measured WEDGES only (`wedge_repro.py` counts stream chunks; the
+batteries sample at temp 0.3): **the output text of all those arms was never
+validated and was almost certainly corrupt.**
+
+### Arms (coh_probe.sh = 8x temp-0 first-token + 6x 40-tok + 3x logprobs=5)
+
+| Arm | Config | P1 distinct | top-1 logprob x3 | Verdict |
+|-----|--------|-------------|------------------|---------|
+| T2a pidfd | v29 k4 graphs, `CCL_ZE_IPC_EXCHANGE=pidfd` | 3 (incl. unrelated text) | -0.50 / -0.75 / -1.09 | oneCCL WARN **"pidfd is not supported, fallbacks to drmfd exchange mode"** (both workers) — cell CLOSED; boot = drmfd replica |
+| same boot, warm | drmfd k4 graphs (default) | 2-3 cycling | -1.598 / -0.294 / -0.099 | corruption replicates on a FRESH boot, IMMEDIATE — no multi-ctx traffic needed (unlike the wedge, which is cumulative) |
+| E1 | v29 k4, `VLLM_XPU_ENABLE_XPU_GRAPH=0` | 1 | **-0.453 bit-stable** | compile-no-capture = the deterministic reference |
+| E-min | v29 k4, capture list [1,2,4,8] | 2 | same 3 values, byte-identical sequence to the <=128-list boot | corruption lives in the SMALL pieces; behavior is boot-reproducible |
+| E-min bs=2 | same boot, 2 concurrent (10 rows > every piece) | 1 | — | eager fallback CLEAN: ' Paris.\nThe capital of Germany is Berlin...' == E1's prefix |
+| E-min bs=1 aged | same boot after ~40 probes | degenerate | — | ' France France France...' / ' France is a country in a country...' — severity GROWS with boot age |
+| k-sweep | v27 image, default graphs, k=1 / k=2 / k=3 | 1 each | **-0.451 bit-stable** each | **k<=3 CLEAN; the boundary is exactly k4** |
+| k4 on v27 | v27 image (PROD image), default | 2-3, byte-identical to v29 | same values | defect is in the shared base stack — not the v28/v29 overlays |
+
+Evidence properties:
+
+- **temp 0 IS honored**: a high-margin 40-token prompt returns 6/6 identical
+  text even on corrupt boots — the *logits* differ across execution paths,
+  prompt-sensitively; this is not a sampler fault.
+- **Byte-reproducible**: same responses in the same order across boots,
+  across v27/v29 images, and across capture lists [1..128] vs [1,2,4,8]. A
+  deterministic function of request ordinal — the scheduler alternates among
+  2-3 paths and at least one computes wrong logits.
+- **Padding is NOT the trigger**: k1 bs=3 (6 rows -> padded 8-piece) and k2
+  bs=1 (3 rows -> padded 4-piece) are clean. The boundary tracks k (draft
+  positions), implicating the multi-draft-position spec machinery (GDN state /
+  verify mask) under replay — the same machinery as the v26 "GDN spec-kernel
+  ragged-batch OOB" fix and #11's "spec x graphs" conviction.
+- **Not a v25-v27 regression**: adv:v24 (k4, default graphs) reproduces the
+  same 8 responses in the same order with the same logprobs, byte-for-byte.
+  KNOWN_ISSUES #12's "bare prompts ARE stable (4/4)" on v22-v24 was a
+  small-sample artifact — with per-request-ordinal path cycling, a same-path
+  run of 4 is unremarkable. The defect is at least as old as v24.
+
+### Cell closures
+
+- **pidfd**: unsupported by this oneCCL build — silent fallback to drmfd at
+  init (CCL_WARN, both TP workers). Only drmfd and sockets are real paths.
+- **`VLLM_XPU_MAX_CAPTURE_SIZE=0`**: closed by SEMANTICS — 0 disables the cap
+  (i.e. capture the FULL 51-size default list up to 512), it is not "disable
+  capture" (`platforms/xpu.py:413`). More capture cannot help a
+  capture-necessary corruption, and the 51-size list is the documented
+  xe-engine `UR_RESULT_ERROR_DEVICE_LOST` boot-fault risk on this hardware.
+- **Verify-region capture disable (T2c)**: closed by EVIDENCE — corruption
+  occurs at bs=1 in the smallest pieces; any capture list able to serve bs=1
+  decode is affected. "No decode capture" is exactly E1 (deterministic, -40%).
+
+### k3 wedge check (prov_k3, drmfd) — k3 ALSO wedges; the defects do NOT collapse
+
+Standard provocation on the k3 boot: fox iter 1 **WEDGE** (wall 158.1 s,
+stalled 120 s — prefill->decode handoff at ~65k), long_exp **RC=7** (iter 1
+wedge at 122.3 s), canonical barrage wedged/dripping until killed. frw5 fired
+the first-ever k3 wedge capture: **w181259** — both TP workers parked at
+`_update_states_after_model_execute` (gmr:1489, mamba-align sync), i.e. the
+identical host signature and (per 3 stats samples) the same device storm as
+every k4 wedge. Conclusion: **the #11 wedge is k-AGNOSTIC (k3 and k4 both
+wedge at >=32k); the output corruption is k4-ONLY. Two distinct defects with
+overlapping triggers** — the "both collapse to k4+capture" hypothesis is
+refuted. The k3 numerics result stands (k<=3 clean on coh_probe); k3 merely
+inherits #11 instead.
+
+### 10-minute repro (upstream-grade)
+
+Boot `/root/build/serve_boot_var.sh "" "" <log> "" 512 llm-scaler-vllm-adv:v27`
+(defaults: k4, FULL_DECODE_ONLY, capture <=128, drmfd), then run
+`/root/build/coh_probe.sh <tag>` three times. k4: P1 distinct >= 2, top-1
+logprob spread >= 1 nat, sometimes the top token itself flips. Same boot
+restarted with `--speculative-config '{"method":"mtp","num_speculative_tokens":3}'`:
+distinct=1, top-1 -0.451 bit-stable, all runs. No provocation, no large
+contexts, no multi-minute batteries — the old wedge repro needed ~1.3k chunks;
+this needs three curls.
+
+
 ## Scripts
 
+- `coh_probe.sh [tag]` — temp-0 determinism probe (8x first-token + 6x
+  40-tok + 3x logprobs=5). The v29c arm-standard endpoint: k4 -> distinct>=2
+  with nat-level logprob swings; k<=3 -> distinct=1 bit-stable.
+- `conc_n_probe.py N [rounds]` — N concurrent identical temp-0 requests;
+  batch-shape discriminator (bs>=2 above the capture list = eager fallback).
+- `mk_serve_boot_min2.sh` (host) — generates `serve_boot_min2.sh`
+  (serve_boot_var.sh + baked-in `cudagraph_capture_sizes:[1,2,4,8]`).
+  Direct `--compilation-config` via EXTRAFLAGS is silently overridden: it
+  lands BEFORE the baked-in flag in serve_boot_var.sh.
 - `frw4.sh [once|restart] <logname>` — capture/recovery watcher. py-spy
   targets `Worker_TP` procs (EngineCore parks in shm `get_response` and
   is the WRONG target — wedge #1 lesson).
@@ -189,4 +290,25 @@ exonerated.
   `VLLM_XPU_MAX_CAPTURE_SIZE=0` (uncapped capture list) and a
   verify-region-only capture disable (would need an image change, env knob
   does not exist today).
+
+### v29c amendments to the posture above
+
+- **All three "untested cells" are now closed**: pidfd (unsupported, silent
+  drmfd fallback), MAX_CAPTURE_SIZE=0 (semantics = UNCAPPED, cannot help),
+  verify-region capture disable (moot — corruption is in the smallest pieces
+  at bs=1; no-capture is E1).
+- **Candidate posture re-ranked** (k4 is now convicted on NUMERICS regardless
+  of transport, so option (2) below is dead and (3) is re-scoped):
+  (1) **v27 nospec + graphs** (prod today) — deterministic, fastest >=65k;
+  (2) **graphs + k<=3 at <=32k ctx only** — deterministic on every coh_probe
+  cell (k1/k2/k3 bit-stable), but k3 provokes the #11 wedge at 65k
+  (prov_k3: FOX_RC=7, LONGEXP_RC=7, w181259) — the spec opt-in stays
+  k=1-only, short ctx, per the existing guidance;
+  (3) **compile-no-capture + k4** — deterministic (E1) but -40% decode;
+  (4) graphs + k4 in any transport/config — **never shippable**: corrupt
+  outputs even when it doesn't wedge.
+- The #11 wedge and the v29c corruption share ingredients (piece capture x
+  spec) but are DISTINCT defects: the wedge is k-agnostic (k3 and k4 wedge at
+  >=32k), the corruption is k4-only. An upstream filing can carry both with
+  the 3-curl corruption repro as the lead.
 
