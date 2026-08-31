@@ -692,6 +692,31 @@ On the user's MTP arm the ≥32k wedge (#11) is effectively DETERMINISTIC:
 frozen (`run=1`, gtok frozen) until client disconnect; prefix-cache retries
 also wedge. So "long-context tok/s" on this arm is mostly **0 or undefined**.
 
+### v29b device/comm arms (2026-08-31): perf of the B-matrix + fabric numbers
+
+Decode throughput (canonical barrage, same harness/metric as the 14.6-14.9
+graphs number above):
+
+| Config | tok/s | Notes |
+|---|---|---|
+| graphs + drmfd (default) | 14.6-14.9 | wedges permanently under the standard provocation |
+| graphs + `CCL_ZE_IPC_EXCHANGE=sockets` | **14.5-15.0** | comm env is perf-FREE; wedge becomes self-healing (>=120 s freezes, engine recovers) |
+| compile-no-capture (`VLLM_XPU_ENABLE_XPU_GRAPH=0`) | 8.0-9.4 (~-40%) | 19/19 provocation-clean, coherent; the safety fallback |
+| `CCL_ENABLE_SYCL_KERNELS=0` | n/a serve | bench: 8x AR latency, 2.5x BW loss — never ship |
+| `CCL_TOPO_P2P_ACCESS=0` | n/a | first collective HANGS — disqualified |
+| governor `performance` | n/a serve | lifts launch-bound anchor 49→86 TFLOPs; fabric unchanged |
+
+Fabric/transport (fence-safe: per-iteration `.item()` readback; copies bypass
+Event/synchronize fencing on this build): same-GPU D2D 240 GB/s; cross-GPU
+copy 9.5 GB/s (host-routed — slower than explicit via-host staging at
+12.2/12.8 GB/s per direction); oneCCL (`xccl`) AR 56 µs @ 8x5120 decode
+shape, large-message ceiling 9.7-9.8 GB/s = the raw-copy ceiling; decode AR
+budget ~35 ARs/step ≈ 2 ms/step (~3% of a 68 ms step — comms are NOT the
+throughput bottleneck); mamba-align 10 KB D2H sync = 19.7 µs. Docker cpuset
+NUMA pinning cannot be measured: oneCCL worker threads fail to start under
+a restricted cpuset (`pthread_create EINVAL`, `CCL_WORKER_AFFINITY` parser
+rejects any in-set list).
+
 On the clean no-spec arm, long-context decode decays **32.1 → 27.0 → 17.9 →
 12.3 tok/s** (2k→262k, −62%). Cause: the 16 full-attn layers scan the whole
 KV each step (8 KB/token/rank at tq4nc → 2.1 GB/rank read per step at 262k),

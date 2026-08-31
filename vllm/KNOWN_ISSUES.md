@@ -1273,6 +1273,47 @@ causes are convicted-innocent by direct arms.*
    layout) — converts a permanent hang into one lost request + ~7 min
    reboot with no human intervention.
 
+*v29b update (2026-08-31, device/comm-level session): the livelock is
+IDENTIFIED as a oneCCL SYCL-kernel collective spin, and its PERMANENCE is
+now attributable to the IPC handle-exchange path.*
+
+6. **B-phase arms (standard provocation = fox 6x128 + long_exp 3x2048 @65k
+   + canonical 10x4096):** B1 `VLLM_XPU_ALLOW_COMM_IN_GRAPH=1` returns
+   DETERMINISTIC GARBAGE at temp 0 (captured collectives corrupt numerics —
+   disqualified without provocation). B2' `VLLM_XPU_ENABLE_XPU_GRAPH=0`
+   (compile-without-capture) survived 19/19 with coherent output but decodes
+   at 8.7 vs 14.7 tok/s (-40%) — proves piece capture is a NECESSARY
+   ingredient of the wedge. B3a `CCL_ZE_IPC_EXCHANGE=sockets` (2 boots):
+   full 14.5-15.0 tok/s; boot 1 fully clean; boot 2 froze >=120 s at fox
+   iter1 AND long_exp iter1 (in-flight requests died) but the engine
+   SELF-RECOVERED both times and then served 10/10 clean canonicals —
+   **drmfd = permanent wedge, sockets = self-healing livelock**. B3b docker
+   cpuset NUMA pin: unbootable (oneCCL worker-affinity pthread_create EINVAL;
+   `CCL_WORKER_AFFINITY` parser rejects any in-set list) — the NUMA-locality
+   lever is untestable without a oneCCL fix.
+7. **w144515 (frw5 full-telemetry capture, first at a live freeze):** both
+   workers parked TOGETHER (not desynced) at gmr:1489; device in the same
+   storm as permanent wedges — Compute 100% + Copy 100% + util 22%, EU 66%
+   stall, HBM reads 80 GB/s, but **PCIe only 33 MB/s** (rising to 68 MB/s as
+   recovery began). The storm is a LOCAL spin polling peer state, not data
+   transfer: the fabric is healthy while both engines peg.
+8. **Transport characterization (fence-safe; copies bypass Event/sync
+   fencing on this build):** same-GPU D2D 240 GB/s; cross-GPU "P2P" copy
+   9.5 GB/s < via-host staging 12.2/12.8 GB/s (P2P is host-routed);
+   oneCCL (torch 2.11+xpu backend name is **`xccl`**) AR 56 us @ 8x5120,
+   ceiling 9.7-9.8 GB/s == the raw copy ceiling; `CCL_ENABLE_SYCL_KERNELS=0`
+   = 2.5x BW / 8x latency regression (never ship); `CCL_TOPO_P2P_ACCESS=0`
+   HANGS the first collective; mamba-align 10 KB D2H sync = 19.7 us
+   (negligible); governor powersave->performance lifts launch-bound work
+   49->86 TFLOPs but leaves the fabric unchanged. Serve env uses
+   `CCL_ZE_IPC_EXCHANGE=drmfd`; oneCCL's DEFAULT is pidfd (untested cell).
+10. **Posture (unchanged conclusion, sharper boundary):** prod stays v27
+   nospec. graphs+spec remains uncertifiable: the best comm-env arm (sockets)
+   converts permanent death into repeated multi-minute freezes that kill
+   in-flight requests — operable only with auto-restart + client retry.
+   Next untried cells: pidfd exchange, `VLLM_XPU_MAX_CAPTURE_SIZE=0`,
+   verify-region-only capture disable (needs image change).
+
 *Operational guidance (final, supersedes the k=1 paragraph above):* for
 the full 262k envelope run WITHOUT `--speculative-config` (nospec +
 FULL_DECODE_ONLY graphs: canonical PASS, 0/10 probes, fastest >=65k
