@@ -1219,6 +1219,60 @@ narrower than "graphs".*
    (UR_RESULT_ERROR_DEVICE_LOST) during PIECEWISE capture with eager
    collectives" — this tree caps default capture sizes to <=128.
 
+*v29 update (2026-08-31, live-capture session): the wedge mechanism is now
+INSTRUMENTED — a rank-desynced device-side livelock — and five candidate
+causes are convicted-innocent by direct arms.*
+
+1. **Mechanism (from 7 auto-captured live wedges, `/root/build/wedge_cap/`
+   w080544-w123120):** both GPUs sit at
+   Compute Engines 100% + Copy Engines 100% with GPU util only 22% (EU
+   ~10% active / ~48% stall in the detailed dump) — a tiny-kernel/copy
+   storm that never retires. The two TP workers' HOSTS freeze at DIFFERENT
+   points of the same engine step, one region apart: one rank parks in
+   `_update_states_after_model_execute` at the mamba-align D2H sync
+   (`gpu_model_runner.py:1489`, `num_accepted_tokens.gpu[:n].cpu()`
+   `.numpy()` — GIL released, classic blocked-sync), while the other is a
+   region ahead inside the drafter `_propose_impl` (or once deeper, in an
+   fp8 `apply_block_scaled_mm` op call that never returned). Which rank is
+   ahead flips between wedges — a symmetric race, not a rank-0 pathology.
+   Eager collectives are fully exonerated: perfect AR begin/end pairing
+   (76,414/76,414 per rank in wedge #1); the fr log's mid-propose tail can
+   under-report (buffered writer never flushes at freeze) — trust py-spy.
+2. **Exonerated by direct arms (all on v29 = v28dbg + stablebuf +
+   capture-stab):** NOASYNC (`--async-scheduling` off: battery 8/8+4/4+20/20
+   clean at ZERO wall cost, then wedged), ALLOC
+   (`expandable_segments:False`: battery clean, then wedged), prefix-cache
+   reuse (unique-prompt canonicals still wedged), mid-serving recompiles
+   (`TORCH_LOGS=recompiles` boots: all 20 dynamo recompiles fire during
+   warmup, ZERO during serving), and **boot-lottery itself** (see 3). The
+   remaining surface is the device-side piece-replay storm, not host
+   configuration.
+3. **Hazard model — ACQUIRED per-boot state, not boot-lottery (A5
+   within-boot proof):** the SAME boot ran ~3.2k short-ctx canonical
+   chunks clean, then after the fox battery (128k) + 2x long_exp (65k)
+   wedged at the NEXT decode start (chunk 1, 65k ctx). Boots that only
+   ever saw short-ctx traffic stayed clean through 6.6-10.7k chunks;
+   boots with large-ctx history wedged the subsequent canonical barrage
+   at ~1,250-1,410 cumulative chunks (5 runs, mean ~1,300). 180 s idle
+   gaps stretched survival ~2.6x but did not immunize — the state
+   persists for the boot's lifetime and large-context traffic is the
+   accelerant. This reinterprets v28dbg's boot-lottery: fresh boots
+   start LOW-hazard; its clean fresh-boot batteries had simply not
+   crossed threshold. The user's production pattern (>=32k ctx) hits it
+   fastest, matching the historical "user arm >=32k effectively
+   deterministic" record.
+4. **ARs/step partition (v29 propose markers):** exactly 12.00 eager ARs
+   per propose call on the drafter side (3 x 4 draft passes,
+   deterministic) + ~23.4 target-side per step; most layer ARs live
+   inside compiled pieces and never hit the eager wrapper.
+5. **Auto-recovery exists:** `patches/qwen38-dflash-v29/frw4.sh [once|
+   restart] <logname>` polls /metrics, on a 50 s stall captures xpu-smi +
+   TP-worker py-spy (grep `Worker_TP` — EngineCore just parks in shm
+   `get_response` and is the WRONG target) + fr/engine tails, and in
+   `restart` mode re-rolls the boot (`docker restart` = fresh capture
+   layout) — converts a permanent hang into one lost request + ~7 min
+   reboot with no human intervention.
+
 *Operational guidance (final, supersedes the k=1 paragraph above):* for
 the full 262k envelope run WITHOUT `--speculative-config` (nospec +
 FULL_DECODE_ONLY graphs: canonical PASS, 0/10 probes, fastest >=65k

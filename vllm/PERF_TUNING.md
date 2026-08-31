@@ -675,6 +675,18 @@ From the v28dbg long-exposure runs (2048-token ignore_eos @ ~65k fox, k4 +
   decode-attn, larger per-split tiles or a persistent kernel): plausibly
   3-10x at 131-262k, and it lifts BOTH arms (spec included).
 
+### v29 zero-cost defensives (2026-08-31): stablebuf + capture-stab + noasync
+
+Measured on the v29 image (`patches/qwen38-dflash-v29`), identical walls to
+the v28dbg baseline: VIA stable output buffer (`VLLM_XPU_VIA_STABLEBUF`, kills
+the per-AR clone on decode-shaped collectives), allocator reset before
+compile/capture (`VLLM_XPU_CAPTURE_STAB`), and dropping `--async-scheduling`
+(battery 8/8 + 4/4 + 20/20, fox 2.9 tok/s, long_exp 137-142 s — all
+unchanged). None of them cure the #11 wedge (all three arms wedged the
+back-to-back canonical barrage), but they are free and stay in the tree.
+Graphs+MTP steady short-ctx throughput on the clean boots: **14.6-14.9
+tok/s** vs 9.1 tok/s on the first post-boot canonical (warm-in cost ~25 s).
+
 On the user's MTP arm the ≥32k wedge (#11) is effectively DETERMINISTIC:
 4/4 requests (2x 32k, 2x 131k) wedged at the prefill→decode handoff, engine
 frozen (`run=1`, gtok frozen) until client disconnect; prefix-cache retries
