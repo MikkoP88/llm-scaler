@@ -1094,13 +1094,26 @@ single-stream unless noted):*
 | MALL | `--mamba-cache-mode all` (async pinned-copy path; no align `.cpu()` D2H, no postprocess_mamba copies) | 2/3 WEDGE |
 | E4 | `--max-num-batched-tokens 4096` | 1/3 WEDGE |
 | K1 | `num_speculative_tokens=1` | **32k 7/7 OK**, 64k 2/3, 131k 1/3 WEDGE |
+| v27 | dedicated drafter oneCCL communicator (`VLLM_XPU_DRAFTER_PG`, adv:v27) | true-32k 1/3 WEDGE (neutral — same as DTP1) |
+| v27+MALLred | + `VLLM_XPU_ALLREDUCE_VIA_ALLGATHER=1` k4 | **32k 7/7 clean**, 65k 1/2, 131k 1/2 WEDGE |
+| v27+nukesimd | + MALLred + every `DISABLE_ESIMD_*=1` | 65k 2/2 clean, 131k 1/2 WEDGE |
+| v27+k1+MALLred | k=1 + MALLred | probes clean 32k-262k (27.7/23.3/14.6/8.48 tok/s) but **canonical WEDGE @ token 141** |
 
 Refuted causes: oneCCL SYCL-kernel transport (E1), collective size /
 argmax path (E2, E2-bs2), host-side interleave barriers (v23/v24/v25),
-XPU graphs (NG), draft-model collectives (DTP1), the align-mode blocking
-D2H + mamba state copies (MALL), prefill chunk size (E4). What remains is
-the GDN (gated-delta-net linear-attention) spec-state machinery shared by
-target verify and drafter on both ranks.
+XPU graphs as a whole for the <=32k class (NG), draft-model collectives
+(DTP1, v27 dedicated communicator — the drafter-comm interleave story is
+dead), the align-mode blocking
+D2H + mamba state copies (MALL), prefill chunk size (E4), the ESIMD
+kernel family (v27+nukesimd: every `DISABLE_ESIMD_*=1` still wedges).
+CONVICTED for the <=32k class: the eager oneCCL `all_reduce` kernel —
+`VLLM_XPU_ALLREDUCE_VIA_ALLGATHER=1` (allgather + local add, already in
+`xpu_communicator.py`, default off) takes k4 @32k from 1-2/3 wedge to
+7/7 clean. What survives every lever is a graphs-x-spec residual
+(~1e-2/step; see the v27 update below). What remains of the original
+GDN reading is only the graphs-x-spec residual's location: it needs
+graph-replay-level debugging (allocator/replay interaction or a captured
+kernel with data-dependent termination), still beyond vLLM-side config.
 
 *Live captures (the mechanism):*
 
@@ -1132,14 +1145,47 @@ acceptance (E[len] 1.67-1.95, position-0 rate 0.80-0.95). At >=64k it
 still wedges ~40-50% (64k 2/3, 131k 1/3 across arm + battery), so k=1 is
 NOT a general fix — it is an opt-in for serves bounded to <=32k contexts.
 
-*Operational guidance (final):* for the full 262k envelope, run WITHOUT
-`--speculative-config`. This is also strictly faster than the k=4 baseline
-everywhere (33.2 vs 15.0 tok/s at 2k; 27.9 vs WEDGED at 32k) and restores
-26% KV capacity (see LONG_CONTEXT_ANALYSIS). For <=32k-bounded serves,
-`{"method":"mtp","num_speculative_tokens":1}` is measured-safe and +37% at
-short ctx. Keep client timeouts >=120 s + one retry regardless. A true fix
-needs GPU-side kernel debugging of the GDN spec-state path (kernel
-instrumentation / level-zero debugger), not vLLM-side changes.
+*v27 update (2026-08-30/31, host 10.20.3.65, adv:v27 = v26 + dedicated
+drafter communicator overlay): the canonical-grade standard changes the
+verdicts.*
+
+1. **Probes under-expose ~60x.** The historical probe = a 64-token decode
+   window; the canonical = a 4096-token generation (~60x the per-step
+   exposure). Probe-clean therefore does NOT mean per-step-zero. The
+   v22-era k=1 "7/7 @32k + canonical PASS" was a lucky draw by this
+   arithmetic; last session's W3 (comm-out-of-graph <=67k) and eager
+   0/11 verdicts read the same way.
+2. **k1+MALLred is NOT canonical-safe.** It passed every probe in the
+   full envelope (32k/65k/131k/262k, 27.7/23.3/14.6/8.48 tok/s) and then
+   wedged a canonical at token 141 at SHORT ctx — the graphs-x-spec
+   residual is ~1e-2/step and context-independent; only exposure drives
+   it. Every probe-clean graphs+spec arm above carries the same caveat.
+3. **`--enforce-eager` + MTP k4 is the only spec config validated at
+   canonical exposure:** 3x canonical PASS back-to-back (short-ctx
+   48.4 tok/s, +18% over the nospec canonical 40.8; 32k-ctx PASS at
+   4.85 tok/s, html+canvas OK) + the 0/13 historical probe record incl.
+   131k/262k. Deep-context decode is slow (>=131k 2.4-3.8 tok/s) —
+   it is a short/medium-ctx latency config, not a deep-ctx one.
+4. **Methodology trap (see #13):** a long filler of identical repetitions
+   instant-EOSes at ~32k ctx (greedy too) and returns empty text in
+   ~1-2 s — trivially misread as a serve failure during canonical
+   testing. A wedge HANGS and never returns. Long-ctx canonicals must
+   use varied fillers (`patches/qwen38-dflash-v27/canonical32k.py`).
+
+*Operational guidance (final, supersedes the k=1 paragraph above):* for
+the full 262k envelope run WITHOUT `--speculative-config` (nospec +
+FULL_DECODE_ONLY graphs: canonical PASS, 0/10 probes, fastest >=65k
+decode — 23.6/18.5/12.7 tok/s @ 67/133/262k). For spec latency at
+short/medium ctx, `--enforce-eager` + MTP k4 is the only
+canonical-validated option (48.4 tok/s short-ctx). k=1+MALLred
+(`VLLM_XPU_ALLREDUCE_VIA_ALLGATHER=1`) removes the convicted reduce
+kernel and is probe-clean across the whole envelope, but retains the
+~1e-2/step graphs-x-spec residual — acceptable only for exposures well
+below canonical (tens of requests x short generations) with the client
+timeout+retry discipline below. A true graphs+spec fix needs
+graph-replay-level debugging (allocator/replay interaction or a captured
+kernel with data-dependent termination), not vLLM-side configuration.
+Keep client timeouts >=120 s + one retry regardless.
 
 
 ## 12 — temperature=0 outputs on LARGE CHUNKED prompts are not bit-stable

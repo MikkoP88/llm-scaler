@@ -619,6 +619,33 @@ bigger chunks; (3) the one env that changes the wedge
 133k. The recommended long-ctx serve remains **nospec +
 FULL_DECODE_ONLY + tq4nc + block 512** exactly as locked in v8.
 
+### v27 wedge endgame arms (2026-08-30/31, host 10.20.3.65, adv:v27):
+### oneCCL reduce kernel convicted at <=32k; canonical-grade standard adopted
+
+adv:v27 = adv:v26 + an inert dedicated-drafter-communicator overlay
+(`VLLM_XPU_DRAFTER_PG`, neutral — kept as capability, see
+`patches/qwen38-dflash-v27/`). The night's arms, all single-boot:
+
+| arm | config | probes (64-tok windows) | canonical (4096-tok) | verdict |
+|---|---|---|---|---|
+| v27 | + drafter dedicated comm (k4) | 32k 1/3 WEDGE | — | neutral, like DTP1 |
+| v27+MALLred | + `VLLM_XPU_ALLREDUCE_VIA_ALLGATHER=1` (k4) | **32k 7/7 clean**, 65k 1/2 W, 131k 1/2 W | — | convicts the eager oneCCL all_reduce kernel for the <=32k class |
+| v27+nukesimd | + MALLred + every `DISABLE_ESIMD_*=1` | 65k 2/2 clean, 131k 1/2 W | — | ESIMD kernels exonerated |
+| v27+k1+MALLred | k=1 + MALLred | 32k/65k/131k/262k **7/7 clean** (27.7/23.3/14.6/8.48 tok/s) | **WEDGE @ token 141 (short ctx)** | NOT canonical-safe |
+| v27+eager | `--enforce-eager` + MTP k4 | (v26 record: 0/13 incl. 131k/262k) | **PASS x3**: short-ctx 48.4 tok/s (+18% over nospec canonical 40.8), 32k-ctx PASS 4.85 tok/s | the only canonical-validated spec config |
+
+Key numbers: eager+spec canonical 48.4 tok/s short-ctx (vs nospec
+canonical 40.8); k1+MALLred full-envelope probe speeds 27.7/23.3/14.6/8.48
+tok/s @ 32k/65k/131k/262k (fastest spec numbers at depth — unusable at
+canonical exposure); eager deep decode stays slow (32k 4.85, 131k 2.37,
+262k 3.82 tok/s). Two standing verdicts change: every probe-clean
+graphs+spec arm carries a ~1e-2/step residual (64-token windows
+under-expose ~60x vs canonical), and long-ctx canonical testing must use
+VARIED fillers (identical-repetition fillers instant-EOS at >=~32k ctx —
+KNOWN_ISSUES #13 — which mimics a serve failure). Full matrix + mechanism:
+KNOWN_ISSUES #11 v27 update.
+
+
 On the user's MTP arm the ≥32k wedge (#11) is effectively DETERMINISTIC:
 4/4 requests (2x 32k, 2x 131k) wedged at the prefill→decode handoff, engine
 frozen (`run=1`, gtok frozen) until client disconnect; prefix-cache retries
