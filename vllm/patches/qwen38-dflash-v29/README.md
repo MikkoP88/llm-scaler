@@ -312,3 +312,29 @@ exonerated.
   >=32k), the corruption is k4-only. An upstream filing can carry both with
   the 3-curl corruption repro as the lead.
 
+## v29d Tier-3 follow-up (2026-08-31 night): upstream recon + workaround arms
+
+Upstream recon (uxlfoundation/oneCCL): **#212** — 2x B70, stale cached
+Level-Zero IPC handle after peer buffer realloc -> page fault + infinite
+`is_event_completed` spin (workaround `CCL_ZE_CACHE_OPEN_IPC_HANDLES=0`,
+~3%); **#215** — multi-GPU Battlemage default-allreduce hang in vLLM TP,
+2021.17.2 + SYCL RT 2025.3.2 = PASS row (workarounds TMP_BUF=1 pair /
+`CCL_ALLREDUCE=ring`); **#213** — pidfd unsupported -> silent drmfd override
+(= our v29c T2a closure). Full details + arm results: KNOWN_ISSUES #11
+v29d update. Arm matrix (v27 image, k4, graphs, drmfd, standard provocation):
+
+| Arm | Env delta | Result | Verdict |
+|-----|-----------|--------|---------|
+| T3a cache-off | `CCL_ZE_CACHE_OPEN_IPC_HANDLES=0` | UNBOOTABLE: `ze_handle_manager.cpp:42 mem_to_ipc_handle: device_fd invalid` at first AR, both workers — drmfd AND sockets | #212 workaround version-gated (needs >=2021.17); cell closed |
+| T3a' sockets+cache-off | `CCL_ZE_IPC_EXCHANGE=sockets CCL_ZE_CACHE_OPEN_IPC_HANDLES=0` | identical init death | same |
+| T3b TMP_BUF pair | `CCL_SYCL_ALLREDUCE_TMP_BUF=1 CCL_SYCL_ALLGATHERV_TMP_BUF=1` | UNBOOTABLE: `allgatherv_sycl.cpp:112: To run on BMG, ...ALLGATHERV_TMP_BUF must be 0` | BMG hard gate; our `=0` pins are a HW requirement |
+| T3b' AR-only | `CCL_SYCL_ALLREDUCE_TMP_BUF=1` | boots, full speed (14.7-15.0 tok/s). Pass 1: **19/19 CLEAN** (first clean graphs+k4 battery ever). Pass 2 same boot: **WEDGE @ canonical iter 2, 488 chunks (~8k cumulative; w213816, identical storm + drafter-parked signature)** | delays onset ~4-6x (vs ~1.3k baseline), NOT a fix |
+
+Net: both upstream workarounds are dead ends on oneCCL 2021.15; the wedge
+mechanism survives the tmp-buf path. Remaining lever: oneCCL upgrade to
+2021.17.x+ (image rebuild, #215 PASS row — mixed prior since #212 is filed
+against 2021.17). Ticket drafts (unposted, evidence-complete):
+`upstream_oneccl_ticket.md` (#212/#215 cross-posts), `upstream_vllm_ticket.md`
+(k4 corruption, references vLLM #26963). Prod restored v27 nospec,
+coh_probe bit-stable (Paris -0.451 x3).
+

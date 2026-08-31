@@ -1358,6 +1358,50 @@ w181259 both workers at `gmr:1489`) — the #11 wedge is k-agnostic, so the
 spec opt-in guidance does NOT widen: **k=1 only, short ctx, unchanged**.
 The k<=3 numerics result matters for root-cause separation, not for ops.
 
+*v29d update (2026-08-31 night, Tier-3 upstream arms): both oneCCL upstream
+workarounds are DEAD ENDS on 2021.15; onset can be delayed ~4-6x but the
+wedge stands. Upstream recon found near-matching public reports —
+uxlfoundation/oneCCL #212 (2x B70: stale cached Level-Zero IPC handle after
+peer buffer realloc -> page fault + infinite `is_event_completed` spin;
+workaround `CCL_ZE_CACHE_OPEN_IPC_HANDLES=0`), #215 (multi-GPU Battlemage
+default-allreduce hang in vLLM TP; 2021.17.2+SYCL RT 2025.3.2 = PASS row;
+workarounds `CCL_SYCL_ALLREDUCE_TMP_BUF=1` / `ALLGATHERV_TMP_BUF=1` /
+`CCL_ALLREDUCE=ring`), #213 (pidfd unsupported -> silent drmfd override —
+exactly our v29c T2a closure). Live arm results (v27 image, k4, graphs,
+drmfd, standard provocation):*
+
+- **`CCL_ZE_CACHE_OPEN_IPC_HANDLES=0` is UNBOOTABLE on 2021.15** — both TP
+  workers die at the first all_reduce in `init_device`:
+  `CCL_ERROR ze_handle_manager.cpp:42 mem_to_ipc_handle: device_fd !=
+  invalid_fd failed`, under BOTH drmfd and sockets exchange. The #212
+  workaround is version-gated (their reporter is on 2021.17).
+- **`CCL_SYCL_ALLGATHERV_TMP_BUF=1` is hard-refused on BMG in 2021.15** —
+  `allgatherv_sycl.cpp:112: To run on BMG, CCL_SYCL_ALLGATHERV_TMP_BUF must
+  be set to 0`. Our env's `=0` pins are a hardware requirement, not tuning.
+- **`CCL_SYCL_ALLREDUCE_TMP_BUF=1` (alone)** boots and serves at full graphs
+  speed (14.7-15.0 tok/s canonical). Provocation pass 1: **19/19 CLEAN**
+  (fox 6/6 + long_exp 3/3 + canonical 10/10, zero watcher captures) — the
+  first clean graphs+k4 battery in project history. Pass 2 on the SAME boot:
+  fox 6/6 + long_exp 3/3 clean, then **WEDGE at canonical iter 2, 488 chunks
+  (~8k cumulative chunks; w213816: same Compute 100% + Copy 100% storm,
+  worker parked in the drafter propose path)**. Baseline wedges at ~1.3k
+  chunks — so the tmp-buf path delays onset ~4-6x but does NOT fix the
+  livelock. Mechanistic read: in-place SYCL-kernel allreduce exposes the
+  caller's graph-replayed buffer to the IPC handle cache more often than a
+  oneCCL-owned tmp buffer — consistent with #212's staleness mechanism
+  surviving.
+- Corollaries confirmed live: oneCCL 2021.15's **default exchange is pidfd**
+  (our env pins drmfd), and pidfd is unsupported on this build/kernel ->
+  silent drmfd fallback (#213), i.e. `CCL_ZE_IPC_EXCHANGE` effectively
+  offers only drmfd/sockets here.
+
+*Posture: UNCHANGED — prod stays v27 nospec + FULL_DECODE_ONLY graphs. The
+remaining Tier-3 lever is a oneCCL upgrade (2021.15 -> 2021.17.x+: #215's
+PASS row, though #212 exists on 2021.17 — mixed prior; image rebuild +
+re-provocation required). Ticket drafts with all arm evidence parked at
+`patches/qwen38-dflash-v29/upstream_{oneccl,vllm}_ticket.md`, deliberately
+unposted pending an upgrade arm.*
+
 
 ## 12 — temperature=0 outputs on LARGE CHUNKED prompts are not bit-stable
 run-to-run under MTP (fp near-tie flips); bare prompts ARE stable —
