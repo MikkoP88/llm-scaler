@@ -2,6 +2,37 @@
 # GATED, #12 clamped — and the perf verdict: spec is a NET LOSS, prod runs
 # v31.1 nospec
 
+## v31.3 third-window addendum (2026-09-01): reference-image superiority
+## confirmed, long-ctx at physics floor, #12 narrowed
+
+- **Superiority vs both reference images (same GPU, same serve flags via
+  `serve_boot_img.sh`, warm ctxbench):** intel/llm-scaler-vllm:0.21.0-b3.1
+  = 12.19/12.89/12.96/13.04 tok/s flat @2k/8k/32k/65k, conc16 agg 105.8;
+  ghcr.io/rmacy/qwen38-fp8-dspark:v16 = 13.05/13.01/12.91/12.96 flat,
+  conc16 agg 104.8 (runs cudagraph_mode NONE, speculative_config=None).
+  Ours (v31.1 nospec): 33.6→23.5 across 2k→65k and conc16 agg ~353 steady
+  — **1.8–2.6x faster everywhere**. The references' flatness is not a
+  virtue: they're slow enough that attention cost never surfaces.
+- **Long-ctx flattening arms CLOSED (negative results):** `--block-size`
+  is INERT for this model (hybrid mamba negotiation forces attention
+  block 2048 regardless, `platforms/interface.py:645`); TQ decode kernel
+  tunables `VLLM_TQ_BLOCK_KV=8`/`VLLM_TQ_STAGE1_STAGES=2` are a
+  REGRESSION (-0.6/-2.7/-5.5% @2k/32k/65k; defaults 4/1 optimal);
+  `NUM_KV_SPLITS` already fixed 32. The 33.6→23.5 slope (-30% over 32x
+  ctx) is 4-bit-KV bandwidth physics.
+- **Spec regression quantified:** k1 acceptance = 85.75%
+  (1715/2000, all pos-0) yet each spec step costs 2.65x a nospec step
+  (78.8ms vs 29.8ms at bs=1) — overhead-bound, not acceptance-bound;
+  config-level fix impossible. Nospec stays.
+- **#12 narrowed (full detail in KNOWN_ISSUES v31.3 update):** corruption
+  law = k4 x SHORT prompt x capture (25k-filler prompt: 1/8 distinct,
+  text-stable); MQ verify kernel, mamba slot allocation, capture padding
+  all exonerated via env arms + live `GDNAttentionMetadataBuilder`
+  telemetry; convicted region = 5-token spec-step numerics
+  (`gated_delta_rule_spec_kernel` at width 5 and/or 5-row verify). k-clamp
+  stays; no speculative patch. Upstream addendum:
+  vllm#54785 issuecomment-5497862084.
+
 Image lineage: `llm-scaler-vllm-adv:v30` (other editor's spec+TP>1 fail-safe
 gate) → `:v31` (k-clamp + split knobs) → **`:v31.1` (the fix posture:
 whole-step XPU graph capture + inductor compile disabled, as the DEFAULT gate

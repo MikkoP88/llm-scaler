@@ -1624,6 +1624,40 @@ for a true fix remains the multi-draft-position spec machinery under
 captured replay (kernels lane, `/root/build/vxk`); #11's inductor
 conviction does not transfer to #12.
 
+*v31.3 update (2026-09-01, third window — ROOT-CAUSE NARROWED to the
+5-token spec step; SHORT-PROMPT law found; four suspects exonerated):*
+
+- **New empirical law: corruption requires k=4 AND a short prompt.** Same
+  k4 capture boot, 8 identical greedy reqs: ~10-token prompt → **8/8
+  distinct** outputs (logprob swings >1 nat); same prompt with ~25k tokens
+  of filler → **1/8, text-stable** (residual logprob wobble ≤0.02). k=3
+  bit-stable at both lengths. Interpretation: when the GDN recurrence
+  carries the whole context (short prompts), stale spec-state content is
+  catastrophic; long contexts are dominated by full-attention KV which
+  masks it. This also retro-explains the "prompt-sensitivity" of the
+  logprob swings.
+- **Exonerated (live telemetry + env arms):** (1) the triton multi-query
+  verify kernel — `VLLM_TQ_MQ_VERIFY=0` (per-row synthetic path for both
+  verify and drafter) still corrupts; (2) spec mamba slot allocation —
+  instrumented `GDNAttentionMetadataBuilder.build`: rows allocate k+1
+  fresh blocks/step at BOTH k3 (`[1..4]→[5..8]→[9..12]`, num_accepted
+  1→2, output correct) and k4 (`[1..5]→[6..10]→…`), and the block table
+  is exactly `[batch, k+1]` — churn is by design (state migrates via the
+  manager's last_state_block_idx/copy path), not the bug; (3) capture
+  padding — `adjust_cudagraph_sizes_for_spec_decode` rounds capture sizes
+  to multiples of k+1, so k4/bs=1 runs the EXACT-fit size-5 piece, no pad
+  rows, and still corrupts; (4) `VLLM_XPU_MTP_EAGER_HEAD` is default-on
+  already (not a discriminator).
+- **Convicted region (what remains):** the 5-token spec step's numerics —
+  the ESIMD `gated_delta_rule_spec_kernel` at num_spec_tokens=5 (k≤3 → 4)
+  and/or the 5-row verify/rejection mapping. Next tool: per-layer device
+  state dumps comparing captured k4 vs eager k4 for the same step.
+- **Decision: no speculative patch this window** — the shipped k-clamp is
+  the correct mitigation, prod (nospec) is unaffected, and an unverified
+  numerics patch is worse than the clamp. No v32 image; posture stays
+  v31.1. Upstream addendum with the short/long discriminator + telemetry:
+  vllm#54785 issuecomment-5497862084.
+
 
 ## 13 — ~65k-token highly-repetitive prompts yield DEGENERATE completions
 (instant-EOS empty text, or a `"!"`-loop) on the no-spec arm; lengths

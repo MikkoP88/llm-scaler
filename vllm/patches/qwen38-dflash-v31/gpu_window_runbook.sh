@@ -27,6 +27,16 @@
 #          unique-prefix 65k prefills on a bypass boot.
 #   UPSTR  filed: vllm#54796 (livelock), vllm#54785 (k4), oneCCL #212/#215
 #          triage cross-posts.
+# v31.3 third-window addenda (2026-09-01):
+#   REFS   b3.1 + dspark v16 benched with serve_boot_img.sh (same flags):
+#          both ~13 tok/s FLAT, conc16 agg ~105 — ours 1.8-2.6x superior.
+#   LONGCT block-size INERT (hybrid forces 2048); TQ BLOCK_KV=8/STAGES=2
+#          REGRESSION; slope = 4-bit-KV bandwidth physics. Arms closed.
+#   K4     #12 law: k4 x SHORT prompt x capture (long prompts text-stable);
+#          MQ kernel + allocator + padding exonerated (env arms + live
+#          gdn_attn telemetry); region = 5-token spec step numerics. Clamp
+#          stays; addendum vllm#54785 issuecomment-5497862084. Prod
+#          re-booted v31.1 nospec, coh bit-stable -0.451, warm 33.57/23.48.
 set -u
 echo "== stop watcher + old container =="
 pkill -f 'frw5.sh' 2>/dev/null; pkill -f 'prov.sh' 2>/dev/null

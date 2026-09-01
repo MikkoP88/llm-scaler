@@ -10,7 +10,11 @@ alongside this is a SEPARATE defect, convicted 2026-09-01 to the
 inductor-compiled piecewise path x spec decode (see
 upstream_oneccl_ticket.md post-log; NOT an oneCCL bug) — **also posted
 2026-09-01 with the mid-wedge gdb native-stack chain:
-https://github.com/vllm-project/vllm/issues/54796**.
+https://github.com/vllm-project/vllm/issues/54796**. **Addendum posted
+(third window): issuecomment-5497862084 — the corruption requires a SHORT
+prompt (long-context k4 requests are text-stable, wobble <=0.02 nats);
+MQ verify kernel, mamba slot allocation, and capture padding exonerated
+via env arms + live metadata telemetry.**
 
 ---
 
