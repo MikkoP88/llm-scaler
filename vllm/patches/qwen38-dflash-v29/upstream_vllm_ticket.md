@@ -2,17 +2,23 @@
 greedy outputs at bs=1 (deterministic multi-path logits on identical
 temp-0 requests)
 
-Status: DRAFT — not posted. Target: new issue on vllm-project/vllm,
-referencing #26963 (XPU speculative decoding tracker). The oneCCL livelock
-(#11) is a SEPARATE defect tracked in upstream_oneccl_ticket.md.
+Status: **POSTED 2026-09-01** as
+https://github.com/vllm-project/vllm/issues/54785
+(referencing #26963, XPU speculative decoding tracker, now closed — the
+k4 corruption is a live post-tracker bug). The 65k livelock we chased
+alongside this is a SEPARATE defect, convicted 2026-09-01 to the
+inductor-compiled piecewise path x spec decode (see
+upstream_oneccl_ticket.md post-log; NOT an oneCCL bug) — **also posted
+2026-09-01 with the mid-wedge gdb native-stack chain:
+https://github.com/vllm-project/vllm/issues/54796**.
 
 ---
 
 ## Title
 
-[Bug][XPU] FULL_DECODE_ONLY cudagraph pieces + MTP num_speculative_tokens=4
-produce non-deterministic, wrong logits at temperature=0 (k<=3 clean, eager
-clean, bs>=2 eager fallback clean)
+[Bug][XPU] XPU graph capture + MTP num_speculative_tokens=4 produce
+non-deterministic, wrong logits at temperature=0 (k<=3 clean, eager clean,
+bs>=2 eager fallback clean, compile-independent)
 
 ## Environment
 
@@ -82,10 +88,25 @@ the whole bug report.
    `VLLM_XPU_ALLOW_COMM_IN_GRAPH` (that mode returns deterministic garbage
    outright and is disabled); the corruption occurs with the default
    comm-outside-graph placement.
+9. **Capture-level and COMPILE-INDEPENDENT (2026-09-01 discriminator)**:
+   with `TORCH_COMPILE_DISABLE=1` and whole-step XPU graph capture still on
+   (dynamo/inductor never engage — pure eager kernels inside the captured
+   step), k=4 STILL corrupts: distinct=3 across 8 identical requests, top-1
+   logprob drifting (-1.668 / -0.187 / -0.050 at the same position), no
+   wedge through the full 65k battery. k<=3 under the identical posture is
+   bit-stable == eager reference. This rules the inductor-compiled pieces
+   OUT of #12 (in contrast to the separate 65k livelock we chased on the
+   same stack, which WAS convicted to inductor x spec) and pins the defect
+   to the capture/replay of multi-draft-position spec state.
+10. **Deployed mitigation**: we clamp `num_speculative_tokens` 4 -> 3 with a
+    boot warning whenever any graph capture is active and a speculative
+    config is present (escape hatch env for repro: `VLLM_XPU_ALLOW_
+    K4_CAPTURE=1`). k=3 retains most of the MTP speedup at bs=1 for us.
 
 ## Suspect area
 
-Multi-draft-position spec machinery under piecewise graph replay — the same
+Multi-draft-position spec machinery under graph capture/replay (capture-
+level, not inductor — see datapoint 9) — the same
 machinery as the GDN spec-kernel ragged-batch OOB we previously found and
 fixed locally (wheel rebuild): GDN speculative state buffers and/or the
 verify mask for 4 draft positions, as replayed inside FULL_DECODE_ONLY

@@ -1,10 +1,40 @@
 # qwen38-dflash v31/v31.1 — graphs x speculative decode: #11 ROOT-CAUSED and
-# GATED, #12 clamped
+# GATED, #12 clamped — and the perf verdict: spec is a NET LOSS, prod runs
+# v31.1 nospec
 
 Image lineage: `llm-scaler-vllm-adv:v30` (other editor's spec+TP>1 fail-safe
 gate) → `:v31` (k-clamp + split knobs) → **`:v31.1` (the fix posture:
 whole-step XPU graph capture + inductor compile disabled, as the DEFAULT gate
 for spec+TP>1)**.
+
+## PROD POSTURE (2026-09-01 decision): v31.1 image, NOSPEC serve config
+
+A controlled before/after sweep (`ctxbench.py`, same client/prompts, greedy,
+B70x2 TP=2) showed MTP k3 is a **2-4x throughput regression vs nospec-graphs
+at every context length and concurrency tested**:
+
+| posture | conc=1 @2k | conc=4 @2k agg | conc=16 @2k agg | conc=16 @32k agg | conc=1 @65k |
+|---|---|---|---|---|---|
+| v27 nospec (graphs+compile) | 33.6 | 29.5 | 137.0 | 53.9 | 23.5 |
+| v31.1 spec k3 (graphs, no compile) | 16.5 | 15.5 | 35.3 | 13.6 | 7.5 |
+
+The "17.7 vs 9.9 tok/s" that motivated the promotion was an artifact: the
+9.9 reference was the v30 gate's **fully eager** posture, not v27-nospec.
+Spec decode on this stack pays ~7 row-forwards (draft k3 + verify k+1) per
+step for ~1-2 accepted tokens at bs=1 (decode is row-serial at small batch:
+conc=4 aggregate is BELOW single-stream), so it never wins at low concurrency,
+and at conc=16 nospec is still 4x ahead. Decision: **prod = v31.1 image with
+NO speculative config** (v27-class perf, plus every v31/v31.1 safety gate
+available for opt-in MTP: #11 gate + k-clamp fire automatically if spec is
+ever requested). MTP stays available for reproductions/diagnosis via the
+normal `--speculative-config` (auto-clamped k4->3, compile disabled by gate).
+
+Warm parity of the promoted posture (v31.1-nospec vs v27, same client;
+first-request-after-boot is compile-polluted at any new prefill shape —
+measure warm): conc=1 @2k 33.56 vs 33.57; conc=1 @32k 27.81 vs 27.76;
+conc=1 @65k 23.52 vs 23.53; conc=16 @2k steady ~353 tok/s both. Coh
+bit-stable Paris -0.451 == eager reference. Gate markers inert (0 inductor
+warnings, 0 clamps) — engine posture identical to v27, as designed.
 
 ## v31.1 — the fix (gate_v311.patch + Dockerfile.v31_1)
 
@@ -88,9 +118,31 @@ demand with the bypass env; wedge signature w122359-class. The kernels lane
 (`/root/build/vxk`) is NOT implicated by #11; it remains the suspect surface
 for #12 only.
 
+Native-stack evidence at the live wedge (2026-09-01, `gdb_wedge_evidence.txt`
+in this dir; raw dumps on host `/root/build/keeper_gdb_wedge_evidence/`):
+both TP workers' main threads parked identically in
+`torch.ops...gdn_attention -> chunk_gated_delta_rule_impl_xe2 -> sycl
+q.wait() -> urQueueFinish -> ur_queue_immediate_in_order_t::queueFinish ->
+libze_intel_gpu` — the EAGER GDN kernel's wait on an IN-ORDER L0 queue,
+i.e. something enqueued ahead of it on the same stream never retires; per
+the matrix that work is the inductor-compiled region. Repro trigger nuance:
+6 concurrent COLD-prefill 65k requests with unique prompt headers (warm
+prefix-cache hits and single streams did not re-trigger on an
+already-exercised boot). Filed upstream as the #11 livelock issue with this
+chain: https://github.com/vllm-project/vllm/issues/54796 (k4 corruption:
+https://github.com/vllm-project/vllm/issues/54785; oneCCL #212/#215
+cross-posts as triage datapoints).
+
 ## Files
 
 - `spec_fixes.patch` + `Dockerfile` — v31 image (patch A + patch B/knobs)
+- `gdb_wedge_evidence.txt` — #11 native-stack evidence at the live wedge
+  (raw dumps: host `/root/build/keeper_gdb_wedge_evidence/`; capture tooling
+  `gdbwedge.sh`/`gdbnow.sh` on `/root/build/`)
+- `ctxbench.py` — context/concurrency decode bench used for the perf
+  verdict + parity (staged to host `/root/build/ctxbench.py`; unique
+  per-request headers defeat prefix-cache sharing; measure WARM — first
+  request at a new prefill shape is compile-polluted)
 - `gate_v311.patch` + `Dockerfile.v31_1` — v31.1 image (the fix posture)
 - `gpu_window_runbook.sh` — arm-1 boot/probe script (staged to host
   `/root/build/v31/`); arms 1b/1c/D/D-k4/cert were run with the same

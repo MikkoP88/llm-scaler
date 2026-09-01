@@ -1505,6 +1505,45 @@ speculative decode. NOT XPU graph capture, NOT any custom kernel, NOT oneCCL.*
   **v31.1 is the validated promotion candidate** for spec+graphs serving
   (16.4-17.7 tok/s canonical, 65k-clean, k=3).
 
+*v31.2 update (2026-09-01, second window — PROMOTION EXECUTED, PERF
+VERDICT, NATIVE-STACK EVIDENCE)*:
+
+- **Perf verdict — spec k3 is a NET LOSS; promotion posture = v31.1 image
+  with NOSPEC config.** Controlled same-client sweep (ctxbench.py, greedy,
+  unique-prefix prompts, warm): spec k3 vs v27-nospec = 16.5 vs 33.6 tok/s
+  (conc=1 @2k), 15.5 vs 29.5 (agg, conc=4), 35.3 vs 137 (agg, conc=16 @2k),
+  13.6 vs 53.9 (agg, conc=16 @32k), 7.5 vs 23.5 (conc=1 @65k). The "17.7 vs
+  9.9" promotion premise was an artifact — 9.9 was the v30 gate's FULLY
+  EAGER reference, not v27-nospec-graphs. Spec decode here pays ~7
+  row-forwards/step (draft k3 + verify k+1) for ~1-2 accepted tokens at
+  small bs (decode is row-serial: conc=4 agg < conc=1 agg); it never wins
+  at any measured point.
+- **Promotion executed**: prod = `llm-scaler-vllm-adv:v31.1` with NO
+  speculative config. Warm parity vs v27 confirmed: conc=1 @2k 33.56 vs
+  33.57, @32k 27.81 vs 27.76, @65k 23.52 vs 23.53, conc=16 @2k steady ~353
+  tok/s both; coh bit-stable Paris -0.451; gate markers inert (0 warnings,
+  0 clamps — posture identical to v27). All v31/v31.1 safety machinery is
+  carried and auto-fires if spec is ever requested. First-request-after-boot
+  at a new prefill shape is compile-polluted (ttft +7-25s) — measure warm.
+- **Native-stack evidence at the live wedge** (gdb mid-stall, both TP
+  workers identical, `gdb_wedge_evidence.txt` +
+  `/root/build/keeper_gdb_wedge_evidence/`): main thread parked in
+  `torch.ops...gdn_attention -> chunk_gated_delta_rule_impl_xe2 -> sycl
+  q.wait() -> urQueueFinish -> ur_queue_immediate_in_order_t::queueFinish
+  -> libze_intel_gpu` — the EAGER GDN kernel's wait on an IN-ORDER L0
+  queue: work enqueued ahead of it never retires (device storm Compute 100%
+  + Copy 100%); per the discriminator matrix that work is the
+  inductor-compiled region on the same stream. Confirms + localizes the
+  fr-record reading (AR end -> silence). Repro nuances: needs COLD-prefill
+  6-concurrent unique-prefix 65k requests early in a bypass boot;
+  prefix-warm and single-stream requests did not re-trigger on an
+  already-exercised boot; the 2021.15 boot self-heals ~2 min (first
+  post-recovery request can be degenerate).
+- Upstream: k4 corruption filed as vllm-project/vllm#54785; #11 livelock
+  filed as a separate vLLM issue with the gdb chain (URL in the drafts
+  post-log); oneCCL #212/#215 cross-posts reframed as triage datapoints
+  (oneCCL exonerated) — all posted 2026-09-01.
+
 
 ## 12 — temperature=0 outputs on LARGE CHUNKED prompts are not bit-stable
 run-to-run under MTP (fp near-tie flips); bare prompts ARE stable —

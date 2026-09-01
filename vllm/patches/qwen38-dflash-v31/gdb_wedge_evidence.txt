@@ -1,0 +1,55 @@
+#11 native-stack evidence at the live wedge (2026-09-01, gdbwedge session)
+============================================================================
+Boot: llm-scaler-vllm-adv:v31.1 + VLLM_XPU_ALLOW_UNSAFE_SPEC_TP_GRAPH=1
+      (bypass = the wedging compiled posture), MTP k4->3, oneCCL 2021.15.
+Provoke: 6 concurrent cold-prefill 65k requests with UNIQUE prompt headers
+      (shared-prefix requests hit the prefix cache and do NOT trigger).
+Result: ttft_max=195.7s (wedge), gdb attached mid-stall at ~t+75s.
+Both TP workers (VLLM::Worker_TP) IDENTICAL, main thread:
+
+Thread 1 (Thread ... "VLLM::Worker_TP"):
+#0  0x...80b in ?? () from /lib/x86_64-linux-gnu/libc.so.6
+#1  0x...d72 in ?? () from libze_intel_gpu.so.1
+#2  v2::ur_queue_immediate_in_order_t::queueFinish ()
+        from libur_adapter_level_zero_v2.so.0
+#3  ur::level_zero::urQueueFinish(ur_queue_handle_t_*)
+        from libur_adapter_level_zero_v2.so.0
+#4  ur_tracing_layer::urQueueFinish(...)  from libur_loader.so.0
+#5  urQueueFinish ()                      from libur_loader.so.0
+#6  sycl::_V1::detail::queue_impl::wait(sycl::_V1::detail::code_location const&)
+        from libsycl.so.8
+#7  gdn::chunk_gated_delta_rule_impl_xe2(sycl::_V1::queue&, at::Tensor&, ...)
+        from vllm_xpu_kernels/libgdn_attn_kernels_xe_2.so
+#8  gdn_attention(at::Tensor&, ...)       from vllm_xpu_kernels/_xpu_C.abi3.so
+#9  c10::impl::make_boxed_from_unboxed_functor<...WrapFunctionIntoRuntimeFunctor_
+        _<void (*)(...gdn_attention signature...)...>::call(...)
+        from vllm_xpu_kernels/_xpu_C.abi3.so
+#10 c10::Dispatcher::callBoxed(...)       from torch/lib/libtorch_cpu.so
+#11 torch::jit::invokeOperatorFromPython(...) from torch/lib/libtorch_python.so
+
+Raw dumps: host /root/build/keeper_gdb_wedge_evidence/ (pid_874/880 = TP
+workers, pid_675 = EngineCore; 12 frames/thread, ~250 threads each).
+
+INTERPRETATION (with the v31 discriminator matrix)
+--------------------------------------------------
+- The host is NOT spinning in a collective and NOT in oneCCL: it is parked
+  in the eager GDN kernel's host wrapper (gdn_attention ->
+  chunk_gated_delta_rule_impl_xe2 -> sycl q.wait()), blocked in the
+  Level-Zero driver on an IN-ORDER immediate queue (queueFinish).
+- On an in-order queue, queueFinish cannot return until EVERYTHING enqueued
+  before it completes. Telemetry at the wedge (Compute 100% + Copy 100%,
+  HBM ~80 GB/s, PCIe 33 MB/s) says the device is executing something that
+  never terminates; the GDN kernel itself is exonerated by the matrix
+  (splitting every custom op out of capture still wedges; capture-no-compile
+  is clean), so the never-retiring work is the inductor-compiled region
+  sharing the same stream/queue.
+- This matches the flight-recorder signature (every stall gap ends with
+  'AR end' then silence: the eager collective retires, the following
+  compiled/replayed region spins) and the historical capture sites
+  (gmr:1489 mamba-align D2H = a later wait on the same wedged stream).
+- Practical notes for reproduction: the wedge fires on COLD 65k prefills
+  (6x unique-prefix requests) early in a bypass boot; prefix-cache-warm
+  requests and small-ctx traffic do not trigger it; the 2021.15 boot
+  self-heals after ~2 min but the first post-recovery request can be
+  degenerate. Single-stream 65k did NOT trigger it on an already-exercised
+  boot.

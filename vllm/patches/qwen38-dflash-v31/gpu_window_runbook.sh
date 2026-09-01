@@ -14,6 +14,19 @@
 #           pieces x spec. D-k4: #12 corruption persists (capture-level).
 #   CERT   v31.1 default posture (no bypass): ALL CLEAN, canonical @16.4.
 # Fix shipped: llm-scaler-vllm-adv:v31.1 (gate_v311.patch + Dockerfile.v31_1).
+#
+# v31.2 second-window addenda (2026-09-01):
+#   PERF   ctxbench sweep: spec k3 is a 2-4x REGRESSION vs nospec-graphs at
+#          ALL ctx/conc (16.5 vs 33.6 single @2k; 35 vs 137 agg conc16) —
+#          prod posture = v31.1 IMAGE + NOSPEC (warm parity with v27,
+#          coh bit-stable -0.451). MTP stays opt-in only.
+#   GDB    mid-wedge native stacks captured (gdbwedge.sh/gdbnow.sh; keeper
+#          /root/build/keeper_gdb_wedge_evidence): both workers parked in
+#          eager-GDN q.wait() on an IN-ORDER L0 queue -> the inductor-
+#          compiled region ahead of it never retires. Trigger = 6x COLD
+#          unique-prefix 65k prefills on a bypass boot.
+#   UPSTR  filed: vllm#54796 (livelock), vllm#54785 (k4), oneCCL #212/#215
+#          triage cross-posts.
 set -u
 echo "== stop watcher + old container =="
 pkill -f 'frw5.sh' 2>/dev/null; pkill -f 'prov.sh' 2>/dev/null

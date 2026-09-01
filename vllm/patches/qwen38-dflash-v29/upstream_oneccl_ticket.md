@@ -1,13 +1,37 @@
 # Ticket B (draft) — oneCCL: cross-post to uxlfoundation/oneCCL #212 / #215
 
-Status: DRAFT — not posted. Post as comments on #212 (primary, same HW) and
-#215 (secondary, same hang class), NOT as a new standalone issue — our data
-confirms and extends both. Only #213 is already fully covered upstream.
+Status: **POSTED 2026-09-01** —
+#212: https://github.com/uxlfoundation/oneCCL/issues/212#issuecomment-5495759967
+#215: https://github.com/uxlfoundation/oneCCL/issues/215#issuecomment-5495760342
+(reframed per the v31 conviction: our hang was NOT oneCCL; posted as a
+triage datapoint + timing-interaction evidence). Only #213 is already
+fully covered upstream.
 
 ---
 
 ## Comment for #212 — your stale-IPC-handle hang reproduces at scale in vLLM
 TP=2 serving on 2x Arc Pro B70, with full device-side telemetry
+
+**RESOLUTION UPDATE (2026-09-01, final — please read first): our livelock was
+ultimately convicted OUTSIDE oneCCL.** A discriminator matrix on the same
+stack convicted it to **vLLM's torch-inductor-compiled piecewise decode path
+x speculative decoding** (details below): booting with `TORCH_COMPILE_DISABLE=1`
+while KEEPING XPU graph capture on — i.e. the same oneCCL 2021.15 executing
+every eager collective in the same TP=2 decode loop — survives the full 65k-
+context provocation battery completely clean, while the inductor-compiled
+configuration wedges at the first 65k chunk (and at chunk ~563 without
+capture). So we are NOT reporting your stale-IPC-handle bug; we are posting
+because (a) our telemetry signature is indistinguishable from yours at the
+device level (Compute 100% + Copy 100% local spin, collective never retires),
+so anyone reproducing our signature on a TP serving stack will land on your
+issue, and (b) the oneCCL-side interaction datapoints below (version-
+independence across 2021.15/2021.17.2; `CCL_ZE_CACHE_OPEN_IPC_HANDLES=0`
+accelerating our onset ~40x; `CCL_SYCL_ALLREDUCE_TMP_BUF=1` delaying it
+4-6x) show the IPC handle cache and tmp-buffer paths shift the onset timing
+of a compiled-region defect without being its cause — possibly the same
+timing sensitivity your reporter hit. Triage recipe for anyone with our
+signature: one boot with `TORCH_COMPILE_DISABLE=1`, graphs still on — if the
+hang vanishes, it is the compiled path, not oneCCL.
 
 We have been chasing a multi-month production livelock with what appears to
 be this exact mechanism class, on the same hardware (2x Arc Pro B70, BMG G31,
@@ -53,8 +77,10 @@ to drmfd exchange mode` on both TP workers at init.)
 **Trigger (necessary ingredients, from a 12-arm matrix)**: piecewise XPU
 graph capture (FULL_DECODE_ONLY pieces) x speculative decode x cumulative
 multi-context traffic (>=32k-ctx requests accelerate it sharply; hazard is
-acquired per boot, idle gaps do not repair it). Compile-without-capture
-survives the identical provocation, proving capture replay is necessary.
+acquired per boot, idle gaps do not repair it). Capture accelerates onset
+~500x (wedge at chunk 1 with capture vs chunk ~563 for compile-without-
+capture — so capture is an accelerator, not a necessary ingredient; the
+necessary ingredient is the inductor-compiled region).
 Eager collectives are exonerated: 76,414/76,414 perfect AR begin/end pairing
 per rank at one wedge.
 
@@ -91,10 +117,17 @@ errors for TP serving.
 ## Comment for #215 — additional datapoint: 2021.15 + SYCL RT 2025.3.2 hangs
 in TP serving; our env pins TMP_BUF=0
 
-Your version matrix says 2021.17.2 + SYCL RT 2025.3.2 = PASS. We hang on
+Your version matrix says 2021.17.2 + SYCL RT 2025.3.2 = PASS. We hung on
 oneCCL 2021.15 + SYCL RT 2025.3.2 (same RT as your PASS row) in vLLM TP=2
 serving on 2x Arc Pro B70 — but only under piecewise graph replay +
-speculative decode (details in the #212 comment). Two notes for your matrix:
+speculative decode (details in the #212 comment). **Resolution update: our
+hang was ultimately convicted to vLLM's inductor-compiled decode path x
+speculative decode, NOT oneCCL** (`TORCH_COMPILE_DISABLE=1` with graph
+capture still on = fully clean through our 65k battery on 2021.15), so your
+PASS row stands as far as we can tell; our `ALLREDUCE_TMP_BUF=1` result
+(below: delays onset 4-6x, does not fix) is a timing interaction with the
+defective compiled region, not evidence against your workaround. Two notes
+for your matrix:
 
 - Our serve env sets `CCL_SYCL_ALLREDUCE_TMP_BUF=0` and
   `CCL_SYCL_ALLGATHERV_TMP_BUF=0` (historical perf tuning predating these
@@ -147,4 +180,21 @@ speculative decode (details in the #212 comment). Two notes for your matrix:
     does not cover our trigger (piecewise graph replay x spec x large ctx).
     Draft remains unposted pending user go-ahead; it now carries this
     datapoint as the strongest single comment for #212/#215.
+- 2026-09-01 (v31 GPU window — CONVICTION, oneCCL EXONERATED): a 7-arm
+  discriminator matrix on v31 (k4->3, 2021.15, same 65k battery):
+  compile+capture WEDGE @1 chunk; +GDN split identical (REDUNDANT — those
+  ops are already in the default split list); +`moe_ops::moe_forward_full_
+  fp8_block` split identical; +ALL custom ops split (every
+  `custom_esimd_kernels_vllm::*` gemm/gemv/norm + `_xpu_C::fp8_gemm*`)
+  identical; compile-no-capture WEDGE @563 chunks; **capture-NO-compile
+  (`TORCH_COMPILE_DISABLE=1`, whole-step XPU graph kept) = fox 6/6 +
+  long_exp 3/3 @65k + canonical 10/10 ALL CLEAN @17.7 tok/s, coh bit-stable**;
+  fully eager clean @9.9. The wedge is the inductor-compiled piecewise path
+  x spec decode; oneCCL, XPU graph capture itself, and every custom kernel
+  are exonerated. Fix shipped in our image v31.1 (gate disables only the
+  compile path for spec+TP>1). The oneCCL-side arms above (version axis,
+  IPC cache off, TMP_BUF=1) are retained as timing-interaction datapoints
+  for the compiled-region defect. Comments reframed accordingly and POSTED:
+  #212 https://github.com/uxlfoundation/oneCCL/issues/212#issuecomment-5495759967
+  #215 https://github.com/uxlfoundation/oneCCL/issues/215#issuecomment-5495760342
 
