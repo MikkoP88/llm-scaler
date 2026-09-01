@@ -1,0 +1,79 @@
+--- xpu.py
++++ xpu.py
+@@ -424,4 +424,44 @@
+                         if _op not in compilation_config.splitting_ops:
+                             compilation_config.splitting_ops.append(_op)
+
++                # llm-scaler v31 (#11 arm): under spec+TP>1 the permanent
++                # livelock lives in captured pieces replayed by spec steps --
++                # the v30 fence arm proved eager collectives retire cleanly
++                # and the NEXT captured piece spins forever (KNOWN_ISSUES
++                # #11, oneCCL-version-independent). Split the GDN kernels out
++                # of the captured pieces so they execute eager between them:
++                # same kernels, same numerics, no replay of the suspect
++                # surface. Capture-size filtering cannot achieve this: the
++                # runner pads small steps UP to the smallest retained size.
++                # VLLM_XPU_SPEC_EAGER_GDN=0 disables the arm;
++                # VLLM_XPU_SPEC_EXTRA_SPLITS=csv overrides the op list
++                # (unmatched names are harmless).
++                if (
++                    vllm_config.speculative_config is not None
++                    and parallel_config.tensor_parallel_size > 1
++                    and os.environ.get("VLLM_XPU_SPEC_EAGER_GDN", "1")
++                    .strip()
++                    .lower()
++                    in ("1", "true", "yes", "on")
++                ):
++                    _spec_splits = [
++                        s.strip()
++                        for s in os.environ.get(
++                            "VLLM_XPU_SPEC_EXTRA_SPLITS",
++                            "vllm::gdn_attention_core,"
++                            "vllm::gdn_attention_core_xpu,vllm::gdn_attention",
++                        ).split(",")
++                        if s.strip()
++                    ]
++                    for _op in _spec_splits:
++                        if _op not in compilation_config.splitting_ops:
++                            compilation_config.splitting_ops.append(_op)
++                    logger.warning(
++                        "spec+TP=%d: GDN kernels split out of XPU graph "
++                        "pieces (eager GDN between captured pieces) for "
++                        "KNOWN_ISSUES #11 (v31 arm). splits=%s",
++                        parallel_config.tensor_parallel_size,
++                        _spec_splits,
++                    )
++
+                 # XPU TP capture stability: with TP>1 the oneCCL collectives
+@@ -483,4 +523,31 @@
+                             _sizes[-1],
+                         )
+
++        # llm-scaler v31 (#12 clamp): piecewise XPU capture corrupts
++        # temperature-0 output exactly at num_speculative_tokens=4 (k<=3 is
++        # bit-stable == eager reference; KNOWN_ISSUES #12, oneCCL-version-
++        # independent). Clamp k to 3 whenever any capture/compilation mode
++        # remains active (TP=1, or TP>1 through the
++        # VLLM_XPU_ALLOW_UNSAFE_SPEC_TP_GRAPH bypass). Set
++        # VLLM_XPU_ALLOW_K4_CAPTURE=1 to keep k=4 for diagnosis.
++        _spec = vllm_config.speculative_config
++        if (
++            _spec is not None
++            and _spec.num_speculative_tokens is not None
++            and _spec.num_speculative_tokens > 3
++            and compilation_config.cudagraph_mode != CUDAGraphMode.NONE
++            and os.environ.get("VLLM_XPU_ALLOW_K4_CAPTURE", "0")
++            .strip()
++            .lower()
++            not in ("1", "true", "yes", "on")
++        ):
++            logger.warning(
++                "num_speculative_tokens %d -> 3: piecewise XPU capture "
++                "corrupts temperature-0 output exactly at k=4 (KNOWN_ISSUES "
++                "#12). Set VLLM_XPU_ALLOW_K4_CAPTURE=1 to keep k=4 for "
++                "diagnosis.",
++                _spec.num_speculative_tokens,
++            )
++            _spec.num_speculative_tokens = 3
++
+         # Disable fusion passes not yet supported on XPU.

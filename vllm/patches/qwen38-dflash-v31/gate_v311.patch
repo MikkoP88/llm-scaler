@@ -1,0 +1,35 @@
+--- xpu.py
++++ xpu.py
+@@ -333,19 +333,21 @@
+         if attention_config.backend is None:
+             attention_config.backend = AttentionBackendEnum.FLASH_ATTN
+         if _unsafe_spec_tp_graph:
+-            # Propagate the effective setting to workers and to kernels which
+-            # select graph-only implementations directly from the environment.
+-            os.environ["VLLM_XPU_ENABLE_XPU_GRAPH"] = "0"
++            # llm-scaler v31.1 (#11 fix): the v31 discriminator matrix
++            # convicted the inductor-compiled pieces x speculative decode,
++            # not XPU graph capture itself. Disable only the compile path
++            # and keep whole-step XPU graph capture (validated clean through
++            # the full 65k battery at 17.7 tok/s canonical, +79% over the
++            # eager posture). The bypass env still restores the wedging
++            # compiled configuration for diagnosis.
+             os.environ["TORCH_COMPILE_DISABLE"] = "1"
+-            compilation_config.mode = CompilationMode.NONE
+-            compilation_config.cudagraph_mode = CUDAGraphMode.NONE
+-            vllm_config.model_config.enforce_eager = True
+             logger.warning(
+-                "XPU graph capture disabled: speculative decoding with TP=%d "
+-                "can permanently livelock both devices (KNOWN_ISSUES #11). "
+-                "Continuing with fully eager execution. "
+-                "Set VLLM_XPU_ALLOW_UNSAFE_SPEC_TP_GRAPH=1 only to reproduce "
+-                "the unsafe configuration.",
++                "inductor compilation disabled for speculative decoding "
++                "with TP=%d: compiled pieces livelock both devices at "
++                ">=32k context, while whole-step XPU graph capture alone "
++                "is clean and faster (KNOWN_ISSUES #11, v31.1). Set "
++                "VLLM_XPU_ALLOW_UNSAFE_SPEC_TP_GRAPH=1 to reproduce the "
++                "wedging compiled configuration.",
+                 parallel_config.tensor_parallel_size,
+             )
+         elif not supports_xpu_graph():

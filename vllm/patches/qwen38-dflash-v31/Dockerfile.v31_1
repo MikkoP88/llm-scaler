@@ -1,0 +1,26 @@
+# llm-scaler-vllm-adv:v31.1 - #11 fix posture as the DEFAULT gate
+# Replaces the v30 fully-eager fail-safe with the convicted fix:
+# whole-step XPU graph capture + no inductor compile (validated clean through
+# the full 65k battery @17.7 tok/s canonical, +79% over eager; coh bit-stable).
+# The v31 k-clamp (#12, capture-level, compile-independent) is retained.
+FROM llm-scaler-vllm-adv:v31
+
+COPY gate_v311.patch /tmp/v31_1/gate_v311.patch
+
+RUN set -eux; \
+    SP=/opt/venv/lib/python3.12/site-packages; \
+    XPU_PLATFORM=$SP/vllm/platforms; \
+    cd $XPU_PLATFORM; \
+    patch -p0 --forward --batch < /tmp/v31_1/gate_v311.patch; \
+    grep -q 'llm-scaler v31.1 (#11 fix)' xpu.py; \
+    grep -q 'v31.1). Set' xpu.py; \
+    ! grep -q 'XPU graph capture disabled' xpu.py; \
+    ! grep -q 'Continuing with fully eager execution' xpu.py; \
+    ! grep -q 'os.environ\["VLLM_XPU_ENABLE_XPU_GRAPH"\] = "0"' xpu.py; \
+    grep -q 'TORCH_COMPILE_DISABLE' xpu.py; \
+    grep -q 'llm-scaler v31 (#12 clamp)' xpu.py; \
+    /opt/venv/bin/python -m py_compile xpu.py; \
+    /opt/venv/bin/python -c "import ast; ast.parse(open('xpu.py').read()); print('ast OK')"; \
+    rm -rf /tmp/v31_1; \
+    find $SP/vllm -name "__pycache__" -type d -prune -exec rm -rf {} + 2>/dev/null; \
+    echo "v31.1 safe gate OK (#11 fix: capture kept, compile disabled)"

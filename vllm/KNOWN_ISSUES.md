@@ -848,7 +848,9 @@ ENGINE forever (oneCCL spin-clog, #05 family, prefill/verify variant);
 NOT scheduler loss, NOT GuC-reset residue, NOT host state
 (FOUND 2026-08-29, live serve adv:v22 MTP k4; CORRECTED VERDICT
 2026-08-30 after instrumented reproduction on v22/v23/v24 boots of the
-rebooted host)
+rebooted host; ROOT-CAUSED 2026-09-01 v31 GPU window: INDUCTOR-COMPILED
+pieces x spec decode — capture and every custom kernel exonerated;
+FIXED-BY-CONFIG in v31.1, see v31 update at the end of this section)
 
 **v26 update (2026-08-30 evening, image adv:v26, host 10.20.3.65).** Two
 results sharpen this entry decisively:
@@ -1443,7 +1445,65 @@ CLOSED — the #11 wedge is oneCCL-version-INDEPENDENT on this stack.*
 *Posture (final): UNCHANGED — prod stays v27 nospec + FULL_DECODE_ONLY graphs
 (restored after the arm; coh_probe Paris −0.451 x3 bit-stable). Ticket drafts
 at `patches/qwen38-dflash-v29/upstream_{oneccl,vllm}_ticket.md` now carry the
-2021.17.2 datapoint — the strongest single comment we can post on #212/#215.
+2021.17.2 datapoint — the strongest single comment we can post on #212/#215.*
+
+*v31/v31.1 update (2026-09-01 GPU window) — ROOT CAUSE CONVICTED AND
+FIXED-BY-CONFIG: the wedge is the INDUCTOR-COMPILED piecewise path x
+speculative decode. NOT XPU graph capture, NOT any custom kernel, NOT oneCCL.*
+
+- Discriminator matrix (v31 image = v30 gate + v31 k-clamp + split knobs;
+  MTP k4 auto-clamped to 3; oneCCL 2021.15; standard battery):
+  - **compile + capture** (v30 bypass path = the historic wedging config):
+    fox iter1 / long_exp iter1 WEDGE after ONE chunk each (w122359 canonical
+    signature: both workers `gmr:1489`, Compute 100% + Copy 100%), while
+    canonical 10/10 CLEAN @17.4 tok/s (~10k chunks) — short/medium ctx is
+    clean, ≥32k wedges; engine self-recovers on client watchdog abort.
+  - **+ GDN splits** (v31 patch B): identical wedge — post-hoc REDUNDANT,
+    `vllm::gdn_attention_core(_xpu)` were already in the default
+    `_attention_ops` split list (`vllm/config/compilation.py`), so the arm
+    changed nothing (duplicate-suppressed).
+  - **+ `moe_ops::moe_forward_full_fp8_block` split** (the ESIMD fp8-block
+    MoE decode variant for ≤12-token steps — the ONE variant missing from
+    `_esimd_moe_splits`, i.e. exactly spec steps; it also keeps a host-side
+    dict-of-output-buffers): identical WEDGE @1 chunk. NEGATIVE.
+  - **+ ALL custom ops split** (every `custom_esimd_kernels_vllm::*`
+    gemm/gemv/norm/qkv_rope op + `_xpu_C::fp8_gemm*` + the moe variants;
+    over-splitting requires `VLLM_DISABLE_COMPILE_CACHE=1` or the compile
+    cache artifact fails serialization): identical WEDGE @1 chunk. Every
+    vllm/esimd/`_xpu_C` kernel EXONERATED — captured pieces contained only
+    inductor-generated code + aten elementwise and still spun.
+  - **compile, no capture** (other editor's v30_safe_p2): WEDGE at 563
+    chunks — same defect, ~500x slower onset.
+  - **capture, NO compile** (arm D: `TORCH_COMPILE_DISABLE=1` +
+    `VLLM_XPU_ENABLE_XPU_GRAPH=1`; the XPU `CUDAGraphWrapper` captures the
+    whole decode step with eager kernels, dynamo never engages): **fox 6/6 +
+    long_exp 3/3 @65k + canonical 10/10 ALL CLEAN @17.7 tok/s** (+79% over
+    eager 9.9; also faster than compile+capture 17.4), coh bit-stable
+    (Paris −0.451 == eager reference), boot ~100 s faster (~230 s).
+- **Fix shipped: `llm-scaler-vllm-adv:v31.1`**
+  (`patches/qwen38-dflash-v31/Dockerfile.v31_1` + `gate_v311.patch`): the
+  spec+TP>1 gate now sets ONLY `TORCH_COMPILE_DISABLE=1` — graphs/capture
+  KEPT, dynamo/inductor off, splitting machinery inert.
+  `VLLM_XPU_ALLOW_UNSAFE_SPEC_TP_GRAPH=1` still restores the wedging
+  compiled config for on-demand repro. The v31 k-clamp is retained (#12 is
+  capture-level, see #12 v31 addendum).
+- **v31.1 certified on the DEFAULT posture (no bypass env)**: markers
+  (inductor-disabled ×4, k 4→3 ×1, zero fully-eager fallback), coh
+  bit-stable, **full battery ALL CLEAN: fox 6/6 + long_exp 3/3 @65k +
+  canonical 10/10 @16.4 tok/s** (+66%; the arm D twin boot measured 17.7),
+  post-battery coh P1 distinct=1.
+- Mechanism (working model): an inductor-generated decode-piece kernel
+  (combo_kernels-class fusion) livelocks under spec-step shapes at ≥32k
+  cumulative context; capture replay accelerates onset (chunk 1 vs chunk
+  563). Flight-recorder fit: every stall gap ends with `AR end` then
+  silence — the eager collective retires, the following compiled/replayed
+  region spins. Remaining upstream-debug surface if a true fix (rather than
+  config avoidance) is wanted: torch-inductor codegen for the decode pieces
+  under spec (bypass env reproduces on demand, w122359-class signature).
+  The kernels lane (`/root/build/vxk`) is exonerated for #11.
+- Posture: prod restored to v27 nospec at window end (coh-verified);
+  **v31.1 is the validated promotion candidate** for spec+graphs serving
+  (16.4-17.7 tok/s canonical, 65k-clean, k=3).
 
 
 ## 12 — temperature=0 outputs on LARGE CHUNKED prompts are not bit-stable
@@ -1511,6 +1571,19 @@ no longer holds on current images:*
   (#11) is k-agnostic, this corruption is k4-only; two distinct defects.
   The eager+MTP-k4 option in the #11 guidance remains valid and is
   deterministic (compile-free). Repro: 3 curls, see README v29c section.
+
+*v31 update (2026-09-01): #12 is CAPTURE-LEVEL and COMPILE-INDEPENDENT —
+inductor is NOT involved.* Under capture-no-compile (arm D posture:
+whole-step XPU graph capture, `TORCH_COMPILE_DISABLE=1`) k=4 STILL corrupts:
+coh P1 distinct=3 with drifting top-1 logprobs across identical requests
+(−1.668 / −0.187 / −0.050, token flips ' The'/'The'), while high-margin
+P2 40-tok stays 6/6 identical; no wedge at 65k in that posture even at k4
+(fox 5/5 clean). The v31/v31.1 k-clamp (`num_speculative_tokens>3` → 3
+whenever `cudagraph_mode != NONE`; `VLLM_XPU_ALLOW_K4_CAPTURE=1` for
+diagnosis) is therefore MANDATORY on any capture posture. Suspect surface
+for a true fix remains the multi-draft-position spec machinery under
+captured replay (kernels lane, `/root/build/vxk`); #11's inductor
+conviction does not transfer to #12.
 
 
 ## 13 — ~65k-token highly-repetitive prompts yield DEGENERATE completions
