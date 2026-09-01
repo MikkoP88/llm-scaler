@@ -1712,4 +1712,91 @@ where the distribution collapse crossed the sampling threshold on those
 runs — it is probabilistic per request, not length-deterministic.
 
 
+## 14 — TurboQuant MQ verify kernel: [Q_BLOCK, BLOCK_KV, BLOCK_D] register
+temps made spec-decode verify pay up to 1.7x the single-token KV scan at
+long context (FIXED LOCALLY, v32, 2026-09-01)
+
+Spec verify (q_len = k+1) routes through the multi-query kernel
+`triton_turboquant_mq_decode_attention` (routing confirmed via triton JIT
+cache: `_tq_mq_decode_stage1` present, single-token `_tq_decode_stage1`
+absent on a k1 boot). The kernel shares KV tile LOADS across query rows,
+but three sites built `[Q_BLOCK, BLOCK_KV, BLOCK_D]` fp32 intermediates
+(FP8-key scores, MSE-path term1, and the value accumulation
+`p[:, :, None] * values[None, :, :]`). At Q_BLOCK=2 / BLOCK_KV=4 /
+BLOCK_D=128 that is 1024-float temps — 2x the single-token kernel's
+footprint — forcing register spills that only bite on long scans:
+
+- k1 @65k: verify forward 72.0ms vs nospec single pass ~40ms (~1.7x),
+  while @2k the two are at parity (25ms) — context-scaled regression,
+  the signature of occupancy loss, not extra bytes.
+- `VLLM_TQ_MQ_STAGE1_WARPS=4` REGRESSES both ctx (77.4ms @65k, 18.65
+  tok/s @2k vs 19.42 baseline): more warps per CTA = fewer resident CTAs
+  on BMG. The knob is a trap for this kernel.
+
+**Fix (llm-scaler v32, `vllm/patches/qwen38-dflash-v32/v32_mq_regpatch.py`)**:
+per-row `tl.static_range(Q_LEN)` loops with where-masked row assembly;
+per-row temps stay `[BLOCK_KV, BLOCK_D]` (identical to the tuned
+single-token kernel). Identical reduction axes per row — bit-stable
+(coh gate: distinct=1, Paris -0.452). Results (k1): tforward @65k
+72.0 -> 66.1ms, drafter paths sharing the kernel -15%/-18% (propose d,
+dforward d), @2k 19.42 -> 19.65 tok/s. Remaining ~26ms over a single
+pass is the per-row SCORE/VALUE ALU (MSE unpack + centroid gather +
+2x MACs), addressable only by XMX `tl.dot` tiles (tf32 numerics
+decision) — see README v32 P1b. Upstreamable as-is (pure kernel-body
+rewrite, no API change).
+
+## 15 — fp8 KV-cache family x MTP spec x long context: e4m3 verify is
+pathological at 65k (250ms/step), e5m2 unbootable (2026-09-01)
+
+`--kv-cache-dtype fp8` (e4m3) bypasses the TurboQuant backend entirely.
+With MTP k1 + graphs + our v32 kernel patches (patches inert on this
+path): @2k 17.88 tok/s (-10% vs 4bit_nc), coh PASS (Paris -0.446,
+deterministic) — but @65k the verify forward runs **~249.5ms/step**
+(3.8x the TQ-4bit path's 66.1ms; propose d 21ms, dforward 17.8ms — the
+drafter's cache reads degrade too). The standard XPU extend/verify path
+with a 65k fp8 paged KV at q_len=2 is catastrophically slow on BMG:
+**fp8 KV is NOT viable WITH SPEC at long context on this stack.**
+`fp8_e5m2` is rejected at boot (WorkerProc startup failure — same
+class as the float16 rejection, #05c).
+
+**NOSPEC counterpoint (same window) — fp8-e4m3 is the FASTEST
+long-ctx lane we have measured:** a true nospec fp8 boot (EngineCore
+`speculative_config=None`) measured **33.51 tok/s @2k** (parity with
+4bit_nc's 33.56) and **25.06 tok/s steady @65k (+6% over 4bit_nc's
+23.61**; 39.4s chunked-prefill TTFT), coh PASS (Paris -0.446,
+distinct=1). This confirms the #14 B/C decomposition from the other
+side: the TQ 4-bit decode lane is ALU-bound (MSE unpack + centroid
+gather ≈ 26ms of the ~40ms 65k scan), while raw fp8 attention skips
+the unpack and wins despite 2x KV bytes. fp8-e4m3 NOSPEC is a prod
+CANDIDATE (+6% @65k single-stream) pending the full adoption battery:
+KV capacity halves (2x bytes/token -> fewer resident long ctx at
+conc16), and the #07-era ESIMD sync posture under sustained load.
+`turboquant_4bit_nc` remains the shipped dtype until that battery
+runs; spec stays off fp8 regardless.
+
+## 16 — vLLM v1 spec decode: acceptance of step N gates scheduling of
+step N+1 — the host round-trip chain (~54ms/step @2k) is EXPOSED for
+spec but HIDDEN for nospec (architectural, 2026-09-01)
+
+With async_scheduling, nospec overlaps scheduler/prep host work with
+worker device execution, hiding the entire host chain (33.6 tok/s @2k =
+pure device rate). Spec cannot: the scheduler needs step N's acceptance
+counts before it can build step N+1's verify batch, so the chain
+worker-finish -> outputs D2H -> shm_broadcast -> engine output processor
+-> scheduler -> submit -> worker prep runs SERIALLY every step.
+Measured decomposition (k1 @2k, step 98.6ms, device ~44ms): drafter
+propose EAGER python ~7ms (k3: 20ms — the v31.1 gate disables inductor
+for spec safety, so the MTP drafter runs eager: all_gather, rotary,
+get_top_tokens GEMM frames dominate), GDN attention metadata build
+~4.4ms (gdn_attn.py build per step), block-table commit H2D ~2ms, and
+~30ms IPC/output/wakeup latency — the EngineCore py-spy shows it 100%
+IDLE in shm_broadcast acquire_read/sched_yield (latency, not CPU).
+The align-mode accepted-count drain (57% of worker SAMPLES) is a
+device-wait that async execution already overlaps: removing it
+(`v32_align_async_v2.py`, correctness-validated) changes nothing
+stacked on the kernel fix. Fix requires a worker-resident acceptance
+loop (compute acceptance + next propose on-worker for m steps before
+returning) — an upstream v1 architectural change; documented as P2 in
+README v32.
+
 
