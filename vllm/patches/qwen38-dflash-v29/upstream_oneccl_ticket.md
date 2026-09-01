@@ -17,6 +17,22 @@ path spins" behavior and adds three things: (1) a trigger characterization
 traffic), (2) a permanence characterization by IPC exchange path, and (3)
 full device telemetry at the live freeze.
 
+**UPDATE (2026-09-01, before posting): we upgraded to oneCCL 2021.17.2 and
+the livelock SURVIVES it.** Same stack with oneCCL 2021.17.2 (apt
+`intel-oneapi-ccl-2021.17-2021.17.2-5`, SYCL RT still 2025.3.2): `drmfd` is
+removed in 2021.17 (the env value is hard-refused at boot), `pidfd` now
+works on kernel 6.17 (the #213 fix is effective for us), and the standard
+provocation still wedges — both workers parked at the same host sync, both
+GPUs at Compute 100% + Copy 100%. Two deltas vs 2021.15: the wedge now
+SELF-HEALS under pidfd after some minutes (but the first post-recovery
+request returns degenerate text, so it is not operationally better than the
+permanent hang), and your workaround `CCL_ZE_CACHE_OPEN_IPC_HANDLES=0` —
+unbootable on our 2021.15 — BOOTS on 2021.17.2 and makes onset ~40x WORSE
+(wedge at the FIRST 65k-context decode step, vs ~1.3k chunks cumulative on
+2021.15). The open IPC handle cache is load-bearing for survival on this
+workload; the spin is not simply "the cache being open". Full arm data in
+the post-log.
+
 **Stack**: vLLM 0.21.1.dev0+gad7125a43 (xpu) + vllm-xpu-kernels
 0.1.8.3.dev0+g3cab97a, torch 2.11.0+xpu (ProcessGroupXCCL, dist backend name
 `xccl`), oneAPI 2025.3.2 / oneCCL **2021.15**, NEO 37833, kernel
@@ -50,7 +66,10 @@ per rank at one wedge.
    `CCL_ERROR ze_handle_manager.cpp:42 mem_to_ipc_handle: condition device_fd != ccl::utils::invalid_fd failed`
    — under BOTH `drmfd` and `sockets` exchange. The handle manager cannot
    mint IPC handles without the cache on this version; the workaround is
-   version-gated (your reporter is on 2021.17).
+   version-gated (your reporter is on 2021.17). **On 2021.17.2 it BOOTS
+   (init passes) — and the wedge onset accelerates ~40x**: provocation
+   wedges at the first 65k-ctx decode (1 chunk) instead of ~1.3k cumulative
+   chunks. See the 2026-09-01 post-log entry.
 2. `CCL_SYCL_ALLGATHERV_TMP_BUF=1` (#215's workaround) is **hard-refused on
    BMG in 2021.15**:
    `allgatherv_sycl.cpp:112 allgather_sycl_single_node: EXCEPTION: To run
@@ -106,4 +125,26 @@ speculative decode (details in the #212 comment). Two notes for your matrix:
   livelock — consistent with in-place SYCL-kernel allreduce exposing the
   caller's (graph-replayed) buffer to the IPC handle cache more often than
   a oneCCL-owned tmp buffer, but the staleness mechanism itself survives.
+- 2026-09-01 (upgrade arm run, image llm-scaler-vllm-adv:v27-ccl1717 =
+  v27 + apt intel-oneapi-ccl-2021.17-2021.17.2-5, SYCL RT 2025.3.2 kept):
+  - Boot 1 — **pidfd** (drmfd is REMOVED in 2021.17: env_parser hard-refuses
+    it; #213's pidfd works on our kernel 6.17, no fallback WARN): healthy
+    boot, all workers on 2021.17 libs. Provocation: fox 6/6 clean, long_exp
+    iter 1 WEDGE after 39 chunks, canonical RC=7. Capture w073435: both
+    workers at `_update_states_after_model_execute` (gmr:1489), Compute 100%
+    + Copy 100% both GPUs. NEW behavior: self-heals after ~minutes, but the
+    first post-recovery request returns degenerate text ("!!!!!!!!").
+    k4 logits corruption (#12) persists on this boot (coh P1 distinct=2).
+  - Boot 2 — pidfd + **CCL_ZE_CACHE_OPEN_IPC_HANDLES=0**: passes init_device
+    (2021.15 died there) → the workaround is live on 2021.17.2. Provocation:
+    fox iter 1 WEDGE after ONE chunk, long_exp iter 1 WEDGE after one chunk,
+    canonical RC=7 (w075336, same signature/site). Cache-off makes onset
+    ~40x FASTER than baseline — the open IPC handle cache is load-bearing
+    for survival on this workload.
+  - Verdict: the livelock is oneCCL-version-independent on this stack
+    (2021.15 wedges; 2021.17.2 wedges in both cache modes; 2022.x = HANG
+    per #215's own matrix). #215's 2021.17.2 + SYCL RT 2025.3.2 PASS row
+    does not cover our trigger (piecewise graph replay x spec x large ctx).
+    Draft remains unposted pending user go-ahead; it now carries this
+    datapoint as the strongest single comment for #212/#215.
 

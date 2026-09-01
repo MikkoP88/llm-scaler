@@ -1395,12 +1395,55 @@ drmfd, standard provocation):*
   silent drmfd fallback (#213), i.e. `CCL_ZE_IPC_EXCHANGE` effectively
   offers only drmfd/sockets here.
 
-*Posture: UNCHANGED — prod stays v27 nospec + FULL_DECODE_ONLY graphs. The
-remaining Tier-3 lever is a oneCCL upgrade (2021.15 -> 2021.17.x+: #215's
-PASS row, though #212 exists on 2021.17 — mixed prior; image rebuild +
-re-provocation required). Ticket drafts with all arm evidence parked at
-`patches/qwen38-dflash-v29/upstream_{oneccl,vllm}_ticket.md`, deliberately
-unposted pending an upgrade arm.*
+*v29e update (2026-09-01, oneCCL 2021.17.2 upgrade arm): the version lever is
+CLOSED — the #11 wedge is oneCCL-version-INDEPENDENT on this stack.*
+
+- Image `llm-scaler-vllm-adv:v27-ccl1717`
+  (`patches/qwen38-dflash-v27-ccl1717/`): v27 + the
+  `intel-oneapi-ccl-2021.17-2021.17.2-5_amd64.deb` component package
+  (apt.repos.intel.com, SHA-pinned in-build). Layout-compatible overlay: new
+  `ccl/2021.17` tree (2021.15 kept), `latest` + `.bashrc` repointed, venv
+  bindings repointed + NEW `libccl.so.2` link — 2021.17's `libccl.so.1`
+  NEEDEDs `libccl.so.2` (no RPATH on any ccl lib) — and
+  `/etc/ld.so.conf.d/ccl-2021.17.conf` + ldconfig: serving runs with NO
+  LD_LIBRARY_PATH (non-interactive `bash -c`; the `.bashrc` vars.sh line only
+  fires interactively) and torch preloads the svml/imf/sycl deps from
+  `/opt/venv/lib`, but NOTHING preloads `libccl.so.2` — without the cache
+  entry the whole dlopen chain fails at serve time. SYCL RT untouched
+  (2025.3.2, torch-bundled libsycl.so.8).
+- **2021.17.2 removes `drmfd`**: our pinned `CCL_ZE_IPC_EXCHANGE=drmfd` is a
+  hard boot error (`env_parser.hpp:100 ... expected values: sockets, pidfd`).
+- **pidfd now WORKS** — 2021.17 carries the #213 fix (2021.15's "pidfd is not
+  supported, fallbacks to drmfd" WARN is gone; kernel 6.17, both TP workers
+  in one container pidns). Healthy boot ~340 s, all 6 vllm procs map
+  `2021.17/lib/libccl.so.1.0` + `libccl.so.2.0`.
+- **WEDGE PERSISTS at 2021.17.2 + pidfd** (standard provocation): fox 6/6
+  clean, then long_exp iter 1 WEDGE after 39 chunks, canonical RC=7. w073435:
+  BOTH workers at `gmr:1489`, Compute 100% + Copy 100% both GPUs — the #11
+  signature exactly. New behavior: the wedge **self-heals on pidfd**
+  (~minutes; like 2021.15+sockets, unlike 2021.15+drmfd permanent), but the
+  first post-recovery request returns degenerate text ("!!!!!!!!") —
+  self-healing is NOT production-usable. #12 k4 corruption also persists
+  (coh P1 distinct=2 on this boot).
+- **#212's cache-off workaround BOOTS on 2021.17 but wedges IMMEDIATELY**:
+  `CCL_ZE_CACHE_OPEN_IPC_HANDLES=0` + pidfd passes `init_device` (2021.15
+  died right there: `mem_to_ipc_handle` fd assertion) — then provocation
+  wedges at fox iter 1 after ONE chunk, long_exp iter 1 one chunk, canonical
+  RC=7 (w075336, same signature/site). Onset ~40x FASTER than baseline —
+  the IPC handle cache is load-bearing for survival, not the bug.
+- Verdict: the oneCCL axis is exhausted — 2021.15 wedges (drmfd permanent /
+  sockets self-healing), 2021.17.2 wedges (pidfd self-healing; cache-off
+  accelerates), 2022.x = HANG per #215's own matrix. #215's
+  2021.17.2+SYCL-RT-2025.3.2 PASS row does not cover our defect class
+  (theirs is a TMP_BUF-adjacent hang; ours is the graphs x spec x ctx
+  livelock). The remaining fix surfaces are graph-replay-level debugging
+  (v28dbg flight recorder is in place) or an upstream oneCCL
+  timeout/preemption primitive in `ccl_executor::wait()`.
+
+*Posture (final): UNCHANGED — prod stays v27 nospec + FULL_DECODE_ONLY graphs
+(restored after the arm; coh_probe Paris −0.451 x3 bit-stable). Ticket drafts
+at `patches/qwen38-dflash-v29/upstream_{oneccl,vllm}_ticket.md` now carry the
+2021.17.2 datapoint — the strongest single comment we can post on #212/#215.
 
 
 ## 12 — temperature=0 outputs on LARGE CHUNKED prompts are not bit-stable
