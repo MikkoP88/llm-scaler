@@ -139,6 +139,41 @@ Prod verify (this window): hashes 0ce080630035 / f167d905a10b /
   hash-divergent vs nospec — do NOT use where bit-stability matters;
   never for concurrent serving).
 
+## Addendum (same day, second pass): remaining local levers exhausted
+
+Two further arms closed under an improvements-only gate:
+
+- **Chunked-prefill size (max_num_batched_tokens) 16384 vs 8192**:
+  hashes = prod refs exact; 2k 33.47, 65k warm 22.28, conc16@8k
+  cold 46.0 / warm 114.8, TTFT 51.8s, 126k cold 124.3s — ALL parity
+  with 8192 (33.49 / 22.29 / 47.2+114.5 / 52.8s / 124.4s). Prefill is
+  compute/bandwidth-bound, not scheduling-bound; chunk size is a null
+  axis. 8192 stands; MNBT32 not worth booting.
+- **GDN build memo: approach FALSIFIED** (not just v1's implementation)
+  — the build's derived tensors (state indices, query offsets,
+  block-table slices) encode per-step acceptance/context state; the
+  per-step build IS the freshness mechanism. A "correct" memo would
+  recompute the varying fields = the build itself. The ~4.4ms/step is
+  only removable inside P3 (frozen + replayed graph). See
+  KNOWN_ISSUES #17 addendum.
+
+**fp8-e4m3 KV nospec is a documented perf opt-in**: 65k warm 23.99 vs
+prod 4bit 22.28 (+7.7%), 2k parity — for workloads that do not need
+bit-stable greedy output (#18 bimodality is intrinsic). Not prod
+because bit-stability gates prod.
+
+**Concurrency guidance (measured)**: agg @8k saturates ~85-115
+(cache-state dependent) — raise client streams to ~32; beyond is
+latency-only. max-num-seqs=64 is not binding.
+
+With that, every locally-implementable lever is either shipped
+(v32/v33/v34 keeper patches, barrier-off, k1/k3 opt-ins) or measured
+null/poison (GDN memo, MNBT, pin-splits, BATCH_INVARIANT, e5m2).
+Maximum-token headroom now lives entirely in P3 (draft graph capture)
+and P2 (worker-resident acceptance loop) — upstream-scale, both
+blocked on the per-position draft metadata rebuild, both carrying
+#04/#12-class corruption risk that demands upstream engineering.
+
 ## Posture
 
 Prod unchanged: **v31.1, NOSPEC, turboquant_4bit_nc** (conc16 decides).

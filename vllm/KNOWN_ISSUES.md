@@ -1829,8 +1829,19 @@ is the dispatcher (`cudagraph_dispatcher.get_capture_descs` /
 `_warmup_and_capture`) — upstream-scale surgery, and the v29c lesson
 (piece-capture x MTP corrupts temp-0 numerics, k4-boundary) argues
 against blind capture attempts. NOT attempted in v34; P3 remains the
-fix. A GDN steady-state build memo was attempted and REJECTED — see
-v34 README (broke numerics AND -45% @65k via per-step key syncs).
+fix. A GDN steady-state build memo was attempted and REJECTED — and
+the A/B data falsified the APPROACH, not just the implementation:
+v1's premise ("every derived tensor is step-invariant except
+num_accepted_tokens") is wrong — the build's derived tensors (state
+indices, query offsets, block-table slices) encode per-step-varying
+acceptance/context state, i.e. the per-step build work IS the freshness
+mechanism. Skipping it returns stale GDN state (all-3 greedy hashes
+broke, mismatched within one invocation) — and the memo key
+(tensor `.numpy().tobytes()` on staging tensors) cost more than the
+build it skipped (65k warm 18.76 -> 10.24, -45%). A "correct" memo
+would have to recompute the varying fields — which IS the build. No
+v2; the ~4.4ms/step is only removable inside P3 (captured graph),
+where the whole build is frozen and replayed.
 
 ## 18 — fp8-e4m3 nospec greedy outputs are BIMODAL under prefix
 caching / batch-state variation (2026-09-02)
