@@ -1648,17 +1648,20 @@ user-selectable for diagnosis:*
   mode, capture bucket geometry, and (per v29c) padding, capture lists,
   oneCCL version, image. Remaining surface = GDN state rollback inside
   the captured verify path / closed kernels — upstream-scale.
-- **k4 user-selectable (per user request, 2026-09-02)**: boot with
-  `VLLM_XPU_ALLOW_K4_CAPTURE=1` (bypasses the xpu.py clamp). BLUNT
-  CAVEATS, measured on the corrupt lane: k4 is DOMINATED by k3
-  everywhere (65k warm 24.1 vs k3 29.25; conc16 9.6-12.9 vs 13.99; 2k
-  early-stops into garbage), and output degrades to mojibake within
-  ~tens of requests on low-margin prompts. Selectable for
-  reproduction/diagnosis only; never prefer over k3 on this stack.
-  FOX_RC=7, LONGEXP_RC=7, w181259 both workers at `gmr:1489`) — the wedge
-  (#11) is k-agnostic, this corruption is k4-only; two distinct defects.
-  The eager+MTP-k4 option in the #11 guidance remains valid and is
-  deterministic (compile-free). Repro: 3 curls, see README v29c section.
+- **k4+ user-selectable (per user request, 2026-09-02; clamp REMOVED
+  same day)**: the xpu.py k>3 clamp and its `VLLM_XPU_ALLOW_K4_CAPTURE`
+  bypass are deleted by the v35 boot patch (`v35_k4_unclamp.py`, applied
+  to every lane by bootp.sh) — k=4+ is selected directly in the boot
+  JSON, no env var, no code protection; the warning lives in this file
+  and the README only. Verified bit-identical to the former bypass lane
+  (f8ref e899790d3635/f167d905a10b/d84100508821, arm v35k4u:
+  SpeculativeConfig num_spec_tokens=4 kept, zero clamp warnings) — all
+  forensics above carry over unchanged. BLUNT CAVEATS, measured on the
+  corrupt lane: k4 is DOMINATED by k3 everywhere (65k warm 24.1 vs k3
+  29.25; conc16 9.6-12.9 vs 13.99; 2k early-stops into garbage), and
+  output degrades to mojibake within ~tens of requests on low-margin
+  prompts. k>4 passes through untested. Never prefer k4 over k3 on
+  this stack.
 
 *v31 update (2026-09-01): #12 is CAPTURE-LEVEL and COMPILE-INDEPENDENT —
 inductor is NOT involved.* Under capture-no-compile (arm D posture:

@@ -234,30 +234,36 @@ requests), high-margin output still intact (P2 6/6, hash invariant).
 New datapoint: **no wedge at 65k on k4** (5x65k clean, warm 24.1 tok/s —
 the v29c-era k4@65k wedge was the compile path, consistent with #11).
 
-### k4 opt-in recipe (diagnosis/reproduction only)
+### k4+ selection (clamp REMOVED v35; docs-only warning)
+
+Since v35 the k>3 clamp and its `VLLM_XPU_ALLOW_K4_CAPTURE` bypass are
+REMOVED (boot patch `vllm/patches/qwen38-dflash-v35/v35_k4_unclamp.py`,
+applied to every lane) — k=4 or larger is selected directly:
 
 ```bash
 setsid nohup bash /root/build/bootp.sh \
   '{"method":"mtp","num_speculative_tokens":4}' \
-  'VLLM_XPU_ALLOW_K4_CAPTURE=1 VLLM_XPU_SPEC_DRAFT_BARRIER=0' \
+  'VLLM_XPU_SPEC_DRAFT_BARRIER=0' \
   v35k4 '' > /root/v35k4_boot.log 2>&1 < /dev/null
 ```
 
-`VLLM_XPU_ALLOW_K4_CAPTURE=1` bypasses the k>3 clamp at
-`platforms/xpu.py:531`. **Never prefer k4 over k3 on this stack** — it
-is dominated everywhere (65k warm 24.1 vs k3 29.25 tok/s; conc16
-9.6-12.9 vs 13.99; 2k early-stops into garbage), and low-margin output
-degrades to mojibake within ~tens of requests. The lane exists so the
-corruption stays reproducible for upstream reporting.
+Verified bit-identical to the former env-bypass lane (f8ref
+`e899790d3635/f167d905a10b/d84100508821`) — clamp removal ≡ bypass, all
+#12 v35 forensics carry over. **Never prefer k4 over k3 on this
+stack** — it is dominated everywhere (65k warm 24.1 vs k3 29.25 tok/s;
+conc16 9.6-12.9 vs 13.99; 2k early-stops into garbage), and low-margin
+output degrades to mojibake within ~tens of requests (KNOWN_ISSUES
+#12; k>4 passes through untested). The lane exists so the corruption
+stays reproducible for upstream reporting.
 
 ## Posture
 
 Prod unchanged: **v31.1, NOSPEC, turboquant_4bit_nc** (conc16 decides).
 Opt-in lanes: 4bit+spec k1 (lossless, flattest small-k curve), k3
 (single-stream <=~100k records, hash-divergent; nospec wins >=126k).
-fp8+spec carries the v34 shim. k4 is user-selectable via
-`VLLM_XPU_ALLOW_K4_CAPTURE=1` for #12 diagnosis only (fix failed
-locally; dominated by k3; corrupt on low-margin prompts). Open levers:
+fp8+spec carries the v34 shim. k4+ is DIRECTLY user-selectable since
+v35 (clamp removed, docs-only warning) for #12 diagnosis/reproduction
+— dominated by k3; corrupt on low-margin prompts. Open levers:
 P3 draft graph capture is now LOCALLY CLOSED (v35dp1 falsified the only
 reachable config; the v31 matrix convicts every compiled variant —
 upstream-blocked on #11); P2 (worker-resident acceptance loop) remains
