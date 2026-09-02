@@ -1811,6 +1811,27 @@ and the draft work scales with batch while overlapping nothing.
 Fix = P3 (capture propose+sample in the decode graph) / P2
 (worker-resident acceptance loop) — README v33.
 
+v34 addendum (2026-09-02): post-v33 py-spy on k3@65k decode (TP0):
+draft/propose = **71% of host samples** (qwen3_5_mtp 64% — spread thin
+across rms_norm / rotary / GEMM IR-op eager dispatch per layer op;
+qwen3_5 67% incl. vocab_parallel_embedding lm_head allreduce,
+get_top_tokens sharded argmax, sample_tokens), GDN build 9.1%, triton
+10.2%, jit dispatch 6.0%, all_reduce 4.9% — no single killer function;
+the fix is structural (capture), not local. k3 conc16@8k = 13.99 agg
+(WORSE than k1's 21.92 — draft work scales with k while #16 still
+serializes). The capture blocker is now precisely located: the draft
+loop (`llm_base_proposer.py`) calls
+`build_per_group_and_layer_attn_metadata(common_attn_metadata,
+draft_index=...)` PER POSITION — fresh tensor objects per position per
+step defeat XPU-graph capture (staleness); static input buffers
+(`self.input_ids`, `self.hidden_states`) already exist. The capture seam
+is the dispatcher (`cudagraph_dispatcher.get_capture_descs` /
+`_warmup_and_capture`) — upstream-scale surgery, and the v29c lesson
+(piece-capture x MTP corrupts temp-0 numerics, k4-boundary) argues
+against blind capture attempts. NOT attempted in v34; P3 remains the
+fix. A GDN steady-state build memo was attempted and REJECTED — see
+v34 README (broke numerics AND -45% @65k via per-step key syncs).
+
 ## 18 — fp8-e4m3 nospec greedy outputs are BIMODAL under prefix
 caching / batch-state variation (2026-09-02)
 
@@ -1824,6 +1845,27 @@ margins). Would require fixed split counts to eliminate. Any
 bit-stability gate on the fp8-nospec lane must pin batch state or
 accept bimodality.
 
+v34 closure (2026-09-02) — CLOSED AS INTRINSIC, three arms:
+(1) `VLLM_BATCH_INVARIANT=1` (upstream's own pin: num_splits=1 +
+batch-invariant backends) is UNBOOTABLE on this stack: it reroutes the
+attention selector (`v1/attention/selector.py:153` — mamba/GDN
+`supports_batch_invariance()` gate / backend switch) and the container
+crash-loops during model init with a silent native death (no
+traceback; exit swallowed by restart=on-failure).
+(2) Our surgical pin `VLLM_XPU_FA2_PIN_SPLITS=N` (v34_f8bi_pin.py,
+flash_attn.py max_num_splits site): N is a **CAP, not an exact count**
+— the C++ op still heuristically picks actual splits <= N per step, so
+pin=64 leaves the reduction tree occupancy/batch-dependent: bimodality
+PERSISTS and now flips WITHIN a single f8ref invocation (P1 modes
+{91d489262cb5, 08fae14be388}, P3 modes {c03d1a317495, e15216abe6b0},
+P2 = 3705c4621a59 invariant). Cap=64 is perf-free (65k warm 24.04 vs
+23.99 unpinned) but buys nothing.
+(3) The only value that forces determinism (splits=1) recreates the
+#15 serial-scan pathology class at long ctx (2 CTAs scanning the whole
+context). Fixing this needs an exact-splits or batch-invariant XPU
+attention kernel — upstream-scale. fp8-nospec remains a non-prod lane
+property; the prod 4bit TQ lane is rep-stable.
+
 ## 19 — fp8_e5m2 KV cache: upstream hard reject with fp8 checkpoints
 (wontfix; was half of #15) (2026-09-02)
 
@@ -1832,6 +1874,19 @@ accept bimodality.
 checkpoints.")` at WorkerProc init — both ranks, deterministic, ~15s
 into boot. Not an XPU/kernel gap. WONTFIX: e5m2 shares e4m3's 1B/elem
 with worse mantissa for bounded KV values; e4m3 strictly dominates.
+
+v34 closure (2026-09-02) — TRIPLE-BLOCKED, wontfix now at KERNEL level,
+not policy level. Bypassing the guard (v34_e5m2_guard.py env-gates the
+raise behind `VLLM_XPU_ALLOW_E5M2_FP8_CKPT=1`) exposes two further,
+independent fatal blockers: (a) with graphs ON the boot passes warmup
+then DIES HARD (no traceback) at "Capturing CUDA graphs (decode,
+FULL): 0%" — the e5m2 KV path faults inside XPU graph capture;
+(b) with `--enforce-eager` the boot is healthy (200) but the FIRST
+real request kills the worker:
+`RuntimeError: Worker failed with error 'Unrecognized FP8 dtype:
+fp8_e5m2'` — the XPU FA varlen dispatch (`flash_attn.py:191` lineage)
+implements the e4m3 descale path ONLY; there is NO e5m2 kernel. The
+upstream guard exists precisely because the kernel does not.
 
 ## 16 — vLLM v1 spec decode: acceptance of step N gates scheduling of
 step N+1 — the host round-trip chain (~54ms/step @2k) is EXPOSED for
