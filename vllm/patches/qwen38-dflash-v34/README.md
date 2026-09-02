@@ -258,13 +258,16 @@ stays reproducible for upstream reporting.
 
 ## Posture
 
-Prod unchanged: **v31.1, NOSPEC, turboquant_4bit_nc** (conc16 decides).
-Opt-in lanes: 4bit+spec k1 (lossless, flattest small-k curve), k3
-(single-stream <=~100k records, hash-divergent; nospec wins >=126k).
-fp8+spec carries the v34 shim. k4+ is DIRECTLY user-selectable since
-v35 (clamp removed, docs-only warning) for #12 diagnosis/reproduction
-— dominated by k3; corrupt on low-margin prompts. Open levers:
-P3 draft graph capture is now LOCALLY CLOSED (v35dp1 falsified the only
-reachable config; the v31 matrix convicts every compiled variant —
-upstream-blocked on #11); P2 (worker-resident acceptance loop) remains
-fork-scale.
+Prod: **v36 image (v31.1 base + v32/v33/v34/v35 keeper patches baked),
+NOSPEC, turboquant_4bit_nc** — validated 2026-09-02: hashes refs exact,
+2k/65k/conc16 parity, 128k/256k long-context A/B >= v31.1 on every
+metric, single-cycle boot. v31.1 remains the certified fallback
+(boot-time patch path). Opt-in lanes: 4bit+spec k1 (lossless, flattest
+small-k curve), k3 (single-stream <=~100k records, hash-divergent;
+nospec wins >=126k). fp8+spec carries v33+v34 (baked in v36). k4+ is
+DIRECTLY user-selectable since v35 (clamp removed, docs-only warning)
+for #12 diagnosis/reproduction — dominated by k3; corrupt on
+low-margin prompts. Open levers: P3 draft graph capture is now LOCALLY
+CLOSED (v35dp1 falsified the only reachable config; the v31 matrix
+convicts every compiled variant — upstream-blocked on #11); P2
+(worker-resident acceptance loop) remains fork-scale.
