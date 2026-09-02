@@ -1623,6 +1623,43 @@ no longer holds on current images:*
   The eager+MTP-k4 option in the #11 guidance remains valid and is
   deterministic (compile-free). Repro: 3 curls, see README v29c section.
 
+*v35 fix campaign (2026-09-02, current tree v31.1+v32 patches) — fix
+FAILED locally; corruption re-confirmed with sharper forensics; k4 left
+user-selectable for diagnosis:*
+
+- **Re-test (v35k4, clamp bypassed via `VLLM_XPU_ALLOW_K4_CAPTURE=1`)**:
+  corruption UNCHANGED and FASTER-ONSET — fresh boot P1 distinct=2 with
+  top-1 logprob drift across reps (-1.642 / -0.258 / -0.061); after ~14
+  requests P1 distinct=8/8 with mojibake (' MS"$//}{}{', 'bs域8⨨',
+  ' theTheTheTheTheThe'). High-margin output intact as before (P2 6/6
+  identical, hash f167d905a10b invariant). **No wedge at 65k** (5x65k
+  clean completions, warm 24.1 tok/s — the v29c-era k4@65k wedge was the
+  compile path, consistent with #11's conviction).
+- **Falsified fix arms (all three byte-identical corruption — same f8ref
+  hashes e899790d3635/f167d905a10b/d84100508821, same logprob drift,
+  same mojibake strings in the same order)**: (1) async scheduling OFF
+  (`--no-async-scheduling`; needed serve_boot_var_noasync.sh — EXTRAFLAGS
+  precedes the hardcoded `--async-scheduling`, and the fork default is
+  True); (2) exact 5-multiple cudagraph capture sizes [5..320], verified
+  in the serve config — zero padding anywhere, corruption byte-identical;
+  (3) verify input staging code read clean (all buffers num_spec_tokens-
+  sized, no hardcodes). Conclusion: the corruption is a deterministic
+  function of the REQUEST SEQUENCE alone — independent of scheduling
+  mode, capture bucket geometry, and (per v29c) padding, capture lists,
+  oneCCL version, image. Remaining surface = GDN state rollback inside
+  the captured verify path / closed kernels — upstream-scale.
+- **k4 user-selectable (per user request, 2026-09-02)**: boot with
+  `VLLM_XPU_ALLOW_K4_CAPTURE=1` (bypasses the xpu.py clamp). BLUNT
+  CAVEATS, measured on the corrupt lane: k4 is DOMINATED by k3
+  everywhere (65k warm 24.1 vs k3 29.25; conc16 9.6-12.9 vs 13.99; 2k
+  early-stops into garbage), and output degrades to mojibake within
+  ~tens of requests on low-margin prompts. Selectable for
+  reproduction/diagnosis only; never prefer over k3 on this stack.
+  FOX_RC=7, LONGEXP_RC=7, w181259 both workers at `gmr:1489`) — the wedge
+  (#11) is k-agnostic, this corruption is k4-only; two distinct defects.
+  The eager+MTP-k4 option in the #11 guidance remains valid and is
+  deterministic (compile-free). Repro: 3 curls, see README v29c section.
+
 *v31 update (2026-09-01): #12 is CAPTURE-LEVEL and COMPILE-INDEPENDENT —
 inductor is NOT involved.* Under capture-no-compile (arm D posture:
 whole-step XPU graph capture, `TORCH_COMPILE_DISABLE=1`) k=4 STILL corrupts:

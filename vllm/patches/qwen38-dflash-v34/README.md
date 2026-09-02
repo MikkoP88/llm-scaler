@@ -215,12 +215,50 @@ capture is upstream-blocked on #11 (compiled-piece × spec livelock,
 oneCCL IPC exchange path). P2 remains fork-scale as previously
 assessed.
 
+## Addendum 3 (same day, fourth pass): #12 k4 fix campaign — fix FAILED locally; k4 left user-selectable
+
+A bounded fix campaign against the #12 k4 capture corruption (three
+arms: async scheduling off via `serve_boot_var_noasync.sh`; exact
+5-multiple cudagraph capture sizes [5..320] — zero padding anywhere,
+verified in the serve config; verify-input staging code audit — all
+buffers `num_spec_tokens`-sized, no hardcodes) produced **byte-identical
+corruption in every arm**: same f8ref hashes, same top-1 logprob drift,
+same mojibake strings in the same order. Combined with the v29c matrix
+(padding, capture lists, oneCCL version, image all falsified), the
+corruption is a **deterministic function of the request sequence alone**
+— the remaining surface is GDN state rollback inside the captured verify
+path / closed kernels, which is upstream-scale. Fresh-boot forensics
+sharpened: corruption is faster-onset than previously recorded (P1
+distinct=2 with logprob drift at request 1; 8/8 mojibake by ~14
+requests), high-margin output still intact (P2 6/6, hash invariant).
+New datapoint: **no wedge at 65k on k4** (5x65k clean, warm 24.1 tok/s —
+the v29c-era k4@65k wedge was the compile path, consistent with #11).
+
+### k4 opt-in recipe (diagnosis/reproduction only)
+
+```bash
+setsid nohup bash /root/build/bootp.sh \
+  '{"method":"mtp","num_speculative_tokens":4}' \
+  'VLLM_XPU_ALLOW_K4_CAPTURE=1 VLLM_XPU_SPEC_DRAFT_BARRIER=0' \
+  v35k4 '' > /root/v35k4_boot.log 2>&1 < /dev/null
+```
+
+`VLLM_XPU_ALLOW_K4_CAPTURE=1` bypasses the k>3 clamp at
+`platforms/xpu.py:531`. **Never prefer k4 over k3 on this stack** — it
+is dominated everywhere (65k warm 24.1 vs k3 29.25 tok/s; conc16
+9.6-12.9 vs 13.99; 2k early-stops into garbage), and low-margin output
+degrades to mojibake within ~tens of requests. The lane exists so the
+corruption stays reproducible for upstream reporting.
+
 ## Posture
 
 Prod unchanged: **v31.1, NOSPEC, turboquant_4bit_nc** (conc16 decides).
 Opt-in lanes: 4bit+spec k1 (lossless, flattest small-k curve), k3
 (single-stream <=~100k records, hash-divergent; nospec wins >=126k).
-fp8+spec carries the v34 shim. Open levers: P3 draft graph capture is
-now LOCALLY CLOSED (v35dp1 falsified the only reachable config; the
-v31 matrix convicts every compiled variant — upstream-blocked on #11);
-P2 (worker-resident acceptance loop) remains fork-scale.
+fp8+spec carries the v34 shim. k4 is user-selectable via
+`VLLM_XPU_ALLOW_K4_CAPTURE=1` for #12 diagnosis only (fix failed
+locally; dominated by k3; corrupt on low-margin prompts). Open levers:
+P3 draft graph capture is now LOCALLY CLOSED (v35dp1 falsified the only
+reachable config; the v31 matrix convicts every compiled variant —
+upstream-blocked on #11); P2 (worker-resident acceptance loop) remains
+fork-scale.
