@@ -751,6 +751,18 @@ single-layer head runs eager — MTP k4 boots and reaches steady 72-76 tok/s
 on the canonical test (2.2x the dflash k2 user config), E[len] 4.2, 0
 resets.
 
+**2026-09-02 close-out (v35dp1 re-test).** `VLLM_XPU_MTP_EAGER_HEAD=0`
+on the current tree (v31.1 lineage) boots CLEAN — zero segfaults, head
+compile warmup passes, decode graphs captured 18/18. The crash site is
+gone by restructure: the head's `forward` now returns hidden states
+only (`compute_logits`/`get_top_tokens` are invoked by the proposer's
+`_greedy_sample`, eager by construction), so the logits allgather no
+longer sits inside any dynamo-evaluated region. Historically closed;
+moot in practice because the v31.1 guard (#11) sets
+`TORCH_COMPILE_DISABLE=1` for spec+TP2 before the head could compile —
+and the PIECEWISE-registered-without-compile drafter state fails the
+hash gate anyway (see #17 v35dp1 addendum).
+
 **Observed alongside (NOT a v22 issue, documented for awareness).** On
 2026-08-29 the chat endpoint (any image, incl. v21 replicas, any spec method)
 stopped producing `delta.content` within 4096 tokens: the model's `<think>`
@@ -1842,6 +1854,21 @@ build it skipped (65k warm 18.76 -> 10.24, -45%). A "correct" memo
 would have to recompute the varying fields — which IS the build. No
 v2; the ~4.4ms/step is only removable inside P3 (captured graph),
 where the whole build is frozen and replayed.
+
+P3 direct test (v35dp1, 2026-09-02): the nearest reachable
+capture-adjacent config — stock PIECEWISE drafter via
+`VLLM_XPU_MTP_EAGER_HEAD=0` — BOOT-OK but REJECTED by the hash gate:
+f8ref c77d4c73ba1b / f167d905a10b / b78b0a33f97f (P1/P3 diverge, P2
+invariant — #18-class batch-state numerics; Paris logprob -0.452 vs
+ref -0.451), perf parity at best (2k 25.34 vs 25.25, 65k 23.82 vs
+23.73, conc16 19.7/30.5 vs 21.92 — no capture jump). Mechanism: the
+v31.1 guard (xpu.py TORCH_COMPILE_DISABLE for spec+TP2) keeps the head
+eager, so PIECEWISE registration only reroutes draft inputs through
+the static-buffer path (direct_eager_inputs off) — numerics change,
+zero benefit. Re-enabling compile for the drafter is CONVICTED by the
+v31 matrix (wedge @1 chunk with capture / @563 chunks without, every
+splitting-op variant incl. all-custom-ops-split). Draft capture is
+upstream-blocked on #11; no local lever remains.
 
 ## 18 — fp8-e4m3 nospec greedy outputs are BIMODAL under prefix
 caching / batch-state variation (2026-09-02)

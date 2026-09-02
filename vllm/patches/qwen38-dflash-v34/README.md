@@ -174,12 +174,53 @@ and P2 (worker-resident acceptance loop) — upstream-scale, both
 blocked on the per-position draft metadata rebuild, both carrying
 #04/#12-class corruption risk that demands upstream engineering.
 
+## Addendum 2 (same day, third pass): P3-lite (graphed drafter) closed by direct test
+
+The one remaining scoped increment — static-buffer drafter then capture
+— was executed as arm **v35dp1**: `VLLM_XPU_MTP_EAGER_HEAD=0` (the v22
+rollback env) restores the stock PIECEWISE drafter, and the static-input
+machinery it needs already exists upstream (`self.input_ids` /
+`self.hidden_states` / `_slot_mapping_buffer`, activated exactly when
+the drafter is in graph mode — `llm_base_proposer._propose_impl`).
+Findings:
+
+1. **#09 is GONE on the current tree**: the v21-era oneCCL allgatherv
+   segfault no longer fires — v35dp1 boots clean, zero segfaults, decode
+   graphs 18/18. The head's `forward` was restructured since v21 to
+   return hidden states ONLY; `compute_logits`/`get_top_tokens` are
+   called by the proposer's `_greedy_sample` (eager by construction),
+   so the logits allgather left the would-be-compiled region.
+2. **The v31.1 guard owns the decision anyway**: `xpu.py:344` sets
+   `TORCH_COMPILE_DISABLE=1` for spec+TP2 (the #11 fix posture) — the
+   head is compile-eligible but never compiled; the target keeps
+   whole-step XPU capture; the drafter registers PIECEWISE keys with no
+   pieces behind them.
+3. **The A/B gate REJECTED the config on its own merits**: f8ref
+   `c77d4c73ba1b / f167d905a10b / b78b0a33f97f` — P1/P3 diverge from
+   refs, P2 invariant (the familiar 2-of-3 #18-class signature; Paris
+   logprob -0.452 vs ref -0.451). Perf parity at best: 2k warm 25.34 vs
+   25.25, 65k warm 23.82 vs 23.73, conc16 19.7/30.5 vs 21.92 — no
+   capture jump. The PIECEWISE registration merely reroutes draft
+   inputs through the static-buffer path (`direct_eager_inputs` off):
+   numerics change, zero benefit.
+4. **Re-enabling compile for the drafter is convicted, not open**: the
+   v31 discriminator matrix wedged compile+capture @1 chunk AND
+   compile-no-capture @563 chunks at 65k, surviving every
+   splitting-op variant including all-custom-ops-split. The eager draft
+   is the measured price of the only clean posture
+   (capture-without-compile, v31.1).
+
+Verdict: no local path to a graphed/compiled drafter exists. Draft
+capture is upstream-blocked on #11 (compiled-piece × spec livelock,
+oneCCL IPC exchange path). P2 remains fork-scale as previously
+assessed.
+
 ## Posture
 
 Prod unchanged: **v31.1, NOSPEC, turboquant_4bit_nc** (conc16 decides).
 Opt-in lanes: 4bit+spec k1 (lossless, flattest small-k curve), k3
 (single-stream <=~100k records, hash-divergent; nospec wins >=126k).
-fp8+spec carries the v34 shim. Open levers, unchanged: P3 draft graph
-capture (kills the conc16 collapse AND the 2k deficit; blocker =
-per-position draft metadata rebuild), P2 worker-resident acceptance
-loop.
+fp8+spec carries the v34 shim. Open levers: P3 draft graph capture is
+now LOCALLY CLOSED (v35dp1 falsified the only reachable config; the
+v31 matrix convicts every compiled variant — upstream-blocked on #11);
+P2 (worker-resident acceptance loop) remains fork-scale.
