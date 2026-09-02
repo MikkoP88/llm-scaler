@@ -1774,6 +1774,65 @@ conc16), and the #07-era ESIMD sync posture under sustained load.
 `turboquant_4bit_nc` remains the shipped dtype until that battery
 runs; spec stays off fp8 regardless.
 
+**RESOLVED 2026-09-02 (v33)**: the e4m3+spec verify pathology is FIXED
+— root cause was C++ `_vllm_fa2_C` branch1 (chunk_prefill, no KV
+splits, 2 CTAs/GPU serially scanning the 65k fp8 KV). Routing small-q
+paged fp8 verify to the in-tree Triton `unified_attention` 3D split
+path (`patches/qwen38-dflash-v33/v33_mq3d_triton.py`) is bit-identical
+and 2.56x faster in warm pure-decode @65k (7.08 -> 18.14 tok/s). The
+e5m2 half of this issue is root-caused in #19. fp8-nospec keeps its
+prod-candidate status (23.99 @65k warm, v33 methodology) with the
+newly-found greedy bimodality caveat (#18).
+
+## 17 — spec decode collapses under concurrency: eager MTP draft is
+never graph-captured; our v2x per-step sync barrier removed (2026-09-02)
+
+Two findings from the v33 window:
+
+(a) **_SPEC_DRAFT_BARRIER removed.** py-spy on TP0 showed 40.6% of
+host samples blocked in `torch.xpu.synchronize()` called from
+`propose_draft_token_ids` — this was OUR v2x oneCCL wedge mitigation
+(`VLLM_XPU_SPEC_DRAFT_BARRIER`, default ON = full device drain EVERY
+spec step), added before the v31.1 "whole-step graph is clean"
+conclusion. `VLLM_XPU_SPEC_DRAFT_BARRIER=0` (now passed at boot for
+all spec lanes): 4bit+spec 2k 19.65 -> 25.25 (+28.5%), fp8+spec 2k
++13.7%, 65k +3-4%; hashes unchanged. No wedge in ~10 min of sustained
+65k spec decode across batteries — but it is a WATCH ITEM for
+multi-hour prod: if #11-class wedge symptoms reappear on a spec lane,
+re-enable the barrier first.
+
+(b) **conc16 collapse is the eager-draft ceiling.** 4bit+spec k1
+conc16@8k = 21.92 tok/s aggregate vs nospec 55.67 (TTFT 80.9s vs
+52.6s). py-spy during conc16: eager MTP draft = 52-62% of TP0 host
+samples (python IR-op dispatch per layer op), plus TQ prefill python
+and per-call Triton JIT cache-key computation for the MQ kernel —
+none graph-captured, all serialized by the #16 acceptance dependency,
+and the draft work scales with batch while overlapping nothing.
+Fix = P3 (capture propose+sample in the decode graph) / P2
+(worker-resident acceptance loop) — README v33.
+
+## 18 — fp8-e4m3 nospec greedy outputs are BIMODAL under prefix
+caching / batch-state variation (2026-09-02)
+
+2 of 3 fixed greedy prompts alternate between two stable completions
+(prompt 2 never flips; each mode rep-deterministic within a batch
+state). Mechanism: C++ FA2 decode KV-split count varies with resident
+batch -> reduction-order changes -> single argmax flips early -> text
+diverges. NOT corruption; both modes coherent; the 4bit TQ lanes are
+fully rep-stable on the same prompts (coarser quant widens argmax
+margins). Would require fixed split counts to eliminate. Any
+bit-stability gate on the fp8-nospec lane must pin batch state or
+accept bimodality.
+
+## 19 — fp8_e5m2 KV cache: upstream hard reject with fp8 checkpoints
+(wontfix; was half of #15) (2026-09-02)
+
+`vllm/model_executor/layers/attention/attention.py:168` raises
+`ValueError("fp8_e5m2 kv-cache is not supported with fp8
+checkpoints.")` at WorkerProc init — both ranks, deterministic, ~15s
+into boot. Not an XPU/kernel gap. WONTFIX: e5m2 shares e4m3's 1B/elem
+with worse mantissa for bounded KV values; e4m3 strictly dominates.
+
 ## 16 — vLLM v1 spec decode: acceptance of step N gates scheduling of
 step N+1 — the host round-trip chain (~54ms/step @2k) is EXPOSED for
 spec but HIDDEN for nospec (architectural, 2026-09-01)

@@ -1,0 +1,52 @@
+--- xpu.py
++++ xpu.py
+@@ -316,19 +316,48 @@
+         if compilation_config.compile_sizes is None:
+             compilation_config.compile_sizes = []
+ 
++        # llm-scaler v30 safety gate (KNOWN_ISSUES #11): piecewise XPU graph
++        # replay plus speculative decoding and TP>1 can permanently livelock
++        # both devices. Force fully eager execution for the unsafe combination.
++        # The explicit override exists only for diagnosis of the unsafe path.
++        _allow_unsafe_spec_tp_graph = os.environ.get(
++            "VLLM_XPU_ALLOW_UNSAFE_SPEC_TP_GRAPH", "0"
++        ).strip().lower() in ("1", "true", "yes", "on")
++        _unsafe_spec_tp_graph = (
++            vllm_config.speculative_config is not None
++            and parallel_config.tensor_parallel_size > 1
++            and not _allow_unsafe_spec_tp_graph
++        )
++
+         attention_config = vllm_config.attention_config
+         if attention_config.backend is None:
+             attention_config.backend = AttentionBackendEnum.FLASH_ATTN
+-        if not supports_xpu_graph():
++        if _unsafe_spec_tp_graph:
++            # Propagate the effective setting to workers and to kernels which
++            # select graph-only implementations directly from the environment.
++            os.environ["VLLM_XPU_ENABLE_XPU_GRAPH"] = "0"
++            os.environ["TORCH_COMPILE_DISABLE"] = "1"
++            compilation_config.mode = CompilationMode.NONE
++            compilation_config.cudagraph_mode = CUDAGraphMode.NONE
++            vllm_config.model_config.enforce_eager = True
++            logger.warning(
++                "XPU graph capture disabled: speculative decoding with TP=%d "
++                "can permanently livelock both devices (KNOWN_ISSUES #11). "
++                "Continuing with fully eager execution. "
++                "Set VLLM_XPU_ALLOW_UNSAFE_SPEC_TP_GRAPH=1 only to reproduce "
++                "the unsafe configuration.",
++                parallel_config.tensor_parallel_size,
++            )
++        elif not supports_xpu_graph():
+             compilation_config.cudagraph_mode = CUDAGraphMode.NONE
+             logger.warning(
+                 "XPU Graph is not supported in the current PyTorch version, "
+                 "disabling cudagraph_mode."
+             )
+         elif not envs.VLLM_XPU_ENABLE_XPU_GRAPH:
+             compilation_config.cudagraph_mode = CUDAGraphMode.NONE
+             logger.warning(
+                 "XPU Graph is disabled by environment variable, "
+                 "please set VLLM_XPU_ENABLE_XPU_GRAPH=1 to enable it."
+             )
+         else:
