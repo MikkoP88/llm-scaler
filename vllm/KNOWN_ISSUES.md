@@ -1651,7 +1651,7 @@ user-selectable for diagnosis:*
 - **k4+ user-selectable (per user request, 2026-09-02; clamp REMOVED
   same day)**: the xpu.py k>3 clamp and its `VLLM_XPU_ALLOW_K4_CAPTURE`
   bypass are deleted by the v35 boot patch (`v35_k4_unclamp.py`, applied
-  to every lane by bootp.sh; baked into llm-scaler-vllm-adv:v36) — k=4+
+  to every lane by bootp.sh; baked into llm-scaler-vllm-adv:v36/v37) — k=4+
   is selected directly in the boot
   JSON, no env var, no code protection; the warning lives in this file
   and the README only. Verified bit-identical to the former bypass lane

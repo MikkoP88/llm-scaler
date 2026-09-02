@@ -258,13 +258,15 @@ stays reproducible for upstream reporting.
 
 ## Posture
 
-Prod: **v36 image (v31.1 base + v32/v33/v34/v35 keeper patches baked),
+Prod: **v37 image (v31.1 base + all keeper patches baked: v32 MQ+async,
+v35 unclamp, v33 MQ3D+scalefold, v34 shim+guards, v37 barrier-default-off),
 NOSPEC, turboquant_4bit_nc** — validated 2026-09-02: hashes refs exact,
-2k/65k/conc16 parity, 128k/256k long-context A/B >= v31.1 on every
-metric, single-cycle boot. v31.1 remains the certified fallback
-(boot-time patch path). Opt-in lanes: 4bit+spec k1 (lossless, flattest
+2k/65k/conc16 parity, 128k/256k long-context >= v31.1, k3 lane proves the
+barrier default-off with NO env (65k warm 29.35 vs 29.25 ref). v36 (same
+minus scalefold+barrier-flip) and v31.1 (boot-time patch path) remain
+certified fallbacks. Opt-in lanes: 4bit+spec k1 (lossless, flattest
 small-k curve), k3 (single-stream <=~100k records, hash-divergent;
-nospec wins >=126k). fp8+spec carries v33+v34 (baked in v36). k4+ is
+nospec wins >=126k). fp8+spec carries v33+v34 (baked in v36/v37). k4+ is
 DIRECTLY user-selectable since v35 (clamp removed, docs-only warning)
 for #12 diagnosis/reproduction — dominated by k3; corrupt on
 low-margin prompts. Open levers: P3 draft graph capture is now LOCALLY

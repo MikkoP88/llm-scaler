@@ -51,3 +51,7 @@ setsid nohup bash /root/build/bootp.sh nospec '' <log> '' \
 
 Rollback = drop the image argument (v31.1 default, boot-time patches).
 v31.1 image RETAINED on the host as the certified base + fallback.
+
+**Superseded by v37** (same recipe + `v33_scalefold.py` keeper that v36
+missed + `v37_barrier_default.py` spec draft-barrier default OFF). v36
+remains a validated fallback; new boots should use v37.
