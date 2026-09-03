@@ -59,6 +59,7 @@ manifest (finds every post-install edit + marker coverage).
 | `spec-prefill-peer-rendezvous-v24/` | v24 | **DISPROVEN** — wedge still reproduces |
 | `spec-every-step-drain-v25/` | v25 | **DID NOT FIX** — every-step pre-drafter drain + collective shrink |
 | `exact-kv-splits-v38/` | v38 | hypothesis **FALSIFIED** — `v38_exact_kv_splits.py`: split machinery inactive at short ctx (wkb=2 < 16 → num_splits=1); pin changed nothing. Tooling/evidence only |
+| `tq-nibble-unpack-v39/` | v39 | **REJECTED ON PERF** — `v39_tq_nibble.py` (single-load nibble unpack via `tl.interleave`): bit-exact PROVEN (rig 25/25, probe `0ce080630035` ×10, dt_loop hashes 8/8) but decode regresses −9.5/−34/−53% at 2k/16k/65k; `tl.interleave` lowers worse on XPU than the L1-cached second byte load. `v39b_qrot.py` designed, never applied. Do not bake |
 
 ## diagnostics/ — instrumentation & recipes (not serving improvements)
 
@@ -69,6 +70,7 @@ manifest (finds every post-install edit + marker coverage).
 | `cudagraph-debug-v28dbg/` | v28dbg | in-engine flight recorder — NOT a serving image |
 | `oneccl-wedge-forensics-v29/` | v29 | live wedge capture, named mechanism (oneCCL SYCL-kernel collective spin), exonerations, upstream ticket drafts |
 | `oneccl-wait-timeout/` | — | UNBUILT source-build recipe: convert #11 livelock into recoverable error at `ccl_executor::wait()` |
+| `kv-dtype-loop-study-v39/` | v39 | KV-dtype × perf/loop matrix (auto/fp8_e4m3/4bit/k8v4) + thinking-trap differential @4096/@8192 + decode env-knob sweep. Verdicts: TQ wins deep prefill; decode gap is triton-vs-ESIMD architectural (env knobs exhausted); "fp8 thinking loops" = model behavior, dtype-independent (fp16 baseline traps identically). See KNOWN_ISSUES #20 |
 
 ## legacy/ — superseded eras
 

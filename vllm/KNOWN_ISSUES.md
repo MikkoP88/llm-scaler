@@ -2025,4 +2025,40 @@ loop (compute acceptance + next propose on-worker for m steps before
 returning) — an upstream v1 architectural change; documented as P2 in
 README v32.
 
+## 20 — "thinking loop" reports on fp8_e4m3 KV are budget-limited long
+thinking, NOT dtype looping (closed 2026-09-03)
+
+Reports of the model looping when thinking with
+`--kv-cache-dtype fp8_e4m3`. Differential battery (8 prompts,
+temperature 0, reasoning field inspected with word- AND char-periodicity
+loop detectors; full study in
+`vllm/patches/diagnostics/kv-dtype-loop-study-v39/`):
+
+- @max_tokens=4096: exactly the same 4 prompts (LIS proof, domino
+  tiling, DB schema, host-policy Monty Hall) hit `finish=length` with
+  zero output on ALL FOUR dtypes — auto (fp16, unquantized KV
+  baseline), fp8_e4m3, turboquant_4bit_nc, turboquant_k8v4 (fp8 keys).
+  Zero periodic text loops detected anywhere; trapped tails are
+  coherent mid-derivation reasoning.
+- @max_tokens=8192: fp16 baseline 4/4 STILL trapped, 0 tail-loops;
+  fp8_e4m3 3/4 — the Monty Hall prompt ESCAPES at 7883 tokens and
+  produces a full correct answer. The unquantized baseline is not
+  better than fp8; there is nothing dtype-specific to fix.
+- fp8_e5m2 is not a servable KV dtype on this stack (#19).
+
+Verdict: model behavior (long thinking exceeding the token budget on
+certain problem types). Operational mitigation only: raise max_tokens
+for thinking requests, or disable/limit thinking
+(`chat_template_kwargs: {"enable_thinking": false}`). The mapped
+Hadamard-wrap surface at the fp8 store (`flash_attn.py:1407` + FA call
+sites) was NOT needed and is parked.
+
+Perf context from the same study (prod:v1, per-dtype steady numbers):
+TQ 4bit beats fp8_e4m3 on deep prefill (+18% @16k, +44% @65k tok/s) but
+trails on 2k prefill (−37%, attribution open) and deep decode
+(−18%/−36%) — the decode gap is architectural (TQ triton 1-warp tiled
+kernel vs fp8's native ESIMD flash decode; `VLLM_TQ_STAGE1_STAGES=2`,
+`VLLM_TQ_BLOCK_KV=8` and the v39a nibble-split patch all failed to move
+it — see `failed/tq-nibble-unpack-v39/`).
+
 
