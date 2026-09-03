@@ -33,10 +33,51 @@ override Kitchen's constraints and fallback policy.
 The node is bundled with the `llm-scaler-omni` ComfyUI image. It requires:
 
 - an `omni_xpu_kernel` wheel built for the active XPU target and Torch minor;
-- the pinned `comfy_kitchen` XPU integration;
+- the official `comfy-kitchen` and `comfy-aimdo` distributions;
+- matching `comfy-kitchen-xpu-runtime` and `comfy-aimdo-xpu-runtime`
+  provider wheels;
 - upstream ComfyUI.
 
 If an Intel XPU is unavailable, initialization is skipped.
+
+## Official packages and XPU providers
+
+The provider distributions use private top-level package names and do not own
+any `comfy_kitchen/*` or `comfy_aimdo/*` file. The official packages can
+therefore be reinstalled or upgraded without overwriting the XPU runtime.
+ComfyUI's launcher and Python entry point are unchanged.
+
+During the normal custom-node prestartup phase, OmniXPU discovers lightweight
+provider metadata before importing PyTorch. It verifies the official package
+version, exact Torch XPU build, platform and image target, source revision,
+source-wheel hash, and every vendored runtime file hash. Kitchen is then routed
+only when its canonical package is first imported.
+
+AIMDO takeover additionally requires explicit DynamicVRAM enablement, an
+unimported PyTorch runtime on Linux, and an official `comfy_aimdo.control`
+module with no device context or allocator. ComfyUI calls official AIMDO init
+before custom-node prestartup; on an XPU Torch build that can leave only its
+pre-device CUDA DSO state live. OmniXPU permits exactly that reversible state,
+calls the official public `deinit()`, and verifies that it returned to a
+pristine module before takeover. Any device or allocator state is rejected.
+OmniXPU then executes the provider control implementation in that same module
+object so the reference imported by ComfyUI remains valid. A reversible
+provider failure restores the deinitialized official module. A failure after
+provider allocator or native state becomes live stops startup because
+allocator ownership cannot be rolled back safely.
+
+Provider routing defaults to `auto` and can be controlled without changing the
+launcher:
+
+```bash
+OMNIXPU_PROVIDER_BOOTSTRAP=off       # Keep every official runtime
+OMNIXPU_PROVIDER_BOOTSTRAP=auto      # Use each compatible XPU provider
+OMNIXPU_PROVIDER_BOOTSTRAP=required  # Fail unless both providers activate
+```
+
+After an official package upgrade, an incompatible provider is skipped in
+`auto` mode instead of being forced into a new API contract. Upgrade the
+corresponding provider wheel to restore XPU routing.
 
 ## Components and switches
 
@@ -71,6 +112,10 @@ OMNIXPU_H120_RMSNORM=0
 OMNIXPU_KREA2_RMSNORM=0
 OMNIXPU_SEEDVR_GROUPNORM=0
 ```
+
+On Windows, CUTE is never selected implicitly. A wheel built explicitly with
+`OMNI_XPU_REQUIRE_CUTE=1` still uses PyTorch SDPA by default; set
+`OMNI_ATTN_BACKEND=cute` before launching ComfyUI to enable the CUTE routes.
 
 For diagnostics, the per-call CUTE output scan can be enabled explicitly. It
 is disabled by default because validated CUTE routes accumulate in FP32 and a
@@ -122,6 +167,7 @@ OMNIXPU_LORA_MEMORY_TRACE=1 python main.py
 Set tracing variables before startup. The **OmniXPU Status** node reports:
 
 - GPU and `omni_xpu_kernel` capabilities;
+- runtime-provider activation, skip, and rejection reasons;
 - each component's kind (`adapter`, `compatibility_patch`, or `legacy_fix`)
   and apply status;
 - attention and fused INT8 FFN routing counters.

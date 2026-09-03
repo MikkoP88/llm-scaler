@@ -16,6 +16,7 @@ across those native ABI boundaries.
 | `cute.sdp_bhld_d128` | BMG batched/rectangular D128 BHLD attention |
 | `cute.sdp_minimax_h3_vae_d64` | Structural BMG MiniMax H3 VideoVAE D64 tile attention |
 | `cute.sdp_wan22_cross` | Exact BMG Wan 2.2 14B T2V Turbo cross-attention |
+| `cute.sol_attn` | BMG sparse Sol-Attn for BF16 BTHD D128 tensors |
 | `linear` | oneDNN FP8 weight-only GEMM |
 | `fp8` | FP8 quantization, dequantization, and stochastic rounding |
 | `gguf` | Q4_0, Q4_1, Q8_0, Q4_K, and Q6_K dequantization |
@@ -40,14 +41,14 @@ The package and `intel/llm-scaler-omni` image versions share the source in
 derives its native identity from the active Torch installation and
 `OMNI_XPU_DEVICE`.
 
-The packaging layer recognizes Torch XPU minors 2.10, 2.11, and 2.12. Each
+The packaging layer recognizes Torch XPU minors 2.10, 2.11, 2.12, and 2.13. Each
 Torch/GPU pair still requires its own build and runtime validation; recognizing
 a version is not a validation claim. The generated wheel uses a PEP 440 local
 version such as:
 
 ```text
-omni_xpu_kernel-0.2.0b1+torch211.bmg
-omni_xpu_kernel-0.2.0b1+torch211.ptlh
+omni_xpu_kernel-0.2.0b2+torch213.bmg
+omni_xpu_kernel-0.2.0b2+torch213.ptlh
 ```
 
 Build and install a different wheel for every Torch/GPU pair. The wheel
@@ -108,13 +109,13 @@ be installed on PTL-H.
 
 - Python 3.9 or newer development environment
 - Intel oneAPI DPC++/C++ Compiler (`icpx`)
-- A packaging-supported PyTorch XPU minor: 2.10.x, 2.11.x, or 2.12.x
-- `onednn==2025.3.0` and `onednn-devel==2025.3.0` for the package's direct
-  oneDNN calls on Linux
-- A matched oneAPI oneDNN 3.9.1 development installation on Windows; the
-  build vendors its `dnnl.dll` and redistribution notices into the wheel
+- PyTorch XPU 2.13.x for the current validated build
+- `onednn==2026.0.0` and `onednn-devel==2026.0.0` (oneDNN 3.11.2) for the
+  package's direct oneDNN calls on Linux
+- A matched oneAPI 2026.0 oneDNN 3.11.2 development installation on Windows.
+  The build vendors its `dnnl.dll` and redistribution notices into the wheel.
 - Intel [`sycl-tla`](https://github.com/intel/sycl-tla) headers for the
-  default Linux CUTE build
+  default Linux CUTE build or explicit experimental Windows BMG CUTE build
 
 Torch and oneDNN are intentionally not listed as isolated build dependencies.
 Install the target runtime first, then build with `--no-build-isolation` so the
@@ -129,8 +130,10 @@ architecture:
 ```bash
 cd /path/to/llm-scaler/omni
 
+OMNI_IMAGE_REPOSITORY=llm-scaler-omni \
 XPU_TARGET=bmg bash build.sh
 # or
+OMNI_IMAGE_REPOSITORY=llm-scaler-omni \
 XPU_TARGET=ptl-h bash build.sh
 ```
 
@@ -147,13 +150,18 @@ source /opt/venv/bin/activate
 
 python -m pip install --upgrade pip wheel
 python -m pip install \
-  torch==2.11.0+xpu torchvision==0.26.0+xpu torchaudio==2.11.0+xpu \
+  torch==2.13.0+xpu torchvision==0.28.0+xpu \
   --index-url https://download.pytorch.org/whl/xpu
-python -m pip install onednn==2025.3.0 onednn-devel==2025.3.0
+python -m pip install onednn==2026.0.0 onednn-devel==2026.0.0
 
 git clone https://github.com/intel/sycl-tla.git /opt/sycl-tla
 git -C /opt/sycl-tla checkout 2fc09973bfdf15755090fcb0e3b6ad236408a992
 ```
+
+There is no Torch-2.13-matched `torchaudio` wheel on the official XPU index.
+It is not required by `omni_xpu_kernel`; the complete ComfyUI image separately
+keeps its existing `2.11.0+xpu` audio wheel as a validated workflow
+compatibility exception.
 
 Build the wheel from this directory:
 
@@ -174,15 +182,27 @@ must not be mistaken for the default image artifact.
 For Windows build and installation details, see
 [`WHL_BUILD_INSTALL.md`](WHL_BUILD_INSTALL.md).
 
+Windows wheels remain core-only by default even when a sycl-tla checkout is
+present. Set both `CUTLASS_SYCL_ROOT=<clean-sycl-tla-v0.8-checkout>` and
+`OMNI_XPU_REQUIRE_CUTE=1` to include the experimental BMG CUTE `.pyd`. Runtime
+routing is a separate opt-in: ComfyUI continues to use PyTorch SDPA unless
+`OMNI_ATTN_BACKEND=cute` is set before launch.
+
 ### oneDNN consistency
 
-The native extensions call oneDNN directly. The `2025.3.0` pin belongs to
+The native extensions call oneDNN directly. The Linux `2026.0.0` pin belongs to
 `omni_xpu_kernel`; it is not inherited from the selected Torch wheel. Using
 headers from one oneDNN release with a library from another can produce
 missing-symbol errors during import. The default Linux path therefore uses the
 matched pip runtime and development packages shown above for every recognized
 Torch minor. A new Torch minor is accepted only after rebuilding and testing
 that complete combination.
+
+Torch 2.13 pins its Intel runtime packages to 2026.0.0. oneDNN 2026.0.0 is the
+matching package release: later 2026.0.x oneDNN wheels require 2026.1 runtimes
+and cannot satisfy this exact Torch environment. The Windows Torch 2.13 build
+uses the matching oneAPI 2026.0 oneDNN 3.11.2 headers, import library, and
+runtime.
 
 For a non-pip development installation, set both variables to the same oneDNN
 installation:
@@ -264,6 +284,11 @@ if cute is not None and cute.supports_minimax_h3_vae_d64():
 # tuned cross-attention contract separately from the general BHLD API.
 if cute is not None and cute.supports_wan22_cross():
     output = cute.sdp_wan22_cross(q_blhd, k_blhd, v_blhd)
+
+# BMG builds expose sparse Sol-Attn for the validated BF16 BTHD D128
+# self-attention contract. Routing thresholds remain explicit call policy.
+if cute is not None and cute.supports_sol_attn():
+    output = cute.sol_attn(q_bthd, k_bthd, v_bthd, tau=1.3)
 ```
 
 The legacy BLHD `cute.sdp` entry point accepts unmasked self-attention with
@@ -286,6 +311,12 @@ Q/K/V `[1, 32, S, 64]`, where `S` varies with the decoder's temporal and
 spatial tile extent. Q/K use the runtime-derived `H*D` sequence stride and V
 retains the three-wide QKV projection stride. Other D64 layouts remain with
 the caller's fallback.
+
+`sol_attn` is BMG-only and accepts matching XPU BF16 Q/K/V in BTHD layout,
+with non-empty sequence length, D128, and contiguous head dimension. It does
+not accept masks, causal mode, GQA, or cross-attention. The approximation
+policy is controlled by `tau`, `sink_blocks`, and `sink_q`; callers must not
+substitute it for dense attention unless their model has selected Sol-Attn.
 
 ### Quantized linear operations
 
@@ -451,12 +482,16 @@ specific. Do not treat a number from one target as validation for another.
 
 ## Native layout
 
-The Linux build produces three extension components:
+The default Linux build produces three extension components:
 
 - `_C.so`: main AOT extension for normalization, quantization, GGUF, SVDQuant,
   rotary, and oneDNN-backed operations;
 - `lgrf_sdp.so`: target-specific ESIMD attention sidecar;
 - `cute_fmha_torch.so`: target-specific CUTLASS-SYCL attention sidecar.
+
+The default Windows build contains `_C.pyd` and `lgrf_sdp.pyd`. An explicitly
+enabled BMG CUTE build adds `cute_fmha_torch.pyd`, including the packaged
+Sol-Attn operators; it does not enable either runtime route automatically.
 
 `setup.py` derives one architecture macro from `OMNI_XPU_DEVICE` so wheel
 metadata, core AOT ISA, and sidecars identify the same target. BMG core and
@@ -465,4 +500,4 @@ table.
 
 ## License
 
-Apache 2.0
+Apache 2.0.
