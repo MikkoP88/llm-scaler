@@ -49,6 +49,7 @@ manifest (finds every post-install edit + marker coverage).
 | `spec-k4-unclamp-v35/` | v35 | `v35_k4_unclamp.py` removes the #12 k>3 clamp → k selectable in boot JSON (docs-only corruption warning, KNOWN_ISSUES #12) |
 | `image-bake-keepers-v37/` | v37 | bake recipe: ALL keepers from v32–v37 baked into `llm-scaler-vllm-adv:v37` (base of current prod) |
 | `attn-esimd-fp8-reroute-v38/` | v38 | `v38_esimd_reroute.py` — **#18 fix**: fp8-KV decode OFF the ESIMD fast path (run-to-run nondeterministic kernel) → vxk FA2 (deterministic AND faster). Latest keeper |
+| `image-prod-v1/` | v1 | **first `llm-scaler-prod:vN` bake** — exactly the certified v38 tree (v37 keepers + v38 reroute) under the new naming; 19/19 md5-identical to `adv:v38`. Validated against 5 images (prod:v1, v37, v31.1, v19, v14) — full matrix in its README. Current prod |
 
 ## failed/ — documented negative results
 
@@ -115,13 +116,17 @@ manifest (finds every post-install edit + marker coverage).
 
 ## Image naming scheme (from the v38 harmonization onward)
 
-- **Production:** `llm-scaler-prod:vN` — starts at `v1` (= v38 keeper
-  lineage re-built under the new name). Contains keepers only.
+- **Production:** `llm-scaler-prod:vN` — `v1` BUILT + VALIDATED 2026-09-03
+  (= v38 keeper lineage re-built under the new name, keepers only) and
+  **prod is running on it**. Validation battery ×5 vs `adv:v37`, `v31.1`,
+  `v19`, `v14`: probe/2k/65k/conc16 all inside the certified envelope —
+  see `prod/image-prod-v1/README.md` for the full matrix.
 - **Experimental:** `llm-scaler-exp:<purpose>` — throwaway arms, never prod.
 - **Historical:** `llm-scaler-vllm-adv:vN` (and `dspark`, `qwen36-b70…`
   ancestors) stay untouched as provenance — never rebuilt, never renamed.
-- Baked images carry `/root/.vN_baked` (new bakes: `/root/llm-scaler-prod_vN_baked`);
-  `bootp.sh` skips boot-time patching when it finds the marker.
+- Baked images carry `/root/.vN_baked` (new bakes:
+  `/root/.llm-scaler-prod_vN_baked`); `bootp.sh` skips boot-time patching
+  when it finds the marker (host-side glob generalized to `/root/.*_baked`).
 
 ## Invariants (do not break)
 
