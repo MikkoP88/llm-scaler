@@ -1911,20 +1911,19 @@ v31 matrix (wedge @1 chunk with capture / @563 chunks without, every
 splitting-op variant incl. all-custom-ops-split). Draft capture is
 upstream-blocked on #11; no local lever remains.
 
-## 18 — fp8-e4m3 nospec greedy outputs are BIMODAL under prefix
-caching / batch-state variation (2026-09-02)
+## 18 — fp8-e4m3 nospec greedy "bimodality": ESIMD decode-kernel race —
+ROOT-CAUSED & FIXED in v38 (filed 2026-09-02; solved 2026-09-03)
 
-2 of 3 fixed greedy prompts alternate between two stable completions
-(prompt 2 never flips; each mode rep-deterministic within a batch
-state). Mechanism: C++ FA2 decode KV-split count varies with resident
-batch -> reduction-order changes -> single argmax flips early -> text
-diverges. NOT corruption; both modes coherent; the 4bit TQ lanes are
-fully rep-stable on the same prompts (coarser quant widens argmax
-margins). Would require fixed split counts to eliminate. Any
-bit-stability gate on the fp8-nospec lane must pin batch state or
-accept bimodality.
+2 of 3 fixed greedy prompts alternated between stable completions (prompt
+2 never flipped). ORIGINAL HYPOTHESIS (WRONG, see v38 below): C++ FA2
+decode KV-split count varies with resident batch -> reduction-order
+changes -> single argmax flips early -> text diverges. Not corruption;
+both modes coherent; the 4bit TQ lanes fully rep-stable on the same
+prompts.
 
-v34 closure (2026-09-02) — CLOSED AS INTRINSIC, three arms:
+v34 closure (2026-09-02) — closed as INTRINSIC on the split-count
+mechanism, three arms (all measurements real; the MECHANISM ATTRIBUTION
+was wrong — v38 proved FA2 was never on this path):
 (1) `VLLM_BATCH_INVARIANT=1` (upstream's own pin: num_splits=1 +
 batch-invariant backends) is UNBOOTABLE on this stack: it reroutes the
 attention selector (`v1/attention/selector.py:153` — mamba/GDN
@@ -1933,17 +1932,51 @@ crash-loops during model init with a silent native death (no
 traceback; exit swallowed by restart=on-failure).
 (2) Our surgical pin `VLLM_XPU_FA2_PIN_SPLITS=N` (v34_f8bi_pin.py,
 flash_attn.py max_num_splits site): N is a **CAP, not an exact count**
-— the C++ op still heuristically picks actual splits <= N per step, so
-pin=64 leaves the reduction tree occupancy/batch-dependent: bimodality
-PERSISTS and now flips WITHIN a single f8ref invocation (P1 modes
-{91d489262cb5, 08fae14be388}, P3 modes {c03d1a317495, e15216abe6b0},
-P2 = 3705c4621a59 invariant). Cap=64 is perf-free (65k warm 24.04 vs
-23.99 unpinned) but buys nothing.
+— the C++ op still heuristically picks actual splits <= N per step.
+[v38 correction: the observed "bimodality PERSISTS under pin=64 and
+flips WITHIN a single f8ref invocation (P1 modes {91d489262cb5,
+08fae14be388}, P3 modes {c03d1a317495, e15216abe6b0}, P2
+3705c4621a59 invariant)" was the ESIMD kernel race below — the FA2
+kernel those pins target was never reached. The cap-not-exact finding
+about the C++ op itself stands.]
 (3) The only value that forces determinism (splits=1) recreates the
 #15 serial-scan pathology class at long ctx (2 CTAs scanning the whole
-context). Fixing this needs an exact-splits or batch-invariant XPU
-attention kernel — upstream-scale. fp8-nospec remains a non-prod lane
-property; the prod 4bit TQ lane is rep-stable.
+context).
+
+v38 ROOT CAUSE (2026-09-03, kernel-level isolation, all reproducible):
+The patch-stack `PAGED_ATTN_ESIMD_INSERTED_v1` gate (flash_attn.py
+~1085) routes fp16-Q + XPU-graph + head-256 + GQA>=2 decoder decode to
+`custom_esimd_kernels_vllm.eagle_ops.page_attn_decode` (compiled ESIMD
+.so, no source) — **fp8 decode BYPASSES the vxk FA2 kernel entirely.**
+That ESIMD kernel is RUN-TO-RUN NONDETERMINISTIC on fp8 KV with FIXED
+inputs (v38quant.py, 999 calls, bit-compare vs call-0): fp8@511 eager
+969/998 differ (same 235-elem signature — MULTISTABLE discrete modes);
+fp8@512 eager 132/998, graph 998/998 (toggles 2 modes/replay); fp8@1024
+988/998; fp8@2048 150/998; fp8@117 ~1/50; fp16@512 5/998 single-element
+(latent on the fp16 lane too). Magnitudes 1-2 fp16 ULP — invisible on
+fat-margin tokens, flips knife-edge argmax tokens -> coherent alternate
+generations. Engine proof: same request x6 batch=1 cache-hit gave 4
+distinct outputs with the gate active; 10/10 identical + f8ref x5 +
+700-token gens x4 through the 512/1024 boundary hot zone bit-identical
+with fp8 excluded. The vxk FA2 kernel is EXONERATED: 50/50
+bit-identical all split configs (v38krig.py), invalid-tail-poison
+invariant + fp32-ref correct to 1.4e-5 (v38ref.py). Also why no split
+pin could ever fix it: f8ref prompts ~12 tokens -> wkb=2 < 16 ->
+heuristic num_splits=1, split machinery INACTIVE at those lengths.
+
+v38 FIX (image adv:v38, `v38_esimd_reroute.py`, baked over v37): the
+ESIMD gate additionally excludes fp8* kv_cache_dtype lanes
+(A/B force-back `VLLM_XPU_ALLOW_ESIMD_F8=1`). fp8 decode routes to the
+vxk FA2 kernel — deterministic, correct, AND FASTER: 2k warm 33.2-33.8
+vs 23.99 (+40%, 4bit parity); 65k warm 28.24-28.27 vs 23.99 (+18%;
+prod 4bit 22.28-22.36 -> +27%); conc16 coherent; 4bit prod lane
+bit-exact untouched (`0ce080630035`). RECLASSIFIED: local patch-stack
+kernel race, NOT intrinsic fp8, NOT split-count. fp8-e4m3-nospec is now
+a bit-stable lane and the fastest at long ctx (prod-promotion
+candidate; prod restored on the v38 image as 4bit pending decision).
+fp16/auto keeps the ESIMD kernel — latent 5/998 single-element
+nondeterminism documented; a bit-stability demand on that lane would
+need the same reroute.
 
 ## 19 — fp8_e5m2 KV cache: upstream hard reject with fp8 checkpoints
 (wontfix; was half of #15) (2026-09-02)

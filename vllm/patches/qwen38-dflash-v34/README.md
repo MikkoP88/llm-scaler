@@ -35,15 +35,25 @@ the XPU varlen shim; fix #17 (spec conc16), #18 (fp8 bimodality), #19
    `cudagraph_dispatcher.get_capture_descs`/`_warmup_and_capture`.
    NOT attempted (v29c k4 corruption lesson; upstream-scale surgery).
 4. **#18 CLOSED intrinsic** (fp8-nospec greedy bimodality):
+   [v38 CORRECTION (2026-09-03): the "intrinsic" verdict was WRONG —
+   the mechanism is a run-to-run race in the patch-stack ESIMD kernel
+   `eagle_ops.page_attn_decode`, which the PAGED_ATTN_ESIMD gate
+   substitutes for FA2 on fp8 decode (FA2 was never reached; split
+   machinery inactive at f8ref lengths anyway: wkb=2 < 16 ->
+   num_splits=1). Fixed in v38 by rerouting fp8 decode to vxk FA2 —
+   bit-stable AND faster (65k 28.3 vs 23.99). See
+   qwen38-dflash-v38/README.md.]
    - `VLLM_BATCH_INVARIANT=1` (upstream pin) UNBOOTABLE here —
      reroutes the attention selector (`selector.py:153` mamba/GDN
      batch-invariance gate) -> silent native crash-loop during init.
    - Our `VLLM_XPU_FA2_PIN_SPLITS=N` (v34_f8bi_pin.py): N is a CAP,
      not exact — C++ still picks actual splits <= N -> bimodality
-     persists, flipping WITHIN one f8ref invocation (P1/P3 two modes
-     each; P2 invariant); cap=64 perf-free (65k 24.04 vs 23.99).
+     persists [v38: = the ESIMD race, not the cap], flipping WITHIN one
+     f8ref invocation (P1/P3 two modes each; P2 invariant); cap=64
+     perf-free (65k 24.04 vs 23.99).
    - splits=1 (the only forcing value) = the #15 serial-scan pathology.
-   Needs an exact-splits / batch-invariant XPU attention kernel.
+   [v38: moot — no split value could fix a kernel that was never
+   executing.]
    Prod 4bit lane unaffected (rep-stable).
 5. **#19 CLOSED triple-blocked** (e5m2 KV): guard env-bypassed
    (v34_e5m2_guard.py) -> graphs boot dies at decode graph capture
@@ -160,7 +170,9 @@ Two further arms closed under an improvements-only gate:
 **fp8-e4m3 KV nospec is a documented perf opt-in**: 65k warm 23.99 vs
 prod 4bit 22.28 (+7.7%), 2k parity — for workloads that do not need
 bit-stable greedy output (#18 bimodality is intrinsic). Not prod
-because bit-stability gates prod.
+because bit-stability gates prod. [v38: SUPERSEDED — #18 fixed
+(ESIMD-kernel race, not intrinsic); fp8 nospec is now bit-stable AND
+65k 28.3 (+27% vs prod) — prod-promotion candidate.]
 
 **Concurrency guidance (measured)**: agg @8k saturates ~85-115
 (cache-state dependent) — raise client streams to ~32; beyond is
