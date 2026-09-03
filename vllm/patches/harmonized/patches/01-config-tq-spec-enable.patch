@@ -1,0 +1,34 @@
+--- a/vllm/config/vllm.py	2026-09-03 09:34:24.040107007 +0000
++++ b/vllm/config/vllm.py	2026-09-03 09:34:14.219408943 +0000
+@@ -820,6 +820,31 @@
+                     model_type,
+                 )
+ 
++        # llm-scaler (#05b, revised in adv:v19): TurboQuant KV caches used
++        # to auto-disable the dflash/dspark drafter on XPU (v14-era:
++        # acceptance ~1-2% + spec warmup wedges). Both causes are gone:
++        # the drafter's KV cache is forced to unquantized 'auto'
++        # (see dflash _create_draft_vllm_config) and the #05b/#03 warmup
++        # skips protect boot; v19 also adds a multi-query verify kernel so
++        # TQ spec no longer pays ~5x compressed-KV rescans per verify step.
++        # Spec now serves WITH turboquant KV by default; roll back to the
++        # old target-only behavior with VLLM_ALLOW_TQ_SPEC=0.
++        kv_cache_dtype = self.cache_config.cache_dtype
++        if (
++            self.speculative_config is not None
++            and isinstance(kv_cache_dtype, str)
++            and kv_cache_dtype.startswith("turboquant")
++            and os.getenv("VLLM_ALLOW_TQ_SPEC", "1") != "1"
++        ):
++            logger.warning(
++                "llm-scaler: speculative decoding disabled by "
++                "VLLM_ALLOW_TQ_SPEC=0 - kv_cache_dtype=%s serving "
++                "target-only (rollback of the v19 default; see "
++                "KNOWN_ISSUES #05b revision).",
++                kv_cache_dtype,
++            )
++            self.speculative_config = None
++
+         from vllm.v1.executor.abstract import Executor
+ 
+         executor_backend = self.parallel_config.distributed_executor_backend

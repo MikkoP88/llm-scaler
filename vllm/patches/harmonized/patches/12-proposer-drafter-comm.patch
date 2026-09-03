@@ -1,0 +1,135 @@
+--- a/vllm/v1/spec_decode/llm_base_proposer.py	2026-09-03 09:34:29.311477672 +0000
++++ b/vllm/v1/spec_decode/llm_base_proposer.py	2026-09-03 09:34:20.238837966 +0000
+@@ -1,5 +1,6 @@
+ # SPDX-License-Identifier: Apache-2.0
+ # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
++import os
+ from importlib.util import find_spec
+ from typing import Any, cast
+ 
+@@ -33,7 +34,9 @@
+ from vllm.v1.kv_cache_interface import KVCacheConfig, UniformTypeKVCacheSpecs
+ from vllm.v1.sample.metadata import SamplingMetadata
+ from vllm.v1.sample.sampler import _SAMPLING_EPS
++from vllm.v1.spec_decode.drafter_comm import with_drafter_communicator  # llm-scaler v27
+ from vllm.v1.spec_decode.metadata import SpecDecodeMetadata
++from vllm.v1.spec_decode.spec_timing import spec_seg  # llm-scaler v20 A2
+ from vllm.v1.spec_decode.utils import (
+     PADDING_SLOT_ID,
+     compute_new_slot_mapping,
+@@ -44,6 +47,8 @@
+     extend_all_queries_by_N,
+     next_power_of_2,
+ )
++
++import fr as _fr  # llm-scaler v29 flight recorder (site-packages root)
+ from vllm.v1.utils import CpuGpuBuffer
+ from vllm.v1.worker.dp_utils import coordinate_batch_across_dp
+ from vllm.v1.worker.gpu_input_batch import CachedRequestState, InputBatch
+@@ -110,8 +115,21 @@
+         self.parallel_drafting_hidden_state_tensor: torch.Tensor | None = None
+         if self.parallel_drafting:
+             self._init_parallel_drafting_params()
++        # llm-scaler v25 (KNOWN_ISSUES #11): default the tiny top-token
++        # gather ON for XPU MTP drafters. The eager MTP head otherwise
++        # issues a FULL-vocab (248,320) all-gather from _greedy_sample on
++        # every draft step; that non-preemptible oneCCL ring kernel,
++        # interleaved with the graphed verify replays, is the UR in-flight
++        # clog behind the deterministic >=32k long-context wedge (v24
++        # py-spy: both ranks stuck in appendUSMMemcpy, queue never drains).
++        # VLLM_XPU_MTP_LOCAL_ARGMAX=0 restores stock (v22) behavior.
+         self.use_local_argmax_reduction: bool = (
+             self.speculative_config.use_local_argmax_reduction
++            or (
++                os.environ.get("VLLM_XPU_MTP_LOCAL_ARGMAX", "1") != "0"
++                and self.method == "mtp"
++                and current_platform.is_xpu()
++            )
+         )
+ 
+         self.max_batch_size = vllm_config.scheduler_config.max_num_seqs
+@@ -400,16 +418,63 @@
+         else:
+             eagle_cudagraph_mode = CUDAGraphMode.NONE
+ 
++        # llm-scaler v22 (VLLM_XPU_MTP_EAGER_HEAD): when the MTP head is kept
++        # eager on XPU (see qwen3_5_mtp.py), it has no compiled subgraphs, so
++        # the drafter must register NONE instead of PIECEWISE -- and NONE also
++        # selects the direct_eager_inputs propose fast path, exactly the code
++        # path the eager validation cells exercised. Method-gated so dflash
++        # and eagle drafters keep their validated PIECEWISE behavior;
++        # VLLM_XPU_MTP_EAGER_HEAD=0 restores stock.
++        if (
++            eagle_cudagraph_mode == CUDAGraphMode.PIECEWISE
++            and getattr(self, "method", None) == "mtp"
++            and current_platform.is_xpu()
++            and os.environ.get("VLLM_XPU_MTP_EAGER_HEAD", "1") != "0"
++        ):
++            eagle_cudagraph_mode = CUDAGraphMode.NONE
++
+         self.cudagraph_dispatcher.initialize_cudagraph_keys(eagle_cudagraph_mode)
+ 
+     def _greedy_sample(self, hidden_states: torch.Tensor) -> torch.Tensor:
+         """Greedy-sample draft tokens from hidden states."""
+-        if self.use_local_argmax_reduction and hidden_states.shape[0] > 1:
++        # llm-scaler v25 (KNOWN_ISSUES #11): lift the stock shape[0] > 1
++        # guard so batch=1 (single-stream, the wedge repro case) also uses
++        # the [bs, topk]-sized gather instead of the full-vocab all-gather.
++        # Same VLLM_XPU_MTP_LOCAL_ARGMAX env gate (default 1; =0 = v22).
++        if self.use_local_argmax_reduction and (
++            hidden_states.shape[0] > 1
++            or os.environ.get("VLLM_XPU_MTP_LOCAL_ARGMAX", "1") != "0"
++        ):
+             return self.model.get_top_tokens(hidden_states)
+         return self.model.compute_logits(hidden_states).argmax(dim=-1)
+ 
++    # llm-scaler v29 (flight-recorder step markers): propose() is a thin
++    # marker wrapper delegating to _propose_impl. With the v28dbg AR/AG
++    # markers in xpu_communicator.py this partitions every spec-decode
++    # step's eager collectives into drafter (between propose begin/end)
++    # and target-verify+sampler (outside) regions in /tmp/fr_<pid>.log —
++    # the measurement that decides whether the graphs-x-spec wedge
++    # residual lives in the drafter's eager collectives or at the
++    # piece-replay boundary (KNOWN_ISSUES #11).
+     def propose(
+         self,
++        *args: Any,
++        **kwargs: Any,
++    ) -> torch.Tensor:
++        _fr.log("propose begin")
++        try:
++            return self._propose_impl(*args, **kwargs)
++        finally:
++            _fr.log("propose end")
++
++    # llm-scaler v27 (KNOWN_ISSUES #11): every drafter collective (head
++    # all-reduces, vocab-parallel argmax gathers) is routed through a
++    # dedicated oneCCL communicator for the duration of the call - see
++    # vllm/v1/spec_decode/drafter_comm.py. VLLM_XPU_DRAFTER_PG=0 restores
++    # the stock shared-TP-communicator behavior.
++    @with_drafter_communicator
++    def _propose_impl(
++        self,
+         # [num_tokens]
+         target_token_ids: torch.Tensor,
+         # [num_tokens] or [3, num_tokens] when M-RoPE is enabled
+@@ -477,7 +542,8 @@
+                 slot_mapping_size, common_attn_metadata.slot_mapping
+             ),
+         ):
+-            ret_hidden_states = self.model(**model_kwargs)
++            with spec_seg("dforward"):  # llm-scaler v20 A2
++                ret_hidden_states = self.model(**model_kwargs)
+             if not self.model_returns_tuple():
+                 last_hidden_states = ret_hidden_states
+                 hidden_states = last_hidden_states
+@@ -1461,6 +1527,9 @@
+                 )
+ 
+     @torch.inference_mode()
++    # llm-scaler v27: keep drafter warmup/dummy_run collectives on the same
++    # dedicated communicator as real propose() calls (no-op while capturing).
++    @with_drafter_communicator
+     def dummy_run(
+         self,
+         num_tokens: int,

@@ -1,0 +1,51 @@
+--- a/vllm/v1/worker/mamba_utils.py	2026-09-03 09:34:31.204610120 +0000
++++ b/vllm/v1/worker/mamba_utils.py	2026-09-03 09:34:22.445994351 +0000
+@@ -271,3 +271,48 @@
+             if src_block_idx == dest_block_idx:
+                 num_accepted_tokens_cpu[i] = 1
+     do_mamba_copy_block(copy_bufs)
++
++
++def run_deferred_postprocess(model_runner, rows):
++    """llm-scaler v32: align-mode postprocess deferred from the previous
++    step's _update_states_after_model_execute.
++
++    Counts are on host (async pinned copy, event already synced by the
++    caller, still in PREVIOUS-step order -- the _prepare_inputs remap has
++    not run yet at the execute_model entry consumption point). Per-request
++    arithmetic uses the N-step snapshots stashed at deferral. Rows whose
++    request finished/dropped, or whose mamba state pointer moved since
++    (preempt/resume re-migration), are skipped: their copies are either
++    useless (dead state) or obsolete (handled by the migration path).
++    """
++    copy_bufs = model_runner._get_mamba_copy_bufs()
++    mamba_group_ids = copy_bufs.mamba_group_ids
++    mamba_spec = copy_bufs.mamba_spec
++    block_size = mamba_spec.block_size
++    cpu = model_runner.input_batch.num_accepted_tokens_cpu
++    copy_bufs.offset = 0
++    for i, (rid, computed, sched, draft, src) in enumerate(rows):
++        if rid not in model_runner.requests:
++            continue
++        if src < 0 or model_runner.mamba_state_idx.get(rid, -1) != src:
++            continue
++        running = computed + sched - draft
++        newc = running + int(cpu[i]) - 1
++        aligned = newc // block_size * block_size
++        if aligned >= running:
++            bias = aligned - running
++            dest = aligned // block_size - 1
++            collect_mamba_copy_meta(
++                copy_bufs,
++                model_runner.kv_cache_config,
++                model_runner.model.get_mamba_state_copy_func(),
++                mamba_group_ids,
++                src,
++                dest,
++                bias,
++                model_runner.requests[rid],
++                model_runner.compilation_config.static_forward_context,
++            )
++            if src == dest:
++                cpu[i] = 1
++    do_mamba_copy_block(copy_bufs)

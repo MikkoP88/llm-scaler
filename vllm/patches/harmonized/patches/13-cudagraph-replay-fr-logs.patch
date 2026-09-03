@@ -1,0 +1,21 @@
+--- a/vllm/v1/worker/gpu/cudagraph_utils.py	2026-09-03 09:34:29.790511222 +0000
++++ b/vllm/v1/worker/gpu/cudagraph_utils.py	2026-09-03 09:34:20.785876773 +0000
+@@ -28,6 +28,8 @@
+ from vllm.v1.worker.gpu.cp_utils import prepare_dcp_local_seq_lens
+ from vllm.v1.worker.gpu.input_batch import InputBatch, InputBuffers
+ from vllm.v1.worker.gpu.model_states.interface import ModelState
++
++import fr as _fr  # llm-scaler v28dbg flight recorder (site-packages root)
+ from vllm.v1.worker.utils import AttentionGroup
+ 
+ logger = init_logger(__name__)
+@@ -275,7 +277,9 @@
+         # cannot see. Without this, replay could overwrite static buffers
+         # while those copies are still in flight.
+         get_offloader().sync_prev_onload()
++        _fr.log(f"replay begin desc={desc}")  # llm-scaler v28dbg
+         self.graphs[desc].replay()
++        _fr.log("replay end")  # llm-scaler v28dbg
+ 
+ 
+ class ModelCudaGraphManager(CudaGraphManager):

@@ -1,0 +1,330 @@
+--- a/vllm/v1/attention/backends/turboquant_attn.py	2026-09-03 09:34:26.945311639 +0000
++++ b/vllm/v1/attention/backends/turboquant_attn.py	2026-09-03 09:34:17.474641408 +0000
+@@ -52,6 +52,7 @@
+     _tq_full_dequant_kv,
+     _use_fp8_e4b15,
+     triton_turboquant_decode_attention,
++    triton_turboquant_mq_decode_attention,
+ )
+ from vllm.v1.attention.ops.triton_turboquant_store import triton_turboquant_store
+ from vllm.v1.worker.workspace import (
+@@ -72,6 +73,27 @@
+ # per continuation, eliminating the O(N²/chunk_size) collapse at long context.
+ _CONTINUATION_DECODE_THRESHOLD = 128
+ 
++# llm-scaler v19: multi-query verify fast path. Speculative verify steps
++# (and tiny continuation chunks) with 1 < q_len ≤ 8 run ONE multi-query
++# kernel call that scores all query rows per KV tile, instead of q_len
++# synthetic single-token decode calls that each re-scan the full
++# compressed context (~q_len x KV bandwidth). Roll back with
++# VLLM_TQ_MQ_VERIFY=0 (synthetic-decode path is kept).
++_TQ_MQ_VERIFY = os.getenv("VLLM_TQ_MQ_VERIFY", "1") != "0"
++# One-time marker for the v21 non-causal draft path (host-side log only,
++# never reads device memory in the hot path).
++_TQ_NC_MQ_LOGGED = False
++_TQ_MQ_MAX_Q = max(2, int(os.getenv("VLLM_TQ_MQ_MAX_Q", "8") or 8))
++
++# llm-scaler v19b: spec-verify XPU graphs must capture the continuation
++# path (KV-cache-reading kernels), never the raw-KV flash fast path.
++# Capture dummies have seq_len == q_len, so without this the fast path
++# fires at capture and every replay attends ONLY the in-batch verify
++# tokens — the target never sees the cached context (#TQ-blind-verify:
++# near-zero acceptance + "blank message" hallucinations). Decode graphs
++# (q_len == 1) are unaffected. Roll back with VLLM_TQ_VERIFY_GRAPH_FIX=0.
++_TQ_VERIFY_GRAPH_FIX = os.getenv("VLLM_TQ_VERIFY_GRAPH_FIX", "1") != "0"
++
+ # Shared grow-only dequant buffers for _continuation_prefill when the
+ # workspace manager is locked (PIECEWISE graphs). Full-attention layers
+ # execute sequentially, so a single (k, v) pair shared across all layers
+@@ -171,6 +193,29 @@
+         return (num_blocks, block_size, num_kv_heads, tq_config.slot_size_aligned)
+ 
+     @classmethod
++    def get_kv_cache_block_dim(
++        cls,
++        block_size: int,
++        num_kv_heads: int,
++        head_size: int,
++        cache_dtype_str: str = "auto",
++    ) -> int:
++        # llm-scaler v21c: the probe result is dtype-independent for TQ
++        # (num_blocks is always dim 0), but the base implementation derives
++        # its sentinel shape through get_kv_cache_shape, which parses
++        # cache_dtype_str. In a mixed-dtype runner (v21 draft-KV policy,
++        # e.g. an fp8 target pool next to a k8v4 DFlash draft pool) the
++        # runner passes ITS dtype here, which is not a TQ preset, and pool
++        # init died with "Unknown TurboQuant cache dtype: 'fp8_e4m3'" in
++        # _update_hybrid_attention_mamba_layout. Probe with a valid preset;
++        # the returned dim is identical across presets.
++        if not cache_dtype_str.startswith("turboquant_"):
++            cache_dtype_str = "turboquant_k8v4"
++        return super().get_kv_cache_block_dim(
++            block_size, num_kv_heads, head_size, cache_dtype_str
++        )
++
++    @classmethod
+     def supports_kv_cache_dtype(cls, kv_cache_dtype: CacheDType | None) -> bool:
+         if kv_cache_dtype is None:
+             return False
+@@ -201,6 +246,14 @@
+     # without per-step D2H syncs.
+     query_start_loc_cpu: torch.Tensor | None = None
+     seq_lens_cpu: torch.Tensor | None = None
++    # llm-scaler v21: causal mask flag. True = standard causal attention
++    # (target prefill/decode/spec-verify). False = DFlash draft steps, whose
++    # full-attention draft layers must attend NON-causally (every query row
++    # sees the whole stored context incl. the current chunk). Honored by the
++    # _prefill_attention continuation paths; the pure-decode path is mask-
++    # invariant (q_len == 1). DFlash asserts metadata.causal is False for
++    # non-SWA draft layers, so the field must exist and be reported.
++    causal: bool = True
+ 
+ 
+ class TurboQuantMetadataBuilder(AttentionMetadataBuilder[TurboQuantMetadata]):
+@@ -216,9 +269,24 @@
+         self, common_attn_metadata: CommonAttentionMetadata
+     ) -> TurboQuantMetadata:
+         attn_metadata = self.build(0, common_attn_metadata)
+-        # Set seq_lens to 1 so CUDA graph capture is fast
+-        # (real seq_lens are filled at replay time).
+-        attn_metadata.seq_lens.fill_(1)
++        # llm-scaler v19b: multi-token (spec-verify) captures must not take
++        # the raw-KV flash fast path in _prefill_attention. The dummy batch
++        # has seq_len == q_len == num_spec_tokens, so max_query_len ==
++        # max_seq_len would bake flash attention over ONLY the in-batch
++        # verify tokens into the graph; replays then never read the KV
++        # cache (#TQ-blind-verify). Force the continuation path instead —
++        # its kernels derive the attention extent from the dynamic
++        # seq_lens/block_table buffers, which are refreshed at replay.
++        # Keep seq_lens small so capture-time kernel work stays trivial.
++        if _TQ_VERIFY_GRAPH_FIX and attn_metadata.max_query_len > 1:
++            attn_metadata.max_seq_len = attn_metadata.max_query_len + 1
++            if attn_metadata.seq_lens_cpu is not None:
++                attn_metadata.seq_lens_cpu.fill_(attn_metadata.max_query_len + 1)
++            attn_metadata.seq_lens.fill_(attn_metadata.max_query_len)
++        else:
++            # Set seq_lens to 1 so CUDA graph capture is fast
++            # (real seq_lens are filled at replay time).
++            attn_metadata.seq_lens.fill_(1)
+         return attn_metadata
+ 
+     def build(self, common_prefix_len, common_attn_metadata, fast_build=False):
+@@ -246,7 +314,41 @@
+             num_decode_tokens=num_decode_tokens,
+             query_start_loc_cpu=cam.query_start_loc_cpu,
+             seq_lens_cpu=cam.seq_lens_cpu_upper_bound,
++            causal=getattr(cam, "causal", True),
++        )
++
++    def build_for_drafting(
++        self,
++        common_attn_metadata: CommonAttentionMetadata,
++        draft_index: int,
++    ) -> TurboQuantMetadata:
++        """llm-scaler v21: metadata for the DFlash draft step (TQ draft KV).
++
++        The draft propose batch is heterogeneous: per-request query length =
++        accepted+1 in 1..k+1, and unlike the target runner the drafter does
++        not reorder_batch, so decode-style (q_len == 1) requests are NOT
++        guaranteed to precede prefill-style (q_len > 1) ones. The mixed path
++        in TurboQuantAttentionImpl.forward splits on that decodes-first
++        ordering, so for a genuinely mixed batch force the pure-prefill path:
++        its per-request continuation loop handles any query-length mix
++        (q_len == 1 rows take the synthetic-decode path, q_len > 1 rows the
++        multi-query kernel; both read the dynamic seq_lens/block_table
++        buffers). Pure-decode and pure-prefill batches keep their natural
++        fast paths untouched.
++        """
++        attn_metadata = self.build(
++            common_prefix_len=0,
++            common_attn_metadata=common_attn_metadata,
++            fast_build=True,
+         )
++        if (
++            attn_metadata.num_decodes > 0
++            and attn_metadata.num_decode_tokens < attn_metadata.num_actual_tokens
++        ):
++            attn_metadata.num_decodes = 0
++            attn_metadata.num_decode_tokens = 0
++            attn_metadata.is_prefill = True
++        return attn_metadata
+ 
+ 
+ class TurboQuantAttentionImpl(AttentionImpl["TurboQuantMetadata"]):
+@@ -414,6 +516,7 @@
+         cu_seqlens_k: torch.Tensor,
+         max_seqlen_q: int,
+         max_seqlen_k: int,
++        causal: bool = True,
+     ) -> torch.Tensor:
+         # fa_utils.get_flash_attn_version() returns None on backends that
+         # should not pass an explicit fa_version kwarg.
+@@ -427,7 +530,7 @@
+                 max_seqlen_q=max_seqlen_q,
+                 max_seqlen_k=max_seqlen_k,
+                 softmax_scale=self.scale,
+-                causal=True,
++                causal=causal,
+             )
+         return flash_attn_varlen_func(
+             q=q,
+@@ -438,7 +541,7 @@
+             max_seqlen_q=max_seqlen_q,
+             max_seqlen_k=max_seqlen_k,
+             softmax_scale=self.scale,
+-            causal=True,
++            causal=causal,
+             fa_version=self.fa_version,
+         )
+ 
+@@ -683,6 +786,10 @@
+     ) -> torch.Tensor:
+         N, Hq, D = query.shape
+ 
++        # llm-scaler v21: causal mask flag from metadata (False only for
++        # DFlash draft steps — non-causal over the stored context).
++        causal = getattr(attn_metadata, "causal", True)
++
+         # Fast path: use flash_attn for first-chunk prefills (all K/V in batch).
+         # max_query_len == max_seq_len means no request has prior cached KV.
+         # Both are Python ints — no GPU sync.
+@@ -695,6 +802,7 @@
+                 cu_seqlens_k=attn_metadata.query_start_loc,
+                 max_seqlen_q=attn_metadata.max_query_len,
+                 max_seqlen_k=attn_metadata.max_query_len,
++                causal=causal,
+             )
+ 
+         # Continuation or no flash_attn: per-request attention.
+@@ -723,15 +831,6 @@
+         # to avoid per-request host→device tensor creation.
+         if not hasattr(self, "_cu_2"):
+             self._cu_2 = torch.zeros(2, device=query.device, dtype=torch.int32)
+-        # Cache arange on self (avoid per-call kernel launch).
+-        _max_seq = attn_metadata.max_seq_len
+-        _ac: torch.Tensor | None = getattr(self, "_arange_cache", None)
+-        if _ac is None or _ac.shape[0] <= _max_seq:
+-            _ac = torch.arange(
+-                0, _max_seq + 1, device=query.device, dtype=attn_metadata.seq_lens.dtype
+-            )
+-            self._arange_cache = _ac
+-        _arange_cache: torch.Tensor = _ac
+ 
+         for i in range(num_reqs):
+             q_start = qsl[i]
+@@ -782,24 +881,97 @@
+                 if q_len <= _CONTINUATION_DECODE_THRESHOLD:
+                     # Fast path: treat each query as a decode request
+                     # with incremental seq_lens for causal masking.
+-                    # Slice from pre-built arange (no kernel launch)
+-                    synth_seq_lens = _arange_cache[cached_len + 1 : seq_len + 1]
+-                    synth_bt = attn_metadata.block_table[i : i + 1].expand(q_len, -1)
+-                    out = triton_turboquant_decode_attention(
+-                        query=q_seq,
+-                        kv_cache=kv_cache,
+-                        block_table=synth_bt,
+-                        seq_lens=synth_seq_lens,
+-                        Pi=Pi,
+-                        centroids=centroids,
+-                        scale=self.scale,
+-                        mse_bits=self.tq_config.key_mse_bits,
+-                        key_packed_size=self.tq_config.key_packed_size,
+-                        value_quant_bits=(self.tq_config.effective_value_quant_bits),
+-                        key_fp8=self.tq_config.key_fp8,
+-                        norm_correction=self.tq_config.norm_correction,
+-                        PiT=PiT,
+-                    )
++                    # llm-scaler v19b: derive per-row causal limits from the
++                    # DYNAMIC seq_lens buffer (seq_lens[i] - (q_len-1) + row)
++                    # instead of slicing a static arange with capture-time
++                    # CPU scalars. Inside a captured graph the subtraction
++                    # re-executes at replay with the refreshed seq_lens, so
++                    # the attention extent is always the real context length.
++                    if _TQ_MQ_VERIFY and 1 < q_len <= _TQ_MQ_MAX_Q:
++                        # llm-scaler v19: single multi-query kernel call —
++                        # one pass over the compressed KV for all q_len
++                        # rows (spec verify / tiny continuation chunk).
++                        # Causal: row-0 limit is cached_len + 1 (the kernel
++                        # derives the remaining rows' ramp internally).
++                        # v21: non-causal DFlash draft steps route here too
++                        # (q0 = FULL seq_len, every row attends the stored
++                        # context) — replaces the q_len full-context
++                        # rescans of the synthetic-decode path below.
++                        if not causal:
++                            global _TQ_NC_MQ_LOGGED
++                            if not _TQ_NC_MQ_LOGGED:
++                                _TQ_NC_MQ_LOGGED = True
++                                logger.info(
++                                    "TurboQuant non-causal MQ draft attention"
++                                    " active (v21): DFlash draft steps use the"
++                                    " multi-query kernel (q_len=%d).",
++                                    q_len,
++                                )
++                        out = triton_turboquant_mq_decode_attention(
++                            query=q_seq,
++                            kv_cache=kv_cache,
++                            block_table=attn_metadata.block_table[i : i + 1],
++                            q0_seq_lens=(
++                                (
++                                    attn_metadata.seq_lens[i : i + 1]
++                                    - (q_len - 1)
++                                )
++                                if causal
++                                else attn_metadata.seq_lens[i : i + 1]
++                            ),
++                            Pi=Pi,
++                            centroids=centroids,
++                            scale=self.scale,
++                            mse_bits=self.tq_config.key_mse_bits,
++                            key_packed_size=self.tq_config.key_packed_size,
++                            value_quant_bits=(
++                                self.tq_config.effective_value_quant_bits
++                            ),
++                            key_fp8=self.tq_config.key_fp8,
++                            norm_correction=self.tq_config.norm_correction,
++                            PiT=PiT,
++                            non_causal=(not causal),
++                        )
++                    else:
++                        # Synthetic decode: one single-token decode call
++                        # per query row (v18 behavior; VLLM_TQ_MQ_VERIFY=0).
++                        # v21: also the NON-CAUSAL path for DFlash draft
++                        # steps — every row attends to the FULL stored
++                        # seq_len (the chunk's K/V were already stored by
++                        # do_kv_cache_update via the drafter's precompute),
++                        # instead of the causal ramp seq_len - (q_len-1) + r.
++                        synth_bt = attn_metadata.block_table[i : i + 1].expand(
++                            q_len, -1
++                        )
++                        if causal:
++                            synth_dyn = (
++                                attn_metadata.seq_lens[i : i + 1]
++                                + torch.arange(
++                                    q_len,
++                                    device=attn_metadata.seq_lens.device,
++                                    dtype=attn_metadata.seq_lens.dtype,
++                                )
++                                - (q_len - 1)
++                            )
++                        else:
++                            synth_dyn = attn_metadata.seq_lens[i : i + 1].repeat(
++                                q_len
++                            )
++                        out = triton_turboquant_decode_attention(
++                            query=q_seq,
++                            kv_cache=kv_cache,
++                            block_table=synth_bt,
++                            seq_lens=synth_dyn,
++                            Pi=Pi,
++                            centroids=centroids,
++                            scale=self.scale,
++                            mse_bits=self.tq_config.key_mse_bits,
++                            key_packed_size=self.tq_config.key_packed_size,
++                            value_quant_bits=(self.tq_config.effective_value_quant_bits),
++                            key_fp8=self.tq_config.key_fp8,
++                            norm_correction=self.tq_config.norm_correction,
++                            PiT=PiT,
++                        )
+                 else:
+                     # Large continuation: dequant cached K/V and use
+                     # flash_attn for better throughput.

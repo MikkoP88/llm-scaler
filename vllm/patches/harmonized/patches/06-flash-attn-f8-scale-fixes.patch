@@ -1,0 +1,254 @@
+--- a/vllm/v1/attention/backends/flash_attn.py	2026-09-03 09:34:26.453277032 +0000
++++ b/vllm/v1/attention/backends/flash_attn.py	2026-09-03 09:34:16.951604139 +0000
+@@ -11,6 +11,14 @@
+ import numpy as np
+ import torch
+ 
++# llm-scaler v19c (KNOWN_ISSUES #07): float(layer._k_scale) below is a D2H
++# sync; inside XPU graph capture it raises "wait method cannot be used for an
++# event associated with a command graph" and kills boot for
++# fp8 KV x nospec x FULL_DECODE_ONLY graphs (4/4 deterministic). Fix caches
++# the static load-time scales as python floats; VLLM_ESIMD_F8_SCALE_FIX=0
++# restores the original (capture-crashing) read for A/B.
++_ESIMD_F8_SCALE_FIX = os.getenv("VLLM_ESIMD_F8_SCALE_FIX", "1") != "0"
++
+ from vllm.model_executor.layers.attention import Attention
+ from vllm.platforms import current_platform
+ from vllm.utils.torch_utils import (
+@@ -599,6 +607,17 @@
+         if envs.VLLM_BATCH_INVARIANT:
+             max_num_splits = 1
+ 
++        # llm-scaler v34: pin FA2 KV split count (#18 bimodality fix).
++        # VLLM_XPU_FA2_PIN_SPLITS=N (N>=1) forces an exact, batch-state
++        # invariant split count without touching backend selection.
++        import os as _os34
++        try:
++            _v34_pin_splits = int(_os34.environ.get("VLLM_XPU_FA2_PIN_SPLITS", "0"))
++        except ValueError:
++            _v34_pin_splits = 0
++        if _v34_pin_splits >= 1:
++            max_num_splits = _v34_pin_splits
++
+         def schedule(
+             batch_size, cu_query_lens, max_query_len, seqlens, max_seq_len, causal
+         ):
+@@ -823,6 +842,11 @@
+             logits_soft_cap = 0
+         self.logits_soft_cap = logits_soft_cap
+         self.kv_sharing_target_layer_name = kv_sharing_target_layer_name
++        # llm-scaler v19c (#07): per-layer fp8 KV descale factors, cached as
++        # python floats at the first eager call so the ESIMD decode fast path
++        # never D2H-syncs inside XPU graph capture. Keyed by id(layer); the
++        # scale tensors are static after model load.
++        self._esimd_kv_scales: dict[int, tuple[float, float]] = {}
+ 
+         self.num_queries_per_kv = self.num_heads // self.num_kv_heads
+ 
+@@ -1098,6 +1122,16 @@
+                     # to flash_attn_varlen_func, which handles bf16/eager
+                     # correctly. DISABLE_ESIMD_PAGE_ATTN=1 remains a manual
+                     # opt-out.
++                    # llm-scaler v38: fp8 decode must not use the ESIMD kernel
++                    # (#18 root cause: eagle_ops.page_attn_decode is
++                    # run-to-run nondeterministic on fp8 KV — see
++                    # v38_esimd_reroute.py header. vxk FA2 is deterministic,
++                    # correct, and faster. A/B force-back:
++                    # VLLM_XPU_ALLOW_ESIMD_F8=1.)
++                    and not (
++                        self.kv_cache_dtype.startswith("fp8")
++                        and os.environ.get(
++                            "VLLM_XPU_ALLOW_ESIMD_F8", "0") != "1")
+                     and query.dtype == torch.float16
+                     and os.environ.get(
+                         "VLLM_XPU_ENABLE_XPU_GRAPH", "0") not in ("", "0")
+@@ -1133,14 +1167,37 @@
+                                 if self.kv_cache_dtype == "fp8_e5m2"
+                                 else torch.float8_e4m3fn)
+                             _kv_for_esimd = kv_cache.view(_kv_dtype)
+-                            _k_scale = float(layer._k_scale)
+-                            _v_scale = float(layer._v_scale)
++                            # llm-scaler v19c (#07): float(layer._k/_v_scale)
++                            # D2H-syncs and kills XPU graph capture (see the
++                            # module-top comment). Cache the static python
++                            # floats at the first eager call; if capture ever
++                            # precedes every eager call, skip the ESIMD fast
++                            # path (falls through to flash_attn_varlen_func)
++                            # rather than bake wrong scales into the graph.
++                            _sc = self._esimd_kv_scales.get(id(layer))
++                            if _sc is None and _ESIMD_F8_SCALE_FIX:
++                                if torch.xpu.is_current_stream_capturing():
++                                    eagle_ops = None  # uncached at capture
++                                else:
++                                    _sc = self._esimd_kv_scales[id(layer)] = (
++                                        float(layer._k_scale),
++                                        float(layer._v_scale),
++                                    )
++                            if _sc is not None or not _ESIMD_F8_SCALE_FIX:
++                                if _sc is not None:
++                                    _k_scale, _v_scale = _sc
++                                else:
++                                    _k_scale = float(layer._k_scale)
++                                    _v_scale = float(layer._v_scale)
++                            else:
++                                _k_scale = 1.0  # unused (fast path skipped)
++                                _v_scale = 1.0
+                         else:
+                             _kv_for_esimd = kv_cache
+                             _k_scale = 1.0
+                             _v_scale = 1.0
+ 
+-                        if _need_pad:
++                        if _need_pad and eagle_ops is not None:
+                             _padded_gqa = ((_gqa + 3) // 4) * 4
+                             _pad_per_kv = _padded_gqa - _gqa
+                             _bs, _, _hd = _q.shape
+@@ -1158,7 +1215,8 @@
+                                 _bs, _num_kv, _padded_gqa, _hd)
+                             _o.copy_(_o_grouped[:, :, :_gqa, :].reshape(
+                                 _bs, _num_q, _hd))
+-                        elif _gqa == 2 or _gqa >= 4:
++                        elif eagle_ops is not None and (
++                                _gqa == 2 or _gqa >= 4):
+                             eagle_ops.page_attn_decode(
+                                 _q, _kv_for_esimd, block_table, seqused_k,
+                                 _o, 1, attn_metadata.max_seq_len,
+@@ -1235,6 +1293,36 @@
+                         )
+                     return output
+ 
++                # llm-scaler v33: paged multi-query (MTP verify) on fp8 KV
++                # -> Triton 3D split path (C++ branch1 serializes: 2 CTAs
++                # per GPU scan the whole context, 249.5 ms/step @65k).
++                if (
++                    _V33_TRITON_MQ3D
++                    and isinstance(self.kv_cache_dtype, str)
++                    and self.kv_cache_dtype.startswith("fp8")
++                    and block_table is not None
++                    and seqused_k is not None
++                    and 1 < max_seqlen_q <= 8
++                    and attn_metadata.causal is True
++                    and sliding_window_size[0] < 0
++                    and not self.logits_soft_cap
++                    and q_descale is None
++                ):
++                    _v33_mq3d_varlen(
++                        self,
++                        query[:num_actual_tokens],
++                        key_cache,
++                        value_cache,
++                        output[:num_actual_tokens],
++                        cu_seqlens_q,
++                        seqused_k,
++                        max_seqlen_q,
++                        max_seqlen_k,
++                        block_table,
++                        k_descale,
++                        v_descale,
++                    )
++                    return output
+                 flash_attn_varlen_func(
+                     q=query[:num_actual_tokens],
+                     k=key_cache,
+@@ -1666,3 +1754,101 @@
+ 
+     # Merge prefix and suffix outputs, and store the result in output.
+     merge_attn_states(output, prefix_output, prefix_lse, suffix_output, suffix_lse)
++
++
++# ---------------------------------------------------------------------------
++# llm-scaler v33: Triton 3D split path for paged multi-query (MTP verify)
++# on fp8 KV caches. See the routing block in FlashAttentionImpl.forward.
++# Rollback: VLLM_XPU_TRITON_MQ3D=0. Segment count tunable via
++# VLLM_XPU_MQ3D_SEGS (default 64).
++_V33_TRITON_MQ3D = os.environ.get("VLLM_XPU_TRITON_MQ3D", "1") != "0"
++_V33_MQ3D_SEGS = max(1, int(os.environ.get("VLLM_XPU_MQ3D_SEGS", "64") or 64))
++
++
++def _v33_mq3d_varlen(
++    impl,
++    q,
++    key_cache,
++    value_cache,
++    out,
++    cu_seqlens_q,
++    seqused_k,
++    max_seqlen_q,
++    max_seqlen_k,
++    block_table,
++    k_descale,
++    v_descale,
++):
++    """Small-q paged fp8 verify via the Triton unified 3D split kernel."""
++    from vllm.v1.attention.ops.triton_unified_attention import unified_attention
++    from vllm.v1.kv_cache_interface import KVQuantMode
++
++    ntok, Hq, D = q.shape
++    D_pad = 1 << (D - 1).bit_length()
++    nseg = _V33_MQ3D_SEGS
++    bufs = getattr(impl, "_v33_mq3d_bufs", None)
++    if (
++        bufs is None
++        or bufs[0].shape[0] < ntok
++        or bufs[0].shape[1] < Hq
++        or bufs[0].shape[2] < nseg
++    ):
++        bufs = (
++            torch.empty(
++                ntok, Hq, nseg, D_pad, dtype=torch.float32, device=q.device
++            ),
++            torch.empty(ntok, Hq, nseg, dtype=torch.float32, device=q.device),
++            torch.empty(ntok, Hq, nseg, dtype=torch.float32, device=q.device),
++        )
++        impl._v33_mq3d_bufs = bufs
++    seg_o, seg_m, seg_e = bufs
++    # llm-scaler v34: cached descale/ones + kv8 dtype + views — the KV
++    # cache tensors, cache dtype and device are immutable per boot; the
++    # per-call ones()/view() churn below was pure host overhead on the
++    # every-step verify path. Same objects reused -> bit-identical.
++    st = getattr(impl, "_v34_mq3d_state", None)
++    if st is None or st[0] is not key_cache or st[1] is not value_cache:
++        kv8 = (
++            torch.float8_e5m2
++            if impl.kv_cache_dtype == "fp8_e5m2"
++            else torch.float8_e4m3fn
++        )
++        ones = torch.ones(1, dtype=torch.float32, device=q.device)
++        st = (
++            key_cache,
++            value_cache,
++            kv8,
++            key_cache.view(kv8),
++            value_cache.view(kv8),
++            ones,
++        )
++        impl._v34_mq3d_state = st
++    _, _, kv8, k8_view, v8_view, ones = st
++    if k_descale is None:
++        k_descale = ones
++    if v_descale is None:
++        v_descale = ones
++    unified_attention(
++        q=q,
++        k=k8_view,
++        v=v8_view,
++        out=out,
++        cu_seqlens_q=cu_seqlens_q,
++        max_seqlen_q=max_seqlen_q,
++        seqused_k=seqused_k,
++        max_seqlen_k=max_seqlen_k,
++        softmax_scale=impl.scale,
++        causal=True,
++        window_size=(-1, -1),
++        block_table=block_table,
++        softcap=0.0,
++        q_descale=None,
++        k_descale=k_descale,
++        v_descale=v_descale,
++        seq_threshold_3D=4096,
++        num_par_softmax_segments=nseg,
++        softmax_segm_output=seg_o[:ntok],
++        softmax_segm_max=seg_m[:ntok],
++        softmax_segm_expsum=seg_e[:ntok],
++        kv_quant_mode=KVQuantMode.FP8_PER_TENSOR,
++    )

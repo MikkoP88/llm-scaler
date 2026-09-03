@@ -1,0 +1,101 @@
+--- a/vllm/platforms/xpu.py	2026-09-03 09:34:25.957242138 +0000
++++ b/vllm/platforms/xpu.py	2026-09-03 09:34:16.414565823 +0000
+@@ -316,10 +316,41 @@
+         if compilation_config.compile_sizes is None:
+             compilation_config.compile_sizes = []
+ 
++        # llm-scaler v30 safety gate (KNOWN_ISSUES #11): piecewise XPU graph
++        # replay plus speculative decoding and TP>1 can permanently livelock
++        # both devices. Force fully eager execution for the unsafe combination.
++        # The explicit override exists only for diagnosis of the unsafe path.
++        _allow_unsafe_spec_tp_graph = os.environ.get(
++            "VLLM_XPU_ALLOW_UNSAFE_SPEC_TP_GRAPH", "0"
++        ).strip().lower() in ("1", "true", "yes", "on")
++        _unsafe_spec_tp_graph = (
++            vllm_config.speculative_config is not None
++            and parallel_config.tensor_parallel_size > 1
++            and not _allow_unsafe_spec_tp_graph
++        )
++
+         attention_config = vllm_config.attention_config
+         if attention_config.backend is None:
+             attention_config.backend = AttentionBackendEnum.FLASH_ATTN
+-        if not supports_xpu_graph():
++        if _unsafe_spec_tp_graph:
++            # llm-scaler v31.1 (#11 fix): the v31 discriminator matrix
++            # convicted the inductor-compiled pieces x speculative decode,
++            # not XPU graph capture itself. Disable only the compile path
++            # and keep whole-step XPU graph capture (validated clean through
++            # the full 65k battery at 17.7 tok/s canonical, +79% over the
++            # eager posture). The bypass env still restores the wedging
++            # compiled configuration for diagnosis.
++            os.environ["TORCH_COMPILE_DISABLE"] = "1"
++            logger.warning(
++                "inductor compilation disabled for speculative decoding "
++                "with TP=%d: compiled pieces livelock both devices at "
++                ">=32k context, while whole-step XPU graph capture alone "
++                "is clean and faster (KNOWN_ISSUES #11, v31.1). Set "
++                "VLLM_XPU_ALLOW_UNSAFE_SPEC_TP_GRAPH=1 to reproduce the "
++                "wedging compiled configuration.",
++                parallel_config.tensor_parallel_size,
++            )
++        elif not supports_xpu_graph():
+             compilation_config.cudagraph_mode = CUDAGraphMode.NONE
+             logger.warning(
+                 "XPU Graph is not supported in the current PyTorch version, "
+@@ -395,6 +426,46 @@
+                         if _op not in compilation_config.splitting_ops:
+                             compilation_config.splitting_ops.append(_op)
+ 
++                # llm-scaler v31 (#11 arm): under spec+TP>1 the permanent
++                # livelock lives in captured pieces replayed by spec steps --
++                # the v30 fence arm proved eager collectives retire cleanly
++                # and the NEXT captured piece spins forever (KNOWN_ISSUES
++                # #11, oneCCL-version-independent). Split the GDN kernels out
++                # of the captured pieces so they execute eager between them:
++                # same kernels, same numerics, no replay of the suspect
++                # surface. Capture-size filtering cannot achieve this: the
++                # runner pads small steps UP to the smallest retained size.
++                # VLLM_XPU_SPEC_EAGER_GDN=0 disables the arm;
++                # VLLM_XPU_SPEC_EXTRA_SPLITS=csv overrides the op list
++                # (unmatched names are harmless).
++                if (
++                    vllm_config.speculative_config is not None
++                    and parallel_config.tensor_parallel_size > 1
++                    and os.environ.get("VLLM_XPU_SPEC_EAGER_GDN", "1")
++                    .strip()
++                    .lower()
++                    in ("1", "true", "yes", "on")
++                ):
++                    _spec_splits = [
++                        s.strip()
++                        for s in os.environ.get(
++                            "VLLM_XPU_SPEC_EXTRA_SPLITS",
++                            "vllm::gdn_attention_core,"
++                            "vllm::gdn_attention_core_xpu,vllm::gdn_attention",
++                        ).split(",")
++                        if s.strip()
++                    ]
++                    for _op in _spec_splits:
++                        if _op not in compilation_config.splitting_ops:
++                            compilation_config.splitting_ops.append(_op)
++                    logger.warning(
++                        "spec+TP=%d: GDN kernels split out of XPU graph "
++                        "pieces (eager GDN between captured pieces) for "
++                        "KNOWN_ISSUES #11 (v31 arm). splits=%s",
++                        parallel_config.tensor_parallel_size,
++                        _spec_splits,
++                    )
++
+                 # XPU TP capture stability: with TP>1 the oneCCL collectives
+                 # run eagerly between the captured pieces (see _comm_splits
+                 # above), and each capture item re-rolls that dice under the
+@@ -454,6 +525,8 @@
+                             _sizes[-1],
+                         )
+ 
++        # llm-scaler v35: #12 clamp removed - k>3 user-selectable,
++        # docs-only warning (KNOWN_ISSUES #12, README addendum 3).
+         # Disable fusion passes not yet supported on XPU.
+         pass_config = compilation_config.pass_config
+         fusion_passes_to_disable = {

@@ -1,0 +1,23 @@
+# harmonized manifest — full prod-tree divergence vs the pristine wheel
+# base (llm-scaler-vllm-adv:v14, vllm-0.21.1.dev0+gad7125a43.d20260826.xpu).
+# Format: <sp-rel-path> <pristine-md5|-> <prod-md5>  (LF bytes, host md5sum)
+# Patched tree == llm-scaler-vllm-adv:v38 (== current prod lineage).
+vllm/config/vllm.py 9284db37c44066d334b2ff2216276eec 79555dc5dd5e2e3c7a0e096eec62be07
+vllm/distributed/device_communicators/xpu_communicator.py 8116bb3c34ec0d114d8bae3e971e001e c2a842bbe8eefcafe6162bf6d0f05fb8
+vllm/model_executor/layers/attention/attention.py 98ad1d8ece8c6cae41ce817264cc04cd d3321f582d82d4585ac7dfa829ceda80
+vllm/model_executor/models/qwen3_5_mtp.py 57d9ea1b07b5eef0487accf5fe407a0d 2d03d2c3dabcc8899b76e1780aa5b84d
+vllm/platforms/xpu.py 6177cd5f04294f3188ca54d12b711e59 123c5dee9ce0920b58f2699fcb2bb40d
+vllm/v1/attention/backends/flash_attn.py f14b441440974f66904c0560b264f18d 1000effd71318a29b7e3279114084e4d
+vllm/v1/attention/backends/turboquant_attn.py b3ba14385f6a97eecb45ae3422d6c1cd 9ac3aa1027db95f208b39179ae37cbe1
+vllm/v1/attention/ops/triton_turboquant_decode.py ea40287ec647014a1d3bffab700f54f7 e0408c1536a030e42590dd2fbcf57cbd
+vllm/v1/attention/ops/triton_unified_attention.py ffd3b71923f7ff0b0a446b487419821b acc28df0f3887f0b2c98e4d348e05a4a
+vllm/v1/core/sched/utils.py 3fb6e1d37e9173fda630b1f5be0a56e3 c396f0e17167bd942d4e2428e37dfa17
+vllm/v1/spec_decode/dflash.py 734f0cc46e97abff6440f4807e2921ed 0ed3a93384a9f487be0c234c8ad83e14
+vllm/v1/spec_decode/llm_base_proposer.py b26d023c26e251614494e208a3cecab3 0371f785cfadb51a34adcbbe3b0e8e19
+vllm/v1/worker/gpu/cudagraph_utils.py 010d0f260b63d956faa7edaa6b251f53 ee6efac4f114ec8ba355c3e47899f50e
+vllm/v1/worker/gpu_model_runner.py cb931a3b3288c0de7838ddc621d7f079 a6a4937a7233f6ae921fd8301f36eed8
+vllm/v1/worker/gpu_worker.py 6ad6fe978714116d710533398841d0c9 d84f343061fd22204e7906c185fd91be
+vllm/v1/worker/mamba_utils.py c13b37a9b063f58385f9d62d0bfeb393 a8b598acdbc3a6931383563bb9ef6030
+fr.py - 6ffe7cc368f1ef431c2a74f81162b680
+vllm/v1/spec_decode/drafter_comm.py - 73fbda6192b27a4c6ed1d533804505de
+vllm/v1/spec_decode/spec_timing.py - 09e932bd5b08735bf20ca2674923315d

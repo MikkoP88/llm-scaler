@@ -1,0 +1,224 @@
+--- a/vllm/v1/spec_decode/dflash.py	2026-09-03 09:34:28.829443895 +0000
++++ b/vllm/v1/spec_decode/dflash.py	2026-09-03 09:34:19.675797991 +0000
+@@ -2,6 +2,7 @@
+ # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+ 
+ import os
++import time
+ from typing import Any
+ 
+ import torch
+@@ -14,10 +15,18 @@
+ from vllm.v1.attention.backend import CommonAttentionMetadata
+ from vllm.v1.kv_cache_interface import KVCacheConfig
+ from vllm.v1.spec_decode.llm_base_proposer import SpecDecodeBaseProposer
++from vllm.v1.spec_decode.spec_timing import spec_seg  # llm-scaler v20 A2
+ from vllm.v1.spec_decode.utils import copy_and_expand_dflash_inputs_kernel
+ 
+ logger = init_logger(__name__)
+ 
++# llm-scaler v21c: largest --max-model-len for which an uncompressed
++# (auto/bf16) DFlash draft KV pool still fits next to a turboquant_4bit_nc
++# target pool (measured: 6.67 GiB available / (13.09 GiB / 262144 tokens)
++# ~= 133.6k tokens). Above it the draft pool switches to turboquant_k8v4
++# so spec decode reaches nospec VRAM parity.
++_TQ4NC_DRAFT_PARITY_MINLEN = 131072
++
+ 
+ class DFlashProposer(SpecDecodeBaseProposer):
+     def __init__(
+@@ -131,6 +140,7 @@
+             self._markov_prev_tokens = next_token_ids
+         else:
+             self._markov_prev_tokens = None
++        _t0 = time.monotonic()
+         draft_token_ids = super().propose(
+             target_token_ids,
+             target_positions,
+@@ -143,6 +153,21 @@
+             num_rejected_tokens_gpu=num_rejected_tokens_gpu,
+             slot_mappings=slot_mappings,
+         )
++        _propose_dt = time.monotonic() - _t0
++        # Host-side stall guard: the eager oneCCL collectives spin-wait on
++        # LR-flagged ze queues with no job timeout; if the peer rank's host
++        # thread is late by more than the xe GuC preempt timeout (~640 ms),
++        # the wait kernel trips an engine reset (UR error 20 for both
++        # ranks; devcoredump "LR job cleanup"). Catch candidate stall
++        # windows (>150 ms) in the log so the next occurrence pinpoints
++        # which phase exceeded the budget.
++        if _propose_dt > 0.15:
++            logger.warning(
++                "DFLASH_STALL propose() took %.3fs (host-side wall; "
++                "peer-late windows >0.64s trip the xe GuC preempt "
++                "watchdog -> engine reset)",
++                _propose_dt,
++            )
+         if (
+             self._dspark_adaptive
+             and self._draft_confidence is not None
+@@ -180,6 +205,10 @@
+         return truncated
+ 
+     def _greedy_sample(self, hidden_states: torch.Tensor) -> torch.Tensor:
++        with spec_seg("greedy"):  # llm-scaler v20 A2
++            return self._greedy_sample_impl(hidden_states)
++
++    def _greedy_sample_impl(self, hidden_states: torch.Tensor) -> torch.Tensor:
+         model = self.model
+         markov_head = getattr(model, "markov_head", None)
+         if markov_head is None or self._markov_prev_tokens is None:
+@@ -281,9 +310,36 @@
+                 )
+                 self._markov_bias_buf = bias_buf
+             w2_t = w2.t()
++            # Embedding gather through a grow-only scratch (index_select
++            # with out=): nn.Embedding(x) allocates a fresh tensor per call,
++            # and 4 fresh per-step temporaries churn the XPU caching
++            # allocator — the same slow-path/fragmentation pressure that
++            # wedges the xe engines under PIECEWISE XPU graphs when free
++            # memory runs low (see the _markov_bias_buf note above).
++            w1_w = markov_head.markov_w1.weight
++            latent_buf = getattr(self, "_markov_latent_buf", None)
++            if (
++                latent_buf is None
++                or latent_buf.shape[0] < batch_size
++                or latent_buf.shape[1] != w1_w.shape[1]
++                or latent_buf.dtype != w1_w.dtype
++                or latent_buf.device != w1_w.device
++            ):
++                capacity = (
++                    max(batch_size, latent_buf.shape[0] * 2)
++                    if latent_buf is not None and latent_buf.device == w1_w.device
++                    else batch_size
++                )
++                latent_buf = torch.empty(
++                    (capacity, w1_w.shape[1]),
++                    dtype=w1_w.dtype,
++                    device=w1_w.device,
++                )
++                self._markov_latent_buf = latent_buf
+             prev_tokens = self._markov_prev_tokens
+             for i in range(num_spec):
+-                latent = markov_head.get_prev_embeddings(prev_tokens)
++                latent = latent_buf[:batch_size]
++                torch.index_select(w1_w, 0, prev_tokens.long(), out=latent)
+                 bias = bias_buf[:batch_size]
+                 torch.mm(latent, w2_t, out=bias)
+                 logits[:, i, :].add_(bias)
+@@ -412,9 +468,95 @@
+     @override
+     def _create_draft_vllm_config(self) -> VllmConfig:
+         base = super()._create_draft_vllm_config()
+-        # TurboQuant kernels are causal-only and cannot serve DFlash's
+-        # non-causal drafting attention; run the drafter unquantized.
++        # llm-scaler v21: honor --kv-cache-dtype for the draft model KV pool.
++        # The v19-era guard below rewrote turboquant_* -> "auto", which forced
++        # an uncompressed (bf16) draft KV pool and cost ~4x VRAM: with spec
++        # decode, --max-model-len 262144 + turboquant_4bit_nc then needed
++        # 13.09 GiB KV vs 6.67 GiB available (est. max len 126976) while the
++        # same config without spec booted fine.
++        #
++        # The guard's stated reason ("TurboQuant kernels are causal-only and
++        # cannot serve DFlash's non-causal drafting attention") describes a
++        # real contract -- DFlash draft steps build metadata with causal=False
++        # (every draft query row attends the full stored context; the chunk's
++        # K/V are pre-stored by precompute) -- but v21 makes TQ honor it: the
++        # causal flag travels on TurboQuantMetadata, build_for_drafting
++        # produces the non-causal draft metadata, and the multi-query decode
++        # kernel gained a NON_CAUSAL variant (v21b). use_non_causal stays
++        # False below only because the TQ backend does not declare
++        # supports_non_causal; the flag itself is unused by this path.
++        tq_draft_kv = os.environ.get("VLLM_DFLASH_TQ_DRAFT_KV", "1") == "1"
++        # llm-scaler v21c: draft-only KV dtype, tq4nc targets only. Two
++        # regimes split at the parity boundary where an uncompressed
++        # (auto/bf16) draft pool next to a tq4nc target pool no longer
++        # fits: 262144 tokens needed 13.09 GiB vs 6.67 GiB available
++        # (est. max len 126976) -- i.e. 6.67 GiB / (13.09 GiB / 262144)
++        # ~= 133.6k tokens, so 131072 is the largest standard maxlen that
++        # still fits.
++        #   <= 131072: draft KV "auto" (v20 behavior, bf16 flash pool). A
++        #     compressed draft pool measurably costs acceptance with a tq4nc
++        #     target (E[len] ~1.78 vs ~2.0-2.4) and the TQ draft backend
++        #     adds ~5-10 ms/step vs flash -- neither cost is justified when
++        #     VRAM is not the constraint.
++        #   >  131072: draft KV turboquant_k8v4. Parity -- the point of the
++        #     v21 fix: the user's tq4nc k2 @262144 config boots like nospec
++        #     (348,612-token pool) and reaches 33.16 tok/s steady vs the
++        #     32.77-32.78 nospec twin, zero resets, E[len] ~1.78. k8v4 over
++        #     tq4nc draft: equal measured acceptance; this is the cell that
++        #     was validated at 262144.
++        # Non-tq4nc targets keep the plain inherit (v20 behavior): the
++        # pre-v21 guard only ever rewrote turboquant_* dtypes, so e.g. fp8
++        # targets already ran an fp8 draft pool in v20 (v20 c2 33.34 vs
++        # v21b 33.66 tok/s) and need no policy. Set
++        # VLLM_DFLASH_DRAFT_KV_DTYPE to override either regime with any
++        # --kv-cache-dtype value (e.g. "auto", "turboquant_k8v4",
++        # "turboquant_4bit_nc").
++        draft_kv_override = os.environ.get("VLLM_DFLASH_DRAFT_KV_DTYPE", "")
++        if (
++            tq_draft_kv
++            and not draft_kv_override
++            and base.cache_config.cache_dtype == "turboquant_4bit_nc"
++        ):
++            if base.model_config.max_model_len > _TQ4NC_DRAFT_PARITY_MINLEN:
++                draft_kv_override = "turboquant_k8v4"
++            else:
++                draft_kv_override = "auto"
++        if draft_kv_override and draft_kv_override != base.cache_config.cache_dtype:
++            logger.info(
++                "DFlash draft KV dtype (v21): draft pool uses %s while the "
++                "target pool uses %s (max_model_len %d; %s).",
++                draft_kv_override,
++                base.cache_config.cache_dtype,
++                base.model_config.max_model_len,
++                "auto policy: uncompressed draft below the VRAM parity "
++                "boundary, k8v4 above"
++                if not os.environ.get("VLLM_DFLASH_DRAFT_KV_DTYPE")
++                else "VLLM_DFLASH_DRAFT_KV_DTYPE override",
++            )
++            base = replace(
++                base,
++                cache_config=replace(
++                    base.cache_config, cache_dtype=draft_kv_override
++                ),
++            )
+         if base.cache_config.cache_dtype.startswith("turboquant_"):
++            if tq_draft_kv:
++                logger.info(
++                    "TurboQuant draft KV cache enabled (v21): draft model KV "
++                    "pool uses %s (was 'auto' pre-v21); DFlash's non-causal "
++                    "drafting attention is served by the v21 metadata flag "
++                    "and the NON_CAUSAL multi-query kernel.",
++                    base.cache_config.cache_dtype,
++                )
++                return replace(
++                    base,
++                    attention_config=replace(
++                        base.attention_config,
++                        use_non_causal=False,
++                    ),
++                )
++            # Rollback (VLLM_DFLASH_TQ_DRAFT_KV=0): v20 behavior - run the
++            # drafter unquantized (causal-only TQ kernels rationale).
+             logger.info(
+                 "TurboQuant KV cache dtype %s is unsupported for DFlash"
+                 " drafting; using 'auto' for the draft model KV cache.",
+@@ -717,11 +859,12 @@
+         num_context = self._dflash_num_context
+ 
+         try:
+-            self.model.precompute_and_store_context_kv(
+-                self._dflash_hidden_states,  # Shape is already [num_context, hidden_size]
+-                self._context_positions_buffer[:num_context],
+-                self._get_dflash_context_slot_mapping(num_context),
+-            )
++            with spec_seg("precompute"):  # llm-scaler v20 A2
++                self.model.precompute_and_store_context_kv(
++                    self._dflash_hidden_states,  # Shape is already [num_context, hidden_size]
++                    self._context_positions_buffer[:num_context],
++                    self._get_dflash_context_slot_mapping(num_context),
++                )
+         finally:
+             self._dflash_hidden_states = None
+         if os.environ.get("DFLASH_DEBUG") == "1" and not getattr(

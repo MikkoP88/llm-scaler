@@ -1,0 +1,85 @@
+--- a/vllm/v1/core/sched/utils.py	2026-09-03 09:34:28.337409386 +0000
++++ b/vllm/v1/core/sched/utils.py	2026-09-03 09:34:19.125493228 +0000
+@@ -3,9 +3,12 @@
+ import contextlib
+ from collections.abc import Sequence
+ 
++from vllm.logger import init_logger
+ from vllm.sampling_params import RepetitionDetectionParams
+ from vllm.v1.request import Request, RequestStatus
+ 
++logger = init_logger(__name__)
++
+ 
+ def _has_repeating_pattern(
+     token_ids: Sequence[int],
+@@ -101,19 +104,65 @@
+         return False
+ 
+     last_token_id = request.output_token_ids[-1]
+-    if last_token_id == sampling_params.eos_token_id:
++    # llm-scaler fix (#05d): with ignore_eos=True the request processor
++    # must strip eos_token_id and must not match stop_token_ids. Guard
++    # both paths anyway so a stale/leaked eos can never terminate an
++    # ignore_eos stream early, and log loud diagnostics if the invariant
++    # is ever violated at runtime.
++    if (
++        sampling_params.ignore_eos
++        and sampling_params.eos_token_id is not None
++    ):
++        logger.warning(
++            "FINISH_DIAG request %s: ignore_eos=True but eos_token_id=%s "
++            "is still set (processor invariant violated).",
++            request.request_id,
++            sampling_params.eos_token_id,
++        )
++    if (
++        not sampling_params.ignore_eos
++        and sampling_params.eos_token_id is not None
++        and last_token_id == sampling_params.eos_token_id
++    ):
+         request.status = RequestStatus.FINISHED_STOPPED
+         return True
+ 
+     if last_token_id in (sampling_params.stop_token_ids or ()):
+-        request.status = RequestStatus.FINISHED_STOPPED
+-        request.stop_reason = last_token_id
+-        return True
++        if sampling_params.ignore_eos:
++            logger.warning(
++                "FINISH_DIAG request %s: ignore_eos=True but token %d "
++                "matched stop_token_ids=%s - refusing to stop (#05d "
++                "guard). num_output_tokens=%d",
++                request.request_id,
++                last_token_id,
++                sampling_params.stop_token_ids,
++                request.num_output_tokens,
++            )
++        else:
++            request.status = RequestStatus.FINISHED_STOPPED
++            request.stop_reason = last_token_id
++            return True
+     if (
+         request.num_tokens >= max_model_len
+         or request.num_output_tokens >= request.max_tokens
+     ):
+         request.status = RequestStatus.FINISHED_LENGTH_CAPPED
++        if sampling_params.ignore_eos and (
++            request.num_output_tokens < request.max_tokens
++        ):
++            # The #05d signature: an ignore_eos stream ending early on
++            # the window cap. Normal (min==max pinned) length caps stay
++            # silent to keep logs clean.
++            logger.warning(
++                "FINISH_DIAG request %s: ignore_eos=True stream "
++                "length-capped at num_tokens=%d (max_model_len=%d) with "
++                "num_output_tokens=%d < max_tokens=%d.",
++                request.request_id,
++                request.num_tokens,
++                max_model_len,
++                request.num_output_tokens,
++                request.max_tokens,
++            )
+         return True
+ 
+     repetition_detection = sampling_params.repetition_detection

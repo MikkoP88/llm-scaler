@@ -1,0 +1,173 @@
+--- a/vllm/v1/worker/gpu_worker.py	2026-09-03 09:34:30.750578387 +0000
++++ b/vllm/v1/worker/gpu_worker.py	2026-09-03 09:34:21.880954369 +0000
+@@ -2,6 +2,7 @@
+ # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+ """A GPU worker class."""
+ 
++import faulthandler
+ import gc
+ import os
+ from collections.abc import Callable
+@@ -66,6 +67,26 @@
+ 
+ logger = init_logger(__name__)
+ 
++
++def _xpu_capture_stab(phase: str) -> None:
++    """llm-scaler v29 FIX-2: quiesce the XPU allocator before compile/capture.
++
++    Wedge susceptibility for graphs+spec decode is decided at capture time
++    (piece layout / allocator state; KNOWN_ISSUES #11 v28dbg update). Called
++    at two points in init_device_memory: before the compile/warmup loop and
++    immediately before cudagraph capture. No-op unless XPU and
++    VLLM_XPU_CAPTURE_STAB is unset/on.
++    """
++    if os.environ.get("VLLM_XPU_CAPTURE_STAB", "1") in ("", "0"):
++        return
++    if not torch.xpu.is_available():
++        return
++    torch.xpu.synchronize()
++    torch.xpu.empty_cache()
++    torch.xpu.synchronize()
++    logger.info("llm-scaler v29 capture-stab: %s (allocator reset)", phase)
++
++
+ if TYPE_CHECKING:
+     from vllm.model_executor.model_loader.tensorizer import TensorizerConfig
+     from vllm.v1.worker.gpu_model_runner import GPUModelRunner
+@@ -572,6 +593,19 @@
+ 
+     @instrument(span_name="Warmup (GPU)")
+     def compile_or_warm_up_model(self) -> CompilationTimes:
++        # llm-scaler fix (#03): XPU capture/warmup can wedge silently
++        # (post-capture hang on a faulted eager kernel) while the
++        # container keeps looking healthy. Fail fast: dump all thread
++        # backtraces and hard-exit so the supervisor can restart the
++        # engine instead of holding a dead port forever.
++        # VLLM_XPU_WARMUP_TIMEOUT_S=0 disables.
++        warmup_timeout_s = int(os.getenv("VLLM_XPU_WARMUP_TIMEOUT_S", "1800"))
++        if warmup_timeout_s > 0:
++            faulthandler.dump_traceback_later(warmup_timeout_s, exit=True)
++            logger.info(
++                "Warmup watchdog armed: %d s (VLLM_XPU_WARMUP_TIMEOUT_S).",
++                warmup_timeout_s,
++            )
+         warmup_sizes: list[int] = []
+ 
+         if self.vllm_config.compilation_config.mode == CompilationMode.VLLM_COMPILE:
+@@ -597,6 +631,16 @@
+                 if not any(x in compile_range for x in all_sizes):
+                     warmup_sizes.append(compile_range.end)
+ 
++        # llm-scaler v29 FIX-2 (boot-lottery stabilization): wedge
++        # susceptibility for graphs+spec is decided at capture time (piece
++        # layout / allocator state; KNOWN_ISSUES #11 v28dbg update). Reset
++        # the XPU allocator and drain all queues right before the
++        # compile/warmup sequence AND again before cudagraph capture, so
++        # every boot starts capture from a defragmented, quiesced pool
++        # instead of whatever the profile/dummy-run phase happened to
++        # leave behind. VLLM_XPU_CAPTURE_STAB=0 disables.
++        _xpu_capture_stab("pre-compile")
++
+         # We skip EPLB here since we don't want to record dummy metrics
+         for size in sorted(warmup_sizes, reverse=True):
+             logger.info("Compile and warming up model for size %d", size)
+@@ -609,6 +653,7 @@
+ 
+         cuda_graph_memory_bytes = 0
+         if not self.model_config.enforce_eager:
++            _xpu_capture_stab("pre-capture")
+             cuda_graph_memory_bytes = self.model_runner.capture_model()
+ 
+         # Compare actual vs estimated CUDA graph memory (if we did profiling)
+@@ -698,12 +743,73 @@
+                 self.scheduler_config.max_num_batched_tokens,
+             )
+ 
+-            # We skip EPLB here since we don't want to record dummy metrics
+-            hidden_states, last_hidden_states = self.model_runner._dummy_run(
+-                num_tokens=max_num_reqs,
+-                skip_eplb=True,
+-                cudagraph_runtime_mode=CUDAGraphMode.NONE,
+-            )
++            # llm-scaler fix (#05b + #03 boot-fault): the eager
++            # post-capture _dummy_run (max_num_reqs x spec tokens, a
++            # never-captured shape) faults on two XPU paths:
++            #   - TurboQuant KV: the TQ triton kernels wedge the queue
++            #     (v14 battery: k8v4/k3v4_nc post-capture hangs)
++            #   - XPU graphs + dflash drafter: the spec-shaped TP
++            #     collectives fault the xe ccs engine 4/4 launches
++            #     (v17 battery a8/a9/a9r/a9r3: guc_id 24/38 ccs reset
++            #     ~60s post-capture; graphs-off + spec boots healthy,
++            #     graphs-on + nospec boots healthy)
++            # The captured graphs have already exercised the kernels;
++            # only the sampler/logits buffer warmup matters, so
++            # synthesize hidden states instead of an eager forward.
++            # VLLM_XPU_TQ_SAFE_WARMUP / VLLM_XPU_SPEC_SAFE_WARMUP = 0
++            # restore upstream behavior per path.
++            kv_dtype = self.cache_config.cache_dtype
++            tq_kv = isinstance(kv_dtype, str) and kv_dtype.startswith("turboquant")
++            skip_reason = None
++            if tq_kv and os.getenv("VLLM_XPU_TQ_SAFE_WARMUP", "1") == "1":
++                skip_reason = f"turboquant KV ({kv_dtype})"
++            elif (
++                self.vllm_config.speculative_config is not None
++                and os.getenv("VLLM_XPU_ENABLE_XPU_GRAPH", "0") == "1"
++                and os.getenv("VLLM_XPU_SPEC_SAFE_WARMUP", "1") == "1"
++            ):
++                skip_reason = "XPU graphs + speculative drafter (#03 boot-fault)"
++            # hybrid configs (e.g. Qwen3_5Config) nest hidden_size inside
++            # text_config; resolve via the canonical accessor and fall back
++            # to the upstream eager path if it cannot be determined.
++            hidden_size = None
++            if skip_reason is not None:
++                hf_cfg = self.model_config.hf_config
++                text_cfg = (
++                    hf_cfg.get_text_config()
++                    if hasattr(hf_cfg, "get_text_config")
++                    else hf_cfg
++                )
++                hidden_size = getattr(text_cfg, "hidden_size", None)
++            if hidden_size is not None:
++                spec_tokens = 1
++                spec_cfg = self.vllm_config.speculative_config
++                if spec_cfg is not None and spec_cfg.num_speculative_tokens:
++                    spec_tokens = spec_cfg.num_speculative_tokens + 1
++                dtype = self.model_config.dtype
++                if isinstance(dtype, str):
++                    dtype = getattr(torch, dtype, torch.bfloat16)
++                hidden_states = torch.zeros(
++                    max_num_reqs * spec_tokens,
++                    hidden_size,
++                    dtype=dtype,
++                    device=self.model_runner.device,
++                )
++                last_hidden_states = hidden_states
++                logger.warning(
++                    "llm-scaler: skipping eager post-capture _dummy_run "
++                    "- %s - synthesized hidden states %s for sampler "
++                    "warmup (#05b/#03 fix).",
++                    skip_reason,
++                    tuple(hidden_states.shape),
++                )
++            else:
++                # We skip EPLB here since we don't want to record dummy metrics
++                hidden_states, last_hidden_states = self.model_runner._dummy_run(
++                    num_tokens=max_num_reqs,
++                    skip_eplb=True,
++                    cudagraph_runtime_mode=CUDAGraphMode.NONE,
++                )
+             if self.model_runner.is_pooling_model:
+                 self.model_runner._dummy_pooler_run(hidden_states)
+             else:
+@@ -721,6 +827,10 @@
+ 
+         activate_triton_jit_monitor()
+ 
++        if warmup_timeout_s > 0:
++            faulthandler.cancel_dump_traceback_later()
++            logger.info("Warmup watchdog disarmed; warmup completed.")
++
+         return CompilationTimes(
+             language_model=self.compilation_config.compilation_time,
+             encoder=self.compilation_config.encoder_compilation_time,

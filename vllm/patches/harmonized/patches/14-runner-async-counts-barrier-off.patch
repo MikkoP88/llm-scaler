@@ -1,0 +1,293 @@
+--- a/vllm/v1/worker/gpu_model_runner.py	2026-09-03 09:34:30.265544465 +0000
++++ b/vllm/v1/worker/gpu_model_runner.py	2026-09-03 09:34:21.329915334 +0000
+@@ -9,6 +9,7 @@
+ from collections import defaultdict
+ from collections.abc import Callable, Iterable, Iterator, Sequence
+ from contextlib import contextmanager
++import os
+ from copy import copy, deepcopy
+ from dataclasses import dataclass, replace
+ from functools import reduce
+@@ -49,6 +50,24 @@
+     BatchDescriptor,
+     set_forward_context,
+ )
++from vllm.v1.spec_decode.spec_timing import spec_seg, spec_step  # llm-scaler v20 A2
++
++# llm-scaler v25 (KNOWN_ISSUES #11): every-step pre-drafter drain for the
++# spec drafter. Resolved once at import; VLLM_XPU_SPEC_DRAFT_BARRIER=0
++# restores the v22 behavior (no barrier). Optional context gate
++# VLLM_XPU_SPEC_DRAFT_BARRIER_MIN_CTX (default 0 = drain on every spec step;
++# e.g. 16384 keeps short-context traffic on the async fast path).
++# See propose_draft_token_ids for the rationale.
++# llm-scaler v37: draft-barrier default OFF (v33 keeper: fp8+spec 2k
++# +13.7%, 4bit+spec 2k +28.5%, hashes unchanged, no wedge sustained;
++# the v2x oneCCL mitigation is obsolete under the v31.1 posture).
++# VLLM_XPU_SPEC_DRAFT_BARRIER=1 restores the drain for diagnosis.
++_SPEC_DRAFT_BARRIER = (
++    os.environ.get("VLLM_XPU_SPEC_DRAFT_BARRIER", "0") == "1"
++)
++_SPEC_DRAFT_BARRIER_MIN_CTX = int(
++    os.environ.get("VLLM_XPU_SPEC_DRAFT_BARRIER_MIN_CTX", "0")
++)
+ from vllm.logger import init_logger
+ from vllm.lora.layers import LoRAMapping, LoRAMappingType
+ from vllm.model_executor.layers.attention import Attention, MLAAttention
+@@ -1470,20 +1489,34 @@
+         self.num_accepted_tokens.gpu[:num_reqs] = (output_token_ids != -1).sum(dim=1)
+ 
+         if self.cache_config.mamba_cache_mode == "align":
+-            for i, num_tokens in enumerate(
+-                self.num_accepted_tokens.gpu[:num_reqs].cpu().numpy()
+-            ):
+-                self.input_batch.num_accepted_tokens_cpu[i] = num_tokens
+-            mamba_utils.postprocess_mamba(
+-                scheduler_output,
+-                self.kv_cache_config,
+-                self.input_batch,
+-                self.requests,
+-                self.mamba_state_idx,
+-                self.compilation_config.static_forward_context,
+-                self.model.get_mamba_state_copy_func(),
+-                self._get_mamba_copy_bufs(),
++            # llm-scaler v32: async accepted-count D2H + deferred postprocess.
++            # The blocking .cpu().numpy() drain was the per-step serialization
++            # point (57% of worker host time, py-spy gpu_model_runner:1489).
++            # Counts travel via the pinned tensor + event (non-align
++            # transport); the postprocess runs at the NEXT execute_model
++            # entry, before _update_states, where req_ids/num_computed still
++            # hold this step's view. N-view per-request inputs are snapshotted
++            # here; consumption skips requests that finished or whose mamba
++            # state pointer moved (preempt/resume) in between.
++            self.input_batch.num_accepted_tokens_cpu_tensor[:num_reqs].copy_(
++                self.num_accepted_tokens.gpu[:num_reqs], non_blocking=True
+             )
++            assert self.num_accepted_tokens_event is not None
++            self.num_accepted_tokens_event.record()
++            _v32_nst = scheduler_output.num_scheduled_tokens
++            _v32_nsd = scheduler_output.scheduled_spec_decode_tokens
++            _v32_midx = self.mamba_state_idx
++            _v32_reqs = self.requests
++            self._v32_pending_pp = [
++                (
++                    _rid,
++                    _v32_reqs[_rid].num_computed_tokens,
++                    _v32_nst[_rid],
++                    len(_v32_nsd.get(_rid, [])),
++                    _v32_midx.get(_rid, -1),
++                )
++                for _rid in list(self.input_batch.req_ids)[:num_reqs]
++            ]
+         else:
+             self.input_batch.num_accepted_tokens_cpu_tensor[:num_reqs].copy_(
+                 self.num_accepted_tokens.gpu[:num_reqs], non_blocking=True
+@@ -3924,6 +3957,13 @@
+             self.synchronize_input_prep(),
+         ):
+             # Update persistent batch states.
++            _v32_pp = getattr(self, "_v32_pending_pp", None)
++            if _v32_pp is not None:
++                self._v32_pending_pp = None
++                # counts landed asynchronously during the previous step;
++                # one full engine round-trip of host work has elapsed.
++                self.num_accepted_tokens_event.synchronize()
++                mamba_utils.run_deferred_postprocess(self, _v32_pp)
+             deferred_state_corrections_fn = self._update_states(scheduler_output)
+ 
+             if has_ec_transfer() and not get_ec_transfer().is_consumer:
+@@ -4142,13 +4182,14 @@
+                 defer_finalize=defer_kv_connector_finalize,
+             ) as kv_connector_output,
+         ):
+-            model_output = self._model_forward(
+-                input_ids=input_ids,
+-                positions=positions,
+-                intermediate_tensors=intermediate_tensors,
+-                inputs_embeds=inputs_embeds,
+-                **model_kwargs,
+-            )
++            with spec_seg("tforward"):  # llm-scaler v20 A2
++                model_output = self._model_forward(
++                    input_ids=input_ids,
++                    positions=positions,
++                    intermediate_tensors=intermediate_tensors,
++                    inputs_embeds=inputs_embeds,
++                    **model_kwargs,
++                )
+ 
+         with record_function_or_nullcontext("gpu_model_runner: postprocess"):
+             if self.use_aux_hidden_state_outputs:
+@@ -4177,8 +4218,9 @@
+                         kv_connector_output,
+                     )
+ 
+-                sample_hidden_states = hidden_states[logits_indices]
+-                logits = self.model.compute_logits(sample_hidden_states)
++                with spec_seg("tlogits"):  # llm-scaler v20 A2
++                    sample_hidden_states = hidden_states[logits_indices]
++                    logits = self.model.compute_logits(sample_hidden_states)
+             else:
+                 # Rare case.
+                 assert not self.is_pooling_model
+@@ -4625,6 +4667,34 @@
+         num_scheduled_tokens = scheduler_output.total_num_scheduled_tokens
+         spec_config = self.speculative_config
+         assert spec_config is not None
++        spec_step()  # llm-scaler v20 A2: step wall boundary (one per engine step)
++        # llm-scaler v25 (KNOWN_ISSUES #11): every-step pre-drafter drain.
++        # With TP>1 the drafter (MTP/EAGLE/dflash) issues its own eager oneCCL
++        # collectives between the graphed verify replays. If the ranks reach
++        # the drafter skewed - one host still waiting in the align-mode
++        # .cpu() D2H drain, the peer already submitting head collectives -
++        # oneCCL's non-preemptible spin-wait kernels miss the rendezvous,
++        # the UR in-flight queue fills (v24 py-spy: appendUSMMemcpy never
++        # submits on either rank) and both engines burn forever: no GuC
++        # preempt reset (no competing queue work), dmesg clean, request
++        # stays Running until the client aborts.
++        # v23/v23-era barriers only fired on steps scheduling >= 512 tokens
++        # (prefill) - but the >=32k wedge forms during DECODE steps (bs*(k+1)
++        # tokens, e.g. 5 at single-stream k=4), which those barriers never
++        # covered. Env-matrix proof that no collective-side knob reaches it:
++        # E0 baseline 3/3 wedge, flag-only 2/3, tiny-gather bs=2 5/8,
++        # CCL_ENABLE_SYCL_KERNELS=0 still wedges. Draining this rank's queue
++        # here on EVERY spec step (both ranks execute the same step code, so
++        # both drain) bounds the peer-late window to host glue: the draft
++        # collectives always start from empty, symmetric queues.
++        # VLLM_XPU_SPEC_DRAFT_BARRIER_MIN_CTX gates by max running context
++        # (default 0 = always) so short-context traffic can keep the async
++        # fast path if the sync cost matters there.
++        if (
++            _SPEC_DRAFT_BARRIER
++            and common_attn_metadata.max_seq_len >= _SPEC_DRAFT_BARRIER_MIN_CTX
++        ):
++            torch.xpu.synchronize()
+         if spec_config.method == "ngram":
+             from vllm.v1.spec_decode.ngram_proposer import NgramProposer
+ 
+@@ -4881,18 +4951,19 @@
+             else:
+                 mm_embed_inputs = None
+ 
+-            draft_token_ids = self.drafter.propose(
+-                target_token_ids=target_token_ids,
+-                target_positions=target_positions,
+-                target_hidden_states=target_hidden_states,
+-                next_token_ids=next_token_ids,
+-                token_indices_to_sample=token_indices_to_sample,
+-                sampling_metadata=sampling_metadata,
+-                common_attn_metadata=common_attn_metadata,
+-                mm_embed_inputs=mm_embed_inputs,
+-                num_rejected_tokens_gpu=num_rejected_tokens_gpu,
+-                slot_mappings=slot_mappings,
+-            )
++            with spec_seg("propose"):  # llm-scaler v20 A2
++                draft_token_ids = self.drafter.propose(
++                    target_token_ids=target_token_ids,
++                    target_positions=target_positions,
++                    target_hidden_states=target_hidden_states,
++                    next_token_ids=next_token_ids,
++                    token_indices_to_sample=token_indices_to_sample,
++                    sampling_metadata=sampling_metadata,
++                    common_attn_metadata=common_attn_metadata,
++                    mm_embed_inputs=mm_embed_inputs,
++                    num_rejected_tokens_gpu=num_rejected_tokens_gpu,
++                    slot_mappings=slot_mappings,
++                )
+ 
+         return draft_token_ids
+ 
+@@ -4919,6 +4990,59 @@
+             scope="global",
+         )
+ 
++        # llm-scaler fix (#05e): the first oneCCL TP all-reduce (dflash
++        # drafter warmup) allocates its scratch arena lazily from device
++        # memory. With --gpu-memory-utilization 0.8 the KV pool has
++        # already consumed the headroom by then, so the collective dies
++        # with UR error 39 (OUT_OF_DEVICE_MEMORY) on ~1/4 of serve
++        # launches and the peer rank spin-wedges. Run one worst-case-size
++        # collective BEFORE the KV pool is sized: oneCCL grabs its arena
++        # from genuinely free memory, the driver-level free-memory
++        # snapshot used for KV sizing correctly excludes it, and gmu 0.8
++        # is restored (+22% KV pool vs the 0.75 workaround).
++        # VLLM_XPU_PREALLOC_CCL_ARENA=0 disables.
++        if (
++            os.getenv("VLLM_XPU_PREALLOC_CCL_ARENA", "1") == "1"
++            and current_platform.is_xpu()
++            and self.parallel_config.tensor_parallel_size > 1
++        ):
++            try:
++                from vllm.distributed import (
++                    tensor_model_parallel_all_reduce as _tp_all_reduce,
++                )
++
++                hidden_size = getattr(
++                    self.model_config.hf_config, "hidden_size", None
++                ) or 8192
++                # Worst-case all-reduce payload = one chunked-prefill
++                # batch of hidden states.
++                arena_tokens = min(
++                    int(
++                        self.vllm_config.scheduler_config.max_num_batched_tokens
++                    ),
++                    8192,
++                )
++                dtype = self.model_config.dtype
++                if isinstance(dtype, str):
++                    dtype = getattr(torch, dtype, torch.bfloat16)
++                arena = torch.zeros(
++                    arena_tokens, hidden_size, dtype=dtype, device=self.device
++                )
++                _tp_all_reduce(arena)
++                del arena
++                logger.info_once(
++                    "XPU TP: oneCCL scratch arena pre-allocated before "
++                    "KV pool sizing (llm-scaler #05e fix; restores "
++                    "--gpu-memory-utilization 0.8).",
++                    scope="global",
++                )
++            except Exception as e:
++                logger.warning(
++                    "oneCCL arena pre-allocation failed (continuing "
++                    "without it): %s",
++                    e,
++                )
++
+         if self.parallel_config.enable_eplb:
+             self.eplb_state = EplbState(self.parallel_config, self.device)
+             eplb_models = 0
+@@ -6801,6 +6925,34 @@
+             shape_block_size = kv_cache_spec.storage_block_size
+         else:
+             shape_block_size = kernel_block_size
++        if attn_backend.get_name() == "TURBOQUANT":
++            # llm-scaler v21c: derive the TQ slot size from the GROUP's own
++            # spec, never from the runner's cache_dtype. The DFlash drafter
++            # registers its TQ groups (built with the draft KV dtype) into
++            # this runner's group list; with a draft dtype different from
++            # the target's (v21 draft-KV policy), from_cache_dtype(
++            # runner_dtype) computed the wrong slot size and the pool view
++            # crashed (shape [.., 134] invalid for a 196-byte/page
++            # allocation). TQFullAttentionSpec.tq_slot_size is authored by
++            # the group's own backend, so it is authoritative here; the
++            # page_size_bytes division is the equivalent fallback (TQ's
++            # page = block_size * num_kv_heads * tq_slot_size, uint8).
++            tq_slot = getattr(kv_cache_spec, "tq_slot_size", 0)
++            if tq_slot > 0:
++                slot_size = tq_slot
++            else:
++                assert kv_cache_spec.page_size_bytes % (
++                    kv_cache_spec.block_size * kv_cache_spec.num_kv_heads
++                ) == 0, "TQ page not divisible by (block_size * num_kv_heads)"
++                slot_size = kv_cache_spec.page_size_bytes // (
++                    kv_cache_spec.block_size * kv_cache_spec.num_kv_heads
++                )
++            return (
++                num_blocks,
++                shape_block_size,
++                kv_cache_spec.num_kv_heads,
++                slot_size,
++            )
+         return attn_backend.get_kv_cache_shape(
+             num_blocks,
+             shape_block_size,

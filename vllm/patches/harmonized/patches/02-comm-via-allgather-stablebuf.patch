@@ -1,0 +1,111 @@
+--- a/vllm/distributed/device_communicators/xpu_communicator.py	2026-09-03 09:34:24.518726692 +0000
++++ b/vllm/distributed/device_communicators/xpu_communicator.py	2026-09-03 09:34:14.775448728 +0000
+@@ -13,6 +13,8 @@
+ 
+ from .base_device_communicator import DeviceCommunicatorBase
+ 
++import fr as _fr  # llm-scaler v28dbg flight recorder (site-packages root)
++
+ logger = init_logger(__name__)
+ _xpu_graph_replay_seen = False
+ _xpu_allreduce_retry_seq = 0
+@@ -24,6 +26,14 @@
+ _XPU_ALLREDUCE_GUARD_MIN_ROWS = int(
+     os.environ.get("VLLM_XPU_ALLREDUCE_GUARD_MIN_ROWS", "128")
+ )
++# llm-scaler v29 FIX-1: row cap for the VIA-allgather stable output buffer.
++# Decode all-reduces are [num_tokens, hidden] with num_tokens <= bs*(k+1)
++# (bs <= 64, k <= 4 typical), well under 512; ragged prefill chunk shapes
++# (up to MNBT rows) stay on the clone path so they cannot pin unbounded
++# cached memory.
++_XPU_VIA_STABLEBUF_MAX_ROWS = int(
++    os.environ.get("VLLM_XPU_VIA_STABLEBUF_MAX_ROWS", "512")
++)
+ 
+ 
+ def _env_enabled(name: str, default: bool) -> bool:
+@@ -133,8 +143,26 @@
+         self._xpu_allgather_fallback_buffers: dict[
+             tuple[torch.device, torch.dtype, tuple[int, ...]], list[torch.Tensor]
+         ] = {}
++        # llm-scaler v29 FIX-1: per-shape stable OUTPUT buffers for the
++        # VIA-allgather path (decode-shaped keys only, see the row cap).
++        self._xpu_via_out_buffers: dict[
++            tuple[torch.device, torch.dtype, tuple[int, ...]], torch.Tensor
++        ] = {}
+ 
+     def all_reduce(self, input_: torch.Tensor) -> torch.Tensor:
++        # llm-scaler v28dbg flight recorder: entry/exit around the whole
++        # collective so a hang localizes to it. The is_compiling() guard is
++        # load-bearing: dynamo traces through here during profile_run and
++        # faults on the f-string tensor method (verified boot crash).
++        if not torch.compiler.is_compiling():
++            _fr.log(f"AR begin numel={input_.numel()} via_env={_env_enabled('VLLM_XPU_ALLREDUCE_VIA_ALLGATHER', False)}")
++        try:
++            return self._all_reduce_impl(input_)
++        finally:
++            if not torch.compiler.is_compiling():
++                _fr.log("AR end")
++
++    def _all_reduce_impl(self, input_: torch.Tensor) -> torch.Tensor:
+         if os.environ.get("SKIP_ALL_REDUCE") == "1":
+             return input_
+         # ALLREDUCE_BOUNCE_FIX_v1: only bounce off the custom op when XPU
+@@ -177,7 +205,35 @@
+             and self.world_size > 1
+             and not torch.xpu.is_current_stream_capturing()
+         ):
+-            output = input_.clone()
++            # llm-scaler v29 FIX-1 (stable output buffer): the clone below
++            # ran once per call — tens of allocations per spec-decode step,
++            # exactly in the window where piecewise-captured graphs place
++            # their buffers against PYTORCH_XPU_ALLOC_CONF=
++            # expandable_segments:True, and wedge susceptibility is decided
++            # at capture time (KNOWN_ISSUES #11 v28dbg update). For
++            # decode-shaped, contiguous inputs we now reuse a per-shape
++            # output buffer (same stream-ordered reuse pattern as the
++            # gathered-buffer cache below: every consumer of the previous
++            # result is enqueued before the next overwrite). Row-capped so
++            # ragged prefill shapes cannot pin unbounded memory; those keep
++            # the clone. VLLM_XPU_VIA_STABLEBUF=0 restores clone-per-call;
++            # VLLM_XPU_VIA_STABLEBUF_MAX_ROWS tunes the cap (default 512:
++            # covers bs<=64 x (k+1)<=5 verify rows with margin).
++            rows = input_.shape[0] if input_.dim() >= 1 else 0
++            use_stable = (
++                _env_enabled("VLLM_XPU_VIA_STABLEBUF", True)
++                and input_.is_contiguous()
++                and 0 < rows <= _XPU_VIA_STABLEBUF_MAX_ROWS
++            )
++            if use_stable:
++                key = (input_.device, input_.dtype, tuple(input_.shape))
++                output = self._xpu_via_out_buffers.get(key)
++                if output is None:
++                    output = torch.empty_like(input_)
++                    self._xpu_via_out_buffers[key] = output
++                output.copy_(input_)
++            else:
++                output = input_.clone()
+             _xpu_allgather_allreduce(
+                 output,
+                 self.device_group,
+@@ -343,6 +399,20 @@
+         self,
+         input_: torch.Tensor | list[torch.Tensor],
+         dim: int = 0,
++        sizes: list[int] | None = None,
++    ):
++        if not torch.compiler.is_compiling():
++            _fr.log(f"AG begin dim={dim} sizes={sizes}")  # llm-scaler v28dbg
++        try:
++            return self._all_gatherv_impl(input_, dim, sizes)
++        finally:
++            if not torch.compiler.is_compiling():
++                _fr.log("AG end")
++
++    def _all_gatherv_impl(
++        self,
++        input_: torch.Tensor | list[torch.Tensor],
++        dim: int = 0,
+         sizes: list[int] | None = None,
+     ):
+         if dim != 0:

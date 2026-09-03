@@ -1,0 +1,18 @@
+--- a/vllm/model_executor/layers/attention/attention.py	2026-09-03 09:34:24.998174585 +0000
++++ b/vllm/model_executor/layers/attention/attention.py	2026-09-03 09:34:15.320487694 +0000
+@@ -164,7 +164,14 @@
+         assert isinstance(quant_method, BaseKVCacheMethod)
+         # TODO (mgoin): kv cache dtype should be specified in the FP8
+         # checkpoint config and become the "auto" behavior
+-        if layer.kv_cache_dtype == "fp8_e5m2":
++        # llm-scaler v34: e5m2-with-fp8-ckpt opt-in (KNOWN_ISSUES #19).
++        # Upstream rejects unconditionally; XPU stack handles e5m2 KV
++        # dtypes end-to-end, so allow it behind an explicit env for the
++        # probe lane. Scales remain the checkpoint's e4m3-calibrated ones.
++        import os as _os
++        if layer.kv_cache_dtype == "fp8_e5m2" and _os.environ.get(
++            "VLLM_XPU_ALLOW_E5M2_FP8_CKPT", "0"
++        ) != "1":
+             raise ValueError("fp8_e5m2 kv-cache is not supported with fp8 checkpoints.")
+         # If quantization is enabled, we make "k_scale" and "v_scale"
+         # parameters so that it can be loaded from the model checkpoint.

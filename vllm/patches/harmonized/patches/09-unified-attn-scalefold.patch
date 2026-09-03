@@ -1,0 +1,62 @@
+--- a/vllm/v1/attention/ops/triton_unified_attention.py	2026-09-03 09:34:27.888377882 +0000
++++ b/vllm/v1/attention/ops/triton_unified_attention.py	2026-09-03 09:34:18.584720436 +0000
+@@ -48,9 +48,10 @@
+       tensor-wide scale.
+     """
+     if KV_QUANT_MODE == 1:
+-        if Q.dtype.is_fp8():
+-            return data.to(Q.dtype)
+-        return (data.to(tl.float32) * tl.load(tensor_scale)).to(Q.dtype)
++        # llm-scaler v33: plain element cast — the per-tensor scale is
++        # applied on the S/P tiles in the main loop (16x fewer elements;
++        # identical math: s*(Q.K) == Q.(s*K), (P*s)@V == P@(s*V)).
++        return data.to(Q.dtype)
+     return data.to(Q.dtype)
+ 
+ 
+@@ -204,6 +205,11 @@
+     acc = tl.zeros([BLOCK_M, HEAD_SIZE_PADDED], dtype=tl.float32)
+ 
+     context_len = seq_len - cur_batch_query_len
++    # llm-scaler v33: hoist per-tensor fp8 scales (mode 1) for the
++    # S/P-tile application below.
++    if KV_QUANT_MODE == 1:
++        k_sc_v33 = tl.load(k_scale)
++        v_sc_v33 = tl.load(v_scale)
+ 
+     if USE_ALIBI_SLOPES:
+         alibi_slope = tl.load(
+@@ -311,6 +317,9 @@
+             # Per-token-head quant: fuse softmax_scale with per-head k_scale
+             # to avoid a separate BLOCK_M × TILE_SIZE multiply on S.
+             S += tl.dot(Q, K) * (scale * k_token_head_scales[None, :])
++        elif KV_QUANT_MODE == 1:
++            # llm-scaler v33: per-tensor fp8 — k_scale on the score tile.
++            S += (scale * k_sc_v33) * tl.dot(Q, K)
+         else:
+             S += scale * tl.dot(Q, K)
+ 
+@@ -361,6 +370,10 @@
+             # Per-token-head quant: apply v_scale to P instead of V.
+             P_v = (P * v_token_head_scales[None, :]).to(V.dtype)
+             acc += tl.dot(P_v, V)
++        elif KV_QUANT_MODE == 1:
++            # llm-scaler v33: per-tensor fp8 — v_scale on the P tile.
++            P_v33 = (P * v_sc_v33).to(V.dtype)
++            acc += tl.dot(P_v33, V)
+         else:
+             acc += tl.dot(P.to(V.dtype), V)
+ 
+@@ -658,7 +671,11 @@
+         or softmax_segm_output is None
+         or softmax_segm_max is None
+         or softmax_segm_expsum is None
+-        or max_seqlen_q > 1
++        # llm-scaler v33: allow the 3D split path for SMALL multi-query
++        # batches (MTP verify, q_len=k+1<=8). The per-row causal ramp and
++        # per-token segment reduction make it mathematically identical to
++        # the 2D path; 2D serializes verify-sized q through ~Hk CTAs.
++        or (max_seqlen_q > 1 and max_seqlen_q > 8)
+         or num_seqs > seq_threshold_3D
+         or is_batch_invariant
+     )
