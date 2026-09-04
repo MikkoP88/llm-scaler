@@ -71,6 +71,7 @@ manifest (finds every post-install edit + marker coverage).
 | `oneccl-wedge-forensics-v29/` | v29 | live wedge capture, named mechanism (oneCCL SYCL-kernel collective spin), exonerations, upstream ticket drafts |
 | `oneccl-wait-timeout/` | — | UNBUILT source-build recipe: convert #11 livelock into recoverable error at `ccl_executor::wait()` |
 | `kv-dtype-loop-study-v39/` | v39 | KV-dtype × perf/loop matrix (auto/fp8_e4m3/4bit/k8v4) + thinking-trap differential @4096/@8192 + decode env-knob sweep. Verdicts: TQ wins deep prefill; decode gap is triton-vs-ESIMD architectural (env knobs exhausted); "fp8 thinking loops" = model behavior, dtype-independent (fp16 baseline traps identically). See KNOWN_ISSUES #20 |
+| `dflash2-spec-port-v40/` | v40 | DFlash 2 drafter (upstream PR #52816: grouped depthwise convs + candidate-selector beam walk) ported onto the fork's DFlash v1 machinery, benchmarked vs MTP. Lane WORKS: acceptance 0.46–0.51 @k=7 (4.43 tok/step), correctness gate passed (bf16-draft + params_dtype sync + fp32 conv internals were the landmines), par with MTP @2k/conc8. NOT promoted: open acceptance-decay-with-context defect (72% @2k → 9% @74k, suspected wrong sliding-window range over precomputed context KV) gates any bake. See its NOTES.md |
 
 ## legacy/ — superseded eras
 
