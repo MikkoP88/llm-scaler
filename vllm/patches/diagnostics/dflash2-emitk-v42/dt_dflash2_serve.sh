@@ -30,6 +30,10 @@ if [ "${DFLASH2_EMIT_K:-7}" = "4" ] && [ "${DFLASH2_CGMODE:-FULL_DECODE_ONLY}" !
        "Use DFLASH2_CGMODE=NONE (eager, 2-5x slower) or k=3 / k=5."
   exit 2
 fi
+# v42 image bake: DFLASH2_IMG selects the lane image. Default = the
+# runtime-patch base (patchers applied by dt_dflash2_boot.sh at boot);
+# set DFLASH2_IMG=llm-scaler-exp:dflash2-v42 to boot the baked image
+# directly (its /root/.dflash2_patched marker skips the await-patch phase).
 docker rm -f lsv-test >/dev/null 2>&1
 docker run -d --name lsv-test \
   --device /dev/dri -v /dev/dri:/dev/dri --network host --ipc host \
@@ -61,7 +65,7 @@ docker run -d --name lsv-test \
   -v /models/qwen3.8-27b-dflash2:/models/dflash2:ro \
   -w /llm-scaler/vllm \
   --entrypoint /bin/bash \
-  llm-scaler-prod:v1 -c "if [ -f /root/.dflash2_patched ]; then exec /opt/venv/bin/python3 /opt/venv/bin/vllm serve \
+  ${DFLASH2_IMG:-llm-scaler-prod:v1} -c "if [ -f /root/.dflash2_patched ]; then exec /opt/venv/bin/python3 /opt/venv/bin/vllm serve \
     --model /models/target \
     --served-model-name qwen3.8-27b-fp8 \
     --tensor-parallel-size 2 \

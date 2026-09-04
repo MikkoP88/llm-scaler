@@ -155,6 +155,53 @@ buffer/kernel internals); k=4 is refused by the serve script guard.
   DFLASH2_CGMODE (default FULL_DECODE_ONLY); k=4+graphs guard
 - `dt_dflash2_boot.sh` — final 6-patcher chain (edit -> winfix -> emitk ->
   schedk -> udql -> disp), 12-file inject
+- `Dockerfile` — **v42 image bake** (`llm-scaler-exp:dflash2-v42`): prod:v1 +
+  all 6 patchers run in-build (the v42 patchers write /w/patched only — the
+  explicit cp loop mirrors boot phase 3 so the baked tree == the runtime
+  lane tree); grep gates for every era hook + py_compile; markers
+  `/root/.dflash2_patched` + `/root/.dflash2_v42_baked`. Boot the baked
+  image directly with `DFLASH2_IMG=llm-scaler-exp:dflash2-v42` (serve-script
+  knob, default `llm-scaler-prod:v1` = runtime-patch flow)
+- `new/dflash2_proposer.py` — the v42 knob-bearing proposer (md5
+  `26e34cc691175af518a3ae07f801497d`); the v40-era copy in
+  `../dflash2-spec-port-v40/` predates the knob
+- `UPSTREAM_COMPARE.md` — deep-research comparison vs upstream PR #52816
+  (verdict: MATCH on drafter math, SUPERIOR on k-adjust/async/graphs, no
+  upstream deltas worth adopting)
+
+## Upstream comparison + image bake (Sep 4, follow-up engagement)
+
+Deep research vs upstream PR #52816 (merged 2026-08-21) — full analysis in
+`UPSTREAM_COMPARE.md`. Summary: conv/selector/top-k/greedy-walk/TP/quant are
+formula-identical; ours adds k-adjustable emission (absent upstream), async
+scheduling, width-aware whole-step graphs, TQ KV + v41 window fix, and the
+bf16-draft/fp16-target numerics the platform requires. The ONLY post-merge
+upstream fix (PR #54282) is in the probabilistic gumbel path we deliberately
+did not port. **No code changes adopted.** AR baseline measured on the
+restored prod nospec lane for the ratio table: 136.6/160.8/130.9/219.3
+(2k/16k/65k/conc8) → DFlash2-k7 = 3.01×/1.63×/1.44×/0.56× AR (conc8 spec
+loss is fork-generic: MTP is 0.65×).
+
+Image `llm-scaler-exp:dflash2-v42` BUILT + VALIDATED:
+
+- Bake gates all green (`DFLASH2_V42_BAKE_OK`); **all 12 tree files
+  md5-IDENTICAL to the runtime-patched lane** (strongest equivalence proof:
+  same bytes ⇒ same behavior).
+- Runtime chain re-validated first (k=7): probes p1/p2/p5/p6 exact refs;
+  415.4/262.2/192.3/123.4 vs baselines 411.6/262.0/189.1/123.6.
+- Baked image, k=7: probes exact; bench 416.9/262.9/125.2 (2k/16k/conc8),
+  65k 189.0+192.1 on re-runs (one 123.8 outlier = greedy knife-edge
+  trajectory, compl 159 vs 182/185 — not tree degradation, md5-identical
+  tree).
+- Baked image, k=3: lattice gate `uniform width 4: 19 sizes, max 512`,
+  udql=4 both workers; probes exact (p1/p2/p5/p6); bench
+  229.6/194.5/176.3/117.1 — ABOVE baseline 207.2/179.1/167.5/111.4.
+- Baked image, k=5: lattice gate `uniform width 6: 13 sizes, max 480`;
+  p6 = documented knife-edge variant `ebcc8258959448f3` (deterministic
+  in-lane); one transient p5 flip reverted to ref on re-run (#18 class);
+  bench 297.2/237.9/160.6/122.2 acc 0.701 vs baseline
+  297.4/238.5/161.3/125.7 acc 0.708 — flat.
+- Degradation gate: PASS on every row of every k.
 
 Prod restored `llm-scaler-prod:v1` nospec via bootp.sh; certified
 harm_probe10 = 0ce080630035 x10.
