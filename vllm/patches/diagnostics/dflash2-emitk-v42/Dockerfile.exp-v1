@@ -1,0 +1,40 @@
+# llm-scaler-exp:v1 — certified DFlash2 lane + v43 real-life fixes.
+# Base: llm-scaler-exp:dflash2-v42 (= prod:v1 keepers + v40 DFlash2 port +
+# v41 window fix + v42 k-adjust chain, all baked + md5-verified).
+# Adds:
+#   v43a v43_descale_edit.py — CRASH-1 fix (fp8 KV): draft-model attention
+#        layers carry MODEL-DTYPE (bf16) kv scales via inherited quant
+#        config; the XPU FA interface demands a float32 scalar-view descale
+#        -> assert at the drafter's first attention. Cast scales to fp32
+#        once per layer (cached); identity for fp32 (target) layers.
+#   v43b dt_warmup.py at /root/dt_warmup.py — CRASH-2 fix (concurrent
+#        DEVICE_LOST): the draft/spec Triton kernels JIT on the first real
+#        requests (measured: first propose 34.3 s). Rank-skewed JIT windows
+#        > ~640 ms trip the xe GuC preempt watchdog -> engine reset BOTH
+#        ranks (dmesg "Engine reset: engine_class=ccs") ->
+#        UR_RESULT_ERROR_DEVICE_LOST. The baked warmup script fires
+#        single + concurrent + longer boot requests (launched as a sidecar
+#        by the serve script) so all first-use JIT happens pre-traffic.
+# Build context: /root/build/dflash2-v43 (v43_descale_edit.py, dt_warmup.py)
+FROM llm-scaler-exp:dflash2-v42
+
+COPY v43_descale_edit.py dt_warmup.py /root/dflash2_v43_bake/
+
+RUN mkdir -p /w \
+    && cp /root/dflash2_v43_bake/v43_descale_edit.py /w/ \
+    && cd /w \
+    && python3 /w/v43_descale_edit.py \
+    && SP=/opt/venv/lib/python3.12/site-packages \
+    && cp /w/patched/vllm/v1/attention/backends/flash_attn.py \
+       $SP/vllm/v1/attention/backends/flash_attn.py \
+    && cp /root/dflash2_v43_bake/dt_warmup.py /root/dt_warmup.py \
+    && rm -rf /w
+
+ARG SP=/opt/venv/lib/python3.12/site-packages
+RUN SP=/opt/venv/lib/python3.12/site-packages \
+    && test "$(grep -c "llm-scaler v43 (crash-1 fix)" $SP/vllm/v1/attention/backends/flash_attn.py)" = 2 \
+    && test -f /root/dt_warmup.py \
+    && python3 -m py_compile $SP/vllm/v1/attention/backends/flash_attn.py \
+    && python3 -m py_compile /root/dt_warmup.py \
+    && touch /root/.v43_baked /root/.llm-scaler-exp_v1_baked \
+    && echo EXP_V1_BAKE_OK
