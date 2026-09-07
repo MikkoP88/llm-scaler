@@ -1,0 +1,39 @@
+== [lane df7_fp8] boot 16:24:07 kv=fp8_e4m3 spec={"method":"dflash","model":"/models/dflash2","num_speculative_tokens":7} gmu=0.9 maxlen=262144 env= img=llm-scaler-exp:v1.2.5
+BOOT_OK fallback=0
+(EngineCore pid=467) INFO 09-07 16:25:38 [kv_cache_utils.py:1729] GPU KV cache size: 373,507 tokens
+== [lane df7_fp8] warmup v51 (p1-p9) 16:27:01
+WARMUP_OK 16:31:01
+== [lane df7_fp8] battery 16:31:01
+PROBE p1_short: sha=83dd8aaa38f8d7f0 prompt_tok=65 compl_tok=63 secs=1.6 tps=39.6
+PROBE p2_arith: sha=c87e27c45fcafcb6 prompt_tok=87 compl_tok=352 secs=3.7 tps=95.8
+PROBE p3_para: sha=12b16921f033714b prompt_tok=93 compl_tok=351 secs=9.3 tps=37.6
+PROBE p4_code: sha=6765850de1d1d8db prompt_tok=76 compl_tok=400 secs=6.5 tps=62.0
+PROBE p5_fact: sha=f61457efcc110d35 prompt_tok=70 compl_tok=220 secs=4.6 tps=48.3
+PROBE p6_ctx2k: sha=724d74011519ac66 prompt_tok=2314 compl_tok=181 secs=7.9 tps=23.0
+ACCEPTANCE: 1099/3269 = 0.336
+== [lane df7_fp8] ctxscan 2k-65k 16:31:36
+CTXSCAN df7_fp8 2k: ptok=2015 ctok=256 ttft=1.2s wall=12.2s tps=23.3
+CTXSCAN df7_fp8 16k: ptok=16665 ctok=256 ttft=19.3s wall=32.6s tps=19.3
+CTXSCAN df7_fp8 32k: ptok=33231 ctok=256 ttft=21.4s wall=41.2s tps=12.9
+CTXSCAN df7_fp8 65k: ptok=67485 ctok=256 ttft=37.1s wall=69.2s tps=8.0
+== [lane df7_fp8] deep 128k + 262k-class 16:34:11
+CTXSCAN2 df7_fp8 nwords=115000: ptok=136191 ctok=256 ttft=125.7s prefill_tps=1084 wall=173.2s decode_tps=5.4
+CTXSCAN2 df7_fp8 nwords=221000: ptok=261757 ctok=256 ttft=209.5s prefill_tps=1249 wall=258.9s decode_tps=5.2
+== [lane df7_fp8] loop8 think-trap scan 16:41:23
+P2: {"i": 2, "finish": "length", "tokens": 8192, "secs": 383.8, "loop_reason": null, "loop_reason_char": {"period_chars": 4, "reps": 128, "unit_sample": "!!!!"}, "think_trapped": true, "reason_len": 22255, "content_len": 0}  <<< LOOP
+P4: {"i": 4, "finish": "length", "tokens": 8192, "secs": 178.2, "loop_reason": null, "loop_reason_char": null, "think_trapped": true, "reason_len": 22183, "content_len": 0}  <<< LOOP
+P5: {"i": 5, "finish": "length", "tokens": 8192, "secs": 194.6, "loop_reason": null, "loop_reason_char": null, "think_trapped": true, "reason_len": 33819, "content_len": 0}  <<< LOOP
+P6: {"i": 6, "finish": "stop", "tokens": 6840, "secs": 157.8, "loop_reason": null, "loop_reason_char": null, "think_trapped": false, "reason_len": 21188, "content_len": 2096}
+DT_LOOP8[df7_fp8_l8]: 3/4 still trapped @8192, 1 tail-loops
+== [lane df7_fp8] conc8@2k 16:56:38
+CONC df7_fp8_c8 N=8 nw=1800 mt=256: ok=8/8 err=0 agg_tps=100.3 busy_tps=14.4 ttft_p50=2.3s p95=2.3s wall=20.4s per_client_tps=[14.2, 15.2, 13.8, 14.6, 14.6, 14.2, 14.3, 14.3]
+== [lane df7_fp8] conc4 mixed 2k/16k 16:56:58
+CONC df7_fp8_cmix N=4 nw=1800+14800 mt=256: ok=4/4 err=0 agg_tps=19.8 busy_tps=7.3 ttft_p50=25.2s p95=25.7s wall=51.7s per_client_tps=[5.2, 9.9, 6.0, 11.3]
+== [lane df7_fp8] conc2@65k 16:57:50
+CONC df7_fp8_c65k N=2 nw=60000 mt=192: ok=2/2 err=0 agg_tps=3.1 busy_tps=4.8 ttft_p50=101.8s p95=101.8s wall=122.0s per_client_tps=[3.2, 9.6]
+== [lane df7_fp8] health tail 16:59:52
+STALLS=20 STRIKES=0 F8=1 JIT=13 ERRS=0 DEVLOST=0
+(APIServer pid=1) INFO 09-07 16:59:39 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 1.00, Accepted throughput: 0.00 tokens/s, Drafted throughput: 3.50 tokens/s, Accepted: 0 tokens, Drafted: 35 tokens, Per-position acceptance rate: 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, Avg Draft acceptance rate: 0.0%
+(APIServer pid=1) INFO 09-07 16:59:49 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 28.4 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 22.0%, Prefix cache hit rate: 19.2%
+(APIServer pid=1) INFO 09-07 16:59:49 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 5.16, Accepted throughput: 22.90 tokens/s, Drafted throughput: 38.50 tokens/s, Accepted: 229 tokens, Drafted: 385 tokens, Per-position acceptance rate: 0.745, 0.655, 0.582, 0.564, 0.564, 0.545, 0.509, Avg Draft acceptance rate: 59.5%
+LANE_DONE df7_fp8 16:59:53

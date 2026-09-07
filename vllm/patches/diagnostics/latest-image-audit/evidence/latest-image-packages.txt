@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+
+from dataclasses import field
+from typing import ClassVar, Literal
+
+from pydantic import Field, SkipValidation, field_validator, model_validator
+
+from vllm.config.utils import config
+from vllm.logger import init_logger
+from vllm.utils.torch_utils import (
+    is_quantized_kv_cache,
+    kv_cache_uses_per_token_head_scales,
+)
+
+logger = init_logger(__name__)
+
+CacheDType = Literal[
+    "auto",
+    "float16",
+    "bfloat16",
+    "fp8",
+    "fp8_e4m3",
+    "fp8_e5m2",
+    "fp8_inc",
+    "fp8_ds_mla",
+    "turboquant_k8v4",
+    "turboquant_4bit_nc",
+    "turboquant_k3v4_nc",
+    "turboquant_3bit_nc",
+    "int8_per_token_head",
+    "fp8_per_token_head",
+    "nvfp4",
+]
+MambaDType = Literal["auto", "float32", "float16"]
+MambaCacheMode = Literal["all", "align", "none"]
+PrefixCachingHashAlgo = Literal["sha256", "sha256_cbor", "xxhash", "xxhash_cbor"]
+KVOffloadingBackend = Literal["native", "lmcache"]
+
+
+@config
+class CacheConfig:
+    """Configuration for the KV cache."""
+
+    DEFAULT_BLOCK_SIZE: ClassVar[int] = 16
+7215ed994b24f842dc9b7bc0b1a6247e  /opt/venv/lib/python3.12/site-packages/vllm/v1/spec_decode/llm_base_proposer.py
+4500df595690ff51a4edf7c214efbe70  /opt/venv/lib/python3.12/site-packages/vllm/v1/attention/backends/flash_attn.py
+192f701929d8614e898e0b750e65d11a  /opt/venv/lib/python3.12/site-packages/vllm/v1/attention/backends/turboquant_attn.py

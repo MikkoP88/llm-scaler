@@ -1,0 +1,26 @@
+CTXSCAN2 df7_fp8 nwords=221000: ptok=261757 ctok=256 ttft=209.5s prefill_tps=1249 wall=258.9s decode_tps=5.2
+== [lane df7_fp8] loop8 think-trap scan 16:41:23
+P2: {"i": 2, "finish": "length", "tokens": 8192, "secs": 383.8, "loop_reason": null, "loop_reason_char": {"period_chars": 4, "reps": 128, "unit_sample": "!!!!"}, "think_trapped": true, "reason_len": 22255, "content_len": 0}  <<< LOOP
+P4: {"i": 4, "finish": "length", "tokens": 8192, "secs": 178.2, "loop_reason": null, "loop_reason_char": null, "think_trapped": true, "reason_len": 22183, "content_len": 0}  <<< LOOP
+P5: {"i": 5, "finish": "length", "tokens": 8192, "secs": 194.6, "loop_reason": null, "loop_reason_char": null, "think_trapped": true, "reason_len": 33819, "content_len": 0}  <<< LOOP
+P6: {"i": 6, "finish": "stop", "tokens": 6840, "secs": 157.8, "loop_reason": null, "loop_reason_char": null, "think_trapped": false, "reason_len": 21188, "content_len": 2096}
+DT_LOOP8[df7_fp8_l8]: 3/4 still trapped @8192, 1 tail-loops
+== [lane df7_fp8] conc8@2k 16:56:38
+CONC df7_fp8_c8 N=8 nw=1800 mt=256: ok=8/8 err=0 agg_tps=100.3 busy_tps=14.4 ttft_p50=2.3s p95=2.3s wall=20.4s per_client_tps=[14.2, 15.2, 13.8, 14.6, 14.6, 14.2, 14.3, 14.3]
+== [lane df7_fp8] conc4 mixed 2k/16k 16:56:58
+CONC df7_fp8_cmix N=4 nw=1800+14800 mt=256: ok=4/4 err=0 agg_tps=19.8 busy_tps=7.3 ttft_p50=25.2s p95=25.7s wall=51.7s per_client_tps=[5.2, 9.9, 6.0, 11.3]
+== [lane df7_fp8] conc2@65k 16:57:50
+CONC df7_fp8_c65k N=2 nw=60000 mt=192: ok=2/2 err=0 agg_tps=3.1 busy_tps=4.8 ttft_p50=101.8s p95=101.8s wall=122.0s per_client_tps=[3.2, 9.6]
+== [lane df7_fp8] health tail 16:59:52
+STALLS=20 STRIKES=0 F8=1 JIT=13 ERRS=0 DEVLOST=0
+(APIServer pid=1) INFO 09-07 16:59:39 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 1.00, Accepted throughput: 0.00 tokens/s, Drafted throughput: 3.50 tokens/s, Accepted: 0 tokens, Drafted: 35 tokens, Per-position acceptance rate: 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, Avg Draft acceptance rate: 0.0%
+(APIServer pid=1) INFO 09-07 16:59:49 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 28.4 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 22.0%, Prefix cache hit rate: 19.2%
+(APIServer pid=1) INFO 09-07 16:59:49 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 5.16, Accepted throughput: 22.90 tokens/s, Drafted throughput: 38.50 tokens/s, Accepted: 229 tokens, Drafted: 385 tokens, Per-position acceptance rate: 0.745, 0.655, 0.582, 0.564, 0.564, 0.545, 0.509, Avg Draft acceptance rate: 59.5%
+LANE_DONE df7_fp8 16:59:53
+== [lane df7_tq4] boot 16:59:53 kv=turboquant_4bit_nc spec={"method":"dflash","model":"/models/dflash2","num_speculative_tokens":7} gmu=0.9 maxlen=262144 env= img=llm-scaler-exp:v1.2.5
+BOOT_OK fallback=0
+(Worker_TP1 pid=667) INFO 09-07 17:00:56 [turboquant_attn.py:539] TurboQuant graph-fixed KV splits: grid=256 (device-side split masking; VLLM_TQ_GRAPH_KV_SPLITS overrides).
+(Worker_TP1 pid=667) INFO 09-07 17:00:56 [turboquant_attn.py:539] TurboQuant graph-fixed KV splits: grid=256 (device-side split masking; VLLM_TQ_GRAPH_KV_SPLITS overrides).
+(Worker_TP1 pid=667) INFO 09-07 17:00:56 [turboquant_attn.py:539] TurboQuant graph-fixed KV splits: grid=256 (device-side split masking; VLLM_TQ_GRAPH_KV_SPLITS overrides).
+== [lane df7_tq4] warmup v51 (p1-p9) 17:02:47
+792390a1f0aec47e4f4bbc143ec5fe3d87eed9e3bf629982c179dc250ae5e007 sha256:a522bf15be2b666e7dcaab1d59557c8cc21e3bbcdf6be0a9c6bbf686b31f0ff8

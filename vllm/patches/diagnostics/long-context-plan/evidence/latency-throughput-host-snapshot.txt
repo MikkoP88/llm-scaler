@@ -1,0 +1,26 @@
+Mon Sep  7 05:24:05 PM UTC 2026
+e700eb349ae9b06302bdc83de79efba5b19248358ee6cae008254744ee01f39d sha256:a522bf15be2b666e7dcaab1d59557c8cc21e3bbcdf6be0a9c6bbf686b31f0ff8
+CTXSCAN df7_tq4 32k: ptok=33231 ctok=256 ttft=9.3s wall=22.2s tps=19.8
+CTXSCAN df7_tq4 65k: ptok=67485 ctok=256 ttft=21.0s wall=38.9s tps=14.3
+== [lane df7_tq4] deep 128k + 262k-class 17:07:35
+CTXSCAN2 df7_tq4 nwords=115000: ptok=136191 ctok=256 ttft=88.7s prefill_tps=1536 wall=149.0s decode_tps=4.2
+CTXSCAN2 df7_tq4 nwords=221000: ptok=261757 ctok=256 ttft=128.7s prefill_tps=2034 wall=167.1s decode_tps=6.7
+== [lane df7_tq4] loop8 think-trap scan 17:12:52
+P2: {"i": 2, "finish": "length", "tokens": 8192, "secs": 117.5, "loop_reason": null, "loop_reason_char": {"period_chars": 4, "reps": 128, "unit_sample": "!!!!"}, "think_trapped": true, "reason_len": 17640, "content_len": 0}  <<< LOOP
+P4: {"i": 4, "finish": "length", "tokens": 8192, "secs": 152.5, "loop_reason": null, "loop_reason_char": null, "think_trapped": true, "reason_len": 23424, "content_len": 0}  <<< LOOP
+P5: {"i": 5, "finish": "length", "tokens": 8192, "secs": 97.7, "loop_reason": null, "loop_reason_char": {"period_chars": 4, "reps": 128, "unit_sample": "!!!!"}, "think_trapped": true, "reason_len": 14890, "content_len": 0}  <<< LOOP
+P6: {"i": 6, "finish": "length", "tokens": 8192, "secs": 87.7, "loop_reason": null, "loop_reason_char": {"period_chars": 4, "reps": 128, "unit_sample": "!!!!"}, "think_trapped": true, "reason_len": 13279, "content_len": 0}  <<< LOOP
+DT_LOOP8[df7_tq4_l8]: 4/4 still trapped @8192, 3 tail-loops
+== [lane df7_tq4] conc8@2k 17:20:27
+CONC df7_tq4_c8 N=8 nw=1800 mt=256: ok=8/8 err=0 agg_tps=94.4 busy_tps=20.6 ttft_p50=8.4s p95=8.5s wall=21.7s per_client_tps=[18.5, 21.7, 20.3, 20.6, 21.3, 20.3, 21.3, 20.8]
+== [lane df7_tq4] conc4 mixed 2k/16k 17:20:49
+CONC df7_tq4_cmix N=4 nw=1800+14800 mt=256: ok=4/4 err=0 agg_tps=35.8 busy_tps=12.9 ttft_p50=13.1s p95=13.8s wall=28.6s per_client_tps=[9.6, 17.3, 11.3, 16.9]
+== [lane df7_tq4] conc2@65k 17:21:17
+CONC df7_tq4_c65k N=2 nw=60000 mt=192: ok=2/2 err=0 agg_tps=4.1 busy_tps=5.9 ttft_p50=78.9s p95=78.9s wall=94.7s per_client_tps=[12.3, 3.9]
+== [lane df7_tq4] health tail 17:22:52
+STALLS=15 STRIKES=0 F8=1 JIT=16 ERRS=0 DEVLOST=0
+(Worker_TP1 pid=667) WARNING 09-07 17:22:35 [mamba_utils.py:221] llm-scaler v52f PRE-COPY: cmpl-876a0bc881fff3a9-0-a5e5b4c5 slot=1 prev=33 curr=34 bias=0 (acc_cpu=1) computed=69632 sched=1449 blocksz=2048
+(APIServer pid=1) INFO 09-07 17:22:44 [loggers.py:273] Engine 000: Avg prompt throughput: 6288.1 tokens/s, Avg generation throughput: 13.3 tokens/s, Running: 2 reqs, Waiting: 0 reqs, GPU KV cache usage: 51.7%, Prefix cache hit rate: 20.2%
+(APIServer pid=1) INFO 09-07 17:22:44 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 4.71, Accepted throughput: 10.40 tokens/s, Drafted throughput: 19.60 tokens/s, Accepted: 104 tokens, Drafted: 196 tokens, Per-position acceptance rate: 0.714, 0.500, 0.500, 0.500, 0.500, 0.500, 0.500, Avg Draft acceptance rate: 53.1%
+LANE_DONE df7_tq4 17:22:53
+== [lane mtp4_fp8] boot 17:22:53 kv=fp8_e4m3 spec={"method":"mtp","num_speculative_tokens":4} gmu=0.9 maxlen=262144 env= img=llm-scaler-exp:v1.2.5

@@ -1,5 +1,7 @@
 # llm-scaler v1.2.5 — Deep Audit, Live Baselines & Fix/Improvement Plan
 
+> **Follow-up, 2026-09-07:** See the [latest-image audit and new fixes/testing plan](../latest-image-audit/REPORT.md). It distinguishes v1.2.6t2 from the active v1.2.5 baseline and supersedes this report's broad claims about ragged-route causality, transferable deep warmup, per-layer dequant workspace reuse, loop absence, universal workload winners and capacity ratios. The tables below remain historical measurements subject to their stated harness limitations.
+
 Date: 2026-09-07 · Host: 10.20.3.65 (2× Intel Arc Pro B70, TP=2, oneCCL, xe driver)
 Image: `llm-scaler-exp:v1.2.5` (certified bits = v1.2.5t5, sha256:a522bf15…, image-ID verified on host)
 Model: qwen3.8-27b-fp8 (hybrid GDN: 48 linear-attn + 16 full-attn layers, GQA 24q/4kv × hd256)

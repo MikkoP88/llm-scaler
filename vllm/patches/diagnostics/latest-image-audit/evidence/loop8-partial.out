@@ -1,0 +1,5 @@
+P2: {"i": 2, "finish": "length", "tokens": 8192, "secs": 383.8, "loop_reason": null, "loop_reason_char": {"period_chars": 4, "reps": 128, "unit_sample": "!!!!"}, "think_trapped": true, "reason_len": 22255, "content_len": 0}  <<< LOOP
+P4: {"i": 4, "finish": "length", "tokens": 8192, "secs": 178.2, "loop_reason": null, "loop_reason_char": null, "think_trapped": true, "reason_len": 22183, "content_len": 0}  <<< LOOP
+P5: {"i": 5, "finish": "length", "tokens": 8192, "secs": 194.6, "loop_reason": null, "loop_reason_char": null, "think_trapped": true, "reason_len": 33819, "content_len": 0}  <<< LOOP
+P6: {"i": 6, "finish": "stop", "tokens": 6840, "secs": 157.8, "loop_reason": null, "loop_reason_char": null, "think_trapped": false, "reason_len": 21188, "content_len": 2096}
+DT_LOOP8[df7_fp8_l8]: 3/4 still trapped @8192, 1 tail-loops
