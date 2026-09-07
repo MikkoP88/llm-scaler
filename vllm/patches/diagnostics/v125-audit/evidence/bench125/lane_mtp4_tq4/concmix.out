@@ -1,0 +1,1 @@
+CONC mtp4_tq4_cmix N=4 nw=1800+14800 mt=256: ok=4/4 err=0 agg_tps=61.4 busy_tps=22.1 ttft_p50=4.4s p95=6.1s wall=16.7s per_client_tps=[18.9, 24.8, 25.0, 20.8]

@@ -1,0 +1,1 @@
+CONC df7_tq4_c65k N=2 nw=60000 mt=192: ok=2/2 err=0 agg_tps=4.1 busy_tps=5.9 ttft_p50=79.1s p95=79.1s wall=93.6s per_client_tps=[3.8, 13.4]

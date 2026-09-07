@@ -1,0 +1,1 @@
+CONC nospec_tq4_c8 N=8 nw=1800 mt=256: ok=8/8 err=0 agg_tps=160.5 busy_tps=26.4 ttft_p50=3.1s p95=3.1s wall=12.8s per_client_tps=[26.5, 26.5, 26.5, 26.5, 25.3, 26.5, 26.5, 26.5]

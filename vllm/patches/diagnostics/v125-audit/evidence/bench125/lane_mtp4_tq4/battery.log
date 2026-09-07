@@ -1,0 +1,15 @@
+PROBE p1_short: sha=3cecc747d7885a11 prompt_tok=65 compl_tok=72 secs=1.4 tps=51.5
+  head: '\x1fCONTENT\x1f\n\nA transformer neural network is a deep learning architecture that uses self-attention mec'
+PROBE p2_arith: sha=c87e27c45fcafcb6 prompt_tok=87 compl_tok=339 secs=4.1 tps=83.4
+  head: '\x1fCONTENT\x1f\n\n16+16=32\n32+32=64\n64+64=128\n128+128=256\n256+256=512\n512+512=1024\n1024+1024=2048\n2048+2048'
+PROBE p3_para: sha=25058c3dc3827329 prompt_tok=93 compl_tok=285 secs=6.0 tps=47.7
+  head: '\x1fCONTENT\x1f\n\nElias woke before the gulls, as he always did, and climbed the spiral stairs with his ear'
+PROBE p4_code: sha=744e88f52ea78148 prompt_tok=76 compl_tok=375 secs=5.4 tps=69.0
+  head: '\x1fCONTENT\x1f\n\n```python\nfrom functools import lru_cache\n\n@lru_cache(maxsize=None)\ndef fibonacci(n: int)'
+PROBE p5_fact: sha=252b4dc1614abef2 prompt_tok=70 compl_tok=221 secs=3.8 tps=58.9
+  head: '\x1fCONTENT\x1f\n\n1. **Jupiter** — The largest planet in the solar system, with a famous storm called the G'
+PROBE p6_ctx2k: sha=ebcc8258959448f3 prompt_tok=2314 compl_tok=118 secs=2.8 tps=41.6
+  head: '\x1fCONTENT\x1f\n\nThe river repeatedly carried silt and small branches past the mooring posts. Its water le'
+METRICS before: {"spec_decode_num_draft_tokens": 3696.0, "spec_decode_num_accepted_tokens": 1463.0, "prefix_cache_queries": 155928.0, "prefix_cache_hits": 0.0, "external_prefix_cache_queries": 0.0, "external_prefix_cache_hits": 0.0}
+METRICS after:  {"spec_decode_num_draft_tokens": 5340.0, "spec_decode_num_accepted_tokens": 2471.0, "prefix_cache_queries": 158633.0, "prefix_cache_hits": 0.0, "external_prefix_cache_queries": 0.0, "external_prefix_cache_hits": 0.0}
+ACCEPTANCE: 1008/1644 = 0.613

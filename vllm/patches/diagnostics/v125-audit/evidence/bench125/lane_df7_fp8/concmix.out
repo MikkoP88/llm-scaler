@@ -1,0 +1,1 @@
+CONC df7_fp8_cmix N=4 nw=1800+14800 mt=256: ok=4/4 err=0 agg_tps=23.0 busy_tps=8.6 ttft_p50=24.5s p95=25.0s wall=44.6s per_client_tps=[5.8, 15.6, 6.6, 13.3]

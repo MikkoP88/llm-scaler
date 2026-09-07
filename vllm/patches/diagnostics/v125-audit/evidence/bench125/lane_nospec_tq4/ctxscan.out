@@ -1,0 +1,4 @@
+CTXSCAN nospec_tq4 2k: ptok=2015 ctok=256 ttft=1.3s wall=8.9s tps=33.7
+CTXSCAN nospec_tq4 16k: ptok=16665 ctok=256 ttft=7.0s wall=15.3s tps=30.6
+CTXSCAN nospec_tq4 32k: ptok=33231 ctok=256 ttft=7.7s wall=16.9s tps=27.7
+CTXSCAN nospec_tq4 65k: ptok=67485 ctok=256 ttft=18.2s wall=29.2s tps=23.2

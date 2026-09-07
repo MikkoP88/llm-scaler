@@ -1,0 +1,70 @@
+DIST_INFO: vllm-0.21.1.dev0+gad7125a43.d20260826.xpu.dist-info
+
+=== MODIFIED (27) ===
+  M vllm/config/vllm.py
+  M vllm/distributed/device_communicators/xpu_communicator.py
+  M vllm/model_executor/layers/attention/attention.py
+  M vllm/model_executor/models/qwen3_5_mtp.py
+  M vllm/model_executor/models/qwen3_dflash.py
+  M vllm/model_executor/models/registry.py
+  M vllm/platforms/xpu.py
+  M vllm/utils/async_utils.py
+  M vllm/v1/attention/backends/flash_attn.py
+  M vllm/v1/attention/backends/turboquant_attn.py
+  M vllm/v1/attention/ops/triton_turboquant_decode.py
+  M vllm/v1/attention/ops/triton_unified_attention.py
+  M vllm/v1/core/block_pool.py
+  M vllm/v1/core/sched/async_scheduler.py
+  M vllm/v1/core/sched/scheduler.py
+  M vllm/v1/core/sched/utils.py
+  M vllm/v1/cudagraph_dispatcher.py
+  M vllm/v1/engine/async_llm.py
+  M vllm/v1/engine/core.py
+  M vllm/v1/sample/rejection_sampler.py
+  M vllm/v1/spec_decode/dflash.py
+  M vllm/v1/spec_decode/llm_base_proposer.py
+  M vllm/v1/spec_decode/utils.py
+  M vllm/v1/worker/gpu/cudagraph_utils.py
+  M vllm/v1/worker/gpu_model_runner.py
+  M vllm/v1/worker/gpu_worker.py
+  M vllm/v1/worker/mamba_utils.py
+
+=== ADDED (7) ===
+  A vllm/entrypoints/openai/serving_chat.py
+  A vllm/entrypoints/openai/serving_completion.py
+  A vllm/model_executor/models/qwen3_dflash2.py
+  A vllm/v1/attention/ops/triton_fp8_mq.py
+  A vllm/v1/spec_decode/dflash2.py
+  A vllm/v1/spec_decode/drafter_comm.py
+  A vllm/v1/spec_decode/spec_timing.py
+
+=== MARKER COVERAGE: 23/27 modified files carry 'llm-scaler vN' markers ===
+  K vllm/config/vllm.py
+  K vllm/distributed/device_communicators/xpu_communicator.py
+  K vllm/model_executor/layers/attention/attention.py
+  K vllm/model_executor/models/qwen3_5_mtp.py
+  K vllm/platforms/xpu.py
+  K vllm/utils/async_utils.py
+  K vllm/v1/attention/backends/flash_attn.py
+  K vllm/v1/attention/backends/turboquant_attn.py
+  K vllm/v1/attention/ops/triton_turboquant_decode.py
+  K vllm/v1/attention/ops/triton_unified_attention.py
+  K vllm/v1/core/block_pool.py
+  K vllm/v1/core/sched/async_scheduler.py
+  K vllm/v1/core/sched/scheduler.py
+  K vllm/v1/cudagraph_dispatcher.py
+  K vllm/v1/engine/async_llm.py
+  K vllm/v1/engine/core.py
+  K vllm/v1/sample/rejection_sampler.py
+  K vllm/v1/spec_decode/dflash.py
+  K vllm/v1/spec_decode/llm_base_proposer.py
+  K vllm/v1/worker/gpu/cudagraph_utils.py
+  K vllm/v1/worker/gpu_model_runner.py
+  K vllm/v1/worker/gpu_worker.py
+  K vllm/v1/worker/mamba_utils.py
+
+ORPHANS (modified, no marker):
+  O vllm/model_executor/models/qwen3_dflash.py
+  O vllm/model_executor/models/registry.py
+  O vllm/v1/core/sched/utils.py
+  O vllm/v1/spec_decode/utils.py

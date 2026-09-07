@@ -1,0 +1,2 @@
+CTXSCAN2 mtp4_fp8 nwords=115000: ptok=136191 ctok=256 ttft=124.3s prefill_tps=1095 wall=162.4s decode_tps=6.7
+CTXSCAN2 mtp4_fp8 nwords=205000: ptok=242761 ctok=256 ttft=176.7s prefill_tps=1374 wall=235.3s decode_tps=4.4

@@ -1,0 +1,8 @@
+entrypoints/anthropic/serving.py 39 from vllm.entrypoints.openai.chat_completion.serving import OpenAIServingChat
+entrypoints/openai/generate/api_router.py 62     from vllm.entrypoints.openai.chat_completion.serving import OpenAIServingChat
+entrypoints/openai/generate/api_router.py 63     from vllm.entrypoints.openai.completion.serving import OpenAIServingCompletion
+entrypoints/openai/chat_completion/batch_serving.py 19 from vllm.entrypoints.openai.chat_completion.serving import (
+entrypoints/openai/chat_completion/api_router.py 16 from vllm.entrypoints.openai.chat_completion.serving import OpenAIServingChat
+entrypoints/openai/completion/api_router.py 14 from vllm.entrypoints.openai.completion.serving import OpenAIServingCompletion
+ACTIVE_CLOSE entrypoints/openai/chat_completion/serving.py False
+ACTIVE_CLOSE entrypoints/openai/completion/serving.py False

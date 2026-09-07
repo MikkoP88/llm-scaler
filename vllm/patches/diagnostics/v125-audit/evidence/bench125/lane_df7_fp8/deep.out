@@ -1,0 +1,2 @@
+CTXSCAN2 df7_fp8 nwords=115000: ptok=136191 ctok=256 ttft=125.7s prefill_tps=1084 wall=152.1s decode_tps=9.7
+CTXSCAN2 df7_fp8 nwords=205000: ptok=242761 ctok=256 ttft=173.9s prefill_tps=1396 wall=237.5s decode_tps=4.0

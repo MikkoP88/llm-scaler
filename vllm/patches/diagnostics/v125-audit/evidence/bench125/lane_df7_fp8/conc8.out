@@ -1,0 +1,1 @@
+CONC df7_fp8_c8 N=8 nw=1800 mt=256: ok=8/8 err=0 agg_tps=90.1 busy_tps=14.8 ttft_p50=5.1s p95=5.1s wall=22.7s per_client_tps=[14.7, 14.8, 14.7, 14.5, 15.2, 14.8, 15.1, 14.6]

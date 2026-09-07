@@ -1,0 +1,4 @@
+CTXSCAN mtp4_tq4 2k: ptok=2015 ctok=256 ttft=1.1s wall=5.2s tps=61.8
+CTXSCAN mtp4_tq4 16k: ptok=16665 ctok=256 ttft=8.6s wall=14.1s tps=46.6
+CTXSCAN mtp4_tq4 32k: ptok=33231 ctok=256 ttft=10.5s wall=19.2s tps=29.3
+CTXSCAN mtp4_tq4 65k: ptok=67485 ctok=256 ttft=22.7s wall=34.8s tps=21.0

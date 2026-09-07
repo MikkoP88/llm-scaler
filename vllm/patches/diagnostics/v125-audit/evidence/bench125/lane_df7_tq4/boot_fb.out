@@ -1,0 +1,5 @@
+f47391114d95d40a6f9c63356d04454f928389ed9f45917c78153284e28f6d5b
+CONTAINER DIED
+WARNING 09-07 08:09:06 [argparse_utils.py:257] With `vllm serve`, you should provide the model as a positional argument or in a config file instead of via the `--model` option. The `--model` option will be removed in a future version.
+usage: vllm serve [model_tag] [options]
+vllm serve: error: argument --speculative-config/-sc: Value method:dflash cannot be converted to <function loads at 0x79df7dae4900>.

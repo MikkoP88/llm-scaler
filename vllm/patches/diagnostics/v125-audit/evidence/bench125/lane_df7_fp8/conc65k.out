@@ -1,0 +1,1 @@
+CONC df7_fp8_c65k N=2 nw=60000 mt=192: ok=2/2 err=0 agg_tps=3.0 busy_tps=4.7 ttft_p50=101.2s p95=101.2s wall=126.5s per_client_tps=[10.1, 3.0]

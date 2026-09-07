@@ -1,0 +1,5 @@
+cacc53863509a63c46d29f26f50dbd51ebf68b64dc12e7c3096a0c5ca546ed54
+CONTAINER DIED
+WARNING 09-07 08:08:25 [argparse_utils.py:257] With `vllm serve`, you should provide the model as a positional argument or in a config file instead of via the `--model` option. The `--model` option will be removed in a future version.
+usage: vllm serve [model_tag] [options]
+vllm serve: error: argument --speculative-config/-sc: Value method:mtp cannot be converted to <function loads at 0x7e8fecb50900>.

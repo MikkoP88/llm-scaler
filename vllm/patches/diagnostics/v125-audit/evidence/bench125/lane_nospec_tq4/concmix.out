@@ -1,0 +1,1 @@
+CONC nospec_tq4_cmix N=4 nw=1800+14800 mt=256: ok=4/4 err=0 agg_tps=65.7 busy_tps=21.2 ttft_p50=4.0s p95=5.5s wall=15.6s per_client_tps=[16.9, 25.3, 22.1, 22.1]

@@ -1,0 +1,110 @@
+SOURCE config/cache.py
+18: CacheDType = Literal[
+19:     "auto",
+20:     "float16",
+21:     "bfloat16",
+22:     "fp8",
+23:     "fp8_e4m3",
+24:     "fp8_e5m2",
+25:     "fp8_inc",
+26:     "fp8_ds_mla",
+27:     "turboquant_k8v4",
+28:     "turboquant_4bit_nc",
+29:     "turboquant_k3v4_nc",
+30:     "turboquant_3bit_nc",
+31:     "int8_per_token_head",
+32:     "fp8_per_token_head",
+33:     "nvfp4",
+34: ]
+SOURCE v1/spec_decode/llm_base_proposer.py
+1188:     def _create_draft_vllm_config(self) -> VllmConfig:
+1189:         """Return a VllmConfig with kernel-level overrides for the proposer.
+1190:         Subclasses may override to apply additional config changes.
+1191:         """
+1192:         spec_cfg = self.speculative_config
+1193:         base = self.vllm_config
+1194: 
+1195:         if spec_cfg.moe_backend is not None:
+1196:             base = replace(
+1197:                 base,
+1198:                 kernel_config=replace(
+1199:                     base.kernel_config,
+1200:                     moe_backend=spec_cfg.moe_backend,
+1201:                 ),
+1202:             )
+1203: 
+1204:         # Note (matt): Never inherit the attention backend from base, because there are
+1205:         # many opportunities for incompatibility, so we always independently autoselect
+1206:         # unless explicitly specified in the speculative config.
+1207:         base = replace(
+1208:             base,
+1209:             attention_config=replace(
+1210:                 base.attention_config,
+1211:                 backend=spec_cfg.attention_backend,
+1212:             ),
+1213:         )
+1214: 
+1215:         return base
+1216: 
+1217:     def _get_model(self) -> nn.Module:
+1218:         """
+1219:         Default method to call get_model(). Can be overridden by subclasses which
+1220:         need to customize model loading.
+1221:         """
+1222:         from vllm.compilation.backends import set_model_tag
+1223: 
+1224:         draft_vllm_config = self._create_draft_vllm_config()
+SOURCE platforms/xpu.py
+165:             if _tp == 1 and _hs is not None and _hs > 256:
+166:                 logger.warning_once(
+167:                     "VLLM_XPU_SINGLECARD_TRITON=1: routing single-card "
+168:                     "head_size=%d attention to Triton (legacy fallback for "
+169:                     "kernel builds without the FlashAttention SLM/window fix).",
+170:                     _hs,
+171:                 )
+172:                 return AttentionBackendEnum.TRITON_ATTN.get_path()
+173: 
+174:         # TurboQuant KV cache: route directly to TQ backend
+175:         kv_cache_dtype = attn_selector_config.kv_cache_dtype
+176:         if kv_cache_dtype is not None and kv_cache_dtype.startswith("turboquant_"):
+177:             logger.info_once("Using TurboQuant attention backend.")
+178:             return AttentionBackendEnum.TURBOQUANT.get_path()
+179: 
+180:         dtype = attn_selector_config.dtype
+181:         if attn_selector_config.use_sparse:
+182:             logger.info_once("Using XPU MLA Sparse backend.")
+183:             return AttentionBackendEnum.XPU_MLA_SPARSE.get_path()
+184:         if attn_selector_config.use_mla:
+185:             if selected_backend in (None, AttentionBackendEnum.FLASH_ATTN_MLA):
+186:                 logger.info_once("Using Flash Attention MLA backend on XPU.")
+187:                 return AttentionBackendEnum.FLASH_ATTN_MLA.get_path()
+188:             if selected_backend == AttentionBackendEnum.TRITON_MLA:
+189:                 logger.info_once("Using Triton MLA backend on V1 engine.")
+190:                 return AttentionBackendEnum.TRITON_MLA.get_path()
+191:             if selected_backend:
+192:                 raise ValueError(
+193:                     f"Invalid attention backend for {cls.device_name}, "
+194:                     f"with use_mla: {attn_selector_config.use_mla}"
+195:                 )
+196:         if selected_backend == AttentionBackendEnum.TRITON_ATTN:
+197:             logger.info_once("Using Triton backend.")
+198:             return AttentionBackendEnum.TRITON_ATTN.get_path()
+199:         elif dtype == torch.float32:
+200:             logger.warning_once(
+201:                 "Flash Attention on XPU does not support float32 dtype. "
+202:                 "Falling back to Triton Attention backend."
+203:             )
+204:             return AttentionBackendEnum.TRITON_ATTN.get_path()
+205:         elif selected_backend == AttentionBackendEnum.FLASH_ATTN:
+TQ_FILE /opt/venv/lib/python3.12/site-packages/vllm/v1/attention/ops/triton_turboquant_decode.py
+TQ_FILE /opt/venv/lib/python3.12/site-packages/vllm/v1/attention/ops/triton_turboquant_store.py
+TQ_FILE /opt/venv/lib/python3.12/site-packages/vllm/v1/attention/backends/turboquant_attn.py
+ONECCL /opt/venv/lib/libccl.so
+/opt/venv/lib/libccl.so.1
+/opt/intel/oneapi/ccl/2021.15/lib/libccl.so
+/opt/intel/oneapi/ccl/2021.15/lib/libccl.so.1.0
+/opt/intel/oneapi/ccl/2021.15/lib/libccl.so.1
+/opt/intel/oneapi/ccl/2021.15/lib/ccl/cpu/lib/libccl.so
+/opt/intel/oneapi/ccl/2021.15/lib/ccl/cpu/lib/libccl.so.1.0
+/opt/intel/oneapi/ccl/2021.15/lib/ccl/cpu/lib/libccl.so.1
+DEVICES 

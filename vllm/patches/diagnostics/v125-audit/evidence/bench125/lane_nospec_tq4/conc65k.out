@@ -1,0 +1,1 @@
+CONC nospec_tq4_c65k N=2 nw=60000 mt=192: ok=2/2 err=0 agg_tps=5.1 busy_tps=8.5 ttft_p50=63.8s p95=63.8s wall=74.9s per_client_tps=[17.6, 5.6]

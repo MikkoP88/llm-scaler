@@ -1,0 +1,82 @@
+# llm-scaler v53 (v125-audit implementation) — bake v1.2.5 -> v1.2.6t1 (TEST)
+#
+# v1.2.6t1 = v1.2.5 + THREE full-file overlays implementing REPORT.md §4
+# levers (L2 / L4 / P-1 / L10). Only these files change vs v1.2.5t5:
+#
+#   1. llm_base_proposer.py (L2): context-adaptive speculative emission
+#      width. VLLM_SPEC_CTX_K="<ctx_threshold>:<k>" (default "" = inert =
+#      byte-identical routing to v1.2.5). When armed and the batch-min
+#      context (via common_attn_metadata._seq_lens_cpu, zero-sync) >=
+#      threshold: sequential drafters (MTP) use k as loop bound; parallel
+#      drafters (DFlash) truncate emission rows to width k (list return,
+#      same contract as DFLASH2_EMIT_K; composes with it). Floor k=1 —
+#      NEVER 0 (v52m zero-emission strike-out convicted). Rationale:
+#      mtp4 deep-ctx 11.7 tok/s vs nospec 17.7 @128k — spec loss fork.
+#
+#   2. flash_attn.py (L4 + P-1):
+#      L4 — RAGGED fp8 multi-row verify (uniform gate rejects ragged, so
+#      ragged falls to v33 MQ3D which measured SLOWER than fallback):
+#      front-pad ragged rows into a pseudo-uniform [B*q] layout, run the
+#      v51 SPLITS triton kernel (causal math bit-exact: real row j' at
+#      slot q-q_i+j' -> kv limit = seq-q_i+j'+1 exactly), unpad via
+#      searchsorted+gather. Gate: waste <= 50% (num_actual_tokens*2 >=
+#      q*B), q in (1,8], causal, no softcap/window/descale, hs<=256.
+#      try/except -> v33 fallback (counter v53_l4_fallback).
+#      VLLM_V53_L4=0 restores v1.2.5 routing exactly (default ON).
+#      P-1 — VLLM_V125_P1=1 (default OFF): route-mix counters
+#      (_v125_p1_route) on v51_uniform / v53_l4_ragged_pad /
+#      v53_l4_fallback / v33_mq3d; logs every 2000 calls. Observability
+#      for the GMU gate-hit-rate question (REPORT §3.1 unknown).
+#
+#   3. turboquant_attn.py (L10): VLLM_V53_TQTIER=1 (default OFF):
+#      periodic _effective_kv_splits() decision logs (every 512th call).
+#      Static finding: tier ladder (2x/4x/8x) collapses at the
+#      _tq_max_kv_splits cap (base 256, cap 1024 -> 4x and 8x tiers both
+#      eff=1024), weakening the D10 tier-boundary suspect; logs confirm.
+#
+# NOT in-image (host-side): dt_warmup_v53.py (L7) = dt_warmup_v51 p1-p9
+# + p10 (~131k) / p11 (~227k) deep warmup buckets, varied fillers
+# (KNOWN_ISSUES #13 instant-EOS >= 32k), V53_DEEP_WARMUP=0 opt-out.
+FROM llm-scaler-exp:v1.2.5
+
+COPY llm_base_proposer_v53.py flash_attn_v53.py turboquant_attn_v53.py /tmp/v126t1/
+
+RUN set -eux; \
+    P=/opt/venv/bin/python; \
+    SP=/opt/venv/lib/python3.12/site-packages; \
+    PROP=$SP/vllm/v1/spec_decode/llm_base_proposer.py; \
+    FA=$SP/vllm/v1/attention/backends/flash_attn.py; \
+    TQ=$SP/vllm/v1/attention/backends/turboquant_attn.py; \
+    md5sum "$PROP" | grep -q 0371f785cfadb51a34adcbbe3b0e8e19; \
+    md5sum "$FA" | grep -q da085d4e37e20a4c2369c6a3a4035fa8; \
+    md5sum "$TQ" | grep -q eb4c86b1268d109a94cbf7fe483bb297; \
+    md5sum /tmp/v126t1/llm_base_proposer_v53.py | grep -q 7740c68cbb6ef876572b2236138d5d41; \
+    md5sum /tmp/v126t1/flash_attn_v53.py | grep -q 4500df595690ff51a4edf7c214efbe70; \
+    md5sum /tmp/v126t1/turboquant_attn_v53.py | grep -q 192f701929d8614e898e0b750e65d11a; \
+    cp /tmp/v126t1/llm_base_proposer_v53.py "$PROP"; \
+    cp /tmp/v126t1/flash_attn_v53.py "$FA"; \
+    cp /tmp/v126t1/turboquant_attn_v53.py "$TQ"; \
+    grep -q 'llm-scaler v53 (v125-audit L2' "$PROP"; \
+    grep -q 'VLLM_SPEC_CTX_K' "$PROP"; \
+    grep -q '_v53_k_eff' "$PROP"; \
+    grep -q 'v53 L2 ctx-adaptive k armed' "$PROP"; \
+    grep -q 'v53 L2 ctx-adaptive k fired' "$PROP"; \
+    grep -q '_v53_ctxk_fires' "$PROP"; \
+    grep -q 'llm-scaler v53 (v125-audit L4' "$FA"; \
+    grep -q 'VLLM_V53_L4' "$FA"; \
+    grep -q 'v53_l4_ragged_pad' "$FA"; \
+    grep -q 'v53_l4_fallback' "$FA"; \
+    grep -q '_v125_p1_route' "$FA"; \
+    grep -q 'VLLM_V125_P1' "$FA"; \
+    grep -q 'v33_mq3d' "$FA"; \
+    grep -q 'llm-scaler v53 (v125-audit L10' "$TQ"; \
+    grep -q 'VLLM_V53_TQTIER' "$TQ"; \
+    grep -q 'V53_TQTIER #' "$TQ"; \
+    $P -m py_compile "$PROP" "$FA" "$TQ"; \
+    md5sum "$PROP" | grep -q 7740c68cbb6ef876572b2236138d5d41; \
+    md5sum "$FA" | grep -q 4500df595690ff51a4edf7c214efbe70; \
+    md5sum "$TQ" | grep -q 192f701929d8614e898e0b750e65d11a; \
+    rm -rf /tmp/v126t1; \
+    find $SP/vllm -name "__pycache__" -type d -prune -exec rm -rf {} + 2>/dev/null || true; \
+    touch /root/.v126t1_baked; \
+    echo "v53 bake OK (v1.2.6t1 = v1.2.5 + L2 ctx-adaptive k / L4 ragged fp8 pad / P-1 route counters / L10 tier logs; all env-gated, defaults inert-or-ON-exactly-v125)"

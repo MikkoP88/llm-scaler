@@ -1,0 +1,1 @@
+CONC mtp4_tq4_c65k N=2 nw=60000 mt=192: ok=2/2 err=0 agg_tps=3.9 busy_tps=5.2 ttft_p50=78.8s p95=78.8s wall=98.1s per_client_tps=[10.0, 3.5]

@@ -1,0 +1,69 @@
+PACKAGE_ROOT /opt/venv/lib/python3.12/site-packages/vllm
+FILE /opt/venv/lib/python3.12/site-packages/vllm/config/cache.py SHA256 4e8511bb8ff4d4028778885bb842b4242e171571ecfec54a79dbe12ebf102325
+18: CacheDType = Literal[
+27:     "turboquant_k8v4",
+28:     "turboquant_4bit_nc",
+29:     "turboquant_k3v4_nc",
+30:     "turboquant_3bit_nc",
+74:     cache_dtype: CacheDType = "auto"
+112:     kv_cache_dtype is fp8. If `False`, the scales will be loaded from the model
+114:     kv_cache_dtype_skip_layers: list[str] = field(default_factory=list)
+FILE /opt/venv/lib/python3.12/site-packages/vllm/platforms/xpu.py SHA256 20c28cb1b42608cd51b083f27731a361c60487b0368003c18db18b38178cbbd6
+175:         kv_cache_dtype = attn_selector_config.kv_cache_dtype
+176:         if kv_cache_dtype is not None and kv_cache_dtype.startswith("turboquant_"):
+FILE /opt/venv/lib/python3.12/site-packages/vllm/v1/spec_decode/llm_base_proposer.py SHA256 3f192d18691558849bc32ee82c1d1a45f1791052a9ac4fa53b7491fa462a919b
+1188:     def _create_draft_vllm_config(self) -> VllmConfig:
+1224:         draft_vllm_config = self._create_draft_vllm_config()
+MODEL target CONFIG_SHA256 74227dd615bf1ea975aa676bdf355a0379858c12f394b5365cd9dfa5fc2c70bc
+architectures ["Qwen3_5ForConditionalGeneration"]
+image_token_id 248056
+language_model_only false
+model_type "qwen3_5"
+text_config {"attention_bias": false, "attention_dropout": 0.0, "attn_output_gate": true, "bos_token_id": 248044, "dtype": "bfloat16", "eos_token_id": 248044, "full_attention_interval": 4, "head_dim": 256, "hidden_act": "silu", "hidden_size": 5120, "initializer_range": 0.02, "intermediate_size": 17408, "layer_types": ["linear_attention", "linear_attention", "linear_attention", "full_attention", "linear_attention", "linear_attention", "linear_attention", "full_attention", "linear_attention", "linear_attention", "linear_attention", "full_attention", "linear_attention", "linear_attention", "linear_attention", "full_attention", "linear_attention", "linear_attention", "linear_attention", "full_attention", "linear_attention", "linear_attention", "linear_attention", "full_attention", "linear_attention", "linear_attention", "linear_attention", "full_attention", "linear_attention", "linear_attention", "linear_attention", "full_attention", "linear_attention", "linear_attention", "linear_attention", "full_attention", "linear_attention", "linear_attention", "linear_attention", "full_attention", "linear_attention", "linear_attention", "linear_attention", "full_attention", "linear_attention", "linear_attention", "linear_attention", "full_attention", "linear_attention", "linear_attention", "linear_attention", "full_attention", "linear_attention", "linear_attention", "linear_attention", "full_attention", "linear_attention", "linear_attention", "linear_attention", "full_attention", "linear_attention", "linear_attention", "linear_attention", "full_attention"], "linear_conv_kernel_dim": 4, "linear_key_head_dim": 128, "linear_num_key_heads": 16, "linear_num_value_heads": 48, "linear_value_head_dim": 128, "mamba_ssm_dtype": "float32", "max_position_embeddings": 262144, "model_type": "qwen3_5_text", "mtp_num_hidden_layers": 1, "mtp_use_dedicated_embeddings": false, "num_attention_heads": 24, "num_hidden_layers": 64, "num_key_value_heads": 4, "output_gate_type": "swish", "pad_token_id": null, "partial_rotary_factor": 0.25, "rms_norm_eps": 1e-06, "rope_parameters": {"mrope_interleaved": true, "mrope_section": [11, 11, 10], "partial_rotary_factor": 0.25, "rope_theta": 10000000, "rope_type": "default"}, "tie_word_embeddings": false, "use_cache": true, "vocab_size": 248320}
+tie_word_embeddings false
+transformers_version "5.8.0.dev0"
+video_token_id 248057
+vision_config {"deepstack_visual_indexes": [], "depth": 27, "hidden_act": "gelu_pytorch_tanh", "hidden_size": 1152, "in_channels": 3, "initializer_range": 0.02, "intermediate_size": 4304, "model_type": "qwen3_5", "num_heads": 16, "num_position_embeddings": 2304, "out_hidden_size": 5120, "patch_size": 16, "spatial_merge_size": 2, "temporal_patch_size": 2}
+vision_end_token_id 248054
+vision_start_token_id 248053
+quantization_config {"activation_scheme": "dynamic", "fmt": "e4m3", "quant_method": "fp8", "modules_to_not_convert": ["model.visual.blocks.0.attn.proj", "model.visual.blocks.0.attn.qkv", "model.visual.blocks.0.mlp.linear_fc1", "model.visual.blocks.0.mlp.linear_fc2", "visual.blocks.0.attn.proj", "visual.blocks.0.attn.qkv_proj", "visual.blocks.0.mlp.linear_fc1", "visual.blocks.0.mlp.linear_fc2", "model.visual.blocks.1.attn.proj", "model.visual.blocks.1.attn.qkv", "model.visual.blocks.1.mlp.linear_fc1", "model.visual.blocks.1.mlp.linear_fc2", "visual.blocks.1.attn.proj", "visual.blocks.1.attn.qkv_proj", "visual.blocks.1.mlp.linear_fc1", "visual.blocks.1.mlp.linear_fc2", "model.visual.blocks.2.attn.proj", "model.visual.blocks.2.attn.qkv", "model.visual.blocks.2.mlp.linear_fc1", "model.visual.blocks.2.mlp.linear_fc2", "visual.blocks.2.attn.proj", "visual.blocks.2.attn.qkv_proj", "visual.blocks.2.mlp.linear_fc1", "visual.blocks.2.mlp.linear_fc2", "model.visual.blocks.3.attn.proj", "model.visual.blocks.3.attn.qkv", "model.visual.blocks.3.mlp.linear_fc1", "model.visual.blocks.3.mlp.linear_fc2", "visual.blocks.3.attn.proj", "visual.blocks.3.attn.qkv_proj", "visual.blocks.3.mlp.linear_fc1", "visual.blocks.3.mlp.linear_fc2", "model.visual.blocks.4.attn.proj", "model.visual.blocks.4.attn.qkv", "model.visual.blocks.4.mlp.linear_fc1", "model.visual.blocks.4.mlp.linear_fc2", "visual.blocks.4.attn.proj", "visual.blocks.4.attn.qkv_proj", "visual.blocks.4.mlp.linear_fc1", "visual.blocks.4.mlp.linear_fc2", "model.visual.blocks.5.attn.proj", "model.visual.blocks.5.attn.qkv", "model.visual.blocks.5.mlp.linear_fc1", "model.visual.blocks.5.mlp.linear_fc2", "visual.blocks.5.attn.proj", "visual.blocks.5.attn.qkv_proj", "visual.blocks.5.mlp.linear_fc1", "visual.blocks.5.mlp.linear_fc2", "model.visual.blocks.6.attn.proj", "model.visual.blocks.6.attn.qkv", "model.visual.blocks.6.mlp.linear_fc1", "model.visual.blocks.6.mlp.linear_fc2", "visual.blocks.6.attn.proj", "visual.blocks.6.attn.qkv_proj", "visual.blocks.6.mlp.linear_fc1", "visual.blocks.6.mlp.linear_fc2", "model.visual.blocks.7.attn.proj", "model.visual.blocks.7.attn.qkv", "model.visual.blocks.7.mlp.linear_fc1", "model.visual.blocks.7.mlp.linear_fc2", "visual.blocks.7.attn.proj", "visual.blocks.7.attn.qkv_proj", "visual.blocks.7.mlp.linear_fc1", "visual.blocks.7.mlp.linear_fc2", "model.visual.blocks.8.attn.proj", "model.visual.blocks.8.attn.qkv", "model.visual.blocks.8.mlp.linear_fc1", "model.visual.blocks.8.mlp.linear_fc2", "visual.blocks.8.attn.proj", "visual.blocks.8.attn.qkv_proj", "visual.blocks.8.mlp.linear_fc1", "visual.blocks.8.mlp.linear_fc2", "model.visual.blocks.9.attn.proj", "model.visual.blocks.9.attn.qkv", "model.visual.blocks.9.mlp.linear_fc1", "model.visual.blocks.9.mlp.linear_fc2", "visual.blocks.9.attn.proj", "visual.blocks.9.attn.qkv_proj", "visual.blocks.9.mlp.linear_fc1", "visual.blocks.9.mlp.linear_fc2", "model.visual.blocks.10.attn.proj", "model.visual.blocks.10.attn.qkv", "model.visual.blocks.10.mlp.linear_fc1", "model.visual.blocks.10.mlp.linear_fc2", "visual.blocks.10.attn.proj", "visual.blocks.10.attn.qkv_proj", "visual.blocks.10.mlp.linear_fc1", "visual.blocks.10.mlp.linear_fc2", "model.visual.blocks.11.attn.proj", "model.visual.blocks.11.attn.qkv", "model.visual.blocks.11.mlp.linear_fc1", "model.visual.blocks.11.mlp.linear_fc2", "visual.blocks.11.attn.proj", "visual.blocks.11.attn.qkv_proj", "visual.blocks.11.mlp.linear_fc1", "visual.blocks.11.mlp.linear_fc2", "model.visual.blocks.12.attn.proj", "model.visual.blocks.12.attn.qkv", "model.visual.blocks.12.mlp.linear_fc1", "model.visual.blocks.12.mlp.linear_fc2", "visual.blocks.12.attn.proj", "visual.blocks.12.attn.qkv_proj", "visual.blocks.12.mlp.linear_fc1", "visual.blocks.12.mlp.linear_fc2", "model.visual.blocks.13.attn.proj", "model.visual.blocks.13.attn.qkv", "model.visual.blocks.13.mlp.linear_fc1", "model.visual.blocks.13.mlp.linear_fc2", "visual.blocks.13.attn.proj", "visual.blocks.13.attn.qkv_proj", "visual.blocks.13.mlp.linear_fc1", "visual.blocks.13.mlp.linear_fc2", "model.visual.blocks.14.attn.proj", "model.visual.blocks.14.attn.qkv", "model.visual.blocks.14.mlp.linear_fc1", "model.visual.blocks.14.mlp.linear_fc2", "visual.blocks.14.attn.proj", "visual.blocks.14.attn.qkv_proj", "visual.blocks.14.mlp.linear_fc1", "visual.blocks.14.mlp.linear_fc2", "model.visual.blocks.15.attn.proj", "model.visual.blocks.15.attn.qkv", "model.visual.blocks.15.mlp.linear_fc1", "model.visual.blocks.15.mlp.linear_fc2", "visual.blocks.15.attn.proj", "visual.blocks.15.attn.qkv_proj", "visual.blocks.15.mlp.linear_fc1", "visual.blocks.15.mlp.linear_fc2", "model.visual.blocks.16.attn.proj", "model.visual.blocks.16.attn.qkv", "model.visual.blocks.16.mlp.linear_fc1", "model.visual.blocks.16.mlp.linear_fc2", "visual.blocks.16.attn.proj", "visual.blocks.16.attn.qkv_proj", "visual.blocks.16.mlp.linear_fc1", "visual.blocks.16.mlp.linear_fc2", "model.visual.blocks.17.attn.proj", "model.visual.blocks.17.attn.qkv", "model.visual.blocks.17.mlp.line
+MODEL dflash2 CONFIG_SHA256 873e3556509b0da06e29654ba00d4944888d4b5e8a33afde25f7eb27d321e980
+architectures ["DFlash2DraftModel"]
+attention_bias false
+attention_dropout 0.0
+bos_token_id null
+is_causal false
+dflash_config {"block_size": 8, "conv_group_size": 16, "conv_kernel_size": 2, "mask_token_id": 248070, "selector_rank": 256, "selector_top_k": 16, "target_layer_ids": [5, 19, 33, 47, 61]}
+dtype "bfloat16"
+eos_token_id 248044
+head_dim 128
+hidden_act "silu"
+hidden_size 5120
+initializer_range 0.02
+intermediate_size 17408
+layer_types ["sliding_attention", "sliding_attention", "sliding_attention", "sliding_attention", "sliding_attention"]
+max_position_embeddings 262144
+max_window_layers 5
+model_type "qwen3"
+num_attention_heads 32
+num_hidden_layers 5
+num_key_value_heads 8
+num_target_layers 64
+pad_token_id 248044
+rms_norm_eps 1e-06
+rope_parameters {"rope_theta": 10000000, "rope_type": "default"}
+sliding_window 2048
+tie_word_embeddings false
+transformers_version "5.15.0"
+use_cache true
+use_sliding_window true
+vocab_size 248320
+HASH v1/spec_decode/dflash.py 0a6549e2ca03b54be32aa9f29ea9da3bf5fa983688947626d651535accede6cb
+HASH v1/spec_decode/dflash2.py e8140652e0bdb25e5ff2aa4eed3b061600f99b29a61877f42d956e129baa491a
+HASH v1/attention/backends/turboquant_attn.py e26b0e4de6c02f6c85b3bcf71c2a6dfa52a3673c76a506c4d66d484724f02be9
+HASH v1/attention/backends/flash_attn.py 69587dfa05984ab8e584ff3d80a363840712f2937f9e947b8a0edb3e58c51808
+HASH v1/core/sched/async_scheduler.py 3df405b15251fe7f4bc861caf3a482b48b30899e8440d0239da6a07517d77465
+HASH v1/core/sched/scheduler.py 79befbe4c502b3eef1119935c6ee0b0dbf06b2d8b6013f3a8f053ef7a042e349
+HASH v1/worker/gpu_model_runner.py 74f21582ad14930257e4e899e67453ab2d9d8cac3a91db097dfe6b16f650ed15
+HASH v1/attention/ops/triton_fp8_mq.py c2b3ef336956958a15aa3791a7f499332eda21db6059264d8240c7d74454cf98
+GIT fatal: not a git repository (or any of the parent directories): .git

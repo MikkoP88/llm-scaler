@@ -1,0 +1,15 @@
+PROBE p1_short: sha=83dd8aaa38f8d7f0 prompt_tok=65 compl_tok=63 secs=1.6 tps=38.5
+  head: '\x1fCONTENT\x1f\n\nA transformer neural network is a deep learning architecture that processes sequences usi'
+PROBE p2_arith: sha=c87e27c45fcafcb6 prompt_tok=87 compl_tok=352 secs=3.7 tps=95.4
+  head: '\x1fCONTENT\x1f\n\n16+16=32\n32+32=64\n64+64=128\n128+128=256\n256+256=512\n512+512=1024\n1024+1024=2048\n2048+2048'
+PROBE p3_para: sha=12b16921f033714b prompt_tok=93 compl_tok=351 secs=9.3 tps=37.6
+  head: '\x1fCONTENT\x1f\n\nThe fog came in before dawn, thick as wool and white as bone, swallowing the sea until th'
+PROBE p4_code: sha=6765850de1d1d8db prompt_tok=76 compl_tok=400 secs=6.3 tps=63.3
+  head: '\x1fCONTENT\x1f'
+PROBE p5_fact: sha=f61457efcc110d35 prompt_tok=70 compl_tok=220 secs=4.6 tps=48.2
+  head: '\x1fCONTENT\x1f\n\n1. **Jupiter** — The largest planet in the solar system, with a famous storm called the G'
+PROBE p6_ctx2k: sha=724d74011519ac66 prompt_tok=2314 compl_tok=181 secs=7.2 tps=25.2
+  head: '\x1fCONTENT\x1f\n\nThe passage repeatedly describes a river carrying silt and small branches past mooring po'
+METRICS before: {"spec_decode_num_draft_tokens": 7676.0, "spec_decode_num_accepted_tokens": 1282.0, "prefix_cache_queries": 155928.0, "prefix_cache_hits": 0.0, "external_prefix_cache_queries": 0.0, "external_prefix_cache_hits": 0.0}
+METRICS after:  {"spec_decode_num_draft_tokens": 10945.0, "spec_decode_num_accepted_tokens": 2383.0, "prefix_cache_queries": 158633.0, "prefix_cache_hits": 0.0, "external_prefix_cache_queries": 0.0, "external_prefix_cache_hits": 0.0}
+ACCEPTANCE: 1101/3269 = 0.337

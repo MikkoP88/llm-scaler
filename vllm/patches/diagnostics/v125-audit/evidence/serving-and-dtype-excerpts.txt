@@ -1,0 +1,55 @@
+FILE entrypoints/openai/api_server.py EXISTS True
+FILE entrypoints/openai/serving_chat.py EXISTS True
+98: class OpenAIServingChat(OpenAIServing):
+1015:             # engine request is aborted immediately. aclose() on an already
+1017:             aclose = getattr(result_generator, "aclose", None)
+1018:             if aclose is not None:
+1019:                 await aclose()
+FILE entrypoints/openai/serving_completion.py EXISTS True
+51: class OpenAIServingCompletion(OpenAIServing):
+476:             aclose = getattr(result_generator, "aclose", None)
+477:             if aclose is not None:
+478:                 await aclose()
+FILE entrypoints/openai/chat_completion/serving.py EXISTS True
+98: class OpenAIServingChat(OpenAIServing):
+FILE entrypoints/openai/completion/serving.py EXISTS True
+51: class OpenAIServingCompletion(OpenAIServing):
+FILE model_executor/models/qwen3_5_mtp.py EXISTS True
+402:         cache_config = vllm_config.cache_config
+403:         if cache_config.mamba_cache_mode == "all":
+FILE model_executor/layers/attention/attention.py EXISTS True
+32:     kv_cache_dtype_str_to_dtype,
+172:         if layer.kv_cache_dtype == "fp8_e5m2" and _os.environ.get(
+175:             raise ValueError("fp8_e5m2 kv-cache is not supported with fp8 checkpoints.")
+204:         cache_config: CacheConfig | None = None,
+224:         elif cache_config is not None:
+226:             sliding_window = cache_config.sliding_window
+231:         if cache_config is not None:
+232:             kv_cache_dtype = cache_config.cache_dtype
+233:             calculate_kv_scales = cache_config.calculate_kv_scales
+235:             kv_cache_dtype = "auto"
+241:             kv_cache_dtype = "fp8"
+243:             if cache_config is not None:
+244:                 cache_config.cache_dtype = "fp8"
+245:                 cache_config.calculate_kv_scales = False
+254:         if cache_config is not None and cache_config.kv_cache_dtype_skip_layers:
+261:                 and "sliding_window" in cache_config.kv_cache_dtype_skip_layers
+266:             if str(layer_idx) in cache_config.kv_cache_dtype_skip_layers:
+269:                 kv_cache_dtype = "auto"
+272:                 "Layer %s: kv_cache_dtype=%s, sliding_window=%s",
+274:                 kv_cache_dtype,
+278:         self.kv_cache_torch_dtype = kv_cache_dtype_str_to_dtype(
+279:             kv_cache_dtype, vllm_config.model_config
+281:         self.kv_cache_dtype = kv_cache_dtype
+309:                 kv_cache_dtype,
+331:             cache_config is not None
+332:             and cache_config.enable_prefix_caching
+343:             cache_config.enable_prefix_caching = False
+359:             kv_cache_dtype,
+401:                 self.kv_cache_dtype.startswith("fp8") or self.kv_cache_dtype == "nvfp4"
+403:             and not self.kv_cache_dtype.endswith("per_token_head")
+446:             assert self.kv_cache_dtype in {"fp8", "fp8_e4m3", "nvfp4"}
+547:         block_size = vllm_config.cache_config.block_size
+550:         quant_mode = get_kv_quant_mode(self.kv_cache_dtype)
+564:         elif self.kv_cache_dtype.startswith("turboquant_"):
+571:                 self.kv_cache_dtype, self.head_size

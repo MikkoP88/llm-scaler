@@ -1,0 +1,55 @@
+# llm-scaler v53 (v125-audit implementation) — bake v1.2.6t1 -> v1.2.6t2 (TEST)
+#
+# t2 = t1 + llm_base_proposer.py ONLY (two fixes from Lane A post-mortem;
+# flash_attn / turboquant_attn / everything else byte-identical to t1):
+#
+#   1. L2 ctx source fix: the t1 _v53_k_eff read the deprecated
+#      _seq_lens_cpu lazy shadow, which NOTHING in the spec path
+#      populates -> L2 armed but never fired (Lane A deep decode
+#      bit-identical to v1.2.5, 0 fire lines). t2 cascades:
+#      seq_lens_cpu_upper_bound (resident CPU tensor, zero sync,
+#      optimistic by <= spec width — irrelevant vs a 65536 threshold;
+#      empirically src=ub) -> _seq_lens_cpu shadow -> one explicit
+#      seq_lens.to('cpu') (only when armed; ~0.1 ms vs ~100 ms deep
+#      step). Verified firing: "fired (#1, src=ub): min_ctx=65536".
+#
+#   2. L2 CONVICTED UNSOUND under async scheduling: the first k=1
+#      narrowing (during a prefill-overlap step at computed~65-88k,
+#      2026-09-07 14:02:16) wedged both TP workers — 5-min silent
+#      spin, RPC "sample_tokens" timeout (exactly 300 s), engine
+#      death. Root cause: AsyncScheduler plans spec width STATICALLY
+#      via _spec_token_placeholders (v42c contract: "the placeholder
+#      list width IS the scheduled spec width; everything downstream
+#      derives from the scheduled width"); proposer-side dynamic
+#      narrowing desyncs accounting under whole-step graphs. t2 gates
+#      narrowing behind VLLM_V53_L2_UNSTABLE=1 (default CLOSED —
+#      armed knob then only logs would-fire decisions, zero behavior
+#      change). Correct dynamic design (L2b) = scheduler-side width
+#      decision plumbed through SchedulerOutput -> runner -> spec
+#      worker + dual-width graph capture; follow-up work.
+FROM llm-scaler-exp:v1.2.6t1
+
+COPY llm_base_proposer_v53.py /tmp/v126t2/
+
+RUN set -eux; \
+    P=/opt/venv/bin/python; \
+    SP=/opt/venv/lib/python3.12/site-packages; \
+    PROP=$SP/vllm/v1/spec_decode/llm_base_proposer.py; \
+    md5sum "$PROP" | grep -q 7740c68cbb6ef876572b2236138d5d41; \
+    md5sum /tmp/v126t2/llm_base_proposer_v53.py | grep -q 7215ed994b24f842dc9b7bc0b1a6247e; \
+    cp /tmp/v126t2/llm_base_proposer_v53.py "$PROP"; \
+    grep -q 'llm-scaler v53 (v125-audit L2' "$PROP"; \
+    grep -q 'VLLM_SPEC_CTX_K' "$PROP"; \
+    grep -q '_v53_k_eff' "$PROP"; \
+    grep -q 'v53 L2 ctx-adaptive k armed' "$PROP"; \
+    grep -q 'v53 L2 ctx-adaptive k fired' "$PROP"; \
+    grep -q '_v53_ctxk_fires' "$PROP"; \
+    grep -q 'VLLM_V53_L2_UNSTABLE' "$PROP"; \
+    grep -q 'UNSTABLE gate closed' "$PROP"; \
+    grep -q 'seq_lens_cpu_upper_bound' "$PROP"; \
+    $P -m py_compile "$PROP"; \
+    md5sum "$PROP" | grep -q 7215ed994b24f842dc9b7bc0b1a6247e; \
+    rm -rf /tmp/v126t2; \
+    find $SP/vllm -name "__pycache__" -type d -prune -exec rm -rf {} + 2>/dev/null || true; \
+    touch /root/.v126t2_baked; \
+    echo "v53 t2 bake OK (v1.2.6t2 = t1 + proposer: L2 ub-source cascade + UNSTABLE gate [narrowing default-DISABLED after async-sched wedge conviction])"

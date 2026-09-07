@@ -1,0 +1,4 @@
+CTXSCAN df7_fp8 2k: ptok=2015 ctok=256 ttft=1.2s wall=12.2s tps=23.2
+CTXSCAN df7_fp8 16k: ptok=16665 ctok=256 ttft=19.4s wall=37.0s tps=14.5
+CTXSCAN df7_fp8 32k: ptok=33231 ctok=256 ttft=21.2s wall=38.5s tps=14.8
+CTXSCAN df7_fp8 65k: ptok=67485 ctok=256 ttft=37.1s wall=73.7s tps=7.0

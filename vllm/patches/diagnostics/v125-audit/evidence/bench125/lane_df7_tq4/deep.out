@@ -1,0 +1,2 @@
+CTXSCAN2 df7_tq4 nwords=115000: ptok=136191 ctok=256 ttft=88.6s prefill_tps=1537 wall=149.0s decode_tps=4.2
+CTXSCAN2 df7_tq4 nwords=205000: ptok=242761 ctok=256 ttft=106.5s prefill_tps=2280 wall=141.4s decode_tps=7.3

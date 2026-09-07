@@ -1,0 +1,1 @@
+CONC mtp4_fp8_c65k N=2 nw=60000 mt=192: ok=2/2 err=0 agg_tps=3.1 busy_tps=4.5 ttft_p50=98.3s p95=98.3s wall=124.3s per_client_tps=[7.4, 3.2]

@@ -1,0 +1,32 @@
+POST_WAIT Mon Sep  7 09:08:35 AM UTC 2026
+POST_START Mon Sep  7 09:36:35 AM UTC 2026
+LEG1 boot ok
+CTXSCAN2 mtp4_tq4_cold nwords=115000: ptok=136191 ctok=256 ttft=115.7s prefill_tps=1177 wall=137.6s decode_tps=11.7
+CTXSCAN2 mtp4_tq4_cold nwords=205000: ptok=242761 ctok=256 ttft=118.0s prefill_tps=2058 wall=159.7s decode_tps=6.1
+CTXSCAN2 mtp4_tq4_warm nwords=115000: ptok=136191 ctok=256 ttft=3.3s prefill_tps=41591 wall=25.1s decode_tps=11.7
+CTXSCAN2 mtp4_tq4_warm nwords=205000: ptok=242761 ctok=256 ttft=4.8s prefill_tps=50682 wall=46.0s decode_tps=6.2
+LEG2 boot ok
+CTXSCAN2 df7_tq4_cold nwords=115000: ptok=136191 ctok=256 ttft=110.2s prefill_tps=1236 wall=174.1s decode_tps=4.0
+CTXSCAN2 df7_tq4_cold nwords=205000: ptok=242761 ctok=256 ttft=106.9s prefill_tps=2272 wall=141.8s decode_tps=7.3
+CTXSCAN2 df7_tq4_warm nwords=115000: ptok=136191 ctok=256 ttft=1.9s prefill_tps=73550 wall=63.1s decode_tps=4.2
+CTXSCAN2 df7_tq4_warm nwords=205000: ptok=242761 ctok=256 ttft=2.3s prefill_tps=105147 wall=37.2s decode_tps=7.3
+LEG3(A) boot ok
+CTXSCAN2 fp8A_cold nwords=115000: ptok=136191 ctok=256 ttft=126.3s prefill_tps=1078 wall=169.6s decode_tps=5.9
+CTXSCAN2 fp8A_cold nwords=205000: ptok=242761 ctok=256 ttft=178.0s prefill_tps=1364 wall=236.6s decode_tps=4.4
+CTXSCAN2 fp8A_warm nwords=115000: ptok=136191 ctok=256 ttft=3.3s prefill_tps=40829 wall=23.9s decode_tps=12.5
+CTXSCAN2 fp8A_warm nwords=205000: ptok=242761 ctok=256 ttft=3.2s prefill_tps=74697 wall=53.2s decode_tps=5.1
+LEG4(B) boot ok
+CTXSCAN fp8B_warmupless 2k: ptok=2015 ctok=256 ttft=12.3s wall=26.3s tps=18.2
+CTXSCAN fp8B_warmupless 16k: ptok=16665 ctok=256 ttft=10.0s wall=17.2s tps=35.5
+CTXSCAN fp8B_warmupless 32k: ptok=33231 ctok=256 ttft=11.2s wall=21.4s tps=25.2
+CTXSCAN fp8B_warmupless 65k: ptok=67485 ctok=256 ttft=27.3s wall=38.8s tps=22.2
+CTXSCAN2 fp8B_cold nwords=115000: ptok=136191 ctok=256 ttft=118.3s prefill_tps=1151 wall=138.9s decode_tps=12.4
+CTXSCAN2 fp8B_cold nwords=205000: ptok=242761 ctok=256 ttft=171.0s prefill_tps=1419 wall=221.0s decode_tps=5.1
+CTXSCAN2 fp8B_warm nwords=115000: ptok=136191 ctok=256 ttft=3.2s prefill_tps=42953 wall=23.7s decode_tps=12.4
+CTXSCAN2 fp8B_warm nwords=205000: ptok=242761 ctok=256 ttft=3.3s prefill_tps=73616 wall=53.3s decode_tps=5.1
+LEG5(C) boot ok
+CTXSCAN2 fp8C_cold nwords=115000: ptok=136191 ctok=256 ttft=133.5s prefill_tps=1020 wall=159.9s decode_tps=9.7
+CTXSCAN2 fp8C_cold nwords=205000: ptok=242761 ctok=256 ttft=172.0s prefill_tps=1411 wall=222.0s decode_tps=5.1
+CTXSCAN2 fp8C_warm nwords=115000: ptok=136191 ctok=256 ttft=3.2s prefill_tps=41954 wall=23.8s decode_tps=12.4
+CTXSCAN2 fp8C_warm nwords=205000: ptok=242761 ctok=256 ttft=3.4s prefill_tps=72333 wall=53.3s decode_tps=5.1
+POST_DONE Mon Sep  7 10:27:30 AM UTC 2026
