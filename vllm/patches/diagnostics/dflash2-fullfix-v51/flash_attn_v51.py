@@ -1340,7 +1340,9 @@ class FlashAttentionImpl(AttentionImpl):
                     and self.kv_cache_dtype.startswith("fp8")
                     and block_table is not None
                     and seqused_k is not None
-                    and 1 < max_seqlen_q <= 8
+                    and (1 < max_seqlen_q <= 8
+                         # v52 G2 opt-in: uniform q==1 (nospec decode)
+                         or (_V51_FP8_MQ_Q1 and max_seqlen_q == 1))
                     # uniform decode: every seq contributed exactly
                     # max_query_len rows (spec verify / uniform draft).
                     and num_actual_tokens
@@ -1852,6 +1854,15 @@ _V33_MQ3D_SEGS = max(1, int(os.environ.get("VLLM_XPU_MQ3D_SEGS", "64") or 64))
 # Kernel tile/split knobs: VLLM_FP8MQ_BLOCK_KV / VLLM_FP8MQ_SPLITS /
 # VLLM_FP8MQ_STAGE1_WARPS / VLLM_FP8MQ_STAGE1_STAGES (see module header).
 _V51_FP8_MQ = os.environ.get("VLLM_XPU_FP8_MQ", "1") != "0"
+
+# llm-scaler v52 (SPLITS G2, opt-in): extend the v51 fp8 MQ kernel route
+# to UNIFORM q_len==1 decode (nospec fp8). The kernel supports Q_LEN=1
+# (Q_BLOCK=next_pow2(max(q_len,2))), but the route historically gated on
+# 1 < q <= 8, so nospec fp8 decode ran vxk FA2 varlen. Default OFF (FA2
+# stays); set VLLM_XPU_FP8_MQ_Q1=1 to A/B the split-KV Triton kernel on
+# the q=1 shape (hypothesis: more split parallelism helps at depth;
+# must be >= FA2 at 2k to ever become default).
+_V51_FP8_MQ_Q1 = os.environ.get("VLLM_XPU_FP8_MQ_Q1", "0") == "1"
 
 
 def _v33_mq3d_varlen(

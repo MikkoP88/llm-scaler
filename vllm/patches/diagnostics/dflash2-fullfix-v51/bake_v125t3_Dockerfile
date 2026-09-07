@@ -1,0 +1,72 @@
+# llm-scaler v52 (SPLITS engagement) — bake v1.2.5t2 -> v1.2.5t3 (TEST)
+#
+# t3 = t2 candidate-final content (TQ MQ split ladder default-32 + G2
+# env-only gate) + the crash-4 fix, as TWO new overlays:
+#
+#   scheduler_v52.py    -> vllm/v1/core/sched/scheduler.py
+#     (crash-4 Fix A: decode-scheduling guard num_new_tokens == 0 -> <= 0.
+#      2026-09-06 15:32 crash: a zombie request whose engine outputs
+#      stopped resolving (F9 gap) drove placeholder accounting to
+#      num_new_tokens = -7 -> SchedulerOutput.total_num_scheduled_tokens
+#      = -7 -> gpu_model_runner._prepare_inputs
+#      assert total_num_scheduled_tokens > 0 killed BOTH TP workers and
+#      every in-flight request returned HTTP 500. Only behavior delta vs
+#      base: previously-fatal negatives now take the existing == 0 skip
+#      path (request skipped for the step, others unaffected).)
+#
+#   async_sched_v52.py  -> vllm/v1/core/sched/async_scheduler.py
+#     (crash-4 Fix B, F8v2: runaway guard re-armed WITH grace. New
+#      default VLLM_V51_F8_MODE=v52: start a park timer at
+#      placeholder-overflow detection; cancel it if outputs resume
+#      (placeholders drain below the limit); force-finish
+#      FINISHED_ABORTED only after VLLM_V52_F8_GRACE seconds (default
+#      60) with no resolution — transiently-stalled VALID requests are
+#      never cut, but a true zombie can no longer sit in the running
+#      queue forever. detect/kill/off modes preserved for A/B.)
+#
+# Base-file md5 gates below pin the exact v1.2.4 content before overlay
+# (verified 2026-09-06: TQ bde20892..., FA 50fa85ce..., SCH 73817db5...,
+# ASCH 956c51ac... — identical to the t2 image, whose only deltas vs
+# v1.2.4 were TQ/FA).
+FROM llm-scaler-exp:v1.2.4
+
+COPY turboquant_attn_v52.py flash_attn_v51.py scheduler_v52.py async_sched_v52.py /tmp/v125t3/
+
+RUN set -eux; \
+    P=/opt/venv/bin/python; \
+    SP=/opt/venv/lib/python3.12/site-packages; \
+    TQ=$SP/vllm/v1/attention/backends/turboquant_attn.py; \
+    FA=$SP/vllm/v1/attention/backends/flash_attn.py; \
+    SCH=$SP/vllm/v1/core/sched/scheduler.py; \
+    ASCH=$SP/vllm/v1/core/sched/async_scheduler.py; \
+    md5sum "$TQ" | grep -q bde20892409e6eed599d22a627a91b32; \
+    md5sum "$FA" | grep -q 50fa85ceeb024067b76163b9718c4730; \
+    md5sum "$SCH" | grep -q 73817db55f8712301643146bce895bfb; \
+    md5sum "$ASCH" | grep -q 956c51acba291709742e8f40fd5042c1; \
+    md5sum /tmp/v125t3/turboquant_attn_v52.py | grep -q eb4c86b1268d109a94cbf7fe483bb297; \
+    md5sum /tmp/v125t3/flash_attn_v51.py | grep -q da085d4e37e20a4c2369c6a3a4035fa8; \
+    md5sum /tmp/v125t3/scheduler_v52.py | grep -q 95f3224bb4d6b887210fac071182f1b7; \
+    md5sum /tmp/v125t3/async_sched_v52.py | grep -q 63ca15aa4f1a0d871ea02fb6b02fd7a5; \
+    cp /tmp/v125t3/turboquant_attn_v52.py "$TQ"; \
+    cp /tmp/v125t3/flash_attn_v51.py "$FA"; \
+    cp /tmp/v125t3/scheduler_v52.py "$SCH"; \
+    cp /tmp/v125t3/async_sched_v52.py "$ASCH"; \
+    grep -q 'llm-scaler v52 (SPLITS G1)' "$TQ"; \
+    grep -q 'VLLM_TQ_MQ_SPLITS' "$TQ"; \
+    grep -q '_mq_kv_splits' "$TQ"; \
+    grep -q 'VLLM_XPU_FP8_MQ_Q1' "$FA"; \
+    grep -q 'llm-scaler v52 (crash-4 fix' "$SCH"; \
+    grep -q 'num_new_tokens <= 0' "$SCH"; \
+    grep -q 'llm-scaler v52 (crash-4 fix, F8v2' "$ASCH"; \
+    grep -q 'VLLM_V52_F8_GRACE' "$ASCH"; \
+    grep -q '_v52_parked' "$ASCH"; \
+    grep -q 'F8v2: FORCE-FINISH' "$ASCH"; \
+    $P -m py_compile "$TQ" "$FA" "$SCH" "$ASCH"; \
+    md5sum "$TQ" | grep -q eb4c86b1268d109a94cbf7fe483bb297; \
+    md5sum "$FA" | grep -q da085d4e37e20a4c2369c6a3a4035fa8; \
+    md5sum "$SCH" | grep -q 95f3224bb4d6b887210fac071182f1b7; \
+    md5sum "$ASCH" | grep -q 63ca15aa4f1a0d871ea02fb6b02fd7a5; \
+    rm -rf /tmp/v125t3; \
+    find $SP/vllm -name "__pycache__" -type d -prune -exec rm -rf {} + 2>/dev/null || true; \
+    touch /root/.v125t3_baked; \
+    echo "v52 bake OK (v1.2.5t3 = v1.2.4 + SPLITS G1 ladder + G2 opt-in gate + crash-4 fix A/B)"

@@ -1,0 +1,46 @@
+# llm-scaler v52 (SPLITS engagement) — bake v1.2.4 -> v1.2.5t1 (TEST)
+#
+# Adds exactly TWO overlays to the certified v1.2.4 set:
+#
+#   turboquant_attn_v52.py -> vllm/v1/attention/backends/turboquant_attn.py
+#     (SPLITS G1: MQ-verify / DFlash-drafter / synthetic-decode kernel
+#      split count now follows the same ctx-tier ladder as q=1 decode
+#      (full-capture grid = 32*{1,2,4,8} by max_model_len, cap 256)
+#      instead of the hard-coded kernel default 32; VLLM_TQ_MQ_SPLITS>0
+#      pins/rolls back. Pinned VLLM_TQ_MQ_SPLITS=32 is kernel-identical
+#      to v1.2.4 (same constexpr) — used as the bit-exact baseline leg.)
+#
+#   flash_attn_v51.py      -> vllm/v1/attention/backends/flash_attn.py
+#     (SPLITS G2, opt-in default-OFF: VLLM_XPU_FP8_MQ_Q1=1 extends the
+#      v51 fp8 MQ kernel route to uniform q_len==1 (nospec fp8 decode,
+#      currently vxk FA2). Unset env = byte-equivalent routing to v1.2.4.)
+#
+# Base turboquant_attn.py md5 bde20892409e6eed599d22a627a91b32 verified
+# identical to the v1.2.4 image file before patching (no foreign-revision
+# overlay risk; flash_attn_v51.py diff vs v1.2.4 baked = the 2 G2 hunks).
+FROM llm-scaler-exp:v1.2.4
+
+COPY turboquant_attn_v52.py flash_attn_v51.py /tmp/v125t1/
+
+RUN set -eux; \
+    P=/opt/venv/bin/python; \
+    SP=/opt/venv/lib/python3.12/site-packages; \
+    TQ=$SP/vllm/v1/attention/backends/turboquant_attn.py; \
+    FA=$SP/vllm/v1/attention/backends/flash_attn.py; \
+    md5sum /tmp/v125t1/turboquant_attn_v52.py | grep -q af1ac6c66a998c28794e257e5dc5f60c; \
+    md5sum /tmp/v125t1/flash_attn_v51.py | grep -q da085d4e37e20a4c2369c6a3a4035fa8; \
+    cp /tmp/v125t1/turboquant_attn_v52.py "$TQ"; \
+    cp /tmp/v125t1/flash_attn_v51.py "$FA"; \
+    grep -q 'llm-scaler v52 (SPLITS G1)' "$TQ"; \
+    grep -q 'VLLM_TQ_MQ_SPLITS' "$TQ"; \
+    grep -q '_mq_kv_splits' "$TQ"; \
+    grep -c 'max_num_kv_splits=self._mq_kv_splits' "$TQ" | grep -q '^2$'; \
+    grep -q 'llm-scaler v52 (SPLITS G2' "$FA"; \
+    grep -q 'VLLM_XPU_FP8_MQ_Q1' "$FA"; \
+    $P -m py_compile "$TQ" "$FA"; \
+    md5sum "$TQ" | grep -q af1ac6c66a998c28794e257e5dc5f60c; \
+    md5sum "$FA" | grep -q da085d4e37e20a4c2369c6a3a4035fa8; \
+    rm -rf /tmp/v125t1; \
+    find $SP/vllm -name "__pycache__" -type d -prune -exec rm -rf {} + 2>/dev/null || true; \
+    touch /root/.v125t1_baked; \
+    echo "v52 bake OK (v1.2.5t1 = v1.2.4 + SPLITS G1 ladder + G2 opt-in gate)"

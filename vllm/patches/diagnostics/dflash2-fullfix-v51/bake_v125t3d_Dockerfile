@@ -1,0 +1,87 @@
+# llm-scaler v52 (SPLITS engagement) — bake v1.2.5t3c -> v1.2.5t3d (TEST)
+#
+# t3d = t3c + v52e R1 ATTRIBUTION telemetry (2 files):
+#   - gpu_model_runner: stash per-step refs (spec metadata, logits, bonus,
+#     target_logits, temperature slot) onto the AsyncGPUModelRunnerOutput;
+#     at the v52d EMPTY-ROW event dump n_draft[slot], cu, draft row,
+#     bonus[slot], temp[slot], bonus-logits row (min,max,argmax), target
+#     argmax — decides (a) n=0 scheduler-drafts-dropped vs (b) stale greedy
+#     slot degenerate-argmax vs (c) >=vocab draft ids.
+#   - v1/sample/rejection_sampler.py (NEW overlay): stash bonus/target refs.
+# All other overlays identical to t3c (md5-gated).
+FROM llm-scaler-exp:v1.2.4
+
+COPY turboquant_attn_v52.py flash_attn_v51.py scheduler_v52.py async_sched_v52.py core_v52.py gpu_model_runner_v52.py rejection_sampler_v52e.py /tmp/v125t3d/
+
+RUN set -eux; \
+    P=/opt/venv/bin/python; \
+    SP=/opt/venv/lib/python3.12/site-packages; \
+    TQ=$SP/vllm/v1/attention/backends/turboquant_attn.py; \
+    FA=$SP/vllm/v1/attention/backends/flash_attn.py; \
+    SCH=$SP/vllm/v1/core/sched/scheduler.py; \
+    ASCH=$SP/vllm/v1/core/sched/async_scheduler.py; \
+    CORE=$SP/vllm/v1/engine/core.py; \
+    GMR=$SP/vllm/v1/worker/gpu_model_runner.py; \
+    RS=$SP/vllm/v1/sample/rejection_sampler.py; \
+    md5sum "$TQ" | grep -q bde20892409e6eed599d22a627a91b32; \
+    md5sum "$FA" | grep -q 50fa85ceeb024067b76163b9718c4730; \
+    md5sum "$SCH" | grep -q 73817db55f8712301643146bce895bfb; \
+    md5sum "$ASCH" | grep -q 956c51acba291709742e8f40fd5042c1; \
+    md5sum "$CORE" | grep -q 1d1ced0db0c33f33d126ebce456caf48; \
+    md5sum "$GMR" | grep -q f610bbd3b69902ad923160408cbbcc82; \
+    md5sum "$RS" | grep -q e9667450611373293a88079441794598; \
+    md5sum /tmp/v125t3d/turboquant_attn_v52.py | grep -q eb4c86b1268d109a94cbf7fe483bb297; \
+    md5sum /tmp/v125t3d/flash_attn_v51.py | grep -q da085d4e37e20a4c2369c6a3a4035fa8; \
+    md5sum /tmp/v125t3d/scheduler_v52.py | grep -q 95f3224bb4d6b887210fac071182f1b7; \
+    md5sum /tmp/v125t3d/async_sched_v52.py | grep -q 4ad8eba506a0899144ec0386cae9eb25; \
+    md5sum /tmp/v125t3d/core_v52.py | grep -q 82a155d91fc11f289ecaf71093c247fe; \
+    md5sum /tmp/v125t3d/gpu_model_runner_v52.py | grep -q 161334600f3bf9a24f451608f8713a12; \
+    md5sum /tmp/v125t3d/rejection_sampler_v52e.py | grep -q ed46b8e92d04857bba3b3ab26d37f465; \
+    cp /tmp/v125t3d/turboquant_attn_v52.py "$TQ"; \
+    cp /tmp/v125t3d/flash_attn_v51.py "$FA"; \
+    cp /tmp/v125t3d/scheduler_v52.py "$SCH"; \
+    cp /tmp/v125t3d/async_sched_v52.py "$ASCH"; \
+    cp /tmp/v125t3d/core_v52.py "$CORE"; \
+    cp /tmp/v125t3d/gpu_model_runner_v52.py "$GMR"; \
+    cp /tmp/v125t3d/rejection_sampler_v52e.py "$RS"; \
+    grep -q 'llm-scaler v52 (SPLITS G1)' "$TQ"; \
+    grep -q 'VLLM_TQ_MQ_SPLITS' "$TQ"; \
+    grep -q '_mq_kv_splits' "$TQ"; \
+    grep -q 'VLLM_XPU_FP8_MQ_Q1' "$FA"; \
+    grep -q 'llm-scaler v52 (crash-4 fix' "$SCH"; \
+    grep -q 'num_new_tokens <= 0' "$SCH"; \
+    grep -q 'llm-scaler v52 (crash-4 fix, F8v2' "$ASCH"; \
+    grep -q 'VLLM_V52_F8_GRACE' "$ASCH"; \
+    grep -q '_v52_parked' "$ASCH"; \
+    grep -q 'F8v2: FORCE-FINISH' "$ASCH"; \
+    grep -q 'llm-scaler v52 (crash-4 R2 root fix)' "$ASCH"; \
+    grep -q '_v52_term_pending' "$ASCH"; \
+    grep -q 'flush_pending_finishes' "$ASCH"; \
+    grep -q 'llm-scaler v52 (crash-4 R2 root fix)' "$CORE"; \
+    grep -q '_v52_flush_pending_finishes' "$CORE"; \
+    grep -q 'flush_pending_finishes' "$CORE"; \
+    grep -q 'llm-scaler v52c' "$GMR"; \
+    grep -q 'v52c DISCARD-GAP' "$GMR"; \
+    grep -q '_v52c_seen' "$GMR"; \
+    grep -q 'llm-scaler v52d' "$GMR"; \
+    grep -q 'v52d EMPTY-ROW' "$GMR"; \
+    grep -q '_v52d_seen' "$GMR"; \
+    grep -q 'llm-scaler v52e' "$GMR"; \
+    grep -q 'v52e ATTR' "$GMR"; \
+    grep -q '_v52e_refs' "$GMR"; \
+    grep -q '_v52e_temp' "$GMR"; \
+    grep -q 'llm-scaler v52e' "$RS"; \
+    grep -q '_v52e_bonus' "$RS"; \
+    grep -q '_v52e_targ' "$RS"; \
+    $P -m py_compile "$TQ" "$FA" "$SCH" "$ASCH" "$CORE" "$GMR" "$RS"; \
+    md5sum "$TQ" | grep -q eb4c86b1268d109a94cbf7fe483bb297; \
+    md5sum "$FA" | grep -q da085d4e37e20a4c2369c6a3a4035fa8; \
+    md5sum "$SCH" | grep -q 95f3224bb4d6b887210fac071182f1b7; \
+    md5sum "$ASCH" | grep -q 4ad8eba506a0899144ec0386cae9eb25; \
+    md5sum "$CORE" | grep -q 82a155d91fc11f289ecaf71093c247fe; \
+    md5sum "$GMR" | grep -q 161334600f3bf9a24f451608f8713a12; \
+    md5sum "$RS" | grep -q ed46b8e92d04857bba3b3ab26d37f465; \
+    rm -rf /tmp/v125t3d; \
+    find $SP/vllm -name "__pycache__" -type d -prune -exec rm -rf {} + 2>/dev/null || true; \
+    touch /root/.v125t3d_baked; \
+    echo "v52 bake OK (v1.2.5t3d = t3c + v52e R1 attribution telemetry, RS overlay added)"

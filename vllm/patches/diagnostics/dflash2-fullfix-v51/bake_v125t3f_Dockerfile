@@ -1,0 +1,106 @@
+# llm-scaler v52 (SPLITS engagement) — bake v1.2.5t3e -> v1.2.5t3f (TEST)
+#
+# t3f = t3e + v52g scheduler R1 ROOT FIX (1 file changed):
+#   - scheduler: _mamba_block_aligned_split gains a decode/spec-decode
+#     branch: a decode-shaped step (1 < num_new_tokens < block_size,
+#     past the prompt) is clamped to the remaining room in the current
+#     mamba block, so a (1+k)-row spec step can never SPAN a 2048-token
+#     block boundary mid-step. Root fix for crash-4 R1: t3e convicted the
+#     onset as the spanning step (4/4 zombies at 2043/2043/2044/4089-span;
+#     control crossing at 2048-exact survived; INPUT-OOB silent; all-NaN
+#     target logits -> sentinel 248320 leak -> empty emission). The
+#     prefill branch already prevents spanning for prompt chunks; decode
+#     was bypassed by design on the 'decode = 1 token' assumption.
+# All other overlays identical to t3e (md5-gated).
+FROM llm-scaler-exp:v1.2.4
+
+COPY turboquant_attn_v52.py flash_attn_v51.py scheduler_v52g.py async_sched_v52.py core_v52.py gpu_model_runner_v52f.py rejection_sampler_v52e.py mamba_utils_v52f.py /tmp/v125t3f/
+
+RUN set -eux; \
+    P=/opt/venv/bin/python; \
+    SP=/opt/venv/lib/python3.12/site-packages; \
+    TQ=$SP/vllm/v1/attention/backends/turboquant_attn.py; \
+    FA=$SP/vllm/v1/attention/backends/flash_attn.py; \
+    SCH=$SP/vllm/v1/core/sched/scheduler.py; \
+    ASCH=$SP/vllm/v1/core/sched/async_scheduler.py; \
+    CORE=$SP/vllm/v1/engine/core.py; \
+    GMR=$SP/vllm/v1/worker/gpu_model_runner.py; \
+    RS=$SP/vllm/v1/sample/rejection_sampler.py; \
+    MMU=$SP/vllm/v1/worker/mamba_utils.py; \
+    md5sum "$TQ" | grep -q bde20892409e6eed599d22a627a91b32; \
+    md5sum "$FA" | grep -q 50fa85ceeb024067b76163b9718c4730; \
+    md5sum "$SCH" | grep -q 73817db55f8712301643146bce895bfb; \
+    md5sum "$ASCH" | grep -q 956c51acba291709742e8f40fd5042c1; \
+    md5sum "$CORE" | grep -q 1d1ced0db0c33f33d126ebce456caf48; \
+    md5sum "$GMR" | grep -q f610bbd3b69902ad923160408cbbcc82; \
+    md5sum "$RS" | grep -q e9667450611373293a88079441794598; \
+    md5sum "$MMU" | grep -q a8b598acdbc3a6931383563bb9ef6030; \
+    md5sum /tmp/v125t3f/turboquant_attn_v52.py | grep -q eb4c86b1268d109a94cbf7fe483bb297; \
+    md5sum /tmp/v125t3f/flash_attn_v51.py | grep -q da085d4e37e20a4c2369c6a3a4035fa8; \
+    md5sum /tmp/v125t3f/scheduler_v52g.py | grep -q 9fdcaff4fd66c4190f4dfd197571b677; \
+    md5sum /tmp/v125t3f/async_sched_v52.py | grep -q 4ad8eba506a0899144ec0386cae9eb25; \
+    md5sum /tmp/v125t3f/core_v52.py | grep -q 82a155d91fc11f289ecaf71093c247fe; \
+    md5sum /tmp/v125t3f/gpu_model_runner_v52f.py | grep -q 68fe555b3dbbd2e625f753417b7875a4; \
+    md5sum /tmp/v125t3f/rejection_sampler_v52e.py | grep -q ed46b8e92d04857bba3b3ab26d37f465; \
+    md5sum /tmp/v125t3f/mamba_utils_v52f.py | grep -q 6fd7a78bc5ff3644f08fbc94c1180669; \
+    cp /tmp/v125t3f/turboquant_attn_v52.py "$TQ"; \
+    cp /tmp/v125t3f/flash_attn_v51.py "$FA"; \
+    cp /tmp/v125t3f/scheduler_v52g.py "$SCH"; \
+    cp /tmp/v125t3f/async_sched_v52.py "$ASCH"; \
+    cp /tmp/v125t3f/core_v52.py "$CORE"; \
+    cp /tmp/v125t3f/gpu_model_runner_v52f.py "$GMR"; \
+    cp /tmp/v125t3f/rejection_sampler_v52e.py "$RS"; \
+    cp /tmp/v125t3f/mamba_utils_v52f.py "$MMU"; \
+    grep -q 'llm-scaler v52 (SPLITS G1)' "$TQ"; \
+    grep -q 'VLLM_TQ_MQ_SPLITS' "$TQ"; \
+    grep -q '_mq_kv_splits' "$TQ"; \
+    grep -q 'VLLM_XPU_FP8_MQ_Q1' "$FA"; \
+    grep -q 'llm-scaler v52 (crash-4 fix' "$SCH"; \
+    grep -q 'num_new_tokens <= 0' "$SCH"; \
+    grep -q 'llm-scaler v52g' "$SCH"; \
+    grep -q 'v52g BOUNDARY-CLAMP' "$SCH"; \
+    grep -q 'llm-scaler v52 (crash-4 fix, F8v2' "$ASCH"; \
+    grep -q 'VLLM_V52_F8_GRACE' "$ASCH"; \
+    grep -q '_v52_parked' "$ASCH"; \
+    grep -q 'F8v2: FORCE-FINISH' "$ASCH"; \
+    grep -q 'llm-scaler v52 (crash-4 R2 root fix)' "$ASCH"; \
+    grep -q '_v52_term_pending' "$ASCH"; \
+    grep -q 'flush_pending_finishes' "$ASCH"; \
+    grep -q 'llm-scaler v52 (crash-4 R2 root fix)' "$CORE"; \
+    grep -q '_v52_flush_pending_finishes' "$CORE"; \
+    grep -q 'flush_pending_finishes' "$CORE"; \
+    grep -q 'llm-scaler v52c' "$GMR"; \
+    grep -q 'v52c DISCARD-GAP' "$GMR"; \
+    grep -q '_v52c_seen' "$GMR"; \
+    grep -q 'llm-scaler v52d' "$GMR"; \
+    grep -q 'v52d EMPTY-ROW' "$GMR"; \
+    grep -q '_v52d_seen' "$GMR"; \
+    grep -q 'llm-scaler v52e' "$GMR"; \
+    grep -q 'v52e ATTR' "$GMR"; \
+    grep -q '_v52e_refs' "$GMR"; \
+    grep -q '_v52e_temp' "$GMR"; \
+    grep -q 'llm-scaler v52f' "$GMR"; \
+    grep -q 'v52f CTX' "$GMR"; \
+    grep -q 'v52f INPUT-OOB' "$GMR"; \
+    grep -q '_v52f_ctx' "$GMR"; \
+    grep -q '_v52f_acc_hist' "$GMR"; \
+    grep -q 'llm-scaler v52e' "$RS"; \
+    grep -q '_v52e_bonus' "$RS"; \
+    grep -q '_v52e_targ' "$RS"; \
+    grep -q 'llm-scaler v52f' "$MMU"; \
+    grep -q 'v52f PRE-COPY' "$MMU"; \
+    grep -q 'v52f POST-COPY' "$MMU"; \
+    grep -q 'v52f DEF-PP' "$MMU"; \
+    $P -m py_compile "$TQ" "$FA" "$SCH" "$ASCH" "$CORE" "$GMR" "$RS" "$MMU"; \
+    md5sum "$TQ" | grep -q eb4c86b1268d109a94cbf7fe483bb297; \
+    md5sum "$FA" | grep -q da085d4e37e20a4c2369c6a3a4035fa8; \
+    md5sum "$SCH" | grep -q 9fdcaff4fd66c4190f4dfd197571b677; \
+    md5sum "$ASCH" | grep -q 4ad8eba506a0899144ec0386cae9eb25; \
+    md5sum "$CORE" | grep -q 82a155d91fc11f289ecaf71093c247fe; \
+    md5sum "$GMR" | grep -q 68fe555b3dbbd2e625f753417b7875a4; \
+    md5sum "$RS" | grep -q ed46b8e92d04857bba3b3ab26d37f465; \
+    md5sum "$MMU" | grep -q 6fd7a78bc5ff3644f08fbc94c1180669; \
+    rm -rf /tmp/v125t3f; \
+    find $SP/vllm -name "__pycache__" -type d -prune -exec rm -rf {} + 2>/dev/null || true; \
+    touch /root/.v125t3f_baked; \
+    echo "v52 bake OK (v1.2.5t3f = t3e + v52g scheduler decode-side mamba boundary clamp — crash-4 R1 root fix)"
