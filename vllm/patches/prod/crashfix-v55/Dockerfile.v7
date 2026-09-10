@@ -1,0 +1,30 @@
+# Dockerfile.v7 — llm-scaler crashfix-v55: the 2026-09-10 crash pair fix.
+#
+# FROM fp8-mtp4-v6 (== v1.2.7, sha256:7cf3d51cfc60…): v5 flash q=1
+# fan-out (VLLM_XPU_FP8_FANOUT=1 baked) + baked
+# VLLM_XPU_ALLOW_E5M2_FP8_CKPT=1 — plus, in this layer:
+#
+#   1. patch_async_fence.py — bounded async-event waits (4 sites) +
+#      GAP-FENCE escalation of the v52c DISCARD-GAP probe
+#      (crash-2 wedge class: dead num_accepted_tokens_event wedged the
+#      RPC thread until the 600 s watchdog; see patcher header).
+#   2. patch_warns.py — env allowlist (57 knobs, census-verified),
+#      v52l/v52f routine mamba-boundary logs demoted to DEBUG.
+#   3. .bashrc oneAPI banner: vars.sh --ccl-bundled-mpi=no (kills the
+#      "WARNING: '--ccl-bundled-mpi' is set to 'yes'" banner on every
+#      interactive shell / docker-exec).
+#
+# Env knobs added: VLLM_V55_EVENT_TIMEOUT_S (default 120 s),
+# VLLM_V55_GAP_FENCE (default 1; 0 = detect-only rollback per boot).
+# Numerics untouched — certified battery outputs must stay
+# byte-identical to the v6/v1.2.7 certification.
+
+FROM llm-scaler-exp:fp8-mtp4-v6
+COPY patch_async_fence.py patch_warns.py /w/v55/
+RUN python3 /w/v55/patch_async_fence.py --sp /opt/venv/lib/python3.12/site-packages \
+ && python3 /w/v55/patch_warns.py --sp /opt/venv/lib/python3.12/site-packages \
+ && grep -q "vars.sh --force$" /root/.bashrc \
+ && sed -i "s|vars.sh --force\$|vars.sh --force --ccl-bundled-mpi=no|" /root/.bashrc \
+ && grep -q "ccl-bundled-mpi=no" /root/.bashrc \
+ && rm -rf /w/v55 \
+ && echo BAKE_V7_OK
