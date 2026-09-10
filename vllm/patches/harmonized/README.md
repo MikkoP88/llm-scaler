@@ -70,3 +70,15 @@ matches the certified prod tree).
 - This set is the RECORD of what eras 1–2 did. Reproducing prod images
   still goes through the era-3 bake chain (v31.1 → v37 → v38); regenerating
   from v14+harmonized is possible but unexercised beyond the scratch check.
+- Era-4 (fp8-mtp4 campaign, 2026-09-10) prod delta: flash q=1 fan-out
+  verify route — production ledger entry
+  `../prod/flash-fp8-fanout-v54/` (patcher + bake/cert README); bake
+  lineage `../diagnostics/fp8-mtp4-v1/`: `Dockerfile.v4` (→ image
+  `fp8-mtp4-v5`, sha `e536666de558…`) and `Dockerfile.v6` (= v5 +
+  baked `VLLM_XPU_ALLOW_E5M2_FP8_CKPT=1` ENV →
+  image `fp8-mtp4-v6`, sha `7cf3d51cfc60…`; the ENV is inert unless
+  `--kv-cache-dtype fp8_e5m2` is selected — single read site, patch 03).
+  PRODUCTION IMAGES since 2026-09-10: v5 (03:54) → v6. Prod semver tag:
+  `llm-scaler-exp:v1.2.7` (dual-tag alias of fp8-mtp4-v6; v1.2.6 space
+  is occupied by test tags). Campaign record
+  and cert evidence: `../diagnostics/fp8-mtp4-v1/REPORT.md`.

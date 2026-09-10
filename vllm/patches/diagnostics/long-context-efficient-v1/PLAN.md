@@ -60,9 +60,15 @@ Diagnostic chain diag1–diag8 (`fp8-mtp4-v1/REPORT.md` is the campaign record; 
   sacrifice); steps deterministic, cancels clean, no wedge. The 128k
   relative-falloff gate is superseded by direct absolute superiority over the
   previously-best lane at every length.
-- **Prod standing since 2026-09-10 03:54 UTC**: fp8_e4m3 + mtp4
-  @0.9/262144 on `fp8-mtp4-v5` (BOOT/HEALTH/WARMUP/smoke green). Rollback:
-  `VLLM_XPU_FP8_FANOUT=0` per boot, or `prod_restore127.sh` for tq4nc.
+- **Prod standing since 2026-09-10 12:00:44 UTC**: fp8_e4m3 + mtp4
+  @0.9/262144 on `llm-scaler-exp:fp8-mtp4-v6` == `llm-scaler-exp:v1.2.7`
+  (sha256:7cf3d51cfc60…; = v5 + baked `VLLM_XPU_ALLOW_E5M2_FP8_CKPT=1`).
+  diag11 dual-lane byte-parity cert: dW6-e4m3 13/14 vs dV5-cert (the 1
+  diff = documented §8.2 boot-1 near-tie), dW6-e5m2 6/6 vs dX2 with EMPTY
+  extraenv (env-passed == env-baked; e5m2 now serve-time selectable via
+  `--kv-cache-dtype fp8_e5m2`, no env). Rollback:
+  `-e VLLM_XPU_ALLOW_E5M2_FP8_CKPT=0` per boot, `prod_restore_v5.sh`
+  (v5), or `prod_restore127.sh` (tq4nc).
 - Still open from the legs above: ~~multi-client soak~~ CLOSED (diag10:
   10 cycles × 2k C2 + 64k C2 + 262k C1 on the standing lane, 72 min,
   0 faults, 0 errors, no perf time-trend; cancel re-verified rc=0,
@@ -73,5 +79,6 @@ Diagnostic chain diag1–diag8 (`fp8-mtp4-v1/REPORT.md` is the campaign record; 
   multihop, no repeated 10-grams) across every campaign cell. Remaining:
   the P0 nospec wedge fence is unchanged (nospec remains the rollback
   lane); optional future re-base onto e5m2 KV (+33-39% @262k over e4m3,
-  validated, needs `VLLM_XPU_ALLOW_E5M2_FP8_CKPT=1` at boot).
+  validated; selectable on v6 with `--kv-cache-dtype fp8_e5m2` — the
+  guard env is baked).
 

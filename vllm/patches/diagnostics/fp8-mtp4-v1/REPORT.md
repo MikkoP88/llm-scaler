@@ -711,3 +711,63 @@ same-boot nospec refs (§7.1), both fp8 KV dtype variants (§7.2), and
 sustained-load soak + cross-boot determinism (§8). fp8_e4m3 + MTP k=4
 is at parity or superior to fp8+nospec at every measured case, with
 zero degradation events; prod stands on it.
+
+## 9. v6 production image — e5m2-lane bake + dual-lane byte-parity cert
+
+### 9.1 Bake
+
+`Dockerfile.v6` = `FROM llm-scaler-exp:fp8-mtp4-v5` +
+`ENV VLLM_XPU_ALLOW_E5M2_FP8_CKPT=1`. Purpose: make the validated
+e5m2 lane (§7.2: +12-17% @64k, +33-39% @262k) selectable with
+`--kv-cache-dtype fp8_e5m2` alone — no per-boot env. Safety: the ENV
+has a **single read site** (harmonized patch 03, attention.py v34
+guard) gated on `kv_cache_dtype == "fp8_e5m2"` — inert for e4m3 and
+tq4nc lanes. In-image checks (diag11):
+
+- `BAKE_V6_OK image=sha256:7cf3d51cfc60…`
+- `BAKE_V6_ENV_CHECK: V6ENV=1`
+- `BAKE_V6_FANOUT_STILL_ON fanout=1` (v5 default survived the layer)
+
+Production tag: **`llm-scaler-exp:v1.2.7`** (dual-tag alias,
+same image ID; v1.2.6 number-space occupied by test tags v1.2.6t1/t2 —
+pattern per v1.2.5 == v1.2.5t5).
+
+### 9.2 Certification — master_diag11 (dual-lane byte-parity, no env anywhere)
+
+| block | config | result |
+|---|---|---|
+| dW6-e4m3 | v6, kv fp8_e4m3, extraenv EMPTY, full 7-length knee ×2 | **13/14 byte-identical** to dV5-cert rep0/rep1 refs |
+| dW6-e5m2 | v6, kv fp8_e5m2, extraenv EMPTY (baked ENV must carry the v34 guard) | **6/6 byte-identical** to diag9b dX2-e5m2 refs |
+
+- The one e4m3 diff is 64k rep0 `5e28041a`→`1e143572`: the documented
+  boot-1 near-tie of §8.2 — v6 matches boots 2+3 (tally 3:1), both
+  resolutions correct (needle_hit=true, 192 tok). Not a v6 effect.
+- dW6-e5m2 **booted with empty extraenv** — the baked ENV is proven
+  load-bearing for the guard, and env-passed == env-baked numerically
+  (262k steps 125.1/125.1).
+- Cancel probes: rc=0 both blocks, engine_abort_count=0.
+
+### 9.3 Prod standing
+
+`prod_restore_v6.sh`: BOOT_OK (KV pool 707,980 blocks), HEALTH_OK
+11:56:47, WARMUP_OK 11:59:37, ctxscan smoke on the standing lane
+60.5/52.3/61.1/51.2 tps @2k/16k/32k/65k, **PROD_V6_STANDING
+12:00:44** — image `llm-scaler-exp:fp8-mtp4-v6` ==
+`llm-scaler-exp:v1.2.7`, fp8_e4m3 + mtp4 @0.9/262144 (config
+unchanged from v5 stand; e5m2 lane = `--kv-cache-dtype fp8_e5m2`,
+no env).
+
+### 9.4 Rollback chain
+
+1. `docker run -e VLLM_XPU_ALLOW_E5M2_FP8_CKPT=0 …` — overrides the
+   baked ENV per boot (kills only the e5m2 guard bypass).
+2. `prod_restore_v5.sh` — prior production image (fan-out baked ON,
+   no e5m2 ENV), same serve config.
+3. `prod_restore127.sh` — tq4nc pre-era-4 lane.
+
+### 9.5 Ledger entries
+
+- Production patch: `../../prod/flash-fp8-fanout-v54/` (patcher copy
+  + README: route, knob, bake lineage, cert, rollback).
+- Harmonized README era-4 note updated: v5/v6 lineage, v1.2.7 tag,
+  PRODUCTION IMAGES since 2026-09-10.
