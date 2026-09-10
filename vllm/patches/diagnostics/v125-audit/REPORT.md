@@ -1,5 +1,7 @@
 # llm-scaler v1.2.5 — Deep Audit, Live Baselines & Fix/Improvement Plan
 
+> **Follow-up, 2026-09-08:** [Long-context efficiency research, new measurements and built candidate](../long-context-efficient-v1/REPORT.md), with a [new implementation plan](../long-context-efficient-v1/PLAN.md). Fresh MTP4/TQ4-NC probes measured 22.0 / 12.1 / 6.1 decode tokens/s at 64k / 128k / near 262k. Actual upstream GPU links are Gen3 x16. The opt-in DFlash conversion-cache image is built and microtested, but remains unqualified for full-model deployment.
+
 > **Follow-up, 2026-09-07:** See the [latest-image audit and new fixes/testing plan](../latest-image-audit/REPORT.md). It distinguishes v1.2.6t2 from the active v1.2.5 baseline and supersedes this report's broad claims about ragged-route causality, transferable deep warmup, per-layer dequant workspace reuse, loop absence, universal workload winners and capacity ratios. The tables below remain historical measurements subject to their stated harness limitations.
 
 Date: 2026-09-07 · Host: 10.20.3.65 (2× Intel Arc Pro B70, TP=2, oneCCL, xe driver)

@@ -1,0 +1,14 @@
+# llm-scaler fp8-mtp4-v4 — v1 (SPLITS=16) + flash fan-out route for
+# uniform fp8 paged verify (knob VLLM_XPU_FP8_FANOUT, default off).
+# q_len flash q=1 calls (position-sliced) on the measured-healthy
+# decode shape instead of the q>1 multi-row kernels. Base = v1.
+ARG BASE=llm-scaler-exp:fp8-mtp4-v1
+FROM ${BASE}
+ARG FANOUT=0
+COPY patch_flash_fanout.py /tmp/
+RUN /opt/venv/bin/python3 /tmp/patch_flash_fanout.py --fanout-default ${FANOUT} \
+ && /opt/venv/bin/python3 -m py_compile \
+      /opt/venv/lib/python3.12/site-packages/vllm/v1/attention/backends/flash_attn.py \
+ && grep -n 'VLLM_XPU_FP8_FANOUT\|_V4_FANOUT' \
+      /opt/venv/lib/python3.12/site-packages/vllm/v1/attention/backends/flash_attn.py \
+ && rm /tmp/patch_flash_fanout.py

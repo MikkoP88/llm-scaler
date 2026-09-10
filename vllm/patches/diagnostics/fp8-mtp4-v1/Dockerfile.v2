@@ -1,0 +1,18 @@
+# llm-scaler fp8-mtp4-v2 — SPLITS=16 defaults + tl.dot stage-1 variant
+# (knob VLLM_FP8MQ_DOT, default off, live for A/B). Base v1.2.5.
+ARG BASE=llm-scaler-exp:v1.2.5
+FROM ${BASE}
+ARG SPLITS=16
+ARG BLOCK_KV=32
+ARG WARPS=4
+ARG STAGES=2
+ARG DOT=0
+COPY patch_fp8mq_defaults.py patch_fp8mq_dot.py /tmp/
+RUN /opt/venv/bin/python3 /tmp/patch_fp8mq_defaults.py \
+      --splits ${SPLITS} --block-kv ${BLOCK_KV} --warps ${WARPS} --stages ${STAGES} \
+ && /opt/venv/bin/python3 /tmp/patch_fp8mq_dot.py --dot-default ${DOT} \
+ && /opt/venv/bin/python3 -m py_compile \
+      /opt/venv/lib/python3.12/site-packages/vllm/v1/attention/ops/triton_fp8_mq.py \
+ && grep -n 'VLLM_FP8MQ_DOT\|_fp8_mq_stage1_dot\|os.environ.get("VLLM_FP8MQ' \
+      /opt/venv/lib/python3.12/site-packages/vllm/v1/attention/ops/triton_fp8_mq.py \
+ && rm /tmp/patch_fp8mq_defaults.py /tmp/patch_fp8mq_dot.py

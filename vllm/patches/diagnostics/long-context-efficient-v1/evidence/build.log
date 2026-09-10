@@ -1,0 +1,41 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 773B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/llm-scaler-exp:v1.2.5
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [internal] load build context
+#4 DONE 0.0s
+
+#5 [1/3] FROM docker.io/library/llm-scaler-exp:v1.2.5@sha256:a522bf15be2b666e7dcaab1d59557c8cc21e3bbcdf6be0a9c6bbf686b31f0ff8
+#5 resolve docker.io/library/llm-scaler-exp:v1.2.5@sha256:a522bf15be2b666e7dcaab1d59557c8cc21e3bbcdf6be0a9c6bbf686b31f0ff8 0.0s done
+#5 CACHED
+
+#4 [internal] load build context
+#4 transferring context: 2.81kB done
+#4 DONE 0.0s
+
+#6 [2/3] COPY build_candidate.py fp32_cache.py /tmp/lce1-build/
+#6 DONE 0.0s
+
+#7 [3/3] RUN /opt/venv/bin/python /tmp/lce1-build/build_candidate.py       /opt/venv/lib/python3.12/site-packages/vllm/model_executor/models/qwen3_dflash2.py       /tmp/lce1-build/qwen3_dflash2.py &&     cp /tmp/lce1-build/qwen3_dflash2.py /opt/venv/lib/python3.12/site-packages/vllm/model_executor/models/qwen3_dflash2.py &&     cp /tmp/lce1-build/fp32_cache.py /opt/venv/lib/python3.12/site-packages/vllm/model_executor/models/lce1_fp32_cache.py &&     /opt/venv/bin/python -m py_compile /opt/venv/lib/python3.12/site-packages/vllm/model_executor/models/qwen3_dflash2.py
+#7 0.310 input_sha256 9c5c768c77a104473c9ecb869f6830900f837a38f264ec1ebdf8c1fe05152ce8
+#7 0.310 candidate_sha256 f25d50a0f323abe709ff6741899fa07b367071214f37e28401e1494c6726051c
+#7 DONE 0.4s
+
+#8 exporting to image
+#8 exporting layers 0.1s done
+#8 exporting manifest sha256:c6241beae01991200f9eef3a7a87fd8991e0e81dfe8130255f88ffa142ee043f done
+#8 exporting config sha256:c0e61abaf6f38d4aea9e76f813d74575155c3fc55e3be54fe9d1ba347c6d5abe done
+#8 exporting attestation manifest sha256:302f5b00df66ec45f2d44f32a847ef6ce062d60e3d22f1cf82686d63c7ee7f00 done
+#8 exporting manifest list sha256:4ebd0899a976bb74b5aa530738a04bf78e2cc58ed98fe6bd0048a045d1fa1c35 done
+#8 naming to docker.io/library/llm-scaler-exp:lce1-fp32-cache done
+#8 unpacking to docker.io/library/llm-scaler-exp:lce1-fp32-cache 0.1s done
+#8 DONE 0.4s

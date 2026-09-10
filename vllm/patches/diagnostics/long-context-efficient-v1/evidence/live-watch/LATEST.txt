@@ -1,0 +1,11 @@
+Observed UTC: 2026-09-08T20:21:44.8280581Z
+SSH exit: 1
+
+Tue Sep  8 08:21:45 PM UTC 2026
+[09-08 20:03:15] CANCEL_PROBE cand-df7 rc=0
+[09-08 20:03:15] == BLOCK cand-df7 end
+[09-08 20:03:15] == restoring prod lane (prod_restore127.sh)
+[09-08 20:21:14] PROD_RESTORE_OK
+[09-08 20:21:14] MASTER_LCE1_DONE
+HEALTH_HTTP=000
+Error response from daemon: No such container: lsv-test
