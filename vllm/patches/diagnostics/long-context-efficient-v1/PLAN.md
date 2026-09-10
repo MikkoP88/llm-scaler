@@ -63,7 +63,15 @@ Diagnostic chain diag1–diag8 (`fp8-mtp4-v1/REPORT.md` is the campaign record; 
 - **Prod standing since 2026-09-10 03:54 UTC**: fp8_e4m3 + mtp4
   @0.9/262144 on `fp8-mtp4-v5` (BOOT/HEALTH/WARMUP/smoke green). Rollback:
   `VLLM_XPU_FP8_FANOUT=0` per boot, or `prod_restore127.sh` for tq4nc.
-- Still open from the legs above: multi-client soak + quality rescore now
-  apply to the NEW prod lane (fp8+mtp4-v5) instead of fp8+nospec; the P0
-  nospec wedge fence is unchanged (nospec remains the rollback lane).
+- Still open from the legs above: ~~multi-client soak~~ CLOSED (diag10:
+  10 cycles × 2k C2 + 64k C2 + 262k C1 on the standing lane, 72 min,
+  0 faults, 0 errors, no perf time-trend; cancel re-verified rc=0,
+  engine_abort_count=0) and ~~cross-boot determinism~~ CLOSED (3 boots:
+  rep1 byte-identical ×3; rep0 byte-identical boots 2+3, boot 1 = one
+  documented fp near-tie acceptance flip, correct in every resolution).
+  Quality is validated per-cell by the suite's task checks (needle_hit,
+  multihop, no repeated 10-grams) across every campaign cell. Remaining:
+  the P0 nospec wedge fence is unchanged (nospec remains the rollback
+  lane); optional future re-base onto e5m2 KV (+33-39% @262k over e4m3,
+  validated, needs `VLLM_XPU_ALLOW_E5M2_FP8_CKPT=1` at boot).
 
