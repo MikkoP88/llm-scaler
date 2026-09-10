@@ -1,0 +1,10 @@
+{
+  "output.py": {
+    "source_sha256": "44230b995721a011dbe2c1d012371b1d9ec844b1b09abfc24dd0c6d8a9e307fc",
+    "patched_sha256": "e6a20210643f94ec9230f6818005655a9baf0c0ecb5c80b051ad5382e96145e3"
+  },
+  "async_scheduler.py": {
+    "source_sha256": "3df405b15251fe7f4bc861caf3a482b48b30899e8440d0239da6a07517d77465",
+    "patched_sha256": "664bfbba1d8edf953b6eaeb7b2c44437b9f23da78615ca50e6992323f56a4b8b"
+  }
+}

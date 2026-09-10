@@ -1,0 +1,54 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 641B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/llm-scaler-exp:v1.2.5
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/3] FROM docker.io/library/llm-scaler-exp:v1.2.5@sha256:a522bf15be2b666e7dcaab1d59557c8cc21e3bbcdf6be0a9c6bbf686b31f0ff8
+#4 resolve docker.io/library/llm-scaler-exp:v1.2.5@sha256:a522bf15be2b666e7dcaab1d59557c8cc21e3bbcdf6be0a9c6bbf686b31f0ff8 0.0s done
+#4 CACHED
+
+#5 [internal] load build context
+#5 transferring context: 77B done
+#5 DONE 0.0s
+
+#6 [2/3] COPY build_patch.py test_prefill_phase.py /tmp/spec-prefill-fix/
+#6 DONE 0.0s
+
+#7 [3/3] RUN /opt/venv/bin/python /tmp/spec-prefill-fix/build_patch.py       /opt/venv/lib/python3.12/site-packages/vllm/v1/core/sched       /tmp/spec-prefill-fix/generated &&     cp /tmp/spec-prefill-fix/generated/output.py       /tmp/spec-prefill-fix/generated/async_scheduler.py       /opt/venv/lib/python3.12/site-packages/vllm/v1/core/sched/ &&     /opt/venv/bin/python /tmp/spec-prefill-fix/test_prefill_phase.py
+#7 0.274 {"output.py": {"source_sha256": "44230b995721a011dbe2c1d012371b1d9ec844b1b09abfc24dd0c6d8a9e307fc", "patched_sha256": "e6a20210643f94ec9230f6818005655a9baf0c0ecb5c80b051ad5382e96145e3"}, "async_scheduler.py": {"source_sha256": "3df405b15251fe7f4bc861caf3a482b48b30899e8440d0239da6a07517d77465", "patched_sha256": "664bfbba1d8edf953b6eaeb7b2c44437b9f23da78615ca50e6992323f56a4b8b"}}
+#7 3.106 /opt/venv/lib/python3.12/site-packages/torch/xpu/__init__.py:68: UserWarning: XPU device count is zero! (Triggered internally at /pytorch/c10/xpu/XPUFunctions.cpp:113.)
+#7 3.106   return torch._C._xpu_getDeviceCount()
+#7 8.103 test_cancelled_and_grammar_rows_are_not_struck (__main__.PrefillPhaseTests.test_cancelled_and_grammar_rows_are_not_struck) ... ok
+#7 8.103 test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) ... ok
+#7 8.110 test_genuine_empty_decode_still_reaches_guard (__main__.PrefillPhaseTests.test_genuine_empty_decode_still_reaches_guard) ... ok
+#7 8.111 test_mixed_batch_uses_each_rows_scheduled_phase (__main__.PrefillPhaseTests.test_mixed_batch_uses_each_rows_scheduled_phase) ... ok
+#7 8.111 test_snapshot_does_not_change_scheduled_width_or_placeholders (__main__.PrefillPhaseTests.test_snapshot_does_not_change_scheduled_width_or_placeholders) ... ok
+#7 8.111 test_snapshot_is_per_step_and_survives_transport (__main__.PrefillPhaseTests.test_snapshot_is_per_step_and_survives_transport) ... ok
+#7 8.111 test_unknown_step_phase_cannot_justify_abort (__main__.PrefillPhaseTests.test_unknown_step_phase_cannot_justify_abort) ... ok
+#7 8.111 test_valid_final_prefill_and_decode_clear_strikes (__main__.PrefillPhaseTests.test_valid_final_prefill_and_decode_clear_strikes) ... ok
+#7 8.112 
+#7 8.112 ----------------------------------------------------------------------
+#7 8.112 Ran 8 tests in 0.009s
+#7 8.112 
+#7 8.112 OK
+#7 DONE 9.5s
+
+#8 exporting to image
+#8 exporting layers
+#8 exporting layers 0.3s done
+#8 exporting manifest sha256:96cfae70c0df7c8b88b9f9f62da152300dcc8e0f2bf4b5df22ae4fb6f1dca591 done
+#8 exporting config sha256:2b11e87ca623ee4a1d136e1f369d878b673ac1718bd850a15abce8f62b77e5f7 done
+#8 exporting attestation manifest sha256:deebe034ef8940151e15e24c43ae743918807b4dc3aa5c68ab80763c59017773 done
+#8 exporting manifest list sha256:563f7362bb3592120276e95b1a5864b6862953d760488defabb97c5fbb566c97 done
+#8 naming to docker.io/library/llm-scaler-exp:spec-prefill-phase-v1-v125 done
+#8 unpacking to docker.io/library/llm-scaler-exp:spec-prefill-phase-v1-v125
+#8 unpacking to docker.io/library/llm-scaler-exp:spec-prefill-phase-v1-v125 0.3s done
+#8 DONE 0.8s

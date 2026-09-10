@@ -1,0 +1,162 @@
+test_cancelled_and_grammar_rows_are_not_struck (__main__.PrefillPhaseTests.test_cancelled_and_grammar_rows_are_not_struck) ... ok
+test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) ... 
+  test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=65536, width=0) ... FAIL
+  test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=65536, width=1) ... FAIL
+  test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=65536, width=4) ... FAIL
+  test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=65536, width=7) ... FAIL
+  test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=131072, width=0) ... FAIL
+  test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=131072, width=1) ... FAIL
+  test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=131072, width=4) ... FAIL
+  test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=131072, width=7) ... FAIL
+  test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=261888, width=0) ... FAIL
+  test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=261888, width=1) ... FAIL
+  test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=261888, width=4) ... FAIL
+  test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=261888, width=7) ... FAIL
+test_genuine_empty_decode_still_reaches_guard (__main__.PrefillPhaseTests.test_genuine_empty_decode_still_reaches_guard) ... ok
+test_snapshot_is_per_step_and_survives_transport (__main__.PrefillPhaseTests.test_snapshot_is_per_step_and_survives_transport) ... ERROR
+test_unknown_step_phase_cannot_justify_abort (__main__.PrefillPhaseTests.test_unknown_step_phase_cannot_justify_abort) ... FAIL
+test_valid_final_prefill_and_decode_clear_strikes (__main__.PrefillPhaseTests.test_valid_final_prefill_and_decode_clear_strikes) ... ok
+
+======================================================================
+ERROR: test_snapshot_is_per_step_and_survives_transport (__main__.PrefillPhaseTests.test_snapshot_is_per_step_and_survives_transport)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/test_prefill_phase.py", line 87, in test_snapshot_is_per_step_and_survives_transport
+    self.assertEqual(early.scheduled_prefill_chunk_req_ids, frozenset({'r'}))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SchedulerOutput' object has no attribute 'scheduled_prefill_chunk_req_ids'
+
+======================================================================
+FAIL: test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=65536, width=0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/test_prefill_phase.py", line 78, in test_delayed_prefill_never_arms_decode_watchdog
+    self.assertEqual(obj._v52b_strikes, {})
+AssertionError: {'r': 1} != {}
+- {'r': 1}
++ {}
+
+======================================================================
+FAIL: test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=65536, width=1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/test_prefill_phase.py", line 78, in test_delayed_prefill_never_arms_decode_watchdog
+    self.assertEqual(obj._v52b_strikes, {})
+AssertionError: {'r': 1} != {}
+- {'r': 1}
++ {}
+
+======================================================================
+FAIL: test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=65536, width=4)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/test_prefill_phase.py", line 78, in test_delayed_prefill_never_arms_decode_watchdog
+    self.assertEqual(obj._v52b_strikes, {})
+AssertionError: {'r': 1} != {}
+- {'r': 1}
++ {}
+
+======================================================================
+FAIL: test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=65536, width=7)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/test_prefill_phase.py", line 78, in test_delayed_prefill_never_arms_decode_watchdog
+    self.assertEqual(obj._v52b_strikes, {})
+AssertionError: {'r': 1} != {}
+- {'r': 1}
++ {}
+
+======================================================================
+FAIL: test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=131072, width=0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/test_prefill_phase.py", line 78, in test_delayed_prefill_never_arms_decode_watchdog
+    self.assertEqual(obj._v52b_strikes, {})
+AssertionError: {'r': 1} != {}
+- {'r': 1}
++ {}
+
+======================================================================
+FAIL: test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=131072, width=1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/test_prefill_phase.py", line 78, in test_delayed_prefill_never_arms_decode_watchdog
+    self.assertEqual(obj._v52b_strikes, {})
+AssertionError: {'r': 1} != {}
+- {'r': 1}
++ {}
+
+======================================================================
+FAIL: test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=131072, width=4)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/test_prefill_phase.py", line 78, in test_delayed_prefill_never_arms_decode_watchdog
+    self.assertEqual(obj._v52b_strikes, {})
+AssertionError: {'r': 1} != {}
+- {'r': 1}
++ {}
+
+======================================================================
+FAIL: test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=131072, width=7)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/test_prefill_phase.py", line 78, in test_delayed_prefill_never_arms_decode_watchdog
+    self.assertEqual(obj._v52b_strikes, {})
+AssertionError: {'r': 1} != {}
+- {'r': 1}
++ {}
+
+======================================================================
+FAIL: test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=261888, width=0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/test_prefill_phase.py", line 78, in test_delayed_prefill_never_arms_decode_watchdog
+    self.assertEqual(obj._v52b_strikes, {})
+AssertionError: {'r': 1} != {}
+- {'r': 1}
++ {}
+
+======================================================================
+FAIL: test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=261888, width=1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/test_prefill_phase.py", line 78, in test_delayed_prefill_never_arms_decode_watchdog
+    self.assertEqual(obj._v52b_strikes, {})
+AssertionError: {'r': 1} != {}
+- {'r': 1}
++ {}
+
+======================================================================
+FAIL: test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=261888, width=4)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/test_prefill_phase.py", line 78, in test_delayed_prefill_never_arms_decode_watchdog
+    self.assertEqual(obj._v52b_strikes, {})
+AssertionError: {'r': 1} != {}
+- {'r': 1}
++ {}
+
+======================================================================
+FAIL: test_delayed_prefill_never_arms_decode_watchdog (__main__.PrefillPhaseTests.test_delayed_prefill_never_arms_decode_watchdog) (length=261888, width=7)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/test_prefill_phase.py", line 78, in test_delayed_prefill_never_arms_decode_watchdog
+    self.assertEqual(obj._v52b_strikes, {})
+AssertionError: {'r': 1} != {}
+- {'r': 1}
++ {}
+
+======================================================================
+FAIL: test_unknown_step_phase_cannot_justify_abort (__main__.PrefillPhaseTests.test_unknown_step_phase_cannot_justify_abort)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/test_prefill_phase.py", line 117, in test_unknown_step_phase_cannot_justify_abort
+    self.assertEqual(obj._v52b_strikes, {})
+AssertionError: {'r': 1} != {}
+- {'r': 1}
++ {}
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.014s
+
+FAILED (failures=13, errors=1)

@@ -1,0 +1,49 @@
+--- a/vllm/v1/core/sched/output.py
++++ b/vllm/v1/core/sched/output.py
+@@ -240,6 +240,11 @@
+     # preventing stale NaN/data from corrupting attention or SSM computation.
+     new_block_ids_to_zero: list[int] | None = None
+ 
++    # Phase of this scheduled step, not the mutable Request phase.
++    # None means unavailable (e.g. an output constructed by an older
++    # producer); absence cannot establish an invalid decode result.
++    scheduled_prefill_chunk_req_ids: frozenset[str] | None = None
++
+     @classmethod
+     def make_empty(cls) -> "SchedulerOutput":
+         return cls(
+--- a/vllm/v1/core/sched/async_scheduler.py
++++ b/vllm/v1/core/sched/async_scheduler.py
+@@ -155,6 +155,9 @@
+         # zero steps (~half the F8 placeholder threshold); auto-clears on
+         # recovery; wrapped so telemetry can never take the engine down.
+         _v52m_doomed: list[str] = []
++        _step_prefill = getattr(
++            scheduler_output, "scheduled_prefill_chunk_req_ids", None
++        )
+         try:
+             _sti = model_runner_output.sampled_token_ids
+             _idx = model_runner_output.req_id_to_index
+@@ -162,6 +165,8 @@
+                 for _rid, _nsched in scheduler_output.num_scheduled_tokens.items():
+                     _req = self.requests.get(_rid)
+                     if (_req is None or _req.is_finished()
++                            or _step_prefill is None
++                            or _rid in _step_prefill
+                             or _req.is_prefill_chunk
+                             or getattr(_req, "use_structured_output",
+                                        False)):
+@@ -282,6 +287,13 @@
+ 
+     def _update_after_schedule(self, scheduler_output: SchedulerOutput) -> None:
+         super()._update_after_schedule(scheduler_output)
++        # SPF1: capture immediately after this step advances its counters.
++        # Later queued steps may change Request.is_prefill_chunk before
++        # this step returns its legitimate empty prefill output.
++        scheduler_output.scheduled_prefill_chunk_req_ids = frozenset(
++            req_id for req_id in scheduler_output.num_scheduled_tokens
++            if self.requests[req_id].is_prefill_chunk
++        )
+         spec_decode_tokens = scheduler_output.scheduled_spec_decode_tokens
+         for req_id in scheduler_output.num_scheduled_tokens:
+             request = self.requests[req_id]
