@@ -111,6 +111,88 @@ crash/warning classes (DEVICE_LOST, RPC timeouts, watchdog, JIT
 warnings, unknown-env, boundary floods, fence trips) → warning census.
 Results: `REPORT.md`.
 
+## 2026-09-11 addendum — crash-4/5/6 (post-coredump GPU flakiness), the v1.2.8 throughput regression, and v55.2 progressive-wait (v1.2.9)
+
+A "major token generation speed drop llm-scaler-exp:v1.2.7 vs v1.2.8"
+report plus three further engine deaths; **two distinct root causes**
+convicted the same day.
+
+### A. Morning chaos: post-coredump GPU flakiness (image-independent)
+
+- **crash-3** (03:41, v1.2.7): manual `/bin/bash` cold boot, no warmup —
+  classic crash-2-class wedge under first traffic (fr_522/fr_528 tails
+  clean `propose end`; preserved in `../../diagnostics/…/crash3-forensics/`
+  on the host). Teardown at 03:57 left `xe … Engine reset (ccs)
+  guc_id=32` + **Xe device coredump** on GPU0 (da:00.0); further resets
+  on both GPUs 03:59:38.
+- **crash-4** (04:00, v1.2.8): another manual `/bin/bash` boot, no
+  warmup; first real traffic (warmup p8) → HTTP 500 after ~4.5 min;
+  serve log lost with the interactive pts (forensics: fr_522/fr_528
+  v128 copies + inspect.json in `crash4-forensics/`).
+- **crash-5** (04:28, v1.2.8, CERTIFIED recipe via `reg_ab.sh`): p1–p13
+  healthy (22.4 tok/s long-decode = certified), then during p14 BOTH
+  workers raised `v55 ASYNC-EVENT-STALL: num_accepted_tokens_event
+  (deferred postprocess)` at 04:41:36 — TP-symmetric stall, the fence
+  fired exactly as designed (culprit named, 120 s, no silent wedge);
+  EngineCore then died via `sample_tokens` RPC timeout. The p14 cycle
+  ran 400 s for 2794 tok (vs 178 s healthy) — the "slow generation"
+  was the wedge window, not steady-state throughput.
+- **crash-6** (04:45, v1.2.7, same harness): died at p12 with the
+  `sample_tokens` RPC timeout at 04:56:18 — one second after a fresh
+  `xe … Engine reset (ccs+bcs)` on GPU0: an actual device reset
+  mid-serve.
+- **Disposition**: with BOTH images dying on the certified recipe while
+  yesterday's identical matrix ran clean for hours, the NODE was
+  convicted: GPU0 flaky since the 03:57 coredump. Host reboot 05:10 →
+  everything healthy (all §B numbers). Ops rules learned: (1) after a
+  coredump-class GPU reset, reboot the node before serving again;
+  (2) never launch the server in an interactive shell — crash-4's log
+  died with the pts. Use `serve_bench.sh` (logs to `/root/b_<tag>.log`),
+  redirect to a file, or run inside tmux.
+
+### B. The real regression: v1.2.8 −14…−44% generation throughput vs v1.2.7
+
+Post-reboot clean A/B (`reg_ab.sh`: back-to-back legs, identical lane
+fp8_e4m3+mtp4 @0.9/262144, full warmup v53 + identical benches each):
+
+| warm metric | v1.2.7 | v1.2.8 | delta |
+|---|---|---|---|
+| ctxscan 2k/16k/32k/65k (tps) | 70.8/53.4/62.1/51.3 | 39.6/38.0/36.5/44.2 | −44/−29/−41/−14% |
+| genspeed 4×1024 aggregate (tok/s) | 142–148 | 88–99 | −37% |
+| warmup p13 long-decode 4096 (tok/s) | 36.8 | 23.2 | −37% |
+| warmup p14 dress rehearsal | 112 s / 7184 tok | 178 s / 7114 tok | +59% wall |
+
+Root cause: v55's `_v55_wait_event` flat `time.sleep(0.05)` poll loop.
+The pre-v55 `.synchronize()` blocks efficiently in the driver; the flat
+poll quantizes EVERY not-yet-signaled event wait to 50 ms granularity,
+and three of the four fence sites are per-engine-step hot paths
+(WorkerAsyncOutputCopy ×2, deferred postprocess) → ~+40 ms per decode
+step. (Step-time adder math from the A/B: consistent across all four
+context lengths.)
+
+### C. The fix — v55.2 progressive wait (`patch_progressive_wait.py`, image v1.2.9)
+
+Progressive cadence, identical stall semantics and identical 120 s
+bound (`VLLM_V55_EVENT_TIMEOUT_S` unchanged): 0.5 ms polls while
+elapsed < 20 ms (the normal async-completion window), 5 ms < 200 ms,
+50 ms < 2 s, 250 ms beyond. Normal-path inflation ≤ 0.5 ms.
+
+- **Scratch test** (live-patched v1.2.8 boot, gmr md5 `51ec1bd2…`):
+  ctxscan 61.5/48.6/59.9/49.0, genspeed 134–160, p13 35.1 tok/s,
+  p14 5/5 in 124 s — v1.2.7-class restored.
+- **Bake**: `Dockerfile.v8` FROM v1.2.8 → `llm-scaler-exp:v1.2.9` ==
+  `crashfix-v55.2` (ddc6f15a7061); baked gmr md5 identical to the
+  scratch-tested file.
+- **Validation ON the baked image** (`validate_v129.sh`): warmup p1–p14
+  (p13 36.4 tok/s, p14 5/5 in 112 s = v1.2.7-identical), client cycles
+  101/102 both PASS 5/5 (6856 tok / 115 s class), ctxscan
+  57.6/49.2/46.0/49.2, genspeed 131.9/141.4/138.8, **0 fence stalls,
+  0 post-warmup WARNING lines**, no crash classes. Numerics untouched —
+  only the wait helper changed.
+- Known residual: `VLLM_ALLOW_LONG_MODEL_LEN=1` is baked as ENV in the
+  image lineage → one boot-time unknown-env advisory per boot (read
+  nowhere; harmless; drop at the next base refresh).
+
 ## Known residual — the e5m2+mtp3 lane (convicted, contained)
 
 Validation runs 7–9 exposed a PRE-EXISTING numerical defect specific to

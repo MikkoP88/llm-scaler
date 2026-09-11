@@ -140,3 +140,41 @@ load recovery) are upstream anomaly-only paths — intentionally kept.
   casts ×2, upstream min_p/KV-scaling/padding advisories — the same
   classes every prior certified boot carried); **0 WARNING lines in
   the post-warmup window** including the smoke traffic.
+
+## 2026-09-11 v55.2 addendum — throughput-regression fix + node incident (image v1.2.9)
+
+User report "major token generation speed drop v1.2.7 vs v1.2.8" plus
+three further deaths; two distinct root causes, both convicted same
+day (full narrative: `README.md` addendum).
+
+1. **Node incident (image-independent)**: crash-4 (manual v1.2.8 boot,
+   no warmup) and crash-5/6 — the clean v1.2.8 AND v1.2.7 legs of
+   `reg_ab.sh` both died on the certified recipe (v1.2.8: BOTH workers
+   raised the v55 ASYNC-EVENT-STALL fence at the same second,
+   TP-symmetric `num_accepted_tokens_event` stall; v1.2.7: died 1 s
+   after a fresh `xe` ccs/bcs engine reset on GPU0). Conviction: GPU0
+   flaky since the 03:57 teardown coredump. Host reboot 05:10 → all
+   healthy. The fence performed exactly as designed on crash-5:
+   culprit named, engine dead in 120 s, no silent 600 s wedge.
+2. **Real v1.2.8 regression**: healthy-node warm A/B (identical lane,
+   back-to-back) — ctxscan 2k/16k/32k/65k = 39.6/38.0/36.5/44.2 vs
+   v1.2.7's 70.8/53.4/62.1/51.3 (−44/−29/−41/−14%); genspeed 4×1024
+   88–99 vs 142–148 tok/s (−37%). Root cause: the v55
+   `_v55_wait_event` flat 50 ms sleep-poll quantizing per-step event
+   waits (~+40 ms/step).
+3. **Fix v55.2** (`patch_progressive_wait.py`, `Dockerfile.v8` FROM
+   v1.2.8 → **v1.2.9** `ddc6f15a7061`, gmr md5 `51ec1bd2…` baked ==
+   scratch): progressive cadence 0.5 ms <20 ms / 5 ms <200 ms /
+   50 ms <2 s / 250 ms beyond, same 120 s bound and stall semantics.
+   Scratch: ctxscan 61.5/48.6/59.9/49.0, genspeed 134–160, p14 5/5 in
+   124 s. Validation ON baked image (`validate_v129.sh`): warmup p14
+   5/5 in 112 s (v1.2.7-identical), cycles 101/102 PASS 5/5, ctxscan
+   57.6/49.2/46.0/49.2, genspeed 131.9/141.4/138.8, **0 fence stalls,
+   0 post-warmup WARNING**, no crash classes. Numerics untouched.
+4. **Prod** (`prod_restore_v8.sh`, `/root/build/prod_restore_v8.out`):
+   BOOT_OK `ddc6f15a7061` KV 707,980 → HEALTH_OK 06:35:46 → WARMUP_OK
+   06:45:01 → smoke 2k/16k/32k/65k = **61.1/58.3/43.4/49.0 tps** (vs
+   35.7/32.1/29.6/38.3 on v1.2.8 yesterday) → **PROD_V129_STANDING
+   06:46:10** (fp8_e4m3 + mtp4 @0.9/262144). 41 boot-time advisories
+   (incl. one unknown-env: `VLLM_ALLOW_LONG_MODEL_LEN` is baked as ENV
+   in the image lineage — harmless, read nowhere), 0 post-warmup.

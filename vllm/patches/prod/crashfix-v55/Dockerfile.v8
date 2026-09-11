@@ -1,0 +1,24 @@
+# Dockerfile.v8 — llm-scaler crashfix-v55.2: progressive-wait fix.
+#
+# FROM v1.2.8 (crashfix-v55, sha256:7b4de29d0ff3…): all v55 fences,
+# warmup, and warning hygiene — plus, in this layer:
+#
+#   patch_progressive_wait.py — v55.2: _v55_wait_event flat 50 ms
+#   sleep-poll -> progressive cadence (0.5 ms <20 ms, 5 ms <200 ms,
+#   50 ms <2 s, 250 ms beyond; same VLLM_V55_EVENT_TIMEOUT_S 120 s
+#   bound, same stall semantics). The flat poll quantized every
+#   not-yet-signaled hot-path event wait to 50 ms granularity
+#   (~+40 ms/decode step): warm A/B on a healthy node measured
+#   genspeed -37%, ctxscan -14..-44% vs v1.2.7 (reg_ab harness,
+#   2026-09-11). Fence behavior (ASYNC-EVENT-STALL at 120 s) unchanged.
+#
+# Numerics untouched — the v1.2.8 certification battery remains
+# byte-identical.
+
+FROM llm-scaler-exp:v1.2.8
+COPY patch_progressive_wait.py /w/v56/
+RUN python3 /w/v56/patch_progressive_wait.py --sp /opt/venv/lib/python3.12/site-packages \
+ && grep -q "_el < 0.02" /opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py \
+ && grep -q "ASYNC-EVENT-STALL" /opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py \
+ && rm -rf /w/v56 \
+ && echo BAKE_V8_OK
