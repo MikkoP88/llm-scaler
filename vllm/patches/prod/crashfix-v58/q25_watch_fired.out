@@ -1,0 +1,51 @@
+watch armed 15:09:58 base_resets=0
+TRIGGER dmesg reset count 0 -> 1 at 17:51:05 health=200
+--- STEP 1: fr rings + f15b dumps FIRST (verified):
+copied fr_574 size=65323456
+copied fr_580 size=65323456
+copied f15b_dump_580 size=21614
+copied f15b_dump_574 size=21680
+total 127700
+drwxr-xr-x  2 root root     4096 Sep 15 17:51 .
+drwxr-xr-x 56 root root    53248 Sep 15 17:51 ..
+-rw-r--r--  1 root root    21680 Sep 15 15:07 f15b_dump_574.log
+-rw-r--r--  1 root root    21614 Sep 15 15:07 f15b_dump_580.log
+-rw-r--r--  1 root root        0 Sep 15 17:51 fr_574.cperr
+-rw-r--r--  1 root root 65323456 Sep 15 17:48 fr_574.log
+-rw-r--r--  1 root root        0 Sep 15 17:51 fr_580.cperr
+-rw-r--r--  1 root root 65323456 Sep 15 17:48 fr_580.log
+--- STEP 2: devcoredump (TTL!):
+saved card1 size=513950
+--- STEP 3: dmesg resets:
+[Tue Sep 15 14:56:24 2026] pstore: Using crash dump compression: deflate
+[Tue Sep 15 14:56:25 2026] mpt3sas_cm0: sending message unit reset !!
+[Tue Sep 15 14:56:25 2026] mpt3sas_cm0: message unit reset: SUCCESS
+[Tue Sep 15 17:50:58 2026] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[Tue Sep 15 17:50:58 2026] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[Tue Sep 15 17:50:58 2026] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data
+--- STEP 4: first errors in serve log:
+--- STEP 5: dump_input / fatal section:
+--- STEP 6: worker ps:
+    PID STAT %CPU     ELAPSED COMMAND
+    374 S     0.0    02:51:35 python3
+--- STEP 7: full serve log copy:
+serve log size=1077530
+--- STEP 8: teardown:
+lsv-test
+total 129268
+drwxr-xr-x  2 root root     4096 Sep 15 17:51 .
+drwxr-xr-x 56 root root    53248 Sep 15 17:51 ..
+-rw-------  1 root root   513950 Sep 15 17:51 devcoredump_card1_Q22.bin
+-rw-r--r--  1 root root      526 Sep 15 17:51 dmesg_tail.txt
+-rw-r--r--  1 root root        0 Sep 15 17:51 dump_lines.txt
+-rw-r--r--  1 root root    21680 Sep 15 15:07 f15b_dump_574.log
+-rw-r--r--  1 root root    21614 Sep 15 15:07 f15b_dump_580.log
+-rw-r--r--  1 root root        0 Sep 15 17:51 first_errors.txt
+-rw-r--r--  1 root root        0 Sep 15 17:51 fr_574.cperr
+-rw-r--r--  1 root root 65323456 Sep 15 17:48 fr_574.log
+-rw-r--r--  1 root root        0 Sep 15 17:51 fr_580.cperr
+-rw-r--r--  1 root root 65323456 Sep 15 17:48 fr_580.log
+-rw-r--r--  1 root root       76 Sep 15 17:51 ps.txt
+-rw-r--r--  1 root root  1077530 Sep 15 17:51 serve_full_Q22.log
+Q22_CAPTURE_AND_TEARDOWN_DONE 17:51:09
+Q22_WATCH_TRIGGERED_RESET 17:51:09

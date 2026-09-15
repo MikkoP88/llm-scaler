@@ -1,0 +1,13 @@
+[Tue Sep 15 14:22:29 2026] Command line: BOOT_IMAGE=/vmlinuz-6.17.0-1010-intel root=/dev/mapper/ubuntu--vg-ubuntu--lv ro xe.force_execlist=1
+[Tue Sep 15 14:22:30 2026] Kernel command line: BOOT_IMAGE=/vmlinuz-6.17.0-1010-intel root=/dev/mapper/ubuntu--vg-ubuntu--lv ro xe.force_execlist=1
+[Tue Sep 15 14:22:39 2026] Setting dangerous option force_execlist - tainting kernel
+[Tue Sep 15 14:22:39 2026] xe 0000:b1:00.0: [drm] Enabling execlist submission (GuC submission disabled)
+[Tue Sep 15 14:22:40 2026] xe 0000:da:00.0: [drm] Enabling execlist submission (GuC submission disabled)
+[Tue Sep 15 14:25:48 2026] xe 0000:da:00.0: [drm] Enabling execlist submission (GuC submission disabled)
+[Tue Sep 15 14:25:48 2026] xe 0000:b1:00.0: [drm] Enabling execlist submission (GuC submission disabled)
+[Tue Sep 15 14:25:48 2026] xe 0000:b1:00.0: [drm] Enabling execlist submission (GuC submission disabled)
+[Tue Sep 15 14:25:49 2026] xe 0000:b1:00.0: [drm] Enabling execlist submission (GuC submission disabled)
+[Tue Sep 15 14:32:22 2026] xe 0000:da:00.0: [drm] Enabling execlist submission (GuC submission disabled)
+[Tue Sep 15 14:32:22 2026] xe 0000:b1:00.0: [drm] Enabling execlist submission (GuC submission disabled)
+[Tue Sep 15 14:32:22 2026] xe 0000:b1:00.0: [drm] Enabling execlist submission (GuC submission disabled)
+[Tue Sep 15 14:32:23 2026] xe 0000:b1:00.0: [drm] Enabling execlist submission (GuC submission disabled)

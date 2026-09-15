@@ -1,0 +1,4 @@
+solo  mt=256: 5.1s 256 tok = 50.4 tok/s
+conc4 mt=128: 3.5s 512 tok = 144.3 tok/s aggregate
+guard_fires before=2 after=2 (delta should be 0: long prompts)
+Q17_PERF_SH_DONE

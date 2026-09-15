@@ -1,0 +1,17 @@
+ff937e77759f5709b472eaf1e876ce10de84b8c7806aa771873868a801da0cc1
+BOOT_Q25 container launched 14:58:59
+[f15b] preflight: all anchors unique OK
+[f15b] module vllm/_f15b.py installed
+[f15b] gmr: patched OK (backup gpu_model_runner.py.f15bak)
+[f15b] xpu_comm: patched OK (backup xpu_communicator.py.f15bak)
+[f15b] dflash: patched OK (backup qwen3_dflash.py.f15bak)
+F15B_APPLY_OK
+[arstage] preflight: anchor unique OK
+[arstage] module vllm/_arstage.py installed (v2 census)
+[arstage] xpu_comm: patched OK (backup xpu_communicator.py.asbak)
+ARSTAGE_APPLY_OK
+5
+1
+v58p1: APPLIED+VERIFIED guard-lines=2
+BOOT_Q25 serve started (graphs ON convicted, util 0.9, VIA_ALLGATHER=1) 14:59:02
+BOOT_Q25 HEALTH_OK after ~170s

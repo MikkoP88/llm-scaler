@@ -1,0 +1,37 @@
+=== GATE 1: f8ref (numerics MUST-equal cb8c3851b897/68332ec7c31b/05c88ff03b0c)
+F8REF[q25e5m2] distinct=OK hashes=['cb8c3851b897', '68332ec7c31b', '05c88ff03b0c']
+=== GATE 2: p1_soak (expect 16/16 bad=0)
+  ' Paris.\nThe capital of'
+--- (c) controls
+  'The capital of France'            -> ' is Paris.\n'
+  'The capital of France is now'     -> ' Paris.\nThe'
+  'My name is John and I'            -> ' am a 2'
+P1_SOAK_PASS bad=0
+=== GATE 3: bench3 COLD
+BENCH warmup: prompt_tok=87 compl_tok=8 ttft=-1.00s decode=0.0 tok/s total=0.3s
+BENCH ctx2k: prompt_tok=2314 compl_tok=111 ttft=3.51s decode=428.0 tok/s total=3.8s
+BENCH ctx16k: prompt_tok=18239 compl_tok=147 ttft=16.17s decode=483.0 tok/s total=16.5s
+BENCH ctx65k: prompt_tok=73914 compl_tok=165 ttft=38.56s decode=344.3 tok/s total=39.0s
+BENCH conc8: n=8 wall=16.1s aggregate=127.6 tok/s per_req=256.0 tok
+BENCH acceptance: 1873/2516 = 0.744 emitted=0
+=== GATE 4: q17_perf COLD (solo + conc4)
+solo  mt=256: 5.1s 256 tok = 50.4 tok/s
+conc4 mt=128: 3.5s 512 tok = 144.3 tok/s aggregate
+guard_fires before=2 after=2 (delta should be 0: long prompts)
+Q17_PERF_SH_DONE
+=== GATE 5: bench3 WARM
+BENCH warmup: prompt_tok=87 compl_tok=8 ttft=-1.00s decode=0.0 tok/s total=0.3s
+BENCH ctx2k: prompt_tok=2314 compl_tok=111 ttft=2.04s decode=407.4 tok/s total=2.3s
+BENCH ctx16k: prompt_tok=18239 compl_tok=147 ttft=3.38s decode=474.3 tok/s total=3.7s
+BENCH ctx65k: prompt_tok=73914 compl_tok=165 ttft=4.03s decode=349.4 tok/s total=4.5s
+BENCH conc8: n=8 wall=5.6s aggregate=362.5 tok/s per_req=256.0 tok
+BENCH acceptance: 1871/2524 = 0.741 emitted=0
+=== GATE 6: q17_perf WARM
+solo  mt=256: 5.1s 256 tok = 50.5 tok/s
+conc4 mt=128: 3.5s 512 tok = 148.3 tok/s aggregate
+guard_fires before=2 after=2 (delta should be 0: long prompts)
+Q17_PERF_SH_DONE
+=== guard fires + census
+2
+0
+Q25_SCREEN_DONE 15:05:18

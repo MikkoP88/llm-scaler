@@ -1,0 +1,13 @@
+[Unit]
+Description=llm-scaler lane containment watchdog (capture + auto-relaunch on health-000)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /root/build/lane_watchdog.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

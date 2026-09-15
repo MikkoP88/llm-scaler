@@ -1,0 +1,6 @@
+[Tue Sep 15 14:56:24 2026] pstore: Using crash dump compression: deflate
+[Tue Sep 15 14:56:25 2026] mpt3sas_cm0: sending message unit reset !!
+[Tue Sep 15 14:56:25 2026] mpt3sas_cm0: message unit reset: SUCCESS
+[Tue Sep 15 17:50:58 2026] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[Tue Sep 15 17:50:58 2026] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[Tue Sep 15 17:50:58 2026] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data

@@ -1820,3 +1820,120 @@ D. SESSION DISPOSITION: standing prod = Q21d (Q21b lineage, stock
    5a4b6c2 (§21) + this section.
 Evidence: host lce1/{bootQ23,bootQ23b,bench3_Q23*,bench3_Q23b*,
 q23_perf*,q23b_perf*,f8ref_q23}.out; repo scripts repro_bootQ23*.sh.
+
+§23 — HOST LEVERS EXECUTED (user sign-off of §22 C items 1-3):
+execlist BOOT-DEAD; fw-align sideload SCREENS GREEN; battery
+
+A. DIRECTIVE: user signed off all three remaining host-level items
+   (watchdog deploy, xe.force_execlist, GuC fw align). Three host
+   reboots this session (#1 execlist, #2 fw-pack 3.1, #3 sideload) —
+   first reboots of the engagement (host had been up 2 days).
+
+B. CONTAINMENT WATCHDOG DEPLOYED (§22 C item 3):
+   /root/build/lane_watchdog.sh + systemd lane-watchdog.service
+   (enabled, Restart=always — survives reboots, verified through all
+   three). Behavior: health poll 60 s; on 2x health-000 (container
+   up, older than 420 s boot-grace) or container-gone → §18 capture
+   via q22_crash_capture.sh (archived to lce1/WD_crash_<ts>) →
+   auto-relaunch standing lineage (repro_bootQ21b.sh WD_<ts>).
+   Guards: min 600 s between relaunches, 3/hour cap then self-pause.
+   Controls: touch/rm /root/build/lane_watchdog.paused (paused during
+   all controlled ops this session). Deploy = mitigation not fix.
+
+C. E-PHASE xe.force_execlist=1 — REJECTED, BOOT-DEAD (stronger than
+   the anticipated perf risk). GRUB single-param boot: dmesg both
+   cards "Enabling execlist submission (GuC submission disabled)" +
+   taint note. Lane Q24: serve NEVER reached first log line — 0-byte
+   serve_full.log, no :8000, PID 102 at 100% CPU from t=0.
+   py-spy (42-line stack captured, lce1/Q24_execlist/): spin inside
+   torch/xpu/__init__.py:68 device_count() <- is_available() <- vllm
+   platform resolution at IMPORT time — the very first GPU query.
+   SIGTERM'd foreground probe left a Zl zombie with live threads.
+   READING: NEO 26.14 L0 device enumeration cannot complete without
+   GuC — execlist avoidance would require different userspace (the
+   perf-degraded NEO 26.18/26.27) → lever closed non-functional for
+   this stack. GRUB reverted (grub.bak_v58, 0 occurrences in
+   grub.cfg).
+
+D. F-PHASE GuC fw align — SCREEN ALL-GREEN (first lever in the
+   engagement to pass the no-degradation screen):
+   - D1 Ubuntu pack dead: linux-firmware 3.1 (20240318...0ubuntu3.1,
+     sha-verified apt) still ships bmg_guc 70.44.1 — dmesg after
+     reboot #2 identical "70.49.4 recommended, only 70.44.1 found"
+     on all 4 GTs. PPA-kernel/distro-fw skew.
+   - D2 Surgical sideload: upstream linux-firmware main
+     xe/bmg_guc_70.bin (WHENCE: GuC 70.72.1 for Battlemage; sha256
+     de81c75f46a1...) placed UNCOMPRESSED at
+     /lib/firmware/updates/xe/bmg_guc_70.bin (loader priority path;
+     this kernel already loads the packaged .zst form). Reboot #3:
+     "Using GuC firmware ... version 70.72.1" on all 4 GTs,
+     mismatch warning GONE, GPUs clean.
+   - D3 Lane Q25 (identical container lineage, stock env): health
+     ~170 s (stock 140). GATES: f8ref EXACTLY certified
+     (cb8c3851b897/68332ec7c31b/05c88ff03b0c — fw is numerically
+     inert, as expected and now proven); p1_soak 16/16 bad=0;
+     bench3 COLD 428.0/483.0/344.3 conc8 127.6 acc 0.744; WARM
+     407.4/474.3/349.4 conc8 362.5 acc 0.741; solo 50.4/50.5;
+     conc4 144.3/148.3; guard delta 0; resets 0 — every metric in
+     the §19 band.
+   Standing posture during battery: fw pack 3.1 + sideloaded GuC
+   70.72.1 (the tested composite).
+
+E. Q25 BATTERY (§20 F bar: >=3 battery-hours, 0 resets, vs observed
+   MTTF 14m-2h52m on 70.44.1): launched 15:09:58 UTC — 18-round
+   repro_sustain + auto-arm watcher (BASE_RESETS=0 fresh boot) +
+   p1_coh_watch 200 min + boundary sweeps ~30/~90 min. Watchdog
+   stays PAUSED during battery (§18 capture-then-end flow owns any
+   event).
+   RESULT: **FAIL — event #5 at TTF 2h41m09s.** Rounds 1-10
+   exit=0 15:09:58→17:48:38 (2h38m40s clean, fence-hits=0
+   throughout), round 11 exit=1 17:51:07; rings froze 17:48
+   (~3 min pre-reset = the ~305s RPC-timeout signature); watcher
+   TRIGGERED_RESET 17:51:09, full §18 capture + teardown by
+   17:51:09 (devcoredump within TTL, 65,323,456 B rings x2,
+   1 MB serve log).
+   FORENSICS (lce1/Q22_crash/Q25crash_summary.txt): devcoredump
+   `Reason: LR job cleanup, guc_id=22` (card1/b1 GT0 ccs — same
+   card AND guc_id as Q19/Q21) AND `GuC version: 70.72.1 (wanted
+   70.49.4)` — the crash happened ON the aligned fw.
+   **=> The §14-class is FIRMWARE-VERSION-INDEPENDENT: 5/5 events
+   identical reason across GuC 70.44.1 (x4) and 70.72.1 (x1).**
+   The race is in the xe/GuC submission path itself (GSD-12919
+   class), not any loadable fw version. fw-align lever CLOSED for
+   hang-avoidance (TTF at the long end of the band is a
+   single-sample effect, not claimed as improvement).
+
+F. POSTURE RESTORED + SESSION DISPOSITION:
+   - Sideload removed; pack 2.29 not restorable (pruned: Launchpad
+     404, archive 404, security 404, apt cache clean) → standing =
+     linux-firmware 3.1 pack + xe GuC 70.44.1 — i.e. the IDENTICAL
+     xe-relevant fw the entire §19 baseline ran on (3.1 ships the
+     same bmg_guc 70.44.1; residual deltas = non-GPU blobs only).
+   - Lane Q26 (Q21b lineage, reboot #4 host): health ~170 s;
+     certified f8ref EXACT (cb8c3851b897/68332ec7c31b/05c88ff03b0c),
+     p1_soak 16/16 bad=0, bench3 405.9/482.5/349.3 conc8 123.0 acc
+     0.743 — in band.
+   - lane-watchdog ARMED on the standing lane (flag removed
+     18:1x; systemd unit verified through reboots #3/#4). The
+     class is proven present on EVERY available host config
+     (stock, +NEO overlay, +execlist-dead, +fw 70.72.1) →
+     auto-relaunch containment is the only remaining mitigation;
+     §18 capture runs before each relaunch.
+   - LEVER BOARD FINAL-FINAL: NEO closed-degradation; cmdlist
+     closed-inert; kernel unavailable; execlist closed BOOT-DEAD;
+     GuC fw closed battery-FAIL (fw-independent); containment
+     DEPLOYED+ARMED; upstream #939 posting prepared (now with
+     event #5 + fw-independence evidence — strengthened) and
+     awaiting user go-ahead.
+   - 4 host reboots total (#1 execlist, #2 fw 3.1, #3 sideload
+     70.72.1, #4 revert); GRUB byte-identical to pre-session
+     (bak restored); no container lineage change (Q21b lineage
+     throughout).
+Evidence: host lce1/{sustain_Q25,p1_coh_Q25,q25_armature,
+q22_watch->q25_watch_fired,p1_len5probe_Q25_load1/2,bootQ24,bootQ25,
+bootQ26,f8ref_q25e5m2,f8ref_q26e5m2,p1_soak_q25,p1_soak_q26,
+bench3_Q25_cold/warm,bench3_Q26,q25_perf_cold/warm,q25_screen,
+Q24_execlist/*,Q22_crash/Q25crash_summary,dmesg_tail,ps}.txt/.out;
+repo scripts lane_watchdog.sh, lane-watchdog.service, q25_screen.sh,
+q25_armature.sh.
+

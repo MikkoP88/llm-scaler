@@ -1,0 +1,71 @@
+watcher armed 15:09:57
+sustain(18) launched 15:09:58
+coh_watch launched 15:11:28
+=== mid-load boundary sweep 1 (~30 min) (15:40:28)
+ntok=4 STABLE  'The capital of France'
+    miss : ' is'                    top3=[(' is', -0.59), (',', -1.59), ('.', -3.08)]
+    rep0: ' is'                    top3=[(' is', -0.59), (',', -1.59), ('.', -3.08)]
+    rep1: ' is'                    top3=[(' is', -0.59), (',', -1.59), ('.', -3.08)]
+ntok=4 STABLE  'My name is John'
+    miss : '.'                      top3=[('.', -1.84), (',', -2.11), (' and', -2.23)]
+    rep0: '.'                      top3=[('.', -1.84), (',', -2.11), (' and', -2.23)]
+    rep1: '.'                      top3=[('.', -1.84), (',', -2.11), (' and', -2.23)]
+ntok=5 STABLE  'The capital of France is'
+    miss : ' Paris'                 top3=[(' Paris', -0.49), (' not', -3.29), (' a', -3.49)]
+    rep0: ' Paris'                 top3=[(' Paris', -0.49), (' not', -3.29), (' a', -3.49)]
+    rep1: ' Paris'                 top3=[(' Paris', -0.49), (' not', -3.29), (' a', -3.49)]
+ntok=5 STABLE  'The largest city in France'
+    miss : ' is'                    top3=[(' is', -1.0), (',', -1.4), (' by', -2.39)]
+    rep0: ' is'                    top3=[(' is', -1.0), (',', -1.4), (' by', -2.39)]
+    rep1: ' is'                    top3=[(' is', -1.0), (',', -1.4), (' by', -2.39)]
+ntok=5 STABLE  'My name is John and'
+    miss : ' I'                     top3=[(' I', -0.17), (' i', -3.05), (' my', -3.38)]
+    rep0: ' I'                     top3=[(' I', -0.17), (' i', -3.05), (' my', -3.38)]
+    rep1: ' I'                     top3=[(' I', -0.17), (' i', -3.05), (' my', -3.38)]
+ntok=5 STABLE  'Water boils at a temperature'
+    miss : ' of'                    top3=[(' of', -0.39), (' that', -2.49), (' lower', -2.91)]
+    rep0: ' of'                    top3=[(' of', -0.39), (' that', -2.49), (' lower', -2.91)]
+    rep1: ' of'                    top3=[(' of', -0.39), (' that', -2.49), (' lower', -2.91)]
+ntok=6 STABLE  'My name is John and I'
+    miss : ' am'                    top3=[(' am', -1.26), ("'m", -1.42), (' have', -2.25)]
+    rep0: ' am'                    top3=[(' am', -1.26), ("'m", -1.42), (' have', -2.25)]
+    rep1: ' am'                    top3=[(' am', -1.26), ("'m", -1.42), (' have', -2.25)]
+ntok=6 STABLE  'Water boils at a temperature of'
+    miss : ' '                      top3=[(' ', -0.39), (' $', -2.11), (' ______', -3.01)]
+    rep0: ' '                      top3=[(' ', -0.39), (' $', -2.11), (' ______', -3.0)]
+    rep1: ' '                      top3=[(' ', -0.39), (' $', -2.11), (' ______', -3.01)]
+P1_LEN5PROBE_DONE
+=== mid-load boundary sweep 2 (~90 min) (16:41:02)
+ntok=4 STABLE  'The capital of France'
+    miss : ' is'                    top3=[(' is', -0.58), (',', -1.6), ('.', -3.09)]
+    rep0: ' is'                    top3=[(' is', -0.59), (',', -1.59), ('.', -3.07)]
+    rep1: ' is'                    top3=[(' is', -0.59), (',', -1.59), ('.', -3.07)]
+ntok=4 STABLE  'My name is John'
+    miss : '.'                      top3=[('.', -1.83), (',', -2.11), (' and', -2.23)]
+    rep0: '.'                      top3=[('.', -1.83), (',', -2.11), (' and', -2.23)]
+    rep1: '.'                      top3=[('.', -1.83), (',', -2.11), (' and', -2.23)]
+ntok=5 STABLE  'The capital of France is'
+    miss : ' Paris'                 top3=[(' Paris', -0.49), (' not', -3.29), (' a', -3.49)]
+    rep0: ' Paris'                 top3=[(' Paris', -0.49), (' not', -3.29), (' a', -3.49)]
+    rep1: ' Paris'                 top3=[(' Paris', -0.49), (' not', -3.29), (' a', -3.49)]
+ntok=5 STABLE  'The largest city in France'
+    miss : ' is'                    top3=[(' is', -0.99), (',', -1.4), (' by', -2.39)]
+    rep0: ' is'                    top3=[(' is', -0.99), (',', -1.4), (' by', -2.39)]
+    rep1: ' is'                    top3=[(' is', -0.99), (',', -1.4), (' by', -2.39)]
+ntok=5 STABLE  'My name is John and'
+    miss : ' I'                     top3=[(' I', -0.17), (' i', -3.03), (' my', -3.38)]
+    rep0: ' I'                     top3=[(' I', -0.17), (' i', -3.03), (' my', -3.38)]
+    rep1: ' I'                     top3=[(' I', -0.17), (' i', -3.03), (' my', -3.38)]
+ntok=5 STABLE  'Water boils at a temperature'
+    miss : ' of'                    top3=[(' of', -0.4), (' that', -2.49), (' lower', -2.9)]
+    rep0: ' of'                    top3=[(' of', -0.4), (' that', -2.49), (' lower', -2.9)]
+    rep1: ' of'                    top3=[(' of', -0.4), (' that', -2.49), (' lower', -2.9)]
+ntok=6 STABLE  'My name is John and I'
+    miss : ' am'                    top3=[(' am', -1.26), ("'m", -1.42), (' have', -2.25)]
+    rep0: ' am'                    top3=[(' am', -1.26), ("'m", -1.42), (' have', -2.25)]
+    rep1: ' am'                    top3=[(' am', -1.26), ("'m", -1.42), (' have', -2.25)]
+ntok=6 STABLE  'Water boils at a temperature of'
+    miss : ' '                      top3=[(' ', -0.39), (' $', -2.11), (' ______', -3.0)]
+    rep0: ' '                      top3=[(' ', -0.39), (' $', -2.11), (' ______', -3.01)]
+    rep1: ' '                      top3=[(' ', -0.39), (' $', -2.11), (' ______', -3.01)]
+P1_LEN5PROBE_DONE
