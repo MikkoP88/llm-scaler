@@ -1772,3 +1772,51 @@ Evidence: host lce1/{bootQ22,bootQ22b,bootQ21c,q22_validate,
 q22b_validate}.out, lce1/{bench3_Q22*,bench3_Q22b*,bench3_Q21c*,
 q22_perf*,q22b_perf*,q21c_perf*,f8ref_q22e5m2,f8ref_q21c,
 p1_soak_Q22,p1_soak_q21c}.out; neodl/ (26.18 set), neodl_2627/.
+
+§22 — Q23/Q23b: CMDLIST LEVER INERT (both arms == baseline);
+CONTAINER-LOCAL LEVERS EXHAUSTED; final lever board + session
+disposition
+
+A. Q23 (stock 26.14 + SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1,
+   single variable, image-native IGC 2.32.7): cold 413.8/481.4/347.8
+   conc8 126.3 solo 50.0 conc4 138.8; warm 411.2/416.6/348.3 conc8
+   362.5 solo 50.4 conc4 149.4; f8ref EXACT certified. == baseline
+   on every metric.
+B. Q23b (=0): cold 414.5/367.1/350.4 solo 50.3 conc4 138.4; warm
+   407.0/478.9/345.5 conc8 360.6 solo 49.9 conc4 146.8. == baseline
+   (16k-cold 367 = known lane-noise dip class).
+=> BOTH arms indistinguishable from stock ⇒ the knob does not reach
+   the active submission path on this stack (IPEX 2.11.0+xpu /
+   torch 2.11 / NEO 26.14 — either IPEX submits via L0 directly or
+   the legacy SYCL_PI_ name is dead in this UR generation). LEVER
+   CLOSED as measured-inert. Boot-to-health 140 s on all three
+   stock boots (vs 180-200 s on NEO overlays) — stock confirmed
+   leanest.
+
+C. FINAL LEVER BOARD (§14-class / GSD-12919):
+- NEO upgrade — CLOSED, degradation (§21).
+- L0 cmdlist flip — CLOSED, inert (this section).
+- Kernel upgrade — UNAVAILABLE (6.17.0-1010.10 newest in PPA).
+- GuC fw align (linux-firmware 2.29→3.1 + host reboot) — low prior
+  (#939 reporter's fw update didn't help); needs sign-off.
+- xe.force_execlist=1 (host reboot) — highest-prior avoidance,
+  perf-risky on Xe2, screen mandatory; needs sign-off.
+- Containment watchdog (auto-relaunch on health-000) — ready to
+  build; mitigation not fix; deploy decision = user's (could mask
+  future fault classes).
+- Upstream posting (evidence bundle: 3 identical-reason
+  devcoredumps, frozen rings, reproducer recipe, NEO A/B
+  degradation table) — prepared, UNPOSTED pending user go-ahead.
+Rationale for stopping here: every container-local lever is
+measured-closed; remaining levers are host-level with weak priors
+and reboot cost; the class has ZERO prod incidence (4/4 events
+under artificial battery only). Root cause is identified, evidenced,
+and documented; the fix belongs upstream (kernel/GuC/NEO).
+
+D. SESSION DISPOSITION: standing prod = Q21d (Q21b lineage, stock
+   26.14, health ~140 s, no env residue): f8ref EXACT certified,
+   soak 16/16 bad=0, bench3 cold 395.6/482.3/346.6 conc8 125.2 acc
+   0.741 — in band. WEDGE_PLAN §20-§22; commits b4bb232 (§20) +
+   5a4b6c2 (§21) + this section.
+Evidence: host lce1/{bootQ23,bootQ23b,bench3_Q23*,bench3_Q23b*,
+q23_perf*,q23b_perf*,f8ref_q23}.out; repo scripts repro_bootQ23*.sh.

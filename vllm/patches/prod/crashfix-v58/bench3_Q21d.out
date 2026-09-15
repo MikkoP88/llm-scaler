@@ -1,0 +1,6 @@
+BENCH warmup: prompt_tok=87 compl_tok=8 ttft=-1.00s decode=0.0 tok/s total=0.3s
+BENCH ctx2k: prompt_tok=2314 compl_tok=111 ttft=3.52s decode=395.6 tok/s total=3.8s
+BENCH ctx16k: prompt_tok=18239 compl_tok=147 ttft=16.44s decode=482.3 tok/s total=16.7s
+BENCH ctx65k: prompt_tok=73914 compl_tok=165 ttft=38.46s decode=346.6 tok/s total=38.9s
+BENCH conc8: n=8 wall=16.4s aggregate=125.2 tok/s per_req=256.0 tok
+BENCH acceptance: 1871/2524 = 0.741 emitted=0

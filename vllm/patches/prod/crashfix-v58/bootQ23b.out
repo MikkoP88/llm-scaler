@@ -1,0 +1,19 @@
+5378dd3e5daa67ba9d739f189bd225d944dd5d8279edb216957d4aa673093dfb
+BOOT_Q23b container launched 11:54:45
+[f15b] preflight: all anchors unique OK
+[f15b] module vllm/_f15b.py installed
+[f15b] gmr: patched OK (backup gpu_model_runner.py.f15bak)
+[f15b] xpu_comm: patched OK (backup xpu_communicator.py.f15bak)
+[f15b] dflash: patched OK (backup qwen3_dflash.py.f15bak)
+F15B_APPLY_OK
+[arstage] preflight: anchor unique OK
+[arstage] module vllm/_arstage.py installed (v2 census)
+[arstage] xpu_comm: patched OK (backup xpu_communicator.py.asbak)
+ARSTAGE_APPLY_OK
+5
+1
+v58p1: APPLIED+VERIFIED guard-lines=2
+BOOT_Q23b serve started (stock NEO 26.14 + IMMEDIATE_CMDLISTS=0) 11:54:48
+BOOT_Q23b HEALTH_OK after ~140s
+live_resets=59
+PROBE_BOOT_READY_NO_ARM 11:57:13
