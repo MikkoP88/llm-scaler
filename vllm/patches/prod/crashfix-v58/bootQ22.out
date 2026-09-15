@@ -1,0 +1,33 @@
+3335db601553044b327cbc531a4d40232cb33f41484785a2adfc8d27432081c6
+BOOT_Q22 container launched 10:56:28
+--- NEO OVERLAY 26.14 -> 26.27 (before any GPU use):
+Setting up intel-igc-opencl-2 (2.38.2) ...
+Setting up intel-ocloc (26.27.39122.11-0) ...
+Setting up libigdgmm12:amd64 (22.10.0) ...
+Setting up libze-intel-gpu1 (26.27.39122.11-0) ...
+Setting up intel-opencl-icd (26.27.39122.11-0) ...
+Processing triggers for libc-bin (2.39-0ubuntu8.7) ...
+--- NEO CENSUS (expect 26.27.39122.11 / igc 2.38.2 / gmmlib 22.10):
+intel-igc-core-2 2.38.2
+intel-igc-opencl-2 2.38.2
+intel-opencl-icd 26.27.39122.11-0
+libigdgmm12:amd64 22.10.0
+libze-intel-gpu1 26.27.39122.11-0
+-rw-r--r-- 1 root root 1592952 Apr 23 18:29 /usr/lib/x86_64-linux-gnu/libze_loader.so.1.28.2
+[f15b] preflight: all anchors unique OK
+[f15b] module vllm/_f15b.py installed
+[f15b] gmr: patched OK (backup gpu_model_runner.py.f15bak)
+[f15b] xpu_comm: patched OK (backup xpu_communicator.py.f15bak)
+[f15b] dflash: patched OK (backup qwen3_dflash.py.f15bak)
+F15B_APPLY_OK
+[arstage] preflight: anchor unique OK
+[arstage] module vllm/_arstage.py installed (v2 census)
+[arstage] xpu_comm: patched OK (backup xpu_communicator.py.asbak)
+ARSTAGE_APPLY_OK
+5
+1
+v58p1: APPLIED+VERIFIED guard-lines=2
+BOOT_Q22 serve started (graphs ON convicted, util 0.9, VIA_ALLGATHER=1, NEO 26.27) 10:56:34
+BOOT_Q22 HEALTH_OK after ~180s
+live_resets=59
+PROBE_BOOT_READY_NO_ARM 10:59:39

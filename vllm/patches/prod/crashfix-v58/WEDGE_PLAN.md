@@ -1694,3 +1694,81 @@ F. Q22a DESIGN (fix-validation, container-local, no host impact):
   14m-2h52m) → restore standing on Q22a. Recur → confirm dump
   reason-string identical → lever 2 (cmdlist flip) → host levers
   (fw align, execlist) which REQUIRE host reboot sign-off.
+
+§21 — Q22 EXECUTION: NEO LEVER CLOSED BY MEASURED DEGRADATION
+(26.18 AND 26.27 both: numerics bit-exact, steady-state -15..-33%);
+§19 band re-confirmed in-session; stock 26.14 lane re-certified
+
+A. Q22a = NEO 26.27.39122.11 overlay (IGC 2.38.2, gmmlib 22.10,
+   ze-intel-gpu1 26.27; all 4 compute-runtime deb sha256s verified
+   against official ww27 sums; dpkg -i in-container AFTER container
+   start, BEFORE patchers/serve — no GPU use precedes the swap;
+   host untouched). Boot health ~180 s.
+- CORRECTNESS: ALL GREEN — f8ref e5m2 EXACTLY certified
+  (cb8c3851b897/68332ec7c31b/05c88ff03b0c), P1 soak 16/16 bad=0,
+  boundary STABLE, acc 0.741-0.744. IGC 2.32.7 → 2.38.2 is
+  numerically inert for this lane.
+- PERFORMANCE: REJECTED. Cold pass 273.9/343.5/270.7 conc8 116.6
+  solo 36.4 conc4 113.1; WARM re-run (JIT discriminators collapsed:
+  ttft 4.93→2.69 / 21.60→3.89 / 39.54→4.90) did NOT recover decode:
+  273.2/256.8/269.9 solo 34.0. Steady-state deficit vs §19 band
+  -22..-33% (solo -30%), consistent across 2 independent passes.
+- VERDICT: FAILS the no-degradation gate. Not battery-eligible.
+
+B. Q22b = NEO 26.18.38308.1 overlay (IGC 2.34.4 — the EXACT version
+   the #939 maintainer asked to be tested; debs sha256-verified).
+   Downgrade-in-place from 26.27 boots clean, health ~200 s.
+- CORRECTNESS: f8ref EXACTLY certified again; soak/soak-controls
+  green; acc 0.743-0.744.
+- PERFORMANCE: cold 308.3/384.7/297.2 solo 38.4 conc4 117.0; warm
+  308.1/385.1/298.1 solo 38.4 conc4 119.0 — flat cold→warm
+  (steady-state, not JIT). Deficit -14..-25% (solo -24%).
+- VERDICT: FAILS the no-degradation gate. Not battery-eligible.
+
+C. SAME-SESSION BASELINE (Q21c = stock image NEO 26.14.37833.4,
+   identical boot lineage, no overlay): cold 414.0/480.8/349.7
+   conc8 127.8 acc 0.741; warm 406.8/422.4/351.7 conc8 365.1
+   acc 0.748; solo 50.4/50.3; conc4 (§19) 143.6. => the §19 band
+   REPRODUCES exactly; the deficits above are real, not lane noise.
+   Q21c standing gates re-certified: f8ref EXACT, soak 16/16 bad=0.
+   NOTE: boot-to-health 140 s on 26.14 vs 180-200 s on 26.18/26.27.
+
+D. NEO LEVER CLOSED — and diagnostically LOUD:
+   decode deficit is MONOTONE in version distance (26.18 ≈ -15..-25%,
+   26.27 ≈ -22..-33%) while numerics stay bit-identical. Combined
+   with #939's survival-under-SYCL_UR_TRACE=2 (slowed submission),
+   the coherent reading: newer NEO submits SLOWER/SAFER — the same
+   direction that dodges the GSD-12919 race window. I.e., the
+   regression and the hang-avoidance are plausibly ONE phenomenon:
+   submission-rate reduction. Unshippable for prod either way
+   (degradation rule), so the lever is closed WITHOUT spending
+   battery hours; the mechanism evidence stands.
+
+E. LEVER BOARD after §21:
+- NEO upgrade — CLOSED (degradation, this section).
+- Kernel upgrade — UNAVAILABLE (6.17.0-1010.10 = newest in PPA).
+- L0 immediate-command-list flip (container env) — REMAINING
+  container-local lever: A/B boot vs 26.14 baseline (solo/ctx2k
+  will expose which setting is live default; only the
+  submission-rate-REDUCING direction is candidate-useful, and only
+  if perf-neutral). 2 boots + bench to screen.
+- GuC fw alignment (linux-firmware 2.29→3.1, host REBOOT) — low
+  prior (#939 reporter's fw update didn't help) — needs user
+  sign-off for host reboot.
+- xe.force_execlist=1 (host REBOOT) — highest-prior avoidance
+  (removes GuC submission entirely) but perf-risky on Xe2; screen
+  with bench gates before any adoption decision; needs sign-off.
+- Containment watchdog (auto-relaunch on EngineDeadError/health-000)
+  — cheap, no image change, bounds blast radius if the class ever
+  escapes the battery into real traffic (0 evidence of that to date).
+- Upstream: our evidence bundle (3 identical-reason devcoredumps,
+  frozen rings, reproducer recipe, NEO A/B) is exactly what #939
+  needs — post when engagement thread closes.
+
+F. STANDING LANE: Q21c (stock 26.14, Q21b lineage) re-certified
+   in-session on every gate (f8ref/soak/bench3 cold+warm/perf) —
+   prod posture restored to §19 state while levers were tested.
+Evidence: host lce1/{bootQ22,bootQ22b,bootQ21c,q22_validate,
+q22b_validate}.out, lce1/{bench3_Q22*,bench3_Q22b*,bench3_Q21c*,
+q22_perf*,q22b_perf*,q21c_perf*,f8ref_q22e5m2,f8ref_q21c,
+p1_soak_Q22,p1_soak_q21c}.out; neodl/ (26.18 set), neodl_2627/.

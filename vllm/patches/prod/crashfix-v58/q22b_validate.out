@@ -1,0 +1,78 @@
+--- NEO CENSUS (expect 26.27.39122.11 / igc 2.38.2 / gmmlib 22.10.0):
+intel-igc-core-2 2.34.4
+intel-igc-opencl-2 2.34.4
+intel-opencl-icd 26.18.38308.1-0
+libigdgmm12:amd64 22.10.0
+libze-intel-gpu1 26.18.38308.1-0
+--- SERVE CONFIG (expect fp8_e5m2):
+(APIServer pid=203) INFO 09-15 11:07:35 [utils.py:240] non-default args: {'model_tag': '/models/target', 'default_chat_template_kwargs': {'preserve_thinking': True, 'reasoning_effort': 'xhigh'}, 'enab
+--- VIA CENSUS per worker pid (expect True>0, False=0):
+pid 493: via_env=True=0 via_env=False=0
+--- P1 MARKER (expect 2):
+2
+--- BOUNDARY PROBE:
+ntok=4 STABLE  'The capital of France'
+    miss : ' is'                    top3=[(' is', -0.59), (',', -1.59), ('.', -3.08)]
+    rep0: ' is'                    top3=[(' is', -0.59), (',', -1.59), ('.', -3.08)]
+    rep1: ' is'                    top3=[(' is', -0.59), (',', -1.59), ('.', -3.08)]
+ntok=4 STABLE  'My name is John'
+    miss : '.'                      top3=[('.', -1.84), (',', -2.11), (' and', -2.23)]
+    rep0: '.'                      top3=[('.', -1.84), (',', -2.11), (' and', -2.23)]
+    rep1: '.'                      top3=[('.', -1.84), (',', -2.11), (' and', -2.23)]
+ntok=5 STABLE  'The capital of France is'
+    miss : ' Paris'                 top3=[(' Paris', -0.49), (' not', -3.29), (' a', -3.5)]
+    rep0: ' Paris'                 top3=[(' Paris', -0.49), (' not', -3.29), (' a', -3.5)]
+    rep1: ' Paris'                 top3=[(' Paris', -0.49), (' not', -3.29), (' a', -3.5)]
+ntok=5 STABLE  'The largest city in France'
+    miss : ' is'                    top3=[(' is', -0.99), (',', -1.4), (' by', -2.38)]
+    rep0: ' is'                    top3=[(' is', -0.99), (',', -1.4), (' by', -2.38)]
+    rep1: ' is'                    top3=[(' is', -0.99), (',', -1.4), (' by', -2.38)]
+ntok=5 STABLE  'My name is John and'
+    miss : ' I'                     top3=[(' I', -0.17), (' i', -3.05), (' my', -3.38)]
+    rep0: ' I'                     top3=[(' I', -0.17), (' i', -3.05), (' my', -3.38)]
+    rep1: ' I'                     top3=[(' I', -0.17), (' i', -3.05), (' my', -3.38)]
+ntok=5 STABLE  'Water boils at a temperature'
+    miss : ' of'                    top3=[(' of', -0.39), (' that', -2.49), (' lower', -2.91)]
+    rep0: ' of'                    top3=[(' of', -0.39), (' that', -2.49), (' lower', -2.91)]
+    rep1: ' of'                    top3=[(' of', -0.39), (' that', -2.49), (' lower', -2.91)]
+ntok=6 STABLE  'My name is John and I'
+    miss : ' am'                    top3=[(' am', -1.26), ("'m", -1.43), (' have', -2.24)]
+    rep0: ' am'                    top3=[(' am', -1.26), ("'m", -1.43), (' have', -2.24)]
+    rep1: ' am'                    top3=[(' am', -1.26), ("'m", -1.43), (' have', -2.24)]
+ntok=6 STABLE  'Water boils at a temperature of'
+    miss : ' '                      top3=[(' ', -0.39), (' $', -2.11), (' ______', -3.01)]
+    rep0: ' '                      top3=[(' ', -0.39), (' $', -2.11), (' ______', -3.01)]
+    rep1: ' '                      top3=[(' ', -0.39), (' $', -2.11), (' ______', -3.01)]
+P1_LEN5PROBE_DONE
+--- GUARD FIRES:
+2
+--- SOAK:
+--- (a) 16 fresh 5-tok x2
+  ...4/16 done, bad=0
+  ...8/16 done, bad=0
+  ...12/16 done, bad=0
+  ...16/16 done, bad=0
+--- (b) plain x3 (expect bit-identical ' Paris...')
+  ' Paris.\nThe capital of'
+  ' Paris.\nThe capital of'
+  ' Paris.\nThe capital of'
+--- (c) controls
+  'The capital of France'            -> ' is Paris.\n'
+  'The capital of France is now'     -> ' Paris.\nThe'
+  'My name is John and I'            -> ' am a 2'
+P1_SOAK_PASS bad=0
+--- F8REF e5m2 (MUST equal cb8c3851b897 / 68332ec7c31b / 05c88ff03b0c):
+F8REF[q22e5m2] distinct=OK hashes=['cb8c3851b897', '68332ec7c31b', '05c88ff03b0c']
+--- BENCH3 spot:
+BENCH warmup: prompt_tok=87 compl_tok=8 ttft=-1.00s decode=0.0 tok/s total=0.4s
+BENCH ctx2k: prompt_tok=2314 compl_tok=111 ttft=4.69s decode=308.3 tok/s total=5.0s
+BENCH ctx16k: prompt_tok=18239 compl_tok=147 ttft=16.95s decode=384.7 tok/s total=17.3s
+BENCH ctx65k: prompt_tok=73914 compl_tok=165 ttft=39.15s decode=297.2 tok/s total=39.7s
+BENCH conc8: n=8 wall=17.5s aggregate=117.1 tok/s per_req=256.0 tok
+BENCH acceptance: 1872/2520 = 0.743 emitted=0
+--- PERF SPOT:
+solo  mt=256: 6.7s 256 tok = 38.4 tok/s
+conc4 mt=128: 4.4s 512 tok = 117.0 tok/s aggregate
+guard_fires before=2 after=2 (delta should be 0: long prompts)
+Q17_PERF_SH_DONE
+Q22_VALIDATE_SH_DONE

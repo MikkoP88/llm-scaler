@@ -1,0 +1,14 @@
+--- (a) 16 fresh 5-tok x2
+  ...4/16 done, bad=0
+  ...8/16 done, bad=0
+  ...12/16 done, bad=0
+  ...16/16 done, bad=0
+--- (b) plain x3 (expect bit-identical ' Paris...')
+  ' Paris.\nThe capital of'
+  ' Paris.\nThe capital of'
+  ' Paris.\nThe capital of'
+--- (c) controls
+  'The capital of France'            -> ' is Paris.\n'
+  'The capital of France is now'     -> ' Paris.\nThe'
+  'My name is John and I'            -> ' am a 2'
+P1_SOAK_PASS bad=0
