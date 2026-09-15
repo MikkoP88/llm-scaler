@@ -1601,3 +1601,96 @@ devcoredump_card1_Q21.bin, fr_*_tail500_Q21.log, dump_section,
 serve_full_Q21.log); host lce1/Q21_crash/ (full rings) +
 lce1/{bootQ21,bootQ21b,sustain_Q21,f8ref_q21e5m2,bench3_Q21,
 p1_soak_Q21}.out.
+
+§20 — §14-CLASS ROOT-CAUSE: UPSTREAM PLATFORM RACE IDENTIFIED
+(GSD-12919 / intel compute-runtime #939); fr-ring forensics: sudden
+cliff, zero precursor; lever matrix + Q22a design
+
+A. DEVCOREDUMP ANALYSIS (A1) — class signature uniform:
+- Q21 dump (card1=GPU1/b1:00.0, 518923 B): "Reason: LR job cleanup,
+  guc_id=22". Contexts: ccs22 (class 5 = compute), Timeout
+  9223372036854775807 ms (INFINITE = long-runner context), Job
+  seqno=149, finished=0 — a compute batch that never completed.
+  GuC fw LOADED 70.44.1 vs WANTED 70.49.4 (mismatch). Kernel
+  6.17.0-1010-intel, module xe, python3, PCI 0xe223 (BMG).
+- Q18 dump (card2=GPU0/da:00.0): "Reason: LR job cleanup, guc_id=32"
+  — IDENTICAL reason string on the OTHER physical card.
+- => 3/3 dumps with reason string identical; both cards; e5m2/e4m3/
+  tq4nc. NOT a single-card hardware defect. xe GuC engine reset
+  triggered by a wedged long-runner compute context.
+
+B. FR-RING TIMING FORENSICS (A2, full rings 88757 AR records each) —
+RACE, NOT DEGENERATION:
+- AR begins == AR ends == 88757 BOTH workers (comm layer re-exonerated).
+- Step periods: med 58.4 ms, p90 67.3; session-sixths medians FLAT
+  (56.0/60.1/57.6/57.9/59.3/57.9) — zero drift. LAST 30 periods
+  before the hang: 47.9-67.1 ms — statistically identical to
+  baseline. The 4549th step completed normally (~57 ms), its propose
+  ARs paired to the last record (final AR end 0.3-2.4 ms before
+  propose-end), then ABSOLUTE SILENCE.
+- Only 13 ARs >50 ms in the whole session, all at IDENTICAL wallclock
+  instants on both workers (+271/+603/+612/+753 s) = client round
+  boundaries, not GPU events.
+- No verify-phase AR records exist anywhere in the ring: verify runs
+  as GRAPH REPLAY (ARs baked into the captured graph; the fr wrapper
+  only sees eager ARs). Hang onset therefore sits INSIDE graph
+  replay = maximal-rate tiny-kernel dispatch, no host gaps.
+- Analyzer: .tmp-tq/fr_timing.py (scp'd host /root/build).
+
+C. UPSTREAM IDENTIFICATION (A3) — exact match, GSD-12919
+(intel/compute-runtime issue #939, OPEN, needs-feedback):
+Xe2 ccs engine reset; devcoredump reason IDENTICAL ("LR job
+cleanup"); workload = MoE inference, "each layer dispatches many
+small per-expert matmul kernels back to back"; TIMING-SENSITIVE —
+survives under SYCL_UR_TRACE=2 (slowed submission); reporter's GuC
+fw update did NOT fix; no confirmed fix in any NEO release through
+26.27.39122.11 (thread asked reporter to test 26.18 — never
+answered). Multiple independent Battlemage B580/B50 hang reports.
+Our fit is total: 4/4 deaths under max-rate battery (verify of tiny
+rows on a MoE = burst of tiny expert GEMMs in graph replay), 0 at
+idle, dtype-agnostic, time-to-death 14m-2h52m random.
+
+D. STACK + LEVER MATRIX:
+- Container: NEO intel-opencl-icd 26.14.37833.4 (IGC 2.32.7, L0
+  loader 1.28.2, gmmlib 22.9), IPEX 2.11.0+xpu; NO submission knobs
+  set (no SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS etc.) —
+  NEO defaults govern the doorbell cadence.
+- Host: kernel 6.17.0-1010.10 = NEWEST offered (kernel lever
+  UNAVAILABLE); linux-firmware 2.29 → 3.1 upgrade available (would
+  align GuC 70.49.4; needs REBOOT); xe.force_execlist param present.
+- NEO releases 26.18/26.22/26.27 = the untested #939 data point.
+- Levers ranked: (1) NEO 26.14→26.27 container-local deb swap —
+  cheap, reversible, no host impact, NEO owns submission batching /
+  doorbell cadence (race participant); (2) L0 immediate-command-list
+  flip — container env, rewrites doorbell pattern; (3) GuC fw
+  alignment — host+reboot, LOW prior (#939 reporter unaffected);
+  (4) xe.force_execlist=1 — removes GuC entirely, PERF-RISKY (gate);
+  (5) kernel — unavailable; (6) submission rate-limiting — REJECTED
+  (degradation). Containment sidecar: auto-relaunch watchdog on
+  EngineDeadError/health-000 (mitigation only, not root fix).
+
+E. HYPOTHESIS (final): under maximal-rate tiny-kernel submission
+(dflash verify graph-replay, MoE expert GEMMs) the xe/GuC
+submission path on BMG occasionally wedges a ccs context (Job
+finished=0); kernel heartbeat fires engine reset ("LR job
+cleanup"), both workers' contexts die, the in-flight TP step never
+signals, EngineCore RPC times out ~305 s → EngineDeadError → lane
+dead. Root cause lives in kernel/GuC/NEO submission stack — open
+upstream (GSD-12919), NOT fixable in vLLM code. Our evidence
+(3 identical devcoredumps + frozen rings + a reproducing battery)
+is exactly what the open upstream thread lacks.
+
+F. Q22a DESIGN (fix-validation, container-local, no host impact):
+- Lineage: Q21b exactly + in-container NEO overlay BEFORE serve:
+  docker cp 6 debs (ocloc/opencl-icd/ze-intel-gpu1/gmmlib 26.27
+  + IGC core/opencl 2.38.2) + dpkg -i + version census logged.
+- GATES (all green before any battery): health; NEO census
+  26.27.39122.11; P1 marker 2; VIA census symmetric; f8ref e5m2 ==
+  certified cb8c3851b897/68332ec7c31b/05c88ff03b0c; boundary STABLE;
+  bench3 + q17_perf within certified band (NO DEGRADATION rule).
+- BATTERY: 6-round repro_sustain + p1_coh_watch (Q19 armature),
+  §18 capture protocol armed (rings FIRST, devcoredump immediate).
+  PASS = ≥3 battery-hours 0 resets (observed MTTF under battery
+  14m-2h52m) → restore standing on Q22a. Recur → confirm dump
+  reason-string identical → lever 2 (cmdlist flip) → host levers
+  (fw align, execlist) which REQUIRE host reboot sign-off.
