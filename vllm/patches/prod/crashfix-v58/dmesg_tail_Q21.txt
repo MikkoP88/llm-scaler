@@ -1,0 +1,10 @@
+[Tue Sep 15 06:39:28 2026] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[Tue Sep 15 06:39:28 2026] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[Tue Sep 15 06:39:28 2026] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data
+[Tue Sep 15 07:42:40 2026] xe 0000:b1:00.0: [drm] Xe device coredump has been deleted.
+[Tue Sep 15 09:03:19 2026] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[Tue Sep 15 09:03:19 2026] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[Tue Sep 15 09:03:19 2026] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[Tue Sep 15 09:31:36 2026] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[Tue Sep 15 09:31:37 2026] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[Tue Sep 15 09:31:37 2026] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data

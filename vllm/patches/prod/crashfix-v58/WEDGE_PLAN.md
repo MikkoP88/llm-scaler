@@ -1389,3 +1389,215 @@ then). Evidence: lce1/{p1_tokenvar_Q15,p1_logprob_Q15,p1_len5probe_Q15,
 p1_lenset_Q15,p1_plogprob_Q15,p1_alias_Q15,p1_len5probe_Q16,p1_batch_Q16,
 p1_shared_Q16,p1_len5probe_Q17,p1_soak_Q17,f8ref_q17fix}.out,
 lce1/bootQ1{5,6,7}.out, serve_user_q16.sh (k=3), patch_v58_p1.py.
+
+## §17 — Boot B (Q18, tq4nc + VIA + P1 fix): fix VALIDATED on the armature lane; LANE CRASHED at 23 min (§14-class event #2) → tq4nc prod-candidacy BLOCKED
+
+Q18 = Q17 lineage with ONLY `--kv-cache-dtype turboquant_4bit_nc`
+(serve_user_tq4nc.sh; preset in-tree config/cache.py:28; all other
+flags identical: 262144, mtp4, async, prefix caching, FULL_DECODE_ONLY,
+f15b+arstage+P1 patchers, VIA env, v1.2.10). Boot 05:08:56, health
+~160 s, PROBE_BOOT_READY 05:11:43.
+
+P1-fix validation on tq4nc (ALL GREEN):
+- Idle: boundary probe all lengths STABLE; top-3 logprobs essentially
+  IDENTICAL to the e5m2 healthy lane (' Paris' -0.45; ' is'
+  -0.58/-1.58/-3.07) → no tq4nc numeric cliff. Guard fired live
+  (reqs=1 udql=5 both ranks). Soak PASS bad=0 (' Paris.\nThe capital
+  of' x3 bit-identical). f8ref q18tq4nc distinct=OK (e899790d3635/
+  f167d905a10b/d84100508821; differs from e5m2 hashes as expected).
+  Perf: solo mt=256 55.5 tok/s (+12% vs Q17's 49.4); conc4 36.8
+  agg (single sample, high-variance lane — not a gate).
+- Under armature (repro_sustain 2 = dt_warmup_v53 p1-p14 x2 +
+  p1_coh_watch 30 min + 2 mid-load fresh-family sweeps):
+  ROUND 1 CLEAN (exit 0, 9.5 min, fence-hits=0); coh rounds 1-13 ALL
+  distinct=1; mid-load sweep 1 (05:21, during round-1 pressure) ALL 8
+  families STABLE with top-3 logprobs == idle values. ZERO garbage
+  anywhere — the §15 on-demand P1 signature is GONE with the fix.
+
+CRASH (~05:26:49, ~7 min into round 2, uptime 23 min):
+- Engine hung mid-step → 280 s later `TimeoutError: RPC call to
+  sample_tokens timed out` → EngineCore fatal → API 500s (sweep-2 +
+  coh requests queued behind the hung step, all 500'd at death);
+  v55 fence (ASYNC-EVENT-STALL, async_output_copy 600 s) and worker
+  step watchdog (605 s) fired post-mortem. dmesg: ccs engine reset
+  GPU0 (da:00.0) + device coredump — saved (Q18_crash/devcoredump).
+- Fatal step captured by dump_input (SchedulerOutput): MIXED batch =
+  2547-token CHUNKED-PREFILL continuation of a ~41k-token chat prompt
+  (num_computed 38912) + ONE 5-token verify row (num_computed 5,
+  output 1, spec [-1,-1,-1,-1]); new_block_ids_to_zero=[486]; KV
+  usage 7.7%. Hang inside execute_model/async_output_copy of this
+  step on GPU0 compute (ccs), NOT in oneCCL (VIA env active, no
+  via_env=False, fence class = async producer dead).
+- P1 guard ORTHOGONAL to the fatal step: both rows have
+  num_computed>0 (not first-chunk k+1 prefills); the mixed shape
+  (max_sched 2547 != udql 5) was never uniform-decode anyway.
+
+Attribution & disposition:
+- §14-class event #2 (target-forward compute hang + ccs reset +
+  devcoredump). Earliest onset yet: Q13b (e5m2+VIA) died at 2h52m
+  under ≥ comparable pressure; Q11 66 min clean; Q14/Q15 idle+probe
+  boots clean. tq4nc lane died at 23 min with 18 min of pressure —
+  strong signal of tq4nc-correlated fragility (TQ kernels visible in
+  JIT monitor: _tq_full_dequant_kv, _tq_mq_decode_stage1/_fwd_stage2),
+  though 1 event cannot fully separate lane-vs-chance.
+- tq4nc prod-candidacy BLOCKED pending root-cause of this class; NOT
+  a mandate dtype (mandate = e5m2 + e4m3). P1 fix UNAFFECTED
+  (validated on this lane too).
+- Evidence: lce1/Q18_crash/ (serve_full_Q18.log, dump lines 902-907,
+  devcoredump_card2_q18.bin, first500/first_errors/via_census/
+  stall_lines/fr_tail), lce1/{p1_len5probe_Q18,p1_len5probe_Q18_load1,
+  p1_len5probe_Q18_load2,p1_soak_Q18,f8ref_q18tq4nc,q18_perf,
+  p1_coh_Q18,sustain_Q18,q18_armature}.out, lce1/bootQ18.out,
+  serve_user_tq4nc.sh, repro_bootQ18.sh.
+
+## §18 — Boot C (Q19, e4m3 + VIA + P1 fix): idle ALL GREEN; died at ~61 min pressure = §14-class event #3 → class is dtype-agnostic, now the dominant open thread
+
+Q19 = Q18 lineage with `--kv-cache-dtype fp8_e4m3`
+(serve_user_e4m3_262k.sh = single-line diff vs user serve). Boot
+05:38:45, health ~140 s.
+
+IDLE VALIDATION (ALL GREEN):
+- Boundary probe: all lengths STABLE; top-3 logprobs ≈ e5m2 AND tq4nc
+  lanes (' Paris' -0.45; ' is' -0.58/-1.57/-3.06) → no numeric cliff
+  across all three KV dtypes. Guard fires live (reqs=1 udql=5, both
+  ranks). Soak PASS bad=0. f8ref q19e4m3 distinct=OK
+  (52f598e7d38a/6b1c26403bfc/95e24129958b — prompt-3 hash
+  BIT-IDENTICAL to the e5m2-lane certified reference).
+- bench3 idle x2: ctx2k 465.2/457.4, ctx16k 380.8/381.2, ctx65k
+  300.0(JIT-warm)/358.5, conc8 128.4/372.2 (= idle VIA samples for
+  the conc8 study), acceptance 0.743/0.739 (e5m2 parity 0.741/0.745).
+  Perf solo 54.4 tok/s (+10% vs Q17 e5m2 49.4).
+
+SUSTAIN CERTIFICATION (sustain 6 + coh watch 65 min): rounds 1-4
+CLEAN (~44 min), 51 coh rounds bit-stable (the one "distinct=2" at
+death = empty-reply artifacts, NOT garbage), sweep1+sweep2 mid-load
+ALL STABLE, fence-hits 0 → DIED mid round 5 at ~61 min of pressure.
+
+Death forensics:
+- Hang onset 06:39:28 == dmesg ccs ENGINE RESET GPU1 (b1:00.0) +
+  devcoredump created (kernel auto-deleted it at 07:42:40, 1 h TTL —
+  not saved). EngineCore RPC sample_tokens timeout 06:44:32 (the 500
+  wave; round-5 exit=1, coh empty-replies). v55 fence 06:49:32 on
+  BOTH num_accepted_tokens_event (deferred postprocess) AND
+  async_output_copy — the classic F1 signature pair, fail-fast worked
+  as designed (workers exited cleanly; NO wedged-engine state).
+- Fatal step (dump_input): a LEGITIMATE uniform-decode verify step —
+  2 chat decodes (num_computed 450/494, num_output 393/437) each
+  scheduling 5 tokens = udql, total 10, graph-replay decode region,
+  KV usage 4.6%. The P1 guard was correctly PERMISSIVE here (real
+  decode rows, num_computed>0) — guard orthogonal to the hang.
+- NOT a oneCCL-leak: ccs compute reset at hang onset (same class as
+  Q13b/Q18), not a parked eager-AR.
+
+§14-CLASS INCIDENCE TABLE (VIA on, mtp4@262144, v1.2.10,
+repro_sustain-class pressure):
+  e5m2   Q13b  died 2 h 52 m (target replay propose-end→silence)
+  tq4nc  Q18   died 23 min    (mixed 2547-chunk + verify, ccs GPU0)
+  e4m3   Q19   died ~61 min   (uniform-decode verify, ccs GPU1)
+→ dtype-agnostic rare compute-hang class; the §1-§13 oneCCL wedge
+  remains FIXED by VIA (0 eager-AR wedges across all VIA boots);
+  e5m2 is the longest-lived lane.
+
+CAPTURE LESSON (hard, for next event): the fr ring files
+(fr_602/fr_608.log, 29 MB, mtime == hang onset) and f15b stall dumps
+(f15b_dump_602/608.log, 06:41) live IN-CONTAINER and were LOST — the
+capture script's copy loop silently failed before teardown ran. Next
+event: docker cp fr_*.log f15b_dump_*.log FIRST, verify non-empty,
+THEN teardown; read /sys/class/drm/*/device/devcoredump/data
+immediately (1 h kernel TTL).
+
+Disposition: e4m3 idle/correctness/determinism/perf = GREEN;
+e4m3+VIA sustained-pressure crash-free = NOT ACHIEVED (1 h 01 m).
+Mandate "crash-free on both dtypes" now hinges on §14-class
+root-cause (open thread). Prod stands on e5m2+VIA+P1fix (longest-lived
+lane + wedge fixed + P1 fixed). Evidence: lce1/Q19_crash/
+(serve_full_Q19.log, dump_section, dmesg_tail, via_census, ps),
+lce1/{p1_len5probe_Q19,p1_len5probe_Q19_load1,p1_len5probe_Q19_load2,
+p1_soak_Q19,f8ref_q19e4m3,bench3_Q19_s1,bench3_Q19_s2,q19_perf,
+p1_coh_Q19,sustain_Q19,q19_armature,bootQ19}.out.
+
+## §19 — Boot D (Q20 conc8 study) RESOLVED; prod-restore attempt Q21 hit §14-class event #4 ON the e5m2 lane (best forensics yet); Q21b STANDING as prod; engagement closure
+
+BOOT D (Q20 = e4m3, NO-VIA control, dispose-while-healthy protocol):
+bench3 x2 idle — conc8 129.0/373.4, acceptance 0.743, ctx2k 474.7/460.2
+vs Q19 VIA samples conc8 128.4/372.2, acc 0.743 → EXACT PARITY.
+CONC8 STUDY CLOSED: the conc8 run-to-run spread (66-373 across the
+engagement) is LANE NOISE, not VIA-attributable. VIA costs nothing at
+conc8 and stays (it is the wedge fix, §13). Q20 disposed healthy
+09:09:03, never near its no-VIA wedge window.
+
+PROD RESTORE ATTEMPT (Q21 = Q17 lineage exactly: serve_user.sh
+e5m2 + VIA_ALLGATHER + v58 P1 patcher, mtp4@262144, v1.2.10):
+- Boot 09:17, health ~140 s. Idle validation ALL GREEN: kv fp8_e5m2;
+  P1 marker 2; boundary 8/8 STABLE; soak PASS bad=0; F8REF q21e5m2 =
+  EXACT certified refs cb8c3851b897/68332ec7c31b/05c88ff03b0c; bench3
+  403.4/481.7/340.9 conc8 124.3 acc 0.743; solo 50.3 tok/s; VIA census
+  (fr rings, NOT serve log — via_env lives in _fr.log) 31431 True /
+  0 False both workers, symmetric. (Note: image /tmp contains STALE
+  Sep-6 fr rings baked at image build — census must target the
+  current-boot pids.)
+- Sustain round 1 (battery spot, launched 09:25:34): round itself
+  exited 0 with fence-hits=0 at 09:37:01 — but the ENGINE DIED at
+  09:36:41. §14-CLASS EVENT #4, ON THE e5m2 PROD LANE, ~6 min into
+  battery pressure (~14 min after boot). The round's green counters
+  are an artifact: hang onset 09:31:36 → RPC timeout 09:36:41 (305 s,
+  the class signature) → round closed before the v55 fence (600 s).
+
+EVENT #4 FORENSICS (§18 capture lesson applied — best evidence of
+the engagement, all artifacts saved BEFORE teardown):
+- fr_574/fr_580 rings (6.0 MB each) frozen at hang onset (mtime
+  09:31): AR begins == AR ends == 88757 on BOTH workers — ZERO
+  unpaired allreduces → the VIA/allgather path (and AR generally) is
+  EXONERATED for the §14 hang class. Both rings end "propose end"
+  170676.918x → silence: the hang is BETWEEN propose-end and the
+  first verify-forward AR, i.e. in the target-verify COMPUTE region.
+  Matches Q13b's "target replay propose-end→silence" signature.
+- devcoredump SAVED (first physical artifact of the class,
+  devcoredump_card1_Q21.bin, 518 KB, card1 = b1:00.0, ccs reset
+  guc_id=22 — IDENTICAL gpu+guc_id to Q19's reset; Q18 was GPU0).
+  GuC engine reset = recovery attempt; the reset workload never
+  completes → host wait never signals → RPC timeout.
+- Fatal step (dump_section_Q21.txt): single legitimate verify step,
+  5 tokens, spec [-1,-1,-1,-1], num_computed 2763 (>0, short ctx),
+  KV usage 2.6% — P1 guard correctly permissive; NOT long-context;
+  NOT first-chunk; same step class as Q19's fatal step.
+- No f15b stall dumps — CONSISTENT: f15b watches the AR ring; no
+  unpaired AR existed. The class is a compute hang, not comm.
+
+§14-CLASS INCIDENCE (final): e5m2 Q13b 2h52m / tq4nc Q18 23m /
+e4m3 Q19 61m / e5m2 Q21 14m — dtype-agnostic, time-to-death highly
+variable (14m-2h52m), 4/4 under repro_sustain/dt_warmup battery,
+0/many in idle validation, 0 in weeks of real prod traffic. Working
+root-cause (evidence-backed, thread open): a compute kernel in the
+target-verify forward hangs a ccs engine (GPU1 twice, guc_id=22
+both times); driver resets the engine; the in-flight TP step never
+completes; EngineCore RPC timeout (300 s) kills the lane. Next
+session's entry point: devcoredump_card1_Q21.bin + full rings at
+host lce1/Q21_crash/ (fr_574/580.log, 88757 paired AR records).
+
+PROD RESTORE-2 (Q21b = same lineage): boot 09:41, health ~140 s,
+idle certification ALL GREEN — F8REF exact certified refs, boundary
+STABLE, soak PASS, bench3 403.6/482.1/348.3 conc8 127.9 acc 0.743,
+solo 50.5/conc4 143.6, VIA 31546/0 both workers, P1 marker 2.
+NO battery re-run (4/4 §14-class events are battery-correlated; the
+battery is artificial worst-case pressure, the class has never hit
+idle validation or real traffic). Q21b LEFT STANDING as prod.
+
+ENGAGEMENT CLOSURE (v58 work order):
+1. VIA_ALLGATHER prod deployment — DONE, standing (§13 fix + §19
+   conc8 parity: zero VIA cost at conc8).
+2. e4m3 spot-validation — idle/correctness/determinism/perf GREEN
+   incl. cross-dtype bit-identity (§18); sustained crash-free NOT
+   achieved (§14-class #3); blocked on the open class root-cause,
+   which is dtype-agnostic (e5m2 itself is not immune — event #4).
+3. Conc8 clean study — CLOSED: VIA vs no-VIA exact parity, spread =
+   lane noise (§19/Q20).
+4. P1 defect — ROOT-CAUSED + FIXED + VALIDATED on all three KV
+   dtypes (§16-§18); patch_v58_p1.py boot-applied pending next bake.
+Open thread for next session: §14-class compute-hang root-cause
+(devcoredump + frozen rings in hand). tq4nc remains BLOCKED (§17).
+Evidence: vllm/patches/prod/crashfix-v58/*_Q21* (15 files incl.
+devcoredump_card1_Q21.bin, fr_*_tail500_Q21.log, dump_section,
+serve_full_Q21.log); host lce1/Q21_crash/ (full rings) +
+lce1/{bootQ21,bootQ21b,sustain_Q21,f8ref_q21e5m2,bench3_Q21,
+p1_soak_Q21}.out.
