@@ -1,0 +1,485 @@
+=== F15B DUMP #1 06:47:19 reason=stall 46s wait=None pid=546 ===
+  [    46.7s ago] AR numel=25600 DONE
+  [    46.7s ago] AR numel=25600 DONE
+  [    46.7s ago] AR numel=25600 DONE
+  [    46.7s ago] AR numel=25600 DONE
+  [    46.7s ago] AR numel=25600 DONE
+  [    46.7s ago] AR numel=25600 DONE
+  [    46.7s ago] AR numel=25600 DONE
+  [    46.7s ago] AR numel=25600 DONE
+  [    46.7s ago] AR numel=25600 DONE
+  [    46.7s ago] AR numel=25600 DONE
+  [    46.7s ago] AR numel=25600 DONE
+  [    46.7s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.5s ago] AR numel=25600 DONE
+  [    46.4s ago] AR numel=25600 DONE
+=== F15B DUMP #2 06:48:05 reason=stall 46s wait=None pid=546 ===
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.8s ago] AR numel=25600 DONE
+  [    92.6s ago] AR numel=25600 DONE
+  [    92.6s ago] AR numel=25600 DONE
+=== F15B DUMP #3 06:48:51 reason=stall 46s wait=None pid=546 ===
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   139.0s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.9s ago] AR numel=25600 DONE
+  [   138.8s ago] AR numel=25600 DONE
+  [   138.8s ago] AR numel=25600 DONE
+=== F15B DUMP #4 06:50:56 reason=stall 46s wait=None pid=546 ===
+  [    46.6s ago] AR numel=5120 DONE
+  [    46.6s ago] AR numel=5120 DONE
+  [    46.6s ago] propose_end  
+  [    46.6s ago] propose_gpu_done  DONE
+  [    46.6s ago] execute_model  
+  [    46.6s ago] input_prep_sync_enter  
+  [    46.6s ago] input_prep_sync_done  
+  [    46.6s ago] v55wait num_accepted_tokens_event (deferred postprocess) 
+  [    46.6s ago] v55wait num_accepted_tokens_event (_update_states) 
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] sample_tokens  
+  [    46.6s ago] propose_begin  
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=25600 DONE
+  [    46.6s ago] AR numel=5120 DONE
+  [    46.6s ago] AR numel=5120 DONE
+  [    46.6s ago] AR numel=5120 DONE
+  [    46.6s ago] AR numel=5120 DONE
+  [    46.6s ago] AR numel=5120 DONE
+  [    46.6s ago] AR numel=5120 DONE
+  [    46.6s ago] AR numel=5120 DONE
+  [    46.6s ago] AR numel=5120 DONE
+  [    46.6s ago] AR numel=5120 DONE
+  [    46.6s ago] propose_end  
+  [    46.6s ago] propose_gpu_done  DONE
+  [    46.6s ago] execute_model  
+  [    46.6s ago] input_prep_sync_enter  
+  [    46.6s ago] input_prep_sync_done  
+  [    46.6s ago] v55wait num_accepted_tokens_event (deferred postprocess) 
+  [    46.5s ago] v55wait num_accepted_tokens_event (_update_states) 
+  [    46.5s ago] AR numel=25600 DONE
+  [    46.5s ago] sample_tokens  
+  [    46.5s ago] propose_begin  
+  [    46.5s ago] AR numel=25600 DONE
+  [    46.5s ago] AR numel=25600 DONE
+  [    46.5s ago] AR numel=25600 DONE
+  [    46.5s ago] AR numel=5120 DONE
+  [    46.5s ago] AR numel=5120 DONE
+  [    46.5s ago] AR numel=5120 DONE
+  [    46.5s ago] AR numel=5120 DONE
+  [    46.5s ago] AR numel=5120 DONE
+  [    46.5s ago] AR numel=5120 DONE
+  [    46.5s ago] AR numel=5120 DONE
+  [    46.5s ago] AR numel=5120 DONE
+  [    46.5s ago] AR numel=5120 DONE
+  [    46.5s ago] propose_end  
+  [    46.5s ago] propose_gpu_done  DONE
+  [    46.5s ago] execute_model  
+  [    46.5s ago] input_prep_sync_enter  
+  [    46.5s ago] input_prep_sync_done  
+  [    46.5s ago] v55wait num_accepted_tokens_event (deferred postprocess) 
+  [    46.5s ago] v55wait num_accepted_tokens_event (_update_states) 
+  [    46.5s ago] AR numel=25600 DONE
+  [    46.5s ago] sample_tokens  
+  [    46.5s ago] propose_begin  
+  [    46.5s ago] AR numel=25600 DONE
+  [    46.5s ago] AR numel=25600 DONE
+  [    46.5s ago] AR numel=25600 DONE
+  [    46.4s ago] AR numel=5120 DONE
+  [    46.4s ago] AR numel=5120 DONE
+  [    46.4s ago] AR numel=5120 DONE
+  [    46.4s ago] AR numel=5120 DONE
+  [    46.4s ago] AR numel=5120 DONE
+  [    46.4s ago] AR numel=5120 DONE
+  [    46.4s ago] AR numel=5120 DONE
+  [    46.4s ago] AR numel=5120 DONE
+  [    46.4s ago] AR numel=5120 DONE
+  [    46.4s ago] propose_end  
+  [    46.4s ago] propose_gpu_done  DONE
+  [    46.4s ago] execute_model  
+  [    46.4s ago] input_prep_sync_enter  
+  [    46.4s ago] input_prep_sync_done  
+  [    46.4s ago] v55wait num_accepted_tokens_event (deferred postprocess) 
+  [    46.4s ago] v55wait num_accepted_tokens_event (_update_states) 
+  [    46.4s ago] AR numel=25600 DONE
+  [    46.4s ago] sample_tokens  
+  [    46.4s ago] propose_begin  
+  [    46.4s ago] AR numel=25600 DONE
+  [    46.4s ago] AR numel=25600 DONE
+  [    46.4s ago] AR numel=25600 DONE
+  [    46.4s ago] AR numel=5120 DONE
+  [    46.4s ago] AR numel=5120 DONE
+  [    46.4s ago] AR numel=5120 DONE
+  [    46.4s ago] AR numel=5120 DONE
+  [    46.4s ago] AR numel=5120 DONE
+  [    46.4s ago] AR numel=5120 DONE
+  [    46.4s ago] AR numel=5120 DONE
+  [    46.4s ago] AR numel=5120 DONE
+  [    46.4s ago] AR numel=5120 DONE
+  [    46.4s ago] propose_end  
+  [    46.4s ago] propose_gpu_done  DONE
+  [    46.4s ago] execute_model  
+  [    46.4s ago] input_prep_sync_enter  
+  [    46.4s ago] input_prep_sync_done  
+  [    46.4s ago] v55wait num_accepted_tokens_event (deferred postprocess) 
+=== F15B DUMP #5 07:15:38 reason=stall 46s wait=num_accepted_tokens_event (deferred postprocess) pid=546 ===
+  [    47.1s ago] AR numel=5120 DONE
+  [    47.1s ago] AR numel=5120 DONE
+  [    47.1s ago] propose_end  
+  [    47.1s ago] propose_gpu_done  DONE
+  [    47.1s ago] execute_model  
+  [    47.1s ago] input_prep_sync_enter  
+  [    47.1s ago] input_prep_sync_done  
+  [    47.1s ago] v55wait num_accepted_tokens_event (deferred postprocess) 
+  [    47.1s ago] v55wait num_accepted_tokens_event (_update_states) 
+  [    47.1s ago] AR numel=25600 DONE
+  [    47.1s ago] sample_tokens  
+  [    47.1s ago] propose_begin  
+  [    47.1s ago] AR numel=25600 DONE
+  [    47.1s ago] AR numel=25600 DONE
+  [    47.1s ago] AR numel=25600 DONE
+  [    47.1s ago] AR numel=5120 DONE
+  [    47.1s ago] AR numel=5120 DONE
+  [    47.1s ago] AR numel=5120 DONE
+  [    47.1s ago] AR numel=5120 DONE
+  [    47.1s ago] AR numel=5120 DONE
+  [    47.1s ago] AR numel=5120 DONE
+  [    47.1s ago] AR numel=5120 DONE
+  [    47.1s ago] AR numel=5120 DONE
+  [    47.1s ago] AR numel=5120 DONE
+  [    47.1s ago] propose_end  
+  [    47.1s ago] propose_gpu_done  DONE
+  [    47.1s ago] execute_model  
+  [    47.1s ago] input_prep_sync_enter  
+  [    47.1s ago] input_prep_sync_done  
+  [    47.1s ago] v55wait num_accepted_tokens_event (deferred postprocess) 
+  [    47.1s ago] v55wait num_accepted_tokens_event (_update_states) 
+  [    47.0s ago] AR numel=25600 DONE
+  [    47.0s ago] sample_tokens  
+  [    47.0s ago] propose_begin  
+  [    47.0s ago] AR numel=25600 DONE
+  [    47.0s ago] AR numel=25600 DONE
+  [    47.0s ago] AR numel=25600 DONE
+  [    47.0s ago] AR numel=5120 DONE
+  [    47.0s ago] AR numel=5120 DONE
+  [    47.0s ago] AR numel=5120 DONE
+  [    47.0s ago] AR numel=5120 DONE
+  [    47.0s ago] AR numel=5120 DONE
+  [    47.0s ago] AR numel=5120 DONE
+  [    47.0s ago] AR numel=5120 DONE
+  [    47.0s ago] AR numel=5120 DONE
+  [    47.0s ago] AR numel=5120 DONE
+  [    47.0s ago] propose_end  
+  [    47.0s ago] propose_gpu_done  DONE
+  [    47.0s ago] execute_model  
+  [    47.0s ago] input_prep_sync_enter  
+  [    47.0s ago] input_prep_sync_done  
+  [    47.0s ago] v55wait num_accepted_tokens_event (deferred postprocess) 
+  [    47.0s ago] v55wait num_accepted_tokens_event (_update_states) 
+  [    47.0s ago] AR numel=25600 DONE
+  [    47.0s ago] sample_tokens  
+  [    47.0s ago] propose_begin  
+  [    47.0s ago] AR numel=25600 DONE
+  [    47.0s ago] AR numel=25600 DONE
+  [    47.0s ago] AR numel=25600 DONE
+  [    47.0s ago] AR numel=5120 DONE
+  [    47.0s ago] AR numel=5120 DONE
+  [    47.0s ago] AR numel=5120 DONE
+  [    47.0s ago] AR numel=5120 DONE
+  [    47.0s ago] AR numel=5120 DONE
+  [    47.0s ago] AR numel=5120 DONE
+  [    47.0s ago] AR numel=5120 DONE
+  [    47.0s ago] AR numel=5120 DONE
+  [    47.0s ago] AR numel=5120 DONE
+  [    47.0s ago] propose_end  
+  [    47.0s ago] propose_gpu_done  DONE
+  [    47.0s ago] execute_model  
+  [    47.0s ago] input_prep_sync_enter  
+  [    47.0s ago] input_prep_sync_done  
+  [    47.0s ago] v55wait num_accepted_tokens_event (deferred postprocess) 
+  [    46.9s ago] v55wait num_accepted_tokens_event (_update_states) 
+  [    46.9s ago] AR numel=25600 DONE
+  [    46.9s ago] sample_tokens  
+  [    46.9s ago] propose_begin  
+  [    46.9s ago] AR numel=25600 PENDING
+  [    46.9s ago] AR numel=25600 PENDING
+  [    46.9s ago] AR numel=25600 PENDING
+  [    46.9s ago] AR numel=5120 PENDING
+  [    46.9s ago] AR numel=5120 PENDING
+  [    46.9s ago] AR numel=5120 PENDING
+  [    46.9s ago] AR numel=5120 PENDING
+  [    46.9s ago] AR numel=5120 PENDING
+  [    46.9s ago] AR numel=5120 PENDING
+  [    46.9s ago] AR numel=5120 PENDING
+  [    46.9s ago] AR numel=5120 PENDING
+  [    46.9s ago] AR numel=5120 PENDING
+  [    46.9s ago] propose_end  
+  [    46.9s ago] propose_gpu_done  PENDING
+  [    46.9s ago] execute_model  
+  [    46.9s ago] input_prep_sync_enter  
+  [    46.9s ago] input_prep_sync_done  
+  [    46.9s ago] v55wait num_accepted_tokens_event (deferred postprocess) 

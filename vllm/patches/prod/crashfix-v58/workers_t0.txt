@@ -1,0 +1,22 @@
+== pid 541 main: state=S wchan=hrtimer_nanosleep
+   kernel-stack:
+[<0>] hrtimer_nanosleep+0x8b/0x110
+[<0>] common_nsleep_timens+0x41/0xa0
+[<0>] __x64_sys_clock_nanosleep+0xeb/0x190
+[<0>] x64_sys_call+0x19c7/0x2330
+[<0>] do_syscall_64+0x81/0xb30
+[<0>] entry_SYSCALL_64_after_hwframe+0x76/0x7e
+   R-threads:
+voluntary_ctxt_switches:	880772
+nonvoluntary_ctxt_switches:	21195
+== pid 547 main: state=S wchan=hrtimer_nanosleep
+   kernel-stack:
+[<0>] hrtimer_nanosleep+0x8b/0x110
+[<0>] common_nsleep_timens+0x41/0xa0
+[<0>] __x64_sys_clock_nanosleep+0xeb/0x190
+[<0>] x64_sys_call+0x19c7/0x2330
+[<0>] do_syscall_64+0x81/0xb30
+[<0>] entry_SYSCALL_64_after_hwframe+0x76/0x7e
+   R-threads:
+voluntary_ctxt_switches:	699937
+nonvoluntary_ctxt_switches:	23439

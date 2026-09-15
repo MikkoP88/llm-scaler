@@ -1,0 +1,13 @@
+# Dockerfile.v1.2.10 — crashfix-v58 wedge fix bake.
+# Root cause (F12/F14): oneCCL drmfd IPC exchange + expandable_segments
+# allocator squeeze at device saturation => stale cached IPC handle =>
+# kernel-mode AR flag-poll kernels never retire => async-event stall
+# wedge (crash classes v50/v55 lineage). Fix: CCL_ZE_IPC_EXCHANGE=pidfd
+# (oneCCL 2021.15 vendor default; survives FULL device saturation —
+# Boot K2: clean >=100 min at 17 MiB free where drmfd wedged 25-69 min;
+# numerics battery PASS: greedy determinism sha-identical, Paris/391
+# correct, sampled reasoning coherent; perf in-band).
+# Bake = single ENV flip over v1.2.9 (no code changes).
+FROM llm-scaler-exp:v1.2.9
+ENV CCL_ZE_IPC_EXCHANGE=pidfd
+RUN echo "v1.2.10 pidfd bake OK"

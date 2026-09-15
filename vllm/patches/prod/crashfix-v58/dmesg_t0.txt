@@ -1,0 +1,10 @@
+[Sun Sep 13 12:47:29 2026] perf: interrupt took too long (3136 > 3135), lowering kernel.perf_event_max_sample_rate to 63000
+[Sun Sep 13 17:22:34 2026] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[Sun Sep 13 17:22:34 2026] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[Sun Sep 13 17:22:34 2026] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=32
+[Sun Sep 13 18:00:10 2026] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[Sun Sep 13 18:00:10 2026] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[Sun Sep 13 18:00:10 2026] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[Sun Sep 13 18:00:10 2026] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[Sun Sep 13 18:00:10 2026] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[Sun Sep 13 18:00:10 2026] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data

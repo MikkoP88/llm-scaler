@@ -1,0 +1,310 @@
+=== dump #1 ===
+[ 7117.791806] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[ 7819.976245] perf: interrupt took too long (2508 > 2500), lowering kernel.perf_event_max_sample_rate to 79000
+[ 9624.970327] perf: interrupt took too long (3136 > 3135), lowering kernel.perf_event_max_sample_rate to 63000
+[26130.094156] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[26130.094629] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[26130.109650] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=32
+[28386.460007] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[28386.460180] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[28386.508232] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[28386.508237] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[28386.508450] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[28386.508454] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data
+[32020.529711] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[32020.529736] xe 0000:b1:00.0: [drm] Xe device coredump has been deleted.
+[39105.421495] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[39105.439757] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[39105.469887] workqueue: delayed_fput hogged CPU for >10000us 4 times, consider switching to WQ_UNBOUND
+[39105.482885] workqueue: delayed_fput hogged CPU for >10000us 5 times, consider switching to WQ_UNBOUND
+[40051.284522] perf: interrupt took too long (3923 > 3920), lowering kernel.perf_event_max_sample_rate to 50000
+[41941.579160] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[41941.628984] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[41941.628988] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[42378.731446] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[42378.731909] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[42378.737585] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[42378.788020] workqueue: delayed_fput hogged CPU for >10000us 7 times, consider switching to WQ_UNBOUND
+[45651.514315] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[46184.057813] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[46184.108508] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[46184.108512] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+=== dump #1 ===
+[ 7117.791806] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[ 7819.976245] perf: interrupt took too long (2508 > 2500), lowering kernel.perf_event_max_sample_rate to 79000
+[ 9624.970327] perf: interrupt took too long (3136 > 3135), lowering kernel.perf_event_max_sample_rate to 63000
+[26130.094156] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[26130.094629] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[26130.109650] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=32
+[28386.460007] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[28386.460180] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[28386.508232] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[28386.508237] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[28386.508450] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[28386.508454] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data
+[32020.529711] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[32020.529736] xe 0000:b1:00.0: [drm] Xe device coredump has been deleted.
+[39105.421495] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[39105.439757] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[39105.469887] workqueue: delayed_fput hogged CPU for >10000us 4 times, consider switching to WQ_UNBOUND
+[39105.482885] workqueue: delayed_fput hogged CPU for >10000us 5 times, consider switching to WQ_UNBOUND
+[40051.284522] perf: interrupt took too long (3923 > 3920), lowering kernel.perf_event_max_sample_rate to 50000
+[41941.579160] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[41941.628984] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[41941.628988] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[42378.731446] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[42378.731909] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[42378.737585] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[42378.788020] workqueue: delayed_fput hogged CPU for >10000us 7 times, consider switching to WQ_UNBOUND
+[45651.514315] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[46184.057813] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[46184.108508] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[46184.108512] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+=== dump #2 ===
+[ 7117.791806] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[ 7819.976245] perf: interrupt took too long (2508 > 2500), lowering kernel.perf_event_max_sample_rate to 79000
+[ 9624.970327] perf: interrupt took too long (3136 > 3135), lowering kernel.perf_event_max_sample_rate to 63000
+[26130.094156] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[26130.094629] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[26130.109650] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=32
+[28386.460007] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[28386.460180] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[28386.508232] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[28386.508237] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[28386.508450] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[28386.508454] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data
+[32020.529711] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[32020.529736] xe 0000:b1:00.0: [drm] Xe device coredump has been deleted.
+[39105.421495] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[39105.439757] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[39105.469887] workqueue: delayed_fput hogged CPU for >10000us 4 times, consider switching to WQ_UNBOUND
+[39105.482885] workqueue: delayed_fput hogged CPU for >10000us 5 times, consider switching to WQ_UNBOUND
+[40051.284522] perf: interrupt took too long (3923 > 3920), lowering kernel.perf_event_max_sample_rate to 50000
+[41941.579160] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[41941.628984] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[41941.628988] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[42378.731446] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[42378.731909] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[42378.737585] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[42378.788020] workqueue: delayed_fput hogged CPU for >10000us 7 times, consider switching to WQ_UNBOUND
+[45651.514315] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[46184.057813] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[46184.108508] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[46184.108512] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+=== dump #2 ===
+[ 7117.791806] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[ 7819.976245] perf: interrupt took too long (2508 > 2500), lowering kernel.perf_event_max_sample_rate to 79000
+[ 9624.970327] perf: interrupt took too long (3136 > 3135), lowering kernel.perf_event_max_sample_rate to 63000
+[26130.094156] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[26130.094629] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[26130.109650] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=32
+[28386.460007] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[28386.460180] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[28386.508232] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[28386.508237] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[28386.508450] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[28386.508454] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data
+[32020.529711] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[32020.529736] xe 0000:b1:00.0: [drm] Xe device coredump has been deleted.
+[39105.421495] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[39105.439757] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[39105.469887] workqueue: delayed_fput hogged CPU for >10000us 4 times, consider switching to WQ_UNBOUND
+[39105.482885] workqueue: delayed_fput hogged CPU for >10000us 5 times, consider switching to WQ_UNBOUND
+[40051.284522] perf: interrupt took too long (3923 > 3920), lowering kernel.perf_event_max_sample_rate to 50000
+[41941.579160] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[41941.628984] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[41941.628988] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[42378.731446] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[42378.731909] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[42378.737585] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[42378.788020] workqueue: delayed_fput hogged CPU for >10000us 7 times, consider switching to WQ_UNBOUND
+[45651.514315] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[46184.057813] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[46184.108508] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[46184.108512] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+=== dump #3 ===
+[ 7117.791806] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[ 7819.976245] perf: interrupt took too long (2508 > 2500), lowering kernel.perf_event_max_sample_rate to 79000
+[ 9624.970327] perf: interrupt took too long (3136 > 3135), lowering kernel.perf_event_max_sample_rate to 63000
+[26130.094156] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[26130.094629] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[26130.109650] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=32
+[28386.460007] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[28386.460180] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[28386.508232] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[28386.508237] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[28386.508450] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[28386.508454] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data
+[32020.529711] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[32020.529736] xe 0000:b1:00.0: [drm] Xe device coredump has been deleted.
+[39105.421495] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[39105.439757] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[39105.469887] workqueue: delayed_fput hogged CPU for >10000us 4 times, consider switching to WQ_UNBOUND
+[39105.482885] workqueue: delayed_fput hogged CPU for >10000us 5 times, consider switching to WQ_UNBOUND
+[40051.284522] perf: interrupt took too long (3923 > 3920), lowering kernel.perf_event_max_sample_rate to 50000
+[41941.579160] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[41941.628984] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[41941.628988] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[42378.731446] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[42378.731909] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[42378.737585] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[42378.788020] workqueue: delayed_fput hogged CPU for >10000us 7 times, consider switching to WQ_UNBOUND
+[45651.514315] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[46184.057813] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[46184.108508] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[46184.108512] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+=== dump #3 ===
+[ 7117.791806] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[ 7819.976245] perf: interrupt took too long (2508 > 2500), lowering kernel.perf_event_max_sample_rate to 79000
+[ 9624.970327] perf: interrupt took too long (3136 > 3135), lowering kernel.perf_event_max_sample_rate to 63000
+[26130.094156] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[26130.094629] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[26130.109650] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=32
+[28386.460007] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[28386.460180] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[28386.508232] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[28386.508237] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[28386.508450] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[28386.508454] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data
+[32020.529711] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[32020.529736] xe 0000:b1:00.0: [drm] Xe device coredump has been deleted.
+[39105.421495] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[39105.439757] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[39105.469887] workqueue: delayed_fput hogged CPU for >10000us 4 times, consider switching to WQ_UNBOUND
+[39105.482885] workqueue: delayed_fput hogged CPU for >10000us 5 times, consider switching to WQ_UNBOUND
+[40051.284522] perf: interrupt took too long (3923 > 3920), lowering kernel.perf_event_max_sample_rate to 50000
+[41941.579160] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[41941.628984] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[41941.628988] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[42378.731446] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[42378.731909] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[42378.737585] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[42378.788020] workqueue: delayed_fput hogged CPU for >10000us 7 times, consider switching to WQ_UNBOUND
+[45651.514315] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[46184.057813] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[46184.108508] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[46184.108512] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+=== dump #4 ===
+[ 7117.791806] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[ 7819.976245] perf: interrupt took too long (2508 > 2500), lowering kernel.perf_event_max_sample_rate to 79000
+[ 9624.970327] perf: interrupt took too long (3136 > 3135), lowering kernel.perf_event_max_sample_rate to 63000
+[26130.094156] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[26130.094629] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[26130.109650] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=32
+[28386.460007] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[28386.460180] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[28386.508232] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[28386.508237] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[28386.508450] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[28386.508454] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data
+[32020.529711] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[32020.529736] xe 0000:b1:00.0: [drm] Xe device coredump has been deleted.
+[39105.421495] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[39105.439757] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[39105.469887] workqueue: delayed_fput hogged CPU for >10000us 4 times, consider switching to WQ_UNBOUND
+[39105.482885] workqueue: delayed_fput hogged CPU for >10000us 5 times, consider switching to WQ_UNBOUND
+[40051.284522] perf: interrupt took too long (3923 > 3920), lowering kernel.perf_event_max_sample_rate to 50000
+[41941.579160] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[41941.628984] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[41941.628988] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[42378.731446] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[42378.731909] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[42378.737585] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[42378.788020] workqueue: delayed_fput hogged CPU for >10000us 7 times, consider switching to WQ_UNBOUND
+[45651.514315] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[46184.057813] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[46184.108508] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[46184.108512] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+=== dump #4 ===
+[ 7117.791806] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[ 7819.976245] perf: interrupt took too long (2508 > 2500), lowering kernel.perf_event_max_sample_rate to 79000
+[ 9624.970327] perf: interrupt took too long (3136 > 3135), lowering kernel.perf_event_max_sample_rate to 63000
+[26130.094156] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[26130.094629] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[26130.109650] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=32
+[28386.460007] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[28386.460180] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[28386.508232] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[28386.508237] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[28386.508450] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[28386.508454] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data
+[32020.529711] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[32020.529736] xe 0000:b1:00.0: [drm] Xe device coredump has been deleted.
+[39105.421495] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[39105.439757] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[39105.469887] workqueue: delayed_fput hogged CPU for >10000us 4 times, consider switching to WQ_UNBOUND
+[39105.482885] workqueue: delayed_fput hogged CPU for >10000us 5 times, consider switching to WQ_UNBOUND
+[40051.284522] perf: interrupt took too long (3923 > 3920), lowering kernel.perf_event_max_sample_rate to 50000
+[41941.579160] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[41941.628984] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[41941.628988] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[42378.731446] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[42378.731909] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[42378.737585] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[42378.788020] workqueue: delayed_fput hogged CPU for >10000us 7 times, consider switching to WQ_UNBOUND
+[45651.514315] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[46184.057813] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[46184.108508] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[46184.108512] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+=== dump #5 ===
+[ 7117.791806] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[ 7819.976245] perf: interrupt took too long (2508 > 2500), lowering kernel.perf_event_max_sample_rate to 79000
+[ 9624.970327] perf: interrupt took too long (3136 > 3135), lowering kernel.perf_event_max_sample_rate to 63000
+[26130.094156] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[26130.094629] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[26130.109650] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=32
+[28386.460007] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[28386.460180] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[28386.508232] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[28386.508237] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[28386.508450] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[28386.508454] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data
+[32020.529711] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[32020.529736] xe 0000:b1:00.0: [drm] Xe device coredump has been deleted.
+[39105.421495] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[39105.439757] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[39105.469887] workqueue: delayed_fput hogged CPU for >10000us 4 times, consider switching to WQ_UNBOUND
+[39105.482885] workqueue: delayed_fput hogged CPU for >10000us 5 times, consider switching to WQ_UNBOUND
+[40051.284522] perf: interrupt took too long (3923 > 3920), lowering kernel.perf_event_max_sample_rate to 50000
+[41941.579160] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[41941.628984] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[41941.628988] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[42378.731446] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[42378.731909] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[42378.737585] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[42378.788020] workqueue: delayed_fput hogged CPU for >10000us 7 times, consider switching to WQ_UNBOUND
+[45651.514315] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[46184.057813] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[46184.108508] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[46184.108512] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+=== dump #5 ===
+[ 7117.791806] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[ 7819.976245] perf: interrupt took too long (2508 > 2500), lowering kernel.perf_event_max_sample_rate to 79000
+[ 9624.970327] perf: interrupt took too long (3136 > 3135), lowering kernel.perf_event_max_sample_rate to 63000
+[26130.094156] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[26130.094629] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[26130.109650] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=32
+[28386.460007] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[28386.460180] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[28386.508232] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[28386.508237] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[28386.508450] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[28386.508454] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data
+[32020.529711] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[32020.529736] xe 0000:b1:00.0: [drm] Xe device coredump has been deleted.
+[39105.421495] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[39105.439757] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[39105.469887] workqueue: delayed_fput hogged CPU for >10000us 4 times, consider switching to WQ_UNBOUND
+[39105.482885] workqueue: delayed_fput hogged CPU for >10000us 5 times, consider switching to WQ_UNBOUND
+[40051.284522] perf: interrupt took too long (3923 > 3920), lowering kernel.perf_event_max_sample_rate to 50000
+[41941.579160] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[41941.628984] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[41941.628988] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[42378.731446] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[42378.731909] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[42378.737585] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[42378.788020] workqueue: delayed_fput hogged CPU for >10000us 7 times, consider switching to WQ_UNBOUND
+[45651.514315] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[46184.057813] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[46184.108508] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[46184.108512] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data

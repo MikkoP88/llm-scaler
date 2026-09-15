@@ -1,0 +1,310 @@
+=== dump #1 ===
+[73149.082940] docker0: port 1(vethd346334) entered disabled state
+[73149.083546] vethd346334 (unregistering): left allmulticast mode
+[73149.083557] vethd346334 (unregistering): left promiscuous mode
+[73149.083564] docker0: port 1(vethd346334) entered disabled state
+[73149.546051] docker0: port 1(veth0896588) entered blocking state
+[73149.546065] docker0: port 1(veth0896588) entered disabled state
+[73149.546093] veth0896588: entered allmulticast mode
+[73149.546224] veth0896588: entered promiscuous mode
+[73149.553412] eth0: renamed from veth63840ab
+[73149.554542] docker0: port 1(veth0896588) entered blocking state
+[73149.554556] docker0: port 1(veth0896588) entered forwarding state
+[73149.644370] docker0: port 1(veth0896588) entered disabled state
+[73149.644498] veth63840ab: renamed from eth0
+[73149.703955] docker0: port 1(veth0896588) entered disabled state
+[73149.704512] veth0896588 (unregistering): left allmulticast mode
+[73149.704526] veth0896588 (unregistering): left promiscuous mode
+[73149.704536] docker0: port 1(veth0896588) entered disabled state
+[73150.145416] docker0: port 1(veth87d641a) entered blocking state
+[73150.145429] docker0: port 1(veth87d641a) entered disabled state
+[73150.145459] veth87d641a: entered allmulticast mode
+[73150.145590] veth87d641a: entered promiscuous mode
+[73150.152734] eth0: renamed from veth50436e5
+[73150.153738] docker0: port 1(veth87d641a) entered blocking state
+[73150.153754] docker0: port 1(veth87d641a) entered forwarding state
+[73150.248571] docker0: port 1(veth87d641a) entered disabled state
+[73150.248737] veth50436e5: renamed from eth0
+[73150.290896] docker0: port 1(veth87d641a) entered disabled state
+[73150.291462] veth87d641a (unregistering): left allmulticast mode
+[73150.291472] veth87d641a (unregistering): left promiscuous mode
+[73150.291479] docker0: port 1(veth87d641a) entered disabled state
+=== dump #1 ===
+[73149.082940] docker0: port 1(vethd346334) entered disabled state
+[73149.083546] vethd346334 (unregistering): left allmulticast mode
+[73149.083557] vethd346334 (unregistering): left promiscuous mode
+[73149.083564] docker0: port 1(vethd346334) entered disabled state
+[73149.546051] docker0: port 1(veth0896588) entered blocking state
+[73149.546065] docker0: port 1(veth0896588) entered disabled state
+[73149.546093] veth0896588: entered allmulticast mode
+[73149.546224] veth0896588: entered promiscuous mode
+[73149.553412] eth0: renamed from veth63840ab
+[73149.554542] docker0: port 1(veth0896588) entered blocking state
+[73149.554556] docker0: port 1(veth0896588) entered forwarding state
+[73149.644370] docker0: port 1(veth0896588) entered disabled state
+[73149.644498] veth63840ab: renamed from eth0
+[73149.703955] docker0: port 1(veth0896588) entered disabled state
+[73149.704512] veth0896588 (unregistering): left allmulticast mode
+[73149.704526] veth0896588 (unregistering): left promiscuous mode
+[73149.704536] docker0: port 1(veth0896588) entered disabled state
+[73150.145416] docker0: port 1(veth87d641a) entered blocking state
+[73150.145429] docker0: port 1(veth87d641a) entered disabled state
+[73150.145459] veth87d641a: entered allmulticast mode
+[73150.145590] veth87d641a: entered promiscuous mode
+[73150.152734] eth0: renamed from veth50436e5
+[73150.153738] docker0: port 1(veth87d641a) entered blocking state
+[73150.153754] docker0: port 1(veth87d641a) entered forwarding state
+[73150.248571] docker0: port 1(veth87d641a) entered disabled state
+[73150.248737] veth50436e5: renamed from eth0
+[73150.290896] docker0: port 1(veth87d641a) entered disabled state
+[73150.291462] veth87d641a (unregistering): left allmulticast mode
+[73150.291472] veth87d641a (unregistering): left promiscuous mode
+[73150.291479] docker0: port 1(veth87d641a) entered disabled state
+=== dump #2 ===
+[73149.082940] docker0: port 1(vethd346334) entered disabled state
+[73149.083546] vethd346334 (unregistering): left allmulticast mode
+[73149.083557] vethd346334 (unregistering): left promiscuous mode
+[73149.083564] docker0: port 1(vethd346334) entered disabled state
+[73149.546051] docker0: port 1(veth0896588) entered blocking state
+[73149.546065] docker0: port 1(veth0896588) entered disabled state
+[73149.546093] veth0896588: entered allmulticast mode
+[73149.546224] veth0896588: entered promiscuous mode
+[73149.553412] eth0: renamed from veth63840ab
+[73149.554542] docker0: port 1(veth0896588) entered blocking state
+[73149.554556] docker0: port 1(veth0896588) entered forwarding state
+[73149.644370] docker0: port 1(veth0896588) entered disabled state
+[73149.644498] veth63840ab: renamed from eth0
+[73149.703955] docker0: port 1(veth0896588) entered disabled state
+[73149.704512] veth0896588 (unregistering): left allmulticast mode
+[73149.704526] veth0896588 (unregistering): left promiscuous mode
+[73149.704536] docker0: port 1(veth0896588) entered disabled state
+[73150.145416] docker0: port 1(veth87d641a) entered blocking state
+[73150.145429] docker0: port 1(veth87d641a) entered disabled state
+[73150.145459] veth87d641a: entered allmulticast mode
+[73150.145590] veth87d641a: entered promiscuous mode
+[73150.152734] eth0: renamed from veth50436e5
+[73150.153738] docker0: port 1(veth87d641a) entered blocking state
+[73150.153754] docker0: port 1(veth87d641a) entered forwarding state
+[73150.248571] docker0: port 1(veth87d641a) entered disabled state
+[73150.248737] veth50436e5: renamed from eth0
+[73150.290896] docker0: port 1(veth87d641a) entered disabled state
+[73150.291462] veth87d641a (unregistering): left allmulticast mode
+[73150.291472] veth87d641a (unregistering): left promiscuous mode
+[73150.291479] docker0: port 1(veth87d641a) entered disabled state
+=== dump #2 ===
+[73149.082940] docker0: port 1(vethd346334) entered disabled state
+[73149.083546] vethd346334 (unregistering): left allmulticast mode
+[73149.083557] vethd346334 (unregistering): left promiscuous mode
+[73149.083564] docker0: port 1(vethd346334) entered disabled state
+[73149.546051] docker0: port 1(veth0896588) entered blocking state
+[73149.546065] docker0: port 1(veth0896588) entered disabled state
+[73149.546093] veth0896588: entered allmulticast mode
+[73149.546224] veth0896588: entered promiscuous mode
+[73149.553412] eth0: renamed from veth63840ab
+[73149.554542] docker0: port 1(veth0896588) entered blocking state
+[73149.554556] docker0: port 1(veth0896588) entered forwarding state
+[73149.644370] docker0: port 1(veth0896588) entered disabled state
+[73149.644498] veth63840ab: renamed from eth0
+[73149.703955] docker0: port 1(veth0896588) entered disabled state
+[73149.704512] veth0896588 (unregistering): left allmulticast mode
+[73149.704526] veth0896588 (unregistering): left promiscuous mode
+[73149.704536] docker0: port 1(veth0896588) entered disabled state
+[73150.145416] docker0: port 1(veth87d641a) entered blocking state
+[73150.145429] docker0: port 1(veth87d641a) entered disabled state
+[73150.145459] veth87d641a: entered allmulticast mode
+[73150.145590] veth87d641a: entered promiscuous mode
+[73150.152734] eth0: renamed from veth50436e5
+[73150.153738] docker0: port 1(veth87d641a) entered blocking state
+[73150.153754] docker0: port 1(veth87d641a) entered forwarding state
+[73150.248571] docker0: port 1(veth87d641a) entered disabled state
+[73150.248737] veth50436e5: renamed from eth0
+[73150.290896] docker0: port 1(veth87d641a) entered disabled state
+[73150.291462] veth87d641a (unregistering): left allmulticast mode
+[73150.291472] veth87d641a (unregistering): left promiscuous mode
+[73150.291479] docker0: port 1(veth87d641a) entered disabled state
+=== dump #3 ===
+[73149.082940] docker0: port 1(vethd346334) entered disabled state
+[73149.083546] vethd346334 (unregistering): left allmulticast mode
+[73149.083557] vethd346334 (unregistering): left promiscuous mode
+[73149.083564] docker0: port 1(vethd346334) entered disabled state
+[73149.546051] docker0: port 1(veth0896588) entered blocking state
+[73149.546065] docker0: port 1(veth0896588) entered disabled state
+[73149.546093] veth0896588: entered allmulticast mode
+[73149.546224] veth0896588: entered promiscuous mode
+[73149.553412] eth0: renamed from veth63840ab
+[73149.554542] docker0: port 1(veth0896588) entered blocking state
+[73149.554556] docker0: port 1(veth0896588) entered forwarding state
+[73149.644370] docker0: port 1(veth0896588) entered disabled state
+[73149.644498] veth63840ab: renamed from eth0
+[73149.703955] docker0: port 1(veth0896588) entered disabled state
+[73149.704512] veth0896588 (unregistering): left allmulticast mode
+[73149.704526] veth0896588 (unregistering): left promiscuous mode
+[73149.704536] docker0: port 1(veth0896588) entered disabled state
+[73150.145416] docker0: port 1(veth87d641a) entered blocking state
+[73150.145429] docker0: port 1(veth87d641a) entered disabled state
+[73150.145459] veth87d641a: entered allmulticast mode
+[73150.145590] veth87d641a: entered promiscuous mode
+[73150.152734] eth0: renamed from veth50436e5
+[73150.153738] docker0: port 1(veth87d641a) entered blocking state
+[73150.153754] docker0: port 1(veth87d641a) entered forwarding state
+[73150.248571] docker0: port 1(veth87d641a) entered disabled state
+[73150.248737] veth50436e5: renamed from eth0
+[73150.290896] docker0: port 1(veth87d641a) entered disabled state
+[73150.291462] veth87d641a (unregistering): left allmulticast mode
+[73150.291472] veth87d641a (unregistering): left promiscuous mode
+[73150.291479] docker0: port 1(veth87d641a) entered disabled state
+=== dump #3 ===
+[73149.082940] docker0: port 1(vethd346334) entered disabled state
+[73149.083546] vethd346334 (unregistering): left allmulticast mode
+[73149.083557] vethd346334 (unregistering): left promiscuous mode
+[73149.083564] docker0: port 1(vethd346334) entered disabled state
+[73149.546051] docker0: port 1(veth0896588) entered blocking state
+[73149.546065] docker0: port 1(veth0896588) entered disabled state
+[73149.546093] veth0896588: entered allmulticast mode
+[73149.546224] veth0896588: entered promiscuous mode
+[73149.553412] eth0: renamed from veth63840ab
+[73149.554542] docker0: port 1(veth0896588) entered blocking state
+[73149.554556] docker0: port 1(veth0896588) entered forwarding state
+[73149.644370] docker0: port 1(veth0896588) entered disabled state
+[73149.644498] veth63840ab: renamed from eth0
+[73149.703955] docker0: port 1(veth0896588) entered disabled state
+[73149.704512] veth0896588 (unregistering): left allmulticast mode
+[73149.704526] veth0896588 (unregistering): left promiscuous mode
+[73149.704536] docker0: port 1(veth0896588) entered disabled state
+[73150.145416] docker0: port 1(veth87d641a) entered blocking state
+[73150.145429] docker0: port 1(veth87d641a) entered disabled state
+[73150.145459] veth87d641a: entered allmulticast mode
+[73150.145590] veth87d641a: entered promiscuous mode
+[73150.152734] eth0: renamed from veth50436e5
+[73150.153738] docker0: port 1(veth87d641a) entered blocking state
+[73150.153754] docker0: port 1(veth87d641a) entered forwarding state
+[73150.248571] docker0: port 1(veth87d641a) entered disabled state
+[73150.248737] veth50436e5: renamed from eth0
+[73150.290896] docker0: port 1(veth87d641a) entered disabled state
+[73150.291462] veth87d641a (unregistering): left allmulticast mode
+[73150.291472] veth87d641a (unregistering): left promiscuous mode
+[73150.291479] docker0: port 1(veth87d641a) entered disabled state
+=== dump #4 ===
+[73149.082940] docker0: port 1(vethd346334) entered disabled state
+[73149.083546] vethd346334 (unregistering): left allmulticast mode
+[73149.083557] vethd346334 (unregistering): left promiscuous mode
+[73149.083564] docker0: port 1(vethd346334) entered disabled state
+[73149.546051] docker0: port 1(veth0896588) entered blocking state
+[73149.546065] docker0: port 1(veth0896588) entered disabled state
+[73149.546093] veth0896588: entered allmulticast mode
+[73149.546224] veth0896588: entered promiscuous mode
+[73149.553412] eth0: renamed from veth63840ab
+[73149.554542] docker0: port 1(veth0896588) entered blocking state
+[73149.554556] docker0: port 1(veth0896588) entered forwarding state
+[73149.644370] docker0: port 1(veth0896588) entered disabled state
+[73149.644498] veth63840ab: renamed from eth0
+[73149.703955] docker0: port 1(veth0896588) entered disabled state
+[73149.704512] veth0896588 (unregistering): left allmulticast mode
+[73149.704526] veth0896588 (unregistering): left promiscuous mode
+[73149.704536] docker0: port 1(veth0896588) entered disabled state
+[73150.145416] docker0: port 1(veth87d641a) entered blocking state
+[73150.145429] docker0: port 1(veth87d641a) entered disabled state
+[73150.145459] veth87d641a: entered allmulticast mode
+[73150.145590] veth87d641a: entered promiscuous mode
+[73150.152734] eth0: renamed from veth50436e5
+[73150.153738] docker0: port 1(veth87d641a) entered blocking state
+[73150.153754] docker0: port 1(veth87d641a) entered forwarding state
+[73150.248571] docker0: port 1(veth87d641a) entered disabled state
+[73150.248737] veth50436e5: renamed from eth0
+[73150.290896] docker0: port 1(veth87d641a) entered disabled state
+[73150.291462] veth87d641a (unregistering): left allmulticast mode
+[73150.291472] veth87d641a (unregistering): left promiscuous mode
+[73150.291479] docker0: port 1(veth87d641a) entered disabled state
+=== dump #4 ===
+[73149.082940] docker0: port 1(vethd346334) entered disabled state
+[73149.083546] vethd346334 (unregistering): left allmulticast mode
+[73149.083557] vethd346334 (unregistering): left promiscuous mode
+[73149.083564] docker0: port 1(vethd346334) entered disabled state
+[73149.546051] docker0: port 1(veth0896588) entered blocking state
+[73149.546065] docker0: port 1(veth0896588) entered disabled state
+[73149.546093] veth0896588: entered allmulticast mode
+[73149.546224] veth0896588: entered promiscuous mode
+[73149.553412] eth0: renamed from veth63840ab
+[73149.554542] docker0: port 1(veth0896588) entered blocking state
+[73149.554556] docker0: port 1(veth0896588) entered forwarding state
+[73149.644370] docker0: port 1(veth0896588) entered disabled state
+[73149.644498] veth63840ab: renamed from eth0
+[73149.703955] docker0: port 1(veth0896588) entered disabled state
+[73149.704512] veth0896588 (unregistering): left allmulticast mode
+[73149.704526] veth0896588 (unregistering): left promiscuous mode
+[73149.704536] docker0: port 1(veth0896588) entered disabled state
+[73150.145416] docker0: port 1(veth87d641a) entered blocking state
+[73150.145429] docker0: port 1(veth87d641a) entered disabled state
+[73150.145459] veth87d641a: entered allmulticast mode
+[73150.145590] veth87d641a: entered promiscuous mode
+[73150.152734] eth0: renamed from veth50436e5
+[73150.153738] docker0: port 1(veth87d641a) entered blocking state
+[73150.153754] docker0: port 1(veth87d641a) entered forwarding state
+[73150.248571] docker0: port 1(veth87d641a) entered disabled state
+[73150.248737] veth50436e5: renamed from eth0
+[73150.290896] docker0: port 1(veth87d641a) entered disabled state
+[73150.291462] veth87d641a (unregistering): left allmulticast mode
+[73150.291472] veth87d641a (unregistering): left promiscuous mode
+[73150.291479] docker0: port 1(veth87d641a) entered disabled state
+=== dump #5 ===
+[73149.083557] vethd346334 (unregistering): left promiscuous mode
+[73149.083564] docker0: port 1(vethd346334) entered disabled state
+[73149.546051] docker0: port 1(veth0896588) entered blocking state
+[73149.546065] docker0: port 1(veth0896588) entered disabled state
+[73149.546093] veth0896588: entered allmulticast mode
+[73149.546224] veth0896588: entered promiscuous mode
+[73149.553412] eth0: renamed from veth63840ab
+[73149.554542] docker0: port 1(veth0896588) entered blocking state
+[73149.554556] docker0: port 1(veth0896588) entered forwarding state
+[73149.644370] docker0: port 1(veth0896588) entered disabled state
+[73149.644498] veth63840ab: renamed from eth0
+[73149.703955] docker0: port 1(veth0896588) entered disabled state
+[73149.704512] veth0896588 (unregistering): left allmulticast mode
+[73149.704526] veth0896588 (unregistering): left promiscuous mode
+[73149.704536] docker0: port 1(veth0896588) entered disabled state
+[73150.145416] docker0: port 1(veth87d641a) entered blocking state
+[73150.145429] docker0: port 1(veth87d641a) entered disabled state
+[73150.145459] veth87d641a: entered allmulticast mode
+[73150.145590] veth87d641a: entered promiscuous mode
+[73150.152734] eth0: renamed from veth50436e5
+[73150.153738] docker0: port 1(veth87d641a) entered blocking state
+[73150.153754] docker0: port 1(veth87d641a) entered forwarding state
+[73150.248571] docker0: port 1(veth87d641a) entered disabled state
+[73150.248737] veth50436e5: renamed from eth0
+[73150.290896] docker0: port 1(veth87d641a) entered disabled state
+[73150.291462] veth87d641a (unregistering): left allmulticast mode
+[73150.291472] veth87d641a (unregistering): left promiscuous mode
+[73150.291479] docker0: port 1(veth87d641a) entered disabled state
+[75272.706171] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[75272.706245] xe 0000:b1:00.0: [drm] Xe device coredump has been deleted.
+=== dump #5 ===
+[73149.083557] vethd346334 (unregistering): left promiscuous mode
+[73149.083564] docker0: port 1(vethd346334) entered disabled state
+[73149.546051] docker0: port 1(veth0896588) entered blocking state
+[73149.546065] docker0: port 1(veth0896588) entered disabled state
+[73149.546093] veth0896588: entered allmulticast mode
+[73149.546224] veth0896588: entered promiscuous mode
+[73149.553412] eth0: renamed from veth63840ab
+[73149.554542] docker0: port 1(veth0896588) entered blocking state
+[73149.554556] docker0: port 1(veth0896588) entered forwarding state
+[73149.644370] docker0: port 1(veth0896588) entered disabled state
+[73149.644498] veth63840ab: renamed from eth0
+[73149.703955] docker0: port 1(veth0896588) entered disabled state
+[73149.704512] veth0896588 (unregistering): left allmulticast mode
+[73149.704526] veth0896588 (unregistering): left promiscuous mode
+[73149.704536] docker0: port 1(veth0896588) entered disabled state
+[73150.145416] docker0: port 1(veth87d641a) entered blocking state
+[73150.145429] docker0: port 1(veth87d641a) entered disabled state
+[73150.145459] veth87d641a: entered allmulticast mode
+[73150.145590] veth87d641a: entered promiscuous mode
+[73150.152734] eth0: renamed from veth50436e5
+[73150.153738] docker0: port 1(veth87d641a) entered blocking state
+[73150.153754] docker0: port 1(veth87d641a) entered forwarding state
+[73150.248571] docker0: port 1(veth87d641a) entered disabled state
+[73150.248737] veth50436e5: renamed from eth0
+[73150.290896] docker0: port 1(veth87d641a) entered disabled state
+[73150.291462] veth87d641a (unregistering): left allmulticast mode
+[73150.291472] veth87d641a (unregistering): left promiscuous mode
+[73150.291479] docker0: port 1(veth87d641a) entered disabled state
+[75272.706171] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[75272.706245] xe 0000:b1:00.0: [drm] Xe device coredump has been deleted.

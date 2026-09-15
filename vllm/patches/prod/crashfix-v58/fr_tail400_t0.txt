@@ -1,0 +1,802 @@
+== /tmp/fr_541.log (tail -400)
+28387.0940 AR begin numel=61440 via_env=False
+28387.0941 AR end
+28387.0953 AR begin numel=61440 via_env=False
+28387.0954 AR end
+28387.0961 AR begin numel=61440 via_env=False
+28387.0963 AR end
+28387.0986 AR begin numel=61440 via_env=False
+28387.0987 AR end
+28387.0994 AR begin numel=61440 via_env=False
+28387.0995 AR end
+28387.1007 AR begin numel=61440 via_env=False
+28387.1008 AR end
+28387.1015 AR begin numel=61440 via_env=False
+28387.1016 AR end
+28387.1028 AR begin numel=61440 via_env=False
+28387.1029 AR end
+28387.1036 AR begin numel=61440 via_env=False
+28387.1037 AR end
+28387.1049 AR begin numel=61440 via_env=False
+28387.1050 AR end
+28387.1057 AR begin numel=61440 via_env=False
+28387.1058 AR end
+28387.1081 AR begin numel=61440 via_env=False
+28387.1083 AR end
+28387.1089 AR begin numel=61440 via_env=False
+28387.1091 AR end
+28387.1103 AR begin numel=61440 via_env=False
+28387.1104 AR end
+28387.1111 AR begin numel=61440 via_env=False
+28387.1112 AR end
+28387.1124 AR begin numel=61440 via_env=False
+28387.1125 AR end
+28387.1132 AR begin numel=61440 via_env=False
+28387.1133 AR end
+28387.1144 AR begin numel=61440 via_env=False
+28387.1146 AR end
+28387.1152 AR begin numel=61440 via_env=False
+28387.1153 AR end
+28387.1177 AR begin numel=61440 via_env=False
+28387.1179 AR end
+28387.1186 AR begin numel=61440 via_env=False
+28387.1187 AR end
+28387.1198 AR begin numel=61440 via_env=False
+28387.1200 AR end
+28387.1207 AR begin numel=61440 via_env=False
+28387.1208 AR end
+28387.1219 AR begin numel=61440 via_env=False
+28387.1221 AR end
+28387.1227 AR begin numel=61440 via_env=False
+28387.1229 AR end
+28387.1240 AR begin numel=61440 via_env=False
+28387.1242 AR end
+28387.1248 AR begin numel=61440 via_env=False
+28387.1249 AR end
+28387.1273 AR begin numel=61440 via_env=False
+28387.1274 AR end
+28387.1281 AR begin numel=61440 via_env=False
+28387.1283 AR end
+28387.1294 AR begin numel=61440 via_env=False
+28387.1296 AR end
+28387.1302 AR begin numel=61440 via_env=False
+28387.1304 AR end
+28387.1315 AR begin numel=61440 via_env=False
+28387.1317 AR end
+28387.1324 AR begin numel=61440 via_env=False
+28387.1325 AR end
+28387.1337 AR begin numel=61440 via_env=False
+28387.1338 AR end
+28387.1345 AR begin numel=61440 via_env=False
+28387.1346 AR end
+28387.1369 AR begin numel=61440 via_env=False
+28387.1370 AR end
+28387.1377 AR begin numel=61440 via_env=False
+28387.1378 AR end
+28387.1390 AR begin numel=61440 via_env=False
+28387.1392 AR end
+28387.1398 AR begin numel=61440 via_env=False
+28387.1399 AR end
+28387.1411 AR begin numel=61440 via_env=False
+28387.1413 AR end
+28387.1419 AR begin numel=61440 via_env=False
+28387.1421 AR end
+28387.1432 AR begin numel=61440 via_env=False
+28387.1433 AR end
+28387.1440 AR begin numel=61440 via_env=False
+28387.1442 AR end
+28387.1465 AR begin numel=61440 via_env=False
+28387.1466 AR end
+28387.1473 AR begin numel=61440 via_env=False
+28387.1474 AR end
+28387.1524 propose begin
+28387.1529 AR begin numel=61440 via_env=False
+28387.1530 AR end
+28387.1563 AR begin numel=61440 via_env=False
+28387.1564 AR end
+28387.1571 AR begin numel=61440 via_env=False
+28387.1572 AR end
+28387.1589 AR begin numel=15360 via_env=False
+28387.1590 AR end
+28387.1618 AR begin numel=15360 via_env=False
+28387.1619 AR end
+28387.1624 AR begin numel=15360 via_env=False
+28387.1626 AR end
+28387.1640 AR begin numel=15360 via_env=False
+28387.1641 AR end
+28387.1669 AR begin numel=15360 via_env=False
+28387.1671 AR end
+28387.1676 AR begin numel=15360 via_env=False
+28387.1677 AR end
+28387.1692 AR begin numel=15360 via_env=False
+28387.1693 AR end
+28387.1720 AR begin numel=15360 via_env=False
+28387.1721 AR end
+28387.1726 AR begin numel=15360 via_env=False
+28387.1728 AR end
+28387.1738 propose end
+28387.1811 AR begin numel=66560 via_env=False
+28387.1812 AR end
+28387.1829 AR begin numel=66560 via_env=False
+28387.1831 AR end
+28387.1837 AR begin numel=66560 via_env=False
+28387.1839 AR end
+28387.1850 AR begin numel=66560 via_env=False
+28387.1851 AR end
+28387.1858 AR begin numel=66560 via_env=False
+28387.1859 AR end
+28387.1871 AR begin numel=66560 via_env=False
+28387.1872 AR end
+28387.1879 AR begin numel=66560 via_env=False
+28387.1880 AR end
+28387.1904 AR begin numel=66560 via_env=False
+28387.1905 AR end
+28387.1912 AR begin numel=66560 via_env=False
+28387.1913 AR end
+28387.1925 AR begin numel=66560 via_env=False
+28387.1926 AR end
+28387.1933 AR begin numel=66560 via_env=False
+28387.1934 AR end
+28387.1946 AR begin numel=66560 via_env=False
+28387.1947 AR end
+28387.1954 AR begin numel=66560 via_env=False
+28387.1955 AR end
+28387.1967 AR begin numel=66560 via_env=False
+28387.1968 AR end
+28387.1974 AR begin numel=66560 via_env=False
+28387.1976 AR end
+28387.1999 AR begin numel=66560 via_env=False
+28387.2000 AR end
+28387.2007 AR begin numel=66560 via_env=False
+28387.2008 AR end
+28387.2020 AR begin numel=66560 via_env=False
+28387.2021 AR end
+28387.2028 AR begin numel=66560 via_env=False
+28387.2029 AR end
+28387.2041 AR begin numel=66560 via_env=False
+28387.2042 AR end
+28387.2049 AR begin numel=66560 via_env=False
+28387.2050 AR end
+28387.2061 AR begin numel=66560 via_env=False
+28387.2063 AR end
+28387.2069 AR begin numel=66560 via_env=False
+28387.2071 AR end
+28387.2095 AR begin numel=66560 via_env=False
+28387.2096 AR end
+28387.2103 AR begin numel=66560 via_env=False
+28387.2104 AR end
+28387.2116 AR begin numel=66560 via_env=False
+28387.2117 AR end
+28387.2124 AR begin numel=66560 via_env=False
+28387.2125 AR end
+28387.2137 AR begin numel=66560 via_env=False
+28387.2138 AR end
+28387.2145 AR begin numel=66560 via_env=False
+28387.2146 AR end
+28387.2158 AR begin numel=66560 via_env=False
+28387.2159 AR end
+28387.2166 AR begin numel=66560 via_env=False
+28387.2167 AR end
+28387.2190 AR begin numel=66560 via_env=False
+28387.2192 AR end
+28387.2198 AR begin numel=66560 via_env=False
+28387.2200 AR end
+28387.2212 AR begin numel=66560 via_env=False
+28387.2213 AR end
+28387.2220 AR begin numel=66560 via_env=False
+28387.2221 AR end
+28387.2233 AR begin numel=66560 via_env=False
+28387.2234 AR end
+28387.2241 AR begin numel=66560 via_env=False
+28387.2242 AR end
+28387.2253 AR begin numel=66560 via_env=False
+28387.2254 AR end
+28387.2261 AR begin numel=66560 via_env=False
+28387.2262 AR end
+28387.2286 AR begin numel=66560 via_env=False
+28387.2287 AR end
+28387.2294 AR begin numel=66560 via_env=False
+28387.2295 AR end
+28387.2307 AR begin numel=66560 via_env=False
+28387.2309 AR end
+28387.2315 AR begin numel=66560 via_env=False
+28387.2317 AR end
+28387.2328 AR begin numel=66560 via_env=False
+28387.2329 AR end
+28387.2336 AR begin numel=66560 via_env=False
+28387.2337 AR end
+28387.2349 AR begin numel=66560 via_env=False
+28387.2350 AR end
+28387.2357 AR begin numel=66560 via_env=False
+28387.2358 AR end
+28387.2382 AR begin numel=66560 via_env=False
+28387.2383 AR end
+28387.2390 AR begin numel=66560 via_env=False
+28387.2391 AR end
+28387.2403 AR begin numel=66560 via_env=False
+28387.2404 AR end
+28387.2411 AR begin numel=66560 via_env=False
+28387.2412 AR end
+28387.2424 AR begin numel=66560 via_env=False
+28387.2425 AR end
+28387.2432 AR begin numel=66560 via_env=False
+28387.2433 AR end
+28387.2444 AR begin numel=66560 via_env=False
+28387.2446 AR end
+28387.2452 AR begin numel=66560 via_env=False
+28387.2453 AR end
+28387.2477 AR begin numel=66560 via_env=False
+28387.2478 AR end
+28387.2485 AR begin numel=66560 via_env=False
+28387.2486 AR end
+28387.2498 AR begin numel=66560 via_env=False
+28387.2499 AR end
+28387.2506 AR begin numel=66560 via_env=False
+28387.2507 AR end
+28387.2519 AR begin numel=66560 via_env=False
+28387.2520 AR end
+28387.2527 AR begin numel=66560 via_env=False
+28387.2528 AR end
+28387.2539 AR begin numel=66560 via_env=False
+28387.2541 AR end
+28387.2547 AR begin numel=66560 via_env=False
+28387.2549 AR end
+28387.2572 AR begin numel=66560 via_env=False
+28387.2574 AR end
+28387.2581 AR begin numel=66560 via_env=False
+28387.2582 AR end
+28387.2594 AR begin numel=66560 via_env=False
+28387.2595 AR end
+28387.2602 AR begin numel=66560 via_env=False
+28387.2603 AR end
+28387.2615 AR begin numel=66560 via_env=False
+28387.2616 AR end
+28387.2623 AR begin numel=66560 via_env=False
+28387.2624 AR end
+28387.2635 AR begin numel=66560 via_env=False
+28387.2637 AR end
+28387.2643 AR begin numel=66560 via_env=False
+28387.2644 AR end
+28387.2668 AR begin numel=66560 via_env=False
+28387.2669 AR end
+28387.2676 AR begin numel=66560 via_env=False
+28387.2677 AR end
+28387.2689 AR begin numel=66560 via_env=False
+28387.2690 AR end
+28387.2697 AR begin numel=66560 via_env=False
+28387.2698 AR end
+28387.2710 AR begin numel=66560 via_env=False
+28387.2711 AR end
+28387.2718 AR begin numel=66560 via_env=False
+28387.2719 AR end
+28387.2731 AR begin numel=66560 via_env=False
+28387.2732 AR end
+28387.2739 AR begin numel=66560 via_env=False
+28387.2740 AR end
+28387.2763 AR begin numel=66560 via_env=False
+28387.2765 AR end
+28387.2772 AR begin numel=66560 via_env=False
+28387.2773 AR end
+28387.2785 AR begin numel=66560 via_env=False
+28387.2786 AR end
+28387.2793 AR begin numel=66560 via_env=False
+28387.2794 AR end
+28387.2805 AR begin numel=66560 via_env=False
+28387.2807 AR end
+28387.2813 AR begin numel=66560 via_env=False
+28387.2815 AR end
+28387.2826 AR begin numel=66560 via_env=False
+28387.2828 AR end
+28387.2834 AR begin numel=66560 via_env=False
+28387.2836 AR end
+28387.2858 AR begin numel=66560 via_env=False
+28387.2859 AR end
+28387.2867 AR begin numel=66560 via_env=False
+28387.2868 AR end
+28387.2880 AR begin numel=66560 via_env=False
+28387.2881 AR end
+28387.2888 AR begin numel=66560 via_env=False
+28387.2889 AR end
+28387.2900 AR begin numel=66560 via_env=False
+28387.2902 AR end
+28387.2908 AR begin numel=66560 via_env=False
+28387.2909 AR end
+28387.2921 AR begin numel=66560 via_env=False
+28387.2922 AR end
+28387.2929 AR begin numel=66560 via_env=False
+28387.2931 AR end
+28387.2954 AR begin numel=66560 via_env=False
+28387.2955 AR end
+28387.2962 AR begin numel=66560 via_env=False
+28387.2963 AR end
+28387.2975 AR begin numel=66560 via_env=False
+28387.2976 AR end
+28387.2983 AR begin numel=66560 via_env=False
+28387.2984 AR end
+28387.2996 AR begin numel=66560 via_env=False
+28387.2997 AR end
+28387.3004 AR begin numel=66560 via_env=False
+28387.3005 AR end
+28387.3017 AR begin numel=66560 via_env=False
+28387.3018 AR end
+28387.3025 AR begin numel=66560 via_env=False
+28387.3026 AR end
+28387.3050 AR begin numel=66560 via_env=False
+28387.3051 AR end
+28387.3058 AR begin numel=66560 via_env=False
+28387.3059 AR end
+28387.3071 AR begin numel=66560 via_env=False
+28387.3073 AR end
+28387.3079 AR begin numel=66560 via_env=False
+28387.3081 AR end
+28387.3092 AR begin numel=66560 via_env=False
+28387.3093 AR end
+28387.3100 AR begin numel=66560 via_env=False
+28387.3101 AR end
+28387.3113 AR begin numel=66560 via_env=False
+28387.3114 AR end
+28387.3121 AR begin numel=66560 via_env=False
+28387.3122 AR end
+28387.3146 AR begin numel=66560 via_env=False
+28387.3147 AR end
+28387.3154 AR begin numel=66560 via_env=False
+28387.3156 AR end
+28387.3167 AR begin numel=66560 via_env=False
+28387.3169 AR end
+28387.3175 AR begin numel=66560 via_env=False
+28387.3176 AR end
+28387.3188 AR begin numel=66560 via_env=False
+28387.3189 AR end
+28387.3196 AR begin numel=66560 via_env=False
+28387.3198 AR end
+28387.3209 AR begin numel=66560 via_env=False
+28387.3211 AR end
+28387.3218 AR begin numel=66560 via_env=False
+28387.3219 AR end
+28387.3242 AR begin numel=66560 via_env=False
+28387.3244 AR end
+28387.3250 AR begin numel=66560 via_env=False
+28387.3252 AR end
+28387.3263 AR begin numel=66560 via_env=False
+28387.3265 AR end
+28387.3271 AR begin numel=66560 via_env=False
+28387.3273 AR end
+28387.3284 AR begin numel=66560 via_env=False
+28387.3285 AR end
+28387.3292 AR begin numel=66560 via_env=False
+28387.3293 AR end
+28387.3305 AR begin numel=66560 via_env=False
+28387.3307 AR end
+28387.3313 AR begin numel=66560 via_env=False
+28387.3315 AR end
+28387.3338 AR begin numel=66560 via_env=False
+28387.3339 AR end
+28387.3346 AR begin numel=66560 via_env=False
+28387.3348 AR end
+28387.3403 propose begin
+28387.3408 AR begin numel=66560 via_env=False
+28387.3409 AR end
+28387.3442 AR begin numel=66560 via_env=False
+28387.3443 AR end
+28387.3450 AR begin numel=66560 via_env=False
+28387.3451 AR end
+28387.3468 AR begin numel=15360 via_env=False
+28387.3469 AR end
+28387.3498 AR begin numel=15360 via_env=False
+28387.3499 AR end
+28387.3504 AR begin numel=15360 via_env=False
+28387.3505 AR end
+28387.3520 AR begin numel=15360 via_env=False
+28387.3522 AR end
+28387.3549 AR begin numel=15360 via_env=False
+28387.3551 AR end
+28387.3556 AR begin numel=15360 via_env=False
+28387.3557 AR end
+28387.3572 AR begin numel=15360 via_env=False
+28387.3573 AR end
+28387.3601 AR begin numel=15360 via_env=False
+28387.3602 AR end
+28387.3607 AR begin numel=15360 via_env=False
+28387.3608 AR end
+28387.3619 propose end
+== /tmp/fr_547.log (tail -400)
+28387.0951 AR begin numel=61440 via_env=False
+28387.0952 AR end
+28387.0964 AR begin numel=61440 via_env=False
+28387.0965 AR end
+28387.0972 AR begin numel=61440 via_env=False
+28387.0974 AR end
+28387.0998 AR begin numel=61440 via_env=False
+28387.0999 AR end
+28387.1006 AR begin numel=61440 via_env=False
+28387.1007 AR end
+28387.1019 AR begin numel=61440 via_env=False
+28387.1020 AR end
+28387.1027 AR begin numel=61440 via_env=False
+28387.1028 AR end
+28387.1040 AR begin numel=61440 via_env=False
+28387.1041 AR end
+28387.1048 AR begin numel=61440 via_env=False
+28387.1049 AR end
+28387.1061 AR begin numel=61440 via_env=False
+28387.1062 AR end
+28387.1069 AR begin numel=61440 via_env=False
+28387.1070 AR end
+28387.1094 AR begin numel=61440 via_env=False
+28387.1095 AR end
+28387.1103 AR begin numel=61440 via_env=False
+28387.1104 AR end
+28387.1116 AR begin numel=61440 via_env=False
+28387.1117 AR end
+28387.1124 AR begin numel=61440 via_env=False
+28387.1125 AR end
+28387.1137 AR begin numel=61440 via_env=False
+28387.1138 AR end
+28387.1145 AR begin numel=61440 via_env=False
+28387.1146 AR end
+28387.1158 AR begin numel=61440 via_env=False
+28387.1159 AR end
+28387.1166 AR begin numel=61440 via_env=False
+28387.1168 AR end
+28387.1191 AR begin numel=61440 via_env=False
+28387.1193 AR end
+28387.1199 AR begin numel=61440 via_env=False
+28387.1201 AR end
+28387.1213 AR begin numel=61440 via_env=False
+28387.1214 AR end
+28387.1221 AR begin numel=61440 via_env=False
+28387.1222 AR end
+28387.1233 AR begin numel=61440 via_env=False
+28387.1235 AR end
+28387.1242 AR begin numel=61440 via_env=False
+28387.1243 AR end
+28387.1255 AR begin numel=61440 via_env=False
+28387.1256 AR end
+28387.1263 AR begin numel=61440 via_env=False
+28387.1264 AR end
+28387.1287 AR begin numel=61440 via_env=False
+28387.1289 AR end
+28387.1296 AR begin numel=61440 via_env=False
+28387.1297 AR end
+28387.1309 AR begin numel=61440 via_env=False
+28387.1310 AR end
+28387.1317 AR begin numel=61440 via_env=False
+28387.1318 AR end
+28387.1330 AR begin numel=61440 via_env=False
+28387.1331 AR end
+28387.1338 AR begin numel=61440 via_env=False
+28387.1339 AR end
+28387.1351 AR begin numel=61440 via_env=False
+28387.1352 AR end
+28387.1359 AR begin numel=61440 via_env=False
+28387.1360 AR end
+28387.1384 AR begin numel=61440 via_env=False
+28387.1386 AR end
+28387.1393 AR begin numel=61440 via_env=False
+28387.1394 AR end
+28387.1406 AR begin numel=61440 via_env=False
+28387.1407 AR end
+28387.1414 AR begin numel=61440 via_env=False
+28387.1415 AR end
+28387.1427 AR begin numel=61440 via_env=False
+28387.1428 AR end
+28387.1435 AR begin numel=61440 via_env=False
+28387.1436 AR end
+28387.1448 AR begin numel=61440 via_env=False
+28387.1449 AR end
+28387.1456 AR begin numel=61440 via_env=False
+28387.1457 AR end
+28387.1481 AR begin numel=61440 via_env=False
+28387.1482 AR end
+28387.1489 AR begin numel=61440 via_env=False
+28387.1490 AR end
+28387.1522 propose begin
+28387.1527 AR begin numel=61440 via_env=False
+28387.1528 AR end
+28387.1561 AR begin numel=61440 via_env=False
+28387.1562 AR end
+28387.1569 AR begin numel=61440 via_env=False
+28387.1570 AR end
+28387.1588 AR begin numel=15360 via_env=False
+28387.1589 AR end
+28387.1618 AR begin numel=15360 via_env=False
+28387.1619 AR end
+28387.1624 AR begin numel=15360 via_env=False
+28387.1625 AR end
+28387.1640 AR begin numel=15360 via_env=False
+28387.1641 AR end
+28387.1669 AR begin numel=15360 via_env=False
+28387.1671 AR end
+28387.1676 AR begin numel=15360 via_env=False
+28387.1677 AR end
+28387.1692 AR begin numel=15360 via_env=False
+28387.1693 AR end
+28387.1721 AR begin numel=15360 via_env=False
+28387.1722 AR end
+28387.1727 AR begin numel=15360 via_env=False
+28387.1728 AR end
+28387.1738 propose end
+28387.1809 AR begin numel=66560 via_env=False
+28387.1810 AR end
+28387.1828 AR begin numel=66560 via_env=False
+28387.1829 AR end
+28387.1837 AR begin numel=66560 via_env=False
+28387.1838 AR end
+28387.1849 AR begin numel=66560 via_env=False
+28387.1851 AR end
+28387.1858 AR begin numel=66560 via_env=False
+28387.1859 AR end
+28387.1871 AR begin numel=66560 via_env=False
+28387.1872 AR end
+28387.1879 AR begin numel=66560 via_env=False
+28387.1880 AR end
+28387.1904 AR begin numel=66560 via_env=False
+28387.1906 AR end
+28387.1913 AR begin numel=66560 via_env=False
+28387.1914 AR end
+28387.1925 AR begin numel=66560 via_env=False
+28387.1927 AR end
+28387.1933 AR begin numel=66560 via_env=False
+28387.1934 AR end
+28387.1946 AR begin numel=66560 via_env=False
+28387.1947 AR end
+28387.1954 AR begin numel=66560 via_env=False
+28387.1955 AR end
+28387.1967 AR begin numel=66560 via_env=False
+28387.1969 AR end
+28387.1975 AR begin numel=66560 via_env=False
+28387.1977 AR end
+28387.2000 AR begin numel=66560 via_env=False
+28387.2002 AR end
+28387.2008 AR begin numel=66560 via_env=False
+28387.2010 AR end
+28387.2022 AR begin numel=66560 via_env=False
+28387.2023 AR end
+28387.2030 AR begin numel=66560 via_env=False
+28387.2031 AR end
+28387.2043 AR begin numel=66560 via_env=False
+28387.2044 AR end
+28387.2051 AR begin numel=66560 via_env=False
+28387.2052 AR end
+28387.2064 AR begin numel=66560 via_env=False
+28387.2065 AR end
+28387.2072 AR begin numel=66560 via_env=False
+28387.2073 AR end
+28387.2098 AR begin numel=66560 via_env=False
+28387.2099 AR end
+28387.2106 AR begin numel=66560 via_env=False
+28387.2108 AR end
+28387.2119 AR begin numel=66560 via_env=False
+28387.2121 AR end
+28387.2127 AR begin numel=66560 via_env=False
+28387.2128 AR end
+28387.2140 AR begin numel=66560 via_env=False
+28387.2142 AR end
+28387.2148 AR begin numel=66560 via_env=False
+28387.2150 AR end
+28387.2162 AR begin numel=66560 via_env=False
+28387.2163 AR end
+28387.2170 AR begin numel=66560 via_env=False
+28387.2171 AR end
+28387.2195 AR begin numel=66560 via_env=False
+28387.2196 AR end
+28387.2204 AR begin numel=66560 via_env=False
+28387.2205 AR end
+28387.2217 AR begin numel=66560 via_env=False
+28387.2218 AR end
+28387.2225 AR begin numel=66560 via_env=False
+28387.2226 AR end
+28387.2238 AR begin numel=66560 via_env=False
+28387.2239 AR end
+28387.2246 AR begin numel=66560 via_env=False
+28387.2247 AR end
+28387.2259 AR begin numel=66560 via_env=False
+28387.2260 AR end
+28387.2267 AR begin numel=66560 via_env=False
+28387.2268 AR end
+28387.2293 AR begin numel=66560 via_env=False
+28387.2294 AR end
+28387.2301 AR begin numel=66560 via_env=False
+28387.2302 AR end
+28387.2314 AR begin numel=66560 via_env=False
+28387.2315 AR end
+28387.2322 AR begin numel=66560 via_env=False
+28387.2323 AR end
+28387.2335 AR begin numel=66560 via_env=False
+28387.2336 AR end
+28387.2343 AR begin numel=66560 via_env=False
+28387.2344 AR end
+28387.2356 AR begin numel=66560 via_env=False
+28387.2357 AR end
+28387.2364 AR begin numel=66560 via_env=False
+28387.2365 AR end
+28387.2389 AR begin numel=66560 via_env=False
+28387.2391 AR end
+28387.2397 AR begin numel=66560 via_env=False
+28387.2399 AR end
+28387.2411 AR begin numel=66560 via_env=False
+28387.2412 AR end
+28387.2419 AR begin numel=66560 via_env=False
+28387.2420 AR end
+28387.2432 AR begin numel=66560 via_env=False
+28387.2433 AR end
+28387.2440 AR begin numel=66560 via_env=False
+28387.2441 AR end
+28387.2453 AR begin numel=66560 via_env=False
+28387.2454 AR end
+28387.2461 AR begin numel=66560 via_env=False
+28387.2462 AR end
+28387.2486 AR begin numel=66560 via_env=False
+28387.2488 AR end
+28387.2495 AR begin numel=66560 via_env=False
+28387.2496 AR end
+28387.2508 AR begin numel=66560 via_env=False
+28387.2509 AR end
+28387.2516 AR begin numel=66560 via_env=False
+28387.2517 AR end
+28387.2529 AR begin numel=66560 via_env=False
+28387.2530 AR end
+28387.2537 AR begin numel=66560 via_env=False
+28387.2538 AR end
+28387.2550 AR begin numel=66560 via_env=False
+28387.2551 AR end
+28387.2558 AR begin numel=66560 via_env=False
+28387.2559 AR end
+28387.2583 AR begin numel=66560 via_env=False
+28387.2585 AR end
+28387.2592 AR begin numel=66560 via_env=False
+28387.2593 AR end
+28387.2605 AR begin numel=66560 via_env=False
+28387.2606 AR end
+28387.2613 AR begin numel=66560 via_env=False
+28387.2614 AR end
+28387.2626 AR begin numel=66560 via_env=False
+28387.2627 AR end
+28387.2634 AR begin numel=66560 via_env=False
+28387.2635 AR end
+28387.2647 AR begin numel=66560 via_env=False
+28387.2648 AR end
+28387.2655 AR begin numel=66560 via_env=False
+28387.2656 AR end
+28387.2680 AR begin numel=66560 via_env=False
+28387.2681 AR end
+28387.2688 AR begin numel=66560 via_env=False
+28387.2689 AR end
+28387.2701 AR begin numel=66560 via_env=False
+28387.2703 AR end
+28387.2709 AR begin numel=66560 via_env=False
+28387.2711 AR end
+28387.2723 AR begin numel=66560 via_env=False
+28387.2724 AR end
+28387.2731 AR begin numel=66560 via_env=False
+28387.2732 AR end
+28387.2743 AR begin numel=66560 via_env=False
+28387.2745 AR end
+28387.2752 AR begin numel=66560 via_env=False
+28387.2753 AR end
+28387.2776 AR begin numel=66560 via_env=False
+28387.2778 AR end
+28387.2785 AR begin numel=66560 via_env=False
+28387.2786 AR end
+28387.2798 AR begin numel=66560 via_env=False
+28387.2799 AR end
+28387.2806 AR begin numel=66560 via_env=False
+28387.2807 AR end
+28387.2819 AR begin numel=66560 via_env=False
+28387.2820 AR end
+28387.2827 AR begin numel=66560 via_env=False
+28387.2828 AR end
+28387.2840 AR begin numel=66560 via_env=False
+28387.2841 AR end
+28387.2848 AR begin numel=66560 via_env=False
+28387.2849 AR end
+28387.2873 AR begin numel=66560 via_env=False
+28387.2874 AR end
+28387.2881 AR begin numel=66560 via_env=False
+28387.2883 AR end
+28387.2894 AR begin numel=66560 via_env=False
+28387.2895 AR end
+28387.2902 AR begin numel=66560 via_env=False
+28387.2904 AR end
+28387.2915 AR begin numel=66560 via_env=False
+28387.2917 AR end
+28387.2924 AR begin numel=66560 via_env=False
+28387.2925 AR end
+28387.2937 AR begin numel=66560 via_env=False
+28387.2938 AR end
+28387.2945 AR begin numel=66560 via_env=False
+28387.2946 AR end
+28387.2970 AR begin numel=66560 via_env=False
+28387.2971 AR end
+28387.2978 AR begin numel=66560 via_env=False
+28387.2979 AR end
+28387.2991 AR begin numel=66560 via_env=False
+28387.2992 AR end
+28387.2999 AR begin numel=66560 via_env=False
+28387.3001 AR end
+28387.3012 AR begin numel=66560 via_env=False
+28387.3014 AR end
+28387.3020 AR begin numel=66560 via_env=False
+28387.3022 AR end
+28387.3033 AR begin numel=66560 via_env=False
+28387.3035 AR end
+28387.3042 AR begin numel=66560 via_env=False
+28387.3043 AR end
+28387.3067 AR begin numel=66560 via_env=False
+28387.3068 AR end
+28387.3075 AR begin numel=66560 via_env=False
+28387.3076 AR end
+28387.3088 AR begin numel=66560 via_env=False
+28387.3089 AR end
+28387.3096 AR begin numel=66560 via_env=False
+28387.3097 AR end
+28387.3109 AR begin numel=66560 via_env=False
+28387.3111 AR end
+28387.3118 AR begin numel=66560 via_env=False
+28387.3119 AR end
+28387.3131 AR begin numel=66560 via_env=False
+28387.3132 AR end
+28387.3139 AR begin numel=66560 via_env=False
+28387.3140 AR end
+28387.3164 AR begin numel=66560 via_env=False
+28387.3165 AR end
+28387.3172 AR begin numel=66560 via_env=False
+28387.3174 AR end
+28387.3186 AR begin numel=66560 via_env=False
+28387.3187 AR end
+28387.3194 AR begin numel=66560 via_env=False
+28387.3195 AR end
+28387.3207 AR begin numel=66560 via_env=False
+28387.3208 AR end
+28387.3216 AR begin numel=66560 via_env=False
+28387.3217 AR end
+28387.3229 AR begin numel=66560 via_env=False
+28387.3230 AR end
+28387.3237 AR begin numel=66560 via_env=False
+28387.3238 AR end
+28387.3262 AR begin numel=66560 via_env=False
+28387.3263 AR end
+28387.3270 AR begin numel=66560 via_env=False
+28387.3272 AR end
+28387.3283 AR begin numel=66560 via_env=False
+28387.3285 AR end
+28387.3292 AR begin numel=66560 via_env=False
+28387.3293 AR end
+28387.3305 AR begin numel=66560 via_env=False
+28387.3306 AR end
+28387.3313 AR begin numel=66560 via_env=False
+28387.3314 AR end
+28387.3326 AR begin numel=66560 via_env=False
+28387.3327 AR end
+28387.3334 AR begin numel=66560 via_env=False
+28387.3336 AR end
+28387.3359 AR begin numel=66560 via_env=False
+28387.3361 AR end
+28387.3368 AR begin numel=66560 via_env=False
+28387.3369 AR end
+28387.3402 propose begin
+28387.3407 AR begin numel=66560 via_env=False
+28387.3408 AR end
+28387.3441 AR begin numel=66560 via_env=False
+28387.3442 AR end
+28387.3449 AR begin numel=66560 via_env=False
+28387.3450 AR end
+28387.3468 AR begin numel=15360 via_env=False
+28387.3469 AR end
+28387.3497 AR begin numel=15360 via_env=False
+28387.3499 AR end
+28387.3504 AR begin numel=15360 via_env=False
+28387.3505 AR end
+28387.3520 AR begin numel=15360 via_env=False
+28387.3522 AR end
+28387.3550 AR begin numel=15360 via_env=False
+28387.3551 AR end
+28387.3556 AR begin numel=15360 via_env=False
+28387.3557 AR end
+28387.3572 AR begin numel=15360 via_env=False
+28387.3573 AR end
+28387.3602 AR begin numel=15360 via_env=False
+28387.3603 AR end
+28387.3608 AR begin numel=15360 via_env=False
+28387.3610 AR end
+28387.3621 propose end

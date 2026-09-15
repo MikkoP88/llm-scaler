@@ -1,0 +1,310 @@
+=== dump #1 ===
+[61177.576305] docker0: port 1(veth6ef5364) entered disabled state
+[61177.984270] docker0: port 1(veth0789802) entered blocking state
+[61177.984283] docker0: port 1(veth0789802) entered disabled state
+[61177.984317] veth0789802: entered allmulticast mode
+[61177.984460] veth0789802: entered promiscuous mode
+[61177.991136] eth0: renamed from veth6e193e6
+[61177.992033] docker0: port 1(veth0789802) entered blocking state
+[61177.992045] docker0: port 1(veth0789802) entered forwarding state
+[61178.117822] docker0: port 1(veth0789802) entered disabled state
+[61178.117968] veth6e193e6: renamed from eth0
+[61178.159199] docker0: port 1(veth0789802) entered disabled state
+[61178.160343] veth0789802 (unregistering): left allmulticast mode
+[61178.160352] veth0789802 (unregistering): left promiscuous mode
+[61178.160358] docker0: port 1(veth0789802) entered disabled state
+[61178.577869] docker0: port 1(veth442fe75) entered blocking state
+[61178.577881] docker0: port 1(veth442fe75) entered disabled state
+[61178.577938] veth442fe75: entered allmulticast mode
+[61178.578073] veth442fe75: entered promiscuous mode
+[61178.584896] eth0: renamed from vethf7fab7b
+[61178.585862] docker0: port 1(veth442fe75) entered blocking state
+[61178.585873] docker0: port 1(veth442fe75) entered forwarding state
+[61178.766289] docker0: port 1(veth442fe75) entered disabled state
+[61178.766389] vethf7fab7b: renamed from eth0
+[61178.810602] docker0: port 1(veth442fe75) entered disabled state
+[61178.811315] veth442fe75 (unregistering): left allmulticast mode
+[61178.811324] veth442fe75 (unregistering): left promiscuous mode
+[61178.811330] docker0: port 1(veth442fe75) entered disabled state
+[61431.604754] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[61431.627103] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[61431.627670] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+=== dump #1 ===
+[61177.576305] docker0: port 1(veth6ef5364) entered disabled state
+[61177.984270] docker0: port 1(veth0789802) entered blocking state
+[61177.984283] docker0: port 1(veth0789802) entered disabled state
+[61177.984317] veth0789802: entered allmulticast mode
+[61177.984460] veth0789802: entered promiscuous mode
+[61177.991136] eth0: renamed from veth6e193e6
+[61177.992033] docker0: port 1(veth0789802) entered blocking state
+[61177.992045] docker0: port 1(veth0789802) entered forwarding state
+[61178.117822] docker0: port 1(veth0789802) entered disabled state
+[61178.117968] veth6e193e6: renamed from eth0
+[61178.159199] docker0: port 1(veth0789802) entered disabled state
+[61178.160343] veth0789802 (unregistering): left allmulticast mode
+[61178.160352] veth0789802 (unregistering): left promiscuous mode
+[61178.160358] docker0: port 1(veth0789802) entered disabled state
+[61178.577869] docker0: port 1(veth442fe75) entered blocking state
+[61178.577881] docker0: port 1(veth442fe75) entered disabled state
+[61178.577938] veth442fe75: entered allmulticast mode
+[61178.578073] veth442fe75: entered promiscuous mode
+[61178.584896] eth0: renamed from vethf7fab7b
+[61178.585862] docker0: port 1(veth442fe75) entered blocking state
+[61178.585873] docker0: port 1(veth442fe75) entered forwarding state
+[61178.766289] docker0: port 1(veth442fe75) entered disabled state
+[61178.766389] vethf7fab7b: renamed from eth0
+[61178.810602] docker0: port 1(veth442fe75) entered disabled state
+[61178.811315] veth442fe75 (unregistering): left allmulticast mode
+[61178.811324] veth442fe75 (unregistering): left promiscuous mode
+[61178.811330] docker0: port 1(veth442fe75) entered disabled state
+[61431.604754] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[61431.627103] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[61431.627670] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+=== dump #2 ===
+[61177.992045] docker0: port 1(veth0789802) entered forwarding state
+[61178.117822] docker0: port 1(veth0789802) entered disabled state
+[61178.117968] veth6e193e6: renamed from eth0
+[61178.159199] docker0: port 1(veth0789802) entered disabled state
+[61178.160343] veth0789802 (unregistering): left allmulticast mode
+[61178.160352] veth0789802 (unregistering): left promiscuous mode
+[61178.160358] docker0: port 1(veth0789802) entered disabled state
+[61178.577869] docker0: port 1(veth442fe75) entered blocking state
+[61178.577881] docker0: port 1(veth442fe75) entered disabled state
+[61178.577938] veth442fe75: entered allmulticast mode
+[61178.578073] veth442fe75: entered promiscuous mode
+[61178.584896] eth0: renamed from vethf7fab7b
+[61178.585862] docker0: port 1(veth442fe75) entered blocking state
+[61178.585873] docker0: port 1(veth442fe75) entered forwarding state
+[61178.766289] docker0: port 1(veth442fe75) entered disabled state
+[61178.766389] vethf7fab7b: renamed from eth0
+[61178.810602] docker0: port 1(veth442fe75) entered disabled state
+[61178.811315] veth442fe75 (unregistering): left allmulticast mode
+[61178.811324] veth442fe75 (unregistering): left promiscuous mode
+[61178.811330] docker0: port 1(veth442fe75) entered disabled state
+[61431.604754] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[61431.627103] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[61431.627670] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[61903.847686] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[63632.456613] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[63632.456731] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[63632.504039] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[63632.504043] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[63632.504677] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[63632.504682] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data
+=== dump #2 ===
+[61177.992045] docker0: port 1(veth0789802) entered forwarding state
+[61178.117822] docker0: port 1(veth0789802) entered disabled state
+[61178.117968] veth6e193e6: renamed from eth0
+[61178.159199] docker0: port 1(veth0789802) entered disabled state
+[61178.160343] veth0789802 (unregistering): left allmulticast mode
+[61178.160352] veth0789802 (unregistering): left promiscuous mode
+[61178.160358] docker0: port 1(veth0789802) entered disabled state
+[61178.577869] docker0: port 1(veth442fe75) entered blocking state
+[61178.577881] docker0: port 1(veth442fe75) entered disabled state
+[61178.577938] veth442fe75: entered allmulticast mode
+[61178.578073] veth442fe75: entered promiscuous mode
+[61178.584896] eth0: renamed from vethf7fab7b
+[61178.585862] docker0: port 1(veth442fe75) entered blocking state
+[61178.585873] docker0: port 1(veth442fe75) entered forwarding state
+[61178.766289] docker0: port 1(veth442fe75) entered disabled state
+[61178.766389] vethf7fab7b: renamed from eth0
+[61178.810602] docker0: port 1(veth442fe75) entered disabled state
+[61178.811315] veth442fe75 (unregistering): left allmulticast mode
+[61178.811324] veth442fe75 (unregistering): left promiscuous mode
+[61178.811330] docker0: port 1(veth442fe75) entered disabled state
+[61431.604754] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[61431.627103] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[61431.627670] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[61903.847686] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[63632.456613] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[63632.456731] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[63632.504039] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[63632.504043] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[63632.504677] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[63632.504682] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data
+=== dump #3 ===
+[61177.992045] docker0: port 1(veth0789802) entered forwarding state
+[61178.117822] docker0: port 1(veth0789802) entered disabled state
+[61178.117968] veth6e193e6: renamed from eth0
+[61178.159199] docker0: port 1(veth0789802) entered disabled state
+[61178.160343] veth0789802 (unregistering): left allmulticast mode
+[61178.160352] veth0789802 (unregistering): left promiscuous mode
+[61178.160358] docker0: port 1(veth0789802) entered disabled state
+[61178.577869] docker0: port 1(veth442fe75) entered blocking state
+[61178.577881] docker0: port 1(veth442fe75) entered disabled state
+[61178.577938] veth442fe75: entered allmulticast mode
+[61178.578073] veth442fe75: entered promiscuous mode
+[61178.584896] eth0: renamed from vethf7fab7b
+[61178.585862] docker0: port 1(veth442fe75) entered blocking state
+[61178.585873] docker0: port 1(veth442fe75) entered forwarding state
+[61178.766289] docker0: port 1(veth442fe75) entered disabled state
+[61178.766389] vethf7fab7b: renamed from eth0
+[61178.810602] docker0: port 1(veth442fe75) entered disabled state
+[61178.811315] veth442fe75 (unregistering): left allmulticast mode
+[61178.811324] veth442fe75 (unregistering): left promiscuous mode
+[61178.811330] docker0: port 1(veth442fe75) entered disabled state
+[61431.604754] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[61431.627103] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[61431.627670] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[61903.847686] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[63632.456613] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[63632.456731] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[63632.504039] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[63632.504043] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[63632.504677] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[63632.504682] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data
+=== dump #3 ===
+[61177.992045] docker0: port 1(veth0789802) entered forwarding state
+[61178.117822] docker0: port 1(veth0789802) entered disabled state
+[61178.117968] veth6e193e6: renamed from eth0
+[61178.159199] docker0: port 1(veth0789802) entered disabled state
+[61178.160343] veth0789802 (unregistering): left allmulticast mode
+[61178.160352] veth0789802 (unregistering): left promiscuous mode
+[61178.160358] docker0: port 1(veth0789802) entered disabled state
+[61178.577869] docker0: port 1(veth442fe75) entered blocking state
+[61178.577881] docker0: port 1(veth442fe75) entered disabled state
+[61178.577938] veth442fe75: entered allmulticast mode
+[61178.578073] veth442fe75: entered promiscuous mode
+[61178.584896] eth0: renamed from vethf7fab7b
+[61178.585862] docker0: port 1(veth442fe75) entered blocking state
+[61178.585873] docker0: port 1(veth442fe75) entered forwarding state
+[61178.766289] docker0: port 1(veth442fe75) entered disabled state
+[61178.766389] vethf7fab7b: renamed from eth0
+[61178.810602] docker0: port 1(veth442fe75) entered disabled state
+[61178.811315] veth442fe75 (unregistering): left allmulticast mode
+[61178.811324] veth442fe75 (unregistering): left promiscuous mode
+[61178.811330] docker0: port 1(veth442fe75) entered disabled state
+[61431.604754] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[61431.627103] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[61431.627670] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[61903.847686] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[63632.456613] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[63632.456731] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[63632.504039] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[63632.504043] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[63632.504677] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[63632.504682] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data
+=== dump #4 ===
+[61177.992045] docker0: port 1(veth0789802) entered forwarding state
+[61178.117822] docker0: port 1(veth0789802) entered disabled state
+[61178.117968] veth6e193e6: renamed from eth0
+[61178.159199] docker0: port 1(veth0789802) entered disabled state
+[61178.160343] veth0789802 (unregistering): left allmulticast mode
+[61178.160352] veth0789802 (unregistering): left promiscuous mode
+[61178.160358] docker0: port 1(veth0789802) entered disabled state
+[61178.577869] docker0: port 1(veth442fe75) entered blocking state
+[61178.577881] docker0: port 1(veth442fe75) entered disabled state
+[61178.577938] veth442fe75: entered allmulticast mode
+[61178.578073] veth442fe75: entered promiscuous mode
+[61178.584896] eth0: renamed from vethf7fab7b
+[61178.585862] docker0: port 1(veth442fe75) entered blocking state
+[61178.585873] docker0: port 1(veth442fe75) entered forwarding state
+[61178.766289] docker0: port 1(veth442fe75) entered disabled state
+[61178.766389] vethf7fab7b: renamed from eth0
+[61178.810602] docker0: port 1(veth442fe75) entered disabled state
+[61178.811315] veth442fe75 (unregistering): left allmulticast mode
+[61178.811324] veth442fe75 (unregistering): left promiscuous mode
+[61178.811330] docker0: port 1(veth442fe75) entered disabled state
+[61431.604754] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[61431.627103] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[61431.627670] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[61903.847686] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[63632.456613] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[63632.456731] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[63632.504039] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[63632.504043] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[63632.504677] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[63632.504682] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data
+=== dump #4 ===
+[61177.992045] docker0: port 1(veth0789802) entered forwarding state
+[61178.117822] docker0: port 1(veth0789802) entered disabled state
+[61178.117968] veth6e193e6: renamed from eth0
+[61178.159199] docker0: port 1(veth0789802) entered disabled state
+[61178.160343] veth0789802 (unregistering): left allmulticast mode
+[61178.160352] veth0789802 (unregistering): left promiscuous mode
+[61178.160358] docker0: port 1(veth0789802) entered disabled state
+[61178.577869] docker0: port 1(veth442fe75) entered blocking state
+[61178.577881] docker0: port 1(veth442fe75) entered disabled state
+[61178.577938] veth442fe75: entered allmulticast mode
+[61178.578073] veth442fe75: entered promiscuous mode
+[61178.584896] eth0: renamed from vethf7fab7b
+[61178.585862] docker0: port 1(veth442fe75) entered blocking state
+[61178.585873] docker0: port 1(veth442fe75) entered forwarding state
+[61178.766289] docker0: port 1(veth442fe75) entered disabled state
+[61178.766389] vethf7fab7b: renamed from eth0
+[61178.810602] docker0: port 1(veth442fe75) entered disabled state
+[61178.811315] veth442fe75 (unregistering): left allmulticast mode
+[61178.811324] veth442fe75 (unregistering): left promiscuous mode
+[61178.811330] docker0: port 1(veth442fe75) entered disabled state
+[61431.604754] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[61431.627103] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[61431.627670] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[61903.847686] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[63632.456613] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[63632.456731] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[63632.504039] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[63632.504043] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[63632.504677] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[63632.504682] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data
+=== dump #5 ===
+[61177.992045] docker0: port 1(veth0789802) entered forwarding state
+[61178.117822] docker0: port 1(veth0789802) entered disabled state
+[61178.117968] veth6e193e6: renamed from eth0
+[61178.159199] docker0: port 1(veth0789802) entered disabled state
+[61178.160343] veth0789802 (unregistering): left allmulticast mode
+[61178.160352] veth0789802 (unregistering): left promiscuous mode
+[61178.160358] docker0: port 1(veth0789802) entered disabled state
+[61178.577869] docker0: port 1(veth442fe75) entered blocking state
+[61178.577881] docker0: port 1(veth442fe75) entered disabled state
+[61178.577938] veth442fe75: entered allmulticast mode
+[61178.578073] veth442fe75: entered promiscuous mode
+[61178.584896] eth0: renamed from vethf7fab7b
+[61178.585862] docker0: port 1(veth442fe75) entered blocking state
+[61178.585873] docker0: port 1(veth442fe75) entered forwarding state
+[61178.766289] docker0: port 1(veth442fe75) entered disabled state
+[61178.766389] vethf7fab7b: renamed from eth0
+[61178.810602] docker0: port 1(veth442fe75) entered disabled state
+[61178.811315] veth442fe75 (unregistering): left allmulticast mode
+[61178.811324] veth442fe75 (unregistering): left promiscuous mode
+[61178.811330] docker0: port 1(veth442fe75) entered disabled state
+[61431.604754] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[61431.627103] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[61431.627670] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[61903.847686] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[63632.456613] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[63632.456731] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[63632.504039] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[63632.504043] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[63632.504677] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[63632.504682] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data
+=== dump #5 ===
+[61177.992045] docker0: port 1(veth0789802) entered forwarding state
+[61178.117822] docker0: port 1(veth0789802) entered disabled state
+[61178.117968] veth6e193e6: renamed from eth0
+[61178.159199] docker0: port 1(veth0789802) entered disabled state
+[61178.160343] veth0789802 (unregistering): left allmulticast mode
+[61178.160352] veth0789802 (unregistering): left promiscuous mode
+[61178.160358] docker0: port 1(veth0789802) entered disabled state
+[61178.577869] docker0: port 1(veth442fe75) entered blocking state
+[61178.577881] docker0: port 1(veth442fe75) entered disabled state
+[61178.577938] veth442fe75: entered allmulticast mode
+[61178.578073] veth442fe75: entered promiscuous mode
+[61178.584896] eth0: renamed from vethf7fab7b
+[61178.585862] docker0: port 1(veth442fe75) entered blocking state
+[61178.585873] docker0: port 1(veth442fe75) entered forwarding state
+[61178.766289] docker0: port 1(veth442fe75) entered disabled state
+[61178.766389] vethf7fab7b: renamed from eth0
+[61178.810602] docker0: port 1(veth442fe75) entered disabled state
+[61178.811315] veth442fe75 (unregistering): left allmulticast mode
+[61178.811324] veth442fe75 (unregistering): left promiscuous mode
+[61178.811330] docker0: port 1(veth442fe75) entered disabled state
+[61431.604754] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=36
+[61431.627103] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[61431.627670] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x1, guc_id=26
+[61903.847686] xe 0000:da:00.0: [drm] Xe device coredump has been deleted.
+[63632.456613] xe 0000:da:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=32
+[63632.456731] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=22
+[63632.504039] xe 0000:da:00.0: [drm] Xe device coredump has been created
+[63632.504043] xe 0000:da:00.0: [drm] Check your /sys/class/drm/card2/device/devcoredump/data
+[63632.504677] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[63632.504682] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data
