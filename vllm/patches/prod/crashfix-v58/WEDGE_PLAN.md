@@ -2352,3 +2352,135 @@ q33_watch.sh,q33_crash_capture.sh,repro_sustain.sh,dt_warmup_v53.py,
 neodeps/{prefix-2614/,prefix-2618/,dl/,out/{V0,V18,R1,BS*}/bin/},
 crt/ (source clone w/ bisect history)}.
 
+§24 H (Sep 16) — DIRECTIVE EXECUTED (P1+P2, then P3): #939 follow-up
+   POSTED; P2 CLOSED app-infeasible by mechanism evidence; P3a kernel
+   lever = first crash+speed candidate (screen ALL-GREEN, 18-round
+   battery in flight).
+   H1 P1 (#939 follow-up posted): issuecomment-5699946762 (15:21Z) —
+   §24-G bisect evidence (single-commit cliff 51.2->34.6; 76e8bd47f0
+   necessary+sufficient; revert = <6-min reproducer; master flip-flop
+   7874534f31/52900009d1/2a028be930/dc3a4a946d; release cherry-pick
+   shipped unreverted), 7/7 devcoredumps identical reason, kernel
+   7.2/7.3 matrix (TDR at boot 6/6; recovery works but NEO returns
+   DEVICE_LOST); asks whether master reverts reach releases. Thread
+   intel mined: kgibala (Intel) 7/13 = boilerplate guide link;
+   AndrzejJanczak 8/31 = SAME hang class on i915 + Vulkan/ANV (no NEO/
+   L0/SYCL anywhere), kernel 7.0, GuC 70.53: CS-stalling PIPE_CONTROL
+   right after COMPUTE_WALKER, EU rows not done, all error regs clear,
+   13 kernel captures, deterministic 17.5k-prompt reproducers, hangs on
+   idle machine => race is kernel/hw submission-path, driver-stack-
+   independent (independently confirms §23 fw-independence + §20
+   target-verify-compute-region mapping).
+   H2 P2 (recover the -24% on 26.18 via app surgery) — CLOSED
+   INFEASIBLE, mechanism measured:
+   a) inventory: ~25 per-step L0 H2D copy sites (gpu_model_runner: 5
+      pageable spec-meta uploads, 5 pinned _prepare_input_ids, ~10
+      CpuGpuBuffer.copy_to_gpu) + 4 proposer; mamba PRE/POST/DEF-PP are
+      Triton batch_memcpy KERNELS (fire ~1/2048 tokens) — exonerated.
+   b) cbench A/B isolated copies 26.14 vs 26.18: per-op 10-15us BOTH;
+      step20_small_h2d 206.8 vs 161.8us => NO isolated-copy tax.
+   c) P2v1 patch (patch_v58_p2.py, _P2CopyStaging pinned coalescer,
+      14->6 H2D ops/step, 8/8 anchors live-validated, stream order
+      preserved): P2V1 warm solo 38.3 vs 37.9 unpatched = NULL.
+      Copy-op COUNT is not the tax.
+   d) differential py-spy 25s@50Hz under q17 load (r12_tp0 26.14 vs
+      p2v0_tp0 26.18, all threads aggregated): _update_states_after_
+      model_execute 0.18->3.56s (0.8->15.2% wall — the v32 async
+      accepted-count D2H+event region), generic native __call__ leaf
+      1.46->5.40s, make_llir 0->2.2s (JIT churn), per-step python
+      frames SHRINK (rms_norm 3.0->1.18, forward_native 2.2->0.96),
+      graph replay FLAT (forward_static 0.98->1.32) => extra time is
+      WAIT, not math; NOT a replay tax.
+   e) steady-state NATIVE py-spy (743 samples, Running:4 confirmed,
+      p2v0n3_tp0): top leaves sched_yield 0.62s + pthread_mutex_lock
+      0.26 + malloc/free 0.30 + __tls_get_addr 0.14; under EVERY
+      hotspot (sample_tokens / propose / get_top_tokens) deepest frame
+      = yield-spin + unresolved runtime frames => per-op HOST-BLOCKING
+      (spin/lock) attached to every eager submission on 26.18 (the
+      commit's counter-based waits + aggregated signal events +
+      lock-pointer copy semantics). Even perfect elimination of the one
+      concentrated stall bounds solo at 26.3ms*0.85 = 44.6 tok/s < 48
+      gate. Only app "fix" = rewriting proposer/sampler/verify into
+      fused captured graphs — out of risk envelope. P2d battery + P2e
+      production image NOT executed (no passing fix). Evidence:
+      lce1/{r12_tp0,p2v0_tp0,p2v0n3_tp0}.json, p2_profdiff_2614_vs_
+      2618.txt, p2_native_2618_ss.txt, p2_cbench logs, patch_v58_p2.py,
+      p2_*.{py,sh}; boot logs boot_P2V0B/P2V1 in lce1/.
+   H3 P3a (kernel lever, strict single variable): installed
+   linux-image-oem-6.17 = 6.17.0-1032.32 (noble-updates/security; 22
+   point-releases newer than standing 6.17.0-1010-intel — "1010
+   newest" held only for the -intel SERIES). Install = exactly 3
+   packages; linux-firmware PINNED at standing 3.1 (GuC 70.44.1);
+   dmesg: kernel RECOMMENDS GuC 70.49.4 (matched-fw = P3b lever if
+   P3a battery fails). GRUB_DEFAULT repinned explicitly (backup
+   /root/build/grub.backup.p3; standing pin was -1010-intel); host
+   reboot #12. Screen P3A1032 on stock 26.14 lane: f8ref EXACT 3/3
+   (cb8c/6833/05c8); solo 50.2/50.3; conc4 warm 147.8 (first-pass 43.4
+   = known parked-clock artifact); bench3 cold 401.3/364.7/347.2;
+   acc 0.747; engine resets 0 => NO DEGRADATION vs §19 band.
+   18-round sustain battery + auto-arm watcher launched 17:08
+   (lce1/sustain_P3A.out + p3a_watch.out, base_resets=0).
+   H4 P3a VERDICT: EVENT #8 — kernel lever CLOSED (with standing fw).
+   Rounds 1-4 clean; at 17:56:47 (TTF 48m38s, round 5) watcher fired:
+   dmesg 'b1:00.0 GT0 Engine reset: engine_class=ccs guc_id=22' (SAME
+   card+engine+guc_id as events #4/#5), cascade bcs guc_id=26 +
+   other-card ccs 32/bcs 36; EngineCore fatal = TimeoutError RPC
+   sample_tokens -> EngineDeadError. Devcoredump reason: 'LR job
+   cleanup, guc_id=22' => 8/8 devcoredumps IDENTICAL across kernels
+   1010-intel AND 1032-oem, fw 70.44.1. Capture clean in TTL (fr rings
+   574/580 + f15b dumps + serve log + devcoredump_card1 512153B +
+   teardown) via q33_watch -> q22_crash_capture. P3a CLOSED FAIL.
+   H5 P3b (matched fw pairing): dmesg on -1032 explicitly recommends
+   GuC 70.49.4 => sideloaded upstream linux-firmware blob at commit
+   f2a23165093f (parent of 9444af1a 'Update GUC to v70.53.0'; WHENCE
+   line verified 'GuC API/APB ver 70.49.4 for Battlemage'; sha256
+   328d57b5af4b...) to /lib/firmware/updates/xe/bmg_guc_70.bin
+   (§23-F surgical method), host reboot #13. Verified: all 4 GTs on
+   70.49.4, mismatch warning GONE. Screen P3B494: f8ref PASS, solo
+   50.3/50.4, conc4 warm 144.1, bench3 403.6/478.4/342.9, conc8
+   349.9, acc 0.740, resets 0 => NO DEGRADATION. 18-round battery +
+   watcher launched 18:33 (sustain_P3B.out + p3b_watch.out) — NOTE the
+   matched pairing is the one cell §23 never tested (70.72.1 ran on
+   -1010 driver = mismatched); verdict pending: crash-fixed or
+   EVENT #9.
+   H6 P3b VERDICT: EVENT #9 — P3 CLOSED, kernel/fw lane EXHAUSTED.
+   Rounds 1-6 clean; 19:49:14 (TTF 1h16m04s, round 7) watcher fired:
+   b1:00.0 ccs guc_id=22 + same cascade (bcs 26 / other card 32+36);
+   devcoredump reason 'LR job cleanup, guc_id=22' => 9/9 IDENTICAL
+   across every kernel/fw cell ever run. Full matrix now: 1010+
+   70.44.1 standing (events #1-#4, §19-§22) FAIL; 1010+70.72.1 (§23 F,
+   event #5, 2h41m) FAIL; 1032-oem+70.44.1 (P3a, event #8, 48m38s)
+   FAIL; 1032-oem+70.49.4 MATCHED (P3b, event #9, 1h16m) FAIL;
+   kernels 7.2.6/7.3-rc3 TDR at boot 6/6 (§24); execlist = no NEO
+   enumeration (§23 E). + #939 independent report (i915+Vulkan/ANV,
+   kernel 7.0, GuC 70.53, PIPE_CONTROL-after-COMPUTE_WALKER) => race
+   is version-independent, hardware/CTC-level submission behavior;
+   the ONLY crash-avoidance in any reachable software = NEO >=26.18
+   lock-pointer semantics at the measured -24% (mechanism §24 H2e).
+   POSTURE (unchanged, now fully evidence-backed): standing prod =
+   stock 26.14 lane + lane-watchdog (crash-tolerant, full perf); 26.18
+   available as crash-free degraded fallback (forbidden by no-
+   degradation rule absent emergency). Root fix requires Intel action
+   (GSD-12919; #939 updated with bisect, this matrix available as
+   supplementary follow-up pending user go-ahead).
+   H7 SESSION-END RESTORE: sideload removed (/lib/firmware/updates/xe/
+   empty), GRUB repinned to -1010-intel from backup, host reboot #14;
+   verified 1010 + GuC 70.44.1 + standing warning signature. Lane
+   RESTORE26R13: HEALTH_OK ~170s; f8ref warm EXACT cb8c/6833/05c8;
+   solo 50.2/50.4; conc4 warm 146.8; bench3 cold 401.9/479.5/344.4;
+   conc8 357.9; acc 0.743; p1_soak 16/16 bad=0; resets 0. lane-
+   watchdog RE-ARMED (flag removed, unit active, health 200).
+§24 H evidence: host lce1/{p2_profdiff_2614_vs_2618.txt,
+p2_native_2618_ss.txt,r12_tp0.json,p2v0_tp0.json,p2v0n3_tp0.json,
+f8ref_nv_P3A1032.out,f8ref_nv_P3B494.out,f8ref_nv_RESTORE26R13.out,
+boot_P2V0B.out,boot_P3A_1032.out,boot_P3B_494.out,boot_RESTORE26R13.out,
+sustain_P3A.out,sustain_P3B.out,p3a_watch.out,p3b_watch.out,
+p1_soak_RESTORE26R13.out,Q22_crash/{devcoredump(event#8),fr_574/580,
+f15b_dump_574/580,serve_full_Q22(=event#8),dmesg_tail,reason via
+sysfs 'LR job cleanup, guc_id=22'}(event#9 same set)};
+host /root/build/{patch_v58_p2.py,p2_cbench.py,p2_harness.sh,
+p2_profdiff.py,p2_native.py,p2_prof.sh,p2_prof_native*.sh,grub.backup.p3,
+fw494/bmg_guc_70.bin(70.49.4,sha328d57b5),lce1/p2_*}.
+
+
+
