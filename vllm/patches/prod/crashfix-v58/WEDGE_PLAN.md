@@ -2213,3 +2213,142 @@ bench3_NVS6_cold.out,bootRESTORE26F,nv_RESTORE26F_screen.*}; host
 neodl_S1/,neodl_2622/(+ww22.sum),neodl_2631/,neodl/}; repo .tmp-tq/
 lane_watchdog_v2.sh (NOT deployed — user rejected).
 
+G. SOURCE BISECT + DECOUPLED BUILD (user directive 2026-09-16: "do
+   these: 1. knob screens ... 2. source bisect 26.14->26.18 ... then
+   attempt a decoupled build and battery it") — CONFIRMS F's "NOT
+   SOLVABLE" and upgrades it to COMMIT-LEVEL PROOF: the -24% and the
+   crash-avoidance are ONE PHENOMENON in one commit.
+   - G0 PRECONDITIONS: lane-watchdog PAUSED (paused flag), standing
+     lane down for experiment boots (restored at session end). Full
+     NEO source clone at /root/build/crt; 376 commits between tags
+     26.14.37833.4 (2026-04-14) and 26.18.38308.1 (2026-05-08).
+   - G1 KNOB SCREENS (K-matrix; NEOReadDebugKeys=1 gate verified in
+     source + NEO_/NEO_L0_/NEO_OCL_EnableDirectSubmission via
+     kprep.sh -> repro_bootK1/K2/K2b):
+       26.14 default  solo 50.4 conc4 147.6 (S0 control)
+       26.14 + DS=0   solo 46.0 conc4 132.0 (K1)
+       26.18 default  solo 38.2 (S1 deb control)
+       26.18 + DS=1   solo 37.3-38.1 conc4 117.4 (K2 = inert, =default)
+       26.18 + DS=0   solo 31.3-33.1 conc4 102.4 (K2b)
+     All f8ref cb8c EXACT. => KNOBS DO NOT DECOUPLE: DS-off costs
+     ~4-5 tok/s on BOTH versions; the residual -12 is in code COMMON
+     to both submission paths. DS selection is not the lever.
+   - G2 BUILD TOOLCHAIN (neobuild.sh): worktree build of any crt ref;
+     deps keyed to the commit's OWN manifest igc BRANCH (revision
+     becomes a raw SHA mid-window; branch stays symbolic:
+     releases/2.32.x -> prefix-2614 [gmmlib 22.9.0 src, IGC
+     2.32.7+21184 devel debs, level-zero headers];
+     releases/2.33.x|2.34.x -> prefix-2618 [22.10.0, 2.34.4+21428]).
+     IGC debs via GitHub release ASSET-ID API route (name-route 404s
+     on '+' filenames; tag needs 'v' prefix; repo renamed to
+     intelgraphicscompiler, old name 301s need curl -L). level-zero
+     must be a SIBLING dir named 'level_zero' next to the worktree or
+     the L0 driver is silently not built. Container overlay via
+     docker cp -L (dereference!) + ldconfig (repro_bootR.sh; plain cp
+     copied the symlink -> loop -> ldconfig pruned driver -> serve
+     crash "Failed to infer device type").
+   - G3 TOOLCHAIN VALIDATION (anchors): RV0 (own-build 26.14 tag):
+     f8ref EXACT cb8c; solo 50.1/49.5; conc4 145.6; bench3
+     405.7/359.7/346.2; conc8 245.8; acc 0.745; resets 0 == stock =>
+     toolchain == upstream. RV18 (own-build 26.18 tag): f8ref EXACT;
+     solo 37.7/38.0; conc4 119.4 == 26.18 debs => the -24% reproduces
+     from SOURCE; packaging/build-flags confound closed.
+   - G4 AUTOMATED BISECT (bisect_run.sh: per step neobuild + R-boot
+     + q17 x2 warm gate, verdict >=48 good / <=41 bad / else skip, 1
+     retry, build cache keyed to commit sha): 10 steps 66 min, ZERO
+     skips/retries:
+       9004696cb 50.5 g | bea2751b0 50.8 g | dff540e72 50.4 g |
+       2e5d9939c 50.7 g | b9f6f5f09 50.2 g | f3baa1263 50.1 g |
+       e75c89119 37.5 b | 2381421fe 50.1 g | 76e8bd47f 34.6 b |
+       392de6fe7 51.2 g
+     FIRST-BAD: 76e8bd47f0cfe "feature: enable copy via lock pointer
+     for non-compressed resources on xe2+" (Michal Mrozek 2026-04-24,
+     NEO-14823). SINGLE-COMMIT CLIFF: parent 392de6fe7a 51.2 GOOD ->
+     culprit 34.6 BAD (-32%; tag-level -24% because later commits
+     partially mask; e75c89119's 37.5-bad is INHERITED — descendant).
+     Mechanism per commit text: routes copies of non-compressed xe2+
+     allocations to CPU locked-pointer path (GPU copy only for
+     compressed) + guards (TBX/AUB, counter-based wait events,
+     aggregated signal events). Matches G1 "deficit in COMMON path",
+     S1 "runtime not IGC", §20 fr-forensics memory-op profile.
+   - G5 UPSTREAM CORROBORATION — flip-flop: master landed 7874534f31
+     (Apr 23) -> Compute-Runtime-Validation REVERTED 52900009d1 (Apr
+     24) -> re-landed 2a028be930 (Apr 24) -> REVERTED AGAIN dc3a4a946d
+     (Apr 28). All five are ancestors of the 26.18 TAG: master's
+     copies were reverted away, but the RELEASE-BRANCH cherry-pick
+     76e8bd47f0 was never reverted and is ACTIVE in the shipped tag.
+     Intel's own CI bot killed this feature twice; the release kept
+     it. None of the five reached 26.27 (branch topology; 26.27's
+     separate -29% per §21 has other causes).
+   - G6 DECOUPLED BUILD R1 = 26.18.38308.1 + git revert 76e8bd47f0
+     (clean: 7 files +2/-306, incl. cmdlist_hw_immediate.inl +
+     gfx_core_helper_xe2_and_later.inl; preflighted in scratch
+     worktree first). Boot HEALTH_OK ~170s. FULL nv_screen ALL-PASS:
+     f8ref EXACT cb8c/6833/05c8; solo 50.5 cold / 50.8 warm; conc4
+     148.7 warm (band top); bench3 403.1/442.2/347.1 (2k/16k/65k all
+     >= band); conc8 247.5 (RV0: 245.8); acc 0.741; engine_resets 0;
+     guard fires 0. => 50-CLASS FULLY RESTORED by reverting ONE
+     commit (same tag unreverted = RV18 37.7/119.4).
+   - G7 BATTERY: **FAIL — event #7, §14-class, TTF 5m51s.** 18-round
+     sustain (repro_sustain.sh + auto-arm watcher q33_watch, armed
+     13:19:23 base_resets=0, on the RBR1 boot straight after screen;
+     round 1 = 6m20s, exit=0): at 13:25:14 (5m51s into battery, ~23min
+     after R1 boot) `b1:00.0 ccs guc_id=22` Engine reset -> devcoredump
+     **`Reason: LR job cleanup, guc_id=22`** (7/7 identical signature,
+     same card+guc_id as events #1/#5); cascade 13:25:24 b1 bcs
+     guc_id=26 + da:00.0 ccs guc_id=32 + da bcs guc_id=36; health 000;
+     serve dead. Watcher auto-captured (fr_641/647 rings 5.4MB fresh,
+     f15b dumps, serve_full log, devcoredump 516237B -> lce1/Q22_crash/)
+     + teardown. TTF 5m51s < stock-26.14 minimum (14min): reverting the
+     CPU-copy path re-exposes the xe/GuC race IMMEDIATELY — the revert
+     build has 26.14's GPU-copy submission profile PLUS all other 26.18
+     submission changes (async ring alloc, layout opt) = at least as
+     racy as stock.
+   - G8 VERDICT (closes the decoupling question at all granularities):
+     76e8bd47f0 is NECESSARY for crash-avoidance (R1 without it: crash
+     in 6min) AND SUFFICIENT (26.18 tag with it: Q31 battery 18/18
+     crash-free) AND is EXACTLY the -24%..-32% (G4/G6). Crash-avoidance
+     and throughput cost are the SAME CODE: routing non-compressed xe2+
+     copies CPU-side removes GPU copy/blit submissions during
+     graph-replay bursts, which both (a) starves the GuC LR-job-cleanup
+     race window (GSD-12919) and (b) taxes decode throughput. Decoupling
+     impossible at version level (F: no intermediate releases), knob
+     level (G1/S4/Q23: inert), and commit level (G7). => the two
+     postures stand as final: stock 26.14 + watchdog (50-class,
+     §14-class exposure), or 26.18/R1-lineage at -24% (crash-free).
+     NEW FOR UPSTREAM #939 (still HELD for user go-ahead): the
+     hang-avoidance in >=26.18 is now identified as commit 76e8bd47f0
+     (NEO-14823, copy-via-locked-pointer) — upstream reverted it twice
+     on master (52900009d1, dc3a4a946d) yet shipped it in the 26.18
+     release branch; every BMG user on 26.18+ is paying the copy-path
+     tax; the xe/GuC race it masks is GSD-12919.
+   - G9 SESSION-END RESTORE: host reboot #11 (event-#7 poisoning
+     protocol per §24-endgame; GuC 70.44.1 standing fw confirmed in
+     dmesg). Lane RESTORE26R11 (repro_bootQ21b.sh Q21b): HEALTH_OK
+     ~170s. Certification: f8ref WARM EXACT cb8c/6833/05c8 — note COLD
+     gate showed hash1 transient 0b21bb2d (the §24-E poisoned VALUE)
+     with hashes 2-3 EXACT + perfect perf => first-request transient,
+     NOT the poisoning profile (which had all-3 wrong + solo 4.5);
+     warm re-run exact. solo 50.1/50.4; conc4 147.0 warm; bench3 cold
+     400.3/362.5/347.9 (16k == RESTORE26R10's certified 363.1); conc8
+     359.8 (S0 control 362.4); acc 0.744; p1 soak 16/16 bad=0; engine
+     resets 0. lane-watchdog RE-ARMED (paused flag removed, unit
+     active, 60s health poll + §18 capture + auto-relaunch).
+§24 G evidence: host lce1/{bisect_steps.log,bisect_log.txt,bisect_run.out,
+neobuild_V0.out,neobuild_V18.out,neobuild_R1.out,neobuild_BS*.out,
+boot_K1.out,boot_K2.out,boot_K2B.out,boot_RV0.out,boot_RV18.out,boot_R1.out,
+boot_BS*.out,nv_screen_K1_driver.out,nv_screen_K2_driver.out,
+nv_screen_K2B_driver.out,nv_screen_RV0_driver.out,nv_screen_RV18_driver.out,
+nv_screen_R1_driver.out,q17_*_cold.out,q17_*_warm.out,
+crt_commits_2614_2618.txt,crt_releases.txt,sustain_R1.out,q33_watch_R1.out,
+Q22_crash/{devcoredump_card1_Q22.bin(516237B,13:25),fr_641.log,fr_647.log,
+f15b_dump_641.log,f15b_dump_647.log,serve_full_Q22.log,reason_R1_event7.txt},
+boot_RESTORE26R11.out,nv_screen_RESTORE26R11_driver.out,
+f8ref_nv_RESTORE26R11.out,p1_soak_RESTORE26R11.out};
+host /root/build/{neobuild.sh,bisect_run.sh,repro_bootR.sh,igcget.py,
+kprep.sh,patch_bootR.py,patch_bisect2.py,revpreflight.sh,flipflop.sh,
+bisect_precheck.sh,r1diag.sh,evdiag.sh,evclose.sh,devcore2.sh,nv_screen.sh,
+q33_watch.sh,q33_crash_capture.sh,repro_sustain.sh,dt_warmup_v53.py,
+neodeps/{prefix-2614/,prefix-2618/,dl/,out/{V0,V18,R1,BS*}/bin/},
+crt/ (source clone w/ bisect history)}.
+
