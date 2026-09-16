@@ -1,0 +1,33 @@
+d18a49a4bfbe22528242ee57f7082362aff62b6b460509b776da7d6e87139262
+BOOT_S2 container launched 04:38:05
+--- NEO OVERLAY from /root/build/neodl_2622 (before any GPU use), FORCE=no:
+6
+Unpacking libze-intel-gpu1 (26.22.38646.4-0) over (26.14.37833.4-1~24.04~ppa1) ...
+Setting up intel-igc-core-2 (2.36.3) ...
+Setting up intel-igc-opencl-2 (2.36.3) ...
+Setting up intel-ocloc (26.22.38646.4-0) ...
+Setting up libigdgmm12:amd64 (22.10.0) ...
+Setting up libze-intel-gpu1 (26.22.38646.4-0) ...
+Setting up intel-opencl-icd (26.22.38646.4-0) ...
+Processing triggers for libc-bin (2.39-0ubuntu8.7) ...
+--- NEO CENSUS (verify the mix actually landed):
+intel-igc-core-2 2.36.3
+intel-igc-opencl-2 2.36.3
+intel-opencl-icd 26.22.38646.4-0
+libigdgmm12:amd64 22.10.0
+libze-intel-gpu1 26.22.38646.4-0
+[f15b] preflight: all anchors unique OK
+[f15b] module vllm/_f15b.py installed
+[f15b] gmr: patched OK (backup gpu_model_runner.py.f15bak)
+[f15b] xpu_comm: patched OK (backup xpu_communicator.py.f15bak)
+[f15b] dflash: patched OK (backup qwen3_dflash.py.f15bak)
+F15B_APPLY_OK
+[arstage] preflight: anchor unique OK
+[arstage] module vllm/_arstage.py installed (v2 census)
+[arstage] xpu_comm: patched OK (backup xpu_communicator.py.asbak)
+ARSTAGE_APPLY_OK
+5
+1
+v58p1: APPLIED+VERIFIED guard-lines=2
+BOOT_S2 serve started (kernel 6.17.0-1010-intel, overlay=/root/build/neodl_2622 force=no) 04:38:10
+BOOT_S2 HEALTH_OK after ~220s

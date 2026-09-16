@@ -1,0 +1,29 @@
+=== [S6] GATE 1: f8ref MUST-equal
+hashes=['cb8c3851b897', '68332ec7c31b', '05c88ff03b0c']
+F8REF_PASS
+=== [S6] GATE 2: q17 solo+conc4 (clock-guarded)
+solo  mt=256: 7.1s 256 tok = 36.2 tok/s
+conc4 mt=128: 12.6s 512 tok = 40.6 tok/s aggregate
+guard_fires before=0 after=0 (delta should be 0: long prompts)
+Q17_PERF_SH_DONE
+clock samples (gpu freq field, top-3): 9726 9435 9035 
+=== [S6] GATE 3: bench3 COLD
+BENCH warmup: prompt_tok=87 compl_tok=8 ttft=-1.00s decode=0.0 tok/s total=0.4s
+BENCH ctx2k: prompt_tok=2314 compl_tok=111 ttft=4.76s decode=295.1 tok/s total=5.1s
+BENCH ctx16k: prompt_tok=18239 compl_tok=133 ttft=16.72s decode=275.7 tok/s total=17.2s
+BENCH ctx65k: prompt_tok=73914 compl_tok=165 ttft=39.38s decode=278.8 tok/s total=40.0s
+BENCH conc8: n=8 wall=9.8s aggregate=209.9 tok/s per_req=256.0 tok
+BENCH acceptance: 1865/2508 = 0.744 emitted=0
+=== [S6] GATE 4: q17 warm
+solo  mt=256: 6.9s 256 tok = 36.9 tok/s
+conc4 mt=128: 4.5s 512 tok = 112.9 tok/s aggregate
+guard_fires before=0 after=0 (delta should be 0: long prompts)
+Q17_PERF_SH_DONE
+=== [S6] census + resets
+intel-igc-core-2 2.40.13
+intel-igc-opencl-2 2.40.13
+intel-opencl-icd 26.31.39395.13-0
+libigdgmm12:amd64 22.10.0-1~24.04~ppa1
+libze-intel-gpu1 26.31.39395.13-0
+engine_resets=0
+NV_SCREEN_DONE [S6] 04:57:27

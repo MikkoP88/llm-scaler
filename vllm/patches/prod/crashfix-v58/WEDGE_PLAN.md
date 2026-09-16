@@ -1937,3 +1937,279 @@ Q24_execlist/*,Q22_crash/Q25crash_summary,dmesg_tail,ps}.txt/.out;
 repo scripts lane_watchdog.sh, lane-watchdog.service, q25_screen.sh,
 q25_armature.sh.
 
+## §24 — UPSTREAM ENGAGEMENT + PATCH-LEVER ENDGAME (user directive:
+post to #939 → research fixes → Option B then A, no degradation
+allowed → if both fail, watchdog permanent)
+
+A. #939 POSTED (issuecomment-5686275999): evidence comment on
+   intel/compute-runtime #939 ("[GSD-12919] Arc 140T ... CCS engine
+   reset under sustained OpenCL MoE compute"). Thread context read
+   first: kgibala (Intel) asked for structured refile + whether i915
+   shows it; AndrzejJanczak added i915 + Vulkan/ANV data (Arc 140T
+   iGPU, PIPE_CONTROL after COMPUTE_WALKER, GPU HANG ecode
+   12:1:85def5fb). Our comment = the xe/dGPU column: 2x BMG 0xe223
+   TP2 vLLM/L0, 5/5 events `Reason: LR job cleanup, guc_id=22`
+   (TTF 14m-2h52m, zero-precursor fr-ring cliff median 58.4ms),
+   fw-independence (70.44.1 x4 + 70.72.1 x1), NEO A/B monotone
+   slower==safer (-14..-33%), reproducer + artifacts offer.
+   => cousin signatures on i915 AND xe, iGPU AND dGPU: bug lives at
+   or below the GuC submission layer both drivers share.
+
+B. FIX RESEARCH (task 2): NO shipped fix anywhere as of 2026-09-14 —
+   NEO releases 26.18..26.31 silent on it (BMG-Pro hotfix 25.44 is
+   older/different product); PPA kernel capped 6.17.0-1010.10.
+   Exact v6.17 crash path mapped: xe_guc_submit.c:1025
+   xe_guc_exec_queue_lr_cleanup() — devcoredump when LR queue job
+   timed out with ring not idle; the 5s wait_event_timeout for
+   schedule-disable at :1010-1012. Upstream fix commits (in v7.2+):
+   b1107d085e "fix job timeout recovery for unstarted jobs and
+   kernel queues" (early ban wakes the disable-waiter that otherwise
+   "sleeps the full 5s timeout"; GT reset + resubmit for unstarted
+   jobs) and a889e9b06b "wedge from the timeout handler only after
+   releasing the queue". Mainline prebuilts v7.2.6 / v7.3-rc3
+   available (kernel.ubuntu.com) => Option B testable WITHOUT
+   compiling.
+
+C. OPTION B (kernel lever) EXECUTED AND CLOSED — matrix Q27..Q30,
+   host reboots #5 (7.2.6), #6 (fw-sideload removed), #7 (7.3-rc3):
+   - Packaging first: mainline deb maintainer scripts call
+     run-parts with TWO directory operands; noble run-parts takes
+     one => preinst aborts "missing operand", half-installed state.
+     Fixed by dpkg-deb -R + sed dropping the /usr/share/kernel/*.d
+     operand from preinst/postinst/prerm/postrm + dpkg-deb -b
+     (v72_fix_deb.sh, v73_install.sh).
+   - Q27/Q27r (7.2.6 + NEO 26.14 + GuC 70.72.1): DETERMINISTIC
+     sampler-stage kernel TDR at profile_run -> NEO
+     UR_DEVICE_LOST. KEY: the new v7.2 recovery WORKS as designed —
+     full GT reset in ~13 ms, zero "LR job cleanup" wedges (the
+     fix-commit analysis is validated on its own terms).
+   - Q28 (7.2.6 + NEO 26.31): gets FURTHER (graph capture passes),
+     dies at custom op _xpu_C.topk_topp_sampler with
+     UR_RESULT_ERROR_OUT_OF_RESOURCES — the same string as the #939
+     title.
+   - Q28n (force native sampler via `if generators:`->`if True:`):
+     also TDR => implementation-independent.
+   - Q29 (fw sideload removed, GuC 70.44.1): identical boot TDR =>
+     fw confound eliminated.
+   - Q30 (v7.3-rc3 + stock 26.14): identical => regression window
+     <= v7.2.
+   - VERDICT: (1) mainline 7.x deterministically wedges the vLLM
+     XPU sampler at BOOT (independent of NEO 26.14/26.31, GuC
+     70.44.1/70.72.1, custom/native sampler) — new upstream
+     regression data point; (2) NEO 26.14 cannot survive ANY GT
+     reset (device lost) => even a PERFECT kernel-side race fix
+     that resets cleanly kills the lane => kernel-side fixes can
+     never keep a lane standing on this NEO; the race must be
+     PREVENTED, not recovered; (3) backport variant unjustifiable
+     (~2h/build + still needs userspace reset-survivability).
+   Option B CLOSED.
+
+D. OPTION A (NEO avoidance lever) — mechanism probe Q31:
+   - Baseline restored first: GRUB_DEFAULT pinned to
+     "Advanced options for Ubuntu>Ubuntu, with Linux
+     6.17.0-1010-intel", reboot #8, verified 6.17.0-1010-intel +
+     xe GuC 70.44.1 pack fw = §19 baseline EXACT (sideload gone).
+   - Q31 = Q21b lineage + in-container NEO overlay 26.14 ->
+     26.18.38308.1 (+IGC 2.34.4, gmmlib 22.10.0) before GPU use.
+     RATIONALE: §21 closed 26.18 on the perf gate alone
+     (-14..-25% decode) WITHOUT ever running its battery. §21 also
+     showed slower==safer monotone, and #939's reporter survives
+     under SYCL_UR_TRACE=2. The decisive mechanism question: does
+     slower submission ELIMINATE the §14 crash at all? If yes, a
+     custom perf-neutral throttle becomes buildable; if no, the
+     entire avoidance family is dead and the watchdog is the end
+     state. Perf gate SKIPPED BY DESIGN (degradation expected and
+     acceptable for the probe).
+   - Gates: health ~220 s; census 26.18.38308.1 / igc 2.34.4 /
+     gmmlib 22.10.0; f8ref EXACTLY certified
+     (cb8c3851b897/68332ec7c31b/05c88ff03b0c == certified e5m2
+     refs, matches Q22b).
+   - §20 F-bar battery ARMED 20:39:15 (reboot-#8 fresh boot,
+     BASE_RESETS=0): 18-round repro_sustain + auto-arm watcher
+     (q31_watch.sh -> q31_crash_capture.sh) — the exact bar the
+     §23 fw battery ran when event #5 hit at 2h41m round 11.
+     Standing lane-watchdog stays PAUSED during the battery.
+   - RESULT: **PASS — MECHANISM CONFIRMED.** SUSTAIN_COMPLETE_NO_WEDGE,
+     18/18 rounds clean, 4h25m47s (20:39:15 -> 01:05:02), 0 engine
+     resets, 0 fence-hits, watcher never fired. Round 11 cleared at
+     23:15:58 — past the §23 fw-battery death point (event #5 at
+     2h41m round 11). vs stock-26.14 §23 battery: wedge at round 11.
+     => the §14 race is SUBMISSION-RATE-DEPENDENT and
+     USERSPACE-AVOIDABLE. But 26.18 costs -14..-25% decode => it
+     proves the mechanism, not the fix. Note: per-round timings show
+     rounds ~14-18 ran slower (see F: lane mode-flip) — the battery
+     traversed both lane modes and stayed clean in both.
+
+D2. Q32 (perf-neutral throttle candidate #1) CLOSED — SYCL_UR_TRACE=2
+   env-only on stock Q21b lineage: trace provably reaches the
+   torch->sycl->ur->L0 hot path (28.4M lines / 3.4 GB in 6 min) but
+   solo 12.3 tok/s vs 18.7 same-lane control = catastrophic true
+   overhead. Fail-fast, no battery spend. (Also yielded the
+   #939-reporter-survival mechanism datapoint.)
+
+D3. Q33 (perf-neutral throttle candidate #2 — submission governor)
+   + LANE MODE-FLIP DISCOVERY:
+   - patch_gov.py: vllm/_gov.py + gpu_model_runner execute_model-entry
+     hook (anchor = the execute_model_state RuntimeError guard,
+     survives f15b patching); torch.xpu.synchronize() every K-th model
+     step on EVERY TP rank (VLLM_GOV_K, default 64), guarded by
+     torch.xpu.is_current_stream_capturing(). Idempotent, backup
+     .govbak, --revert. gov_diag.py variant prints per-sync cost +
+     calls/s (live submission-rate telemetry).
+   - First Q33 boots measured solo 18.4-18.7 vs 50.4 cert; A/B
+     VLLM_GOV_K=0 vs 64 IDENTICAL (18.7/18.4) => governor EXONERATED
+     (sync cost measured 19-31ms every ~12s = 0.2% duty). Pure-stock
+     Q33S boot + host reboot #9 ALSO 18.4 => not governor, not host
+     transient, not container lineage.
+   - **THE MODE-FLIP (root cause of the 'sick lane')**: GPU-freq
+     parking under light decode load. xpu-smi telemetry: healthy solo
+     decode = graphics clock 2800 MHz (max); idle = 950-1000 MHz.
+     Sick 18.4 tok/s x (2800/950) ~= 52 ~= healthy rate — sick mode =
+     GT not boosting on tiny-kernel decode. Explains: prefill TTFTs
+     bit-exact while decode 3x slow (big matmuls force boost);
+     every certified 'solo 50.4' was measured AFTER f8ref+bench3
+     heavy prefill; every sick reading on a light-loaded fresh lane;
+     historical conc8 spread (123-148 cert vs 360 healthy-mode);
+     Q23b '16k cold dip'; Q31 late-round slowdown. Lane healed after
+     bench3+long-decode load and stayed 50.1/50.2 x3 back-to-back.
+     NOT: GuC submission (enabled, dmesc census), fw pack 3.1 (F-phase
+     solo 50.4 on it), initrd regen (Sep15 14:38, linux-firmware
+     2.29->3.1 apt install — cosmetic for runtime fw, GuC 70.44.1
+     loads from rootfs), microcode/cmdline (unchanged), CPU freq
+     (intel_pstate active, turbo on), mem/swap (385G free).
+     Healthy fingerprint saved: lce1/healthy_fingerprint_Q33S.txt
+     (PCIe L1 resid ~7.6%, pkg G2-dominant, clocks 950-idle).
+   - Q33 STRICT GATES on warm healthy lane (in-place patch, serve
+     restart 140s — preserves device power state; diag module, no
+     restart needed since import is call-time):
+     * f8ref EXACT: cb8c3851b897/68332ec7c31b/05c88ff03b0c == cert
+     * q17: solo 50.2 (cert 50.4), conc4 134.7 (band 123-148)
+     * [gov] census NON-INERT: both ranks, sync every 64 steps,
+       dt 16-24ms, calls/s telemetry live; GPU at 2800 MHz WITH
+       governor active => drain does not cause freq parking
+     * bench3 cold TTFT 3.19/16.32/38.42 (cert 3.46/16.63/38.50),
+       decode 403.5/479.8/349.9 (cert 405.9/482.5/349.3), acceptance
+       0.740 (cert 0.741-0.743); warm consistent
+   - §20 F-bar battery ARMED 02:37:25 (Q33S container + gov K=64 +
+     diag telemetry, q33_watch.sh lineage, BASE_RESETS=0), 18 rounds.
+
+E. DISPOSITION (endgame verdict, filled post-battery + §24-endgame):
+   - Q33 battery FAIL: event #6 at TTF 31min (round 3 of 18; rounds
+     9m01s/12m05s/9m58s): dmesg b1:00.0 ccs guc_id=22, devcoredump
+     `Reason: LR job cleanup, guc_id=22` — §14-class signature 6/6
+     identical. Governor CONFIRMED ACTIVE through death (438 [gov]
+     lines, 219 syncs/rank, last n=14016; serve died
+     UR_RESULT_ERROR_DEVICE_LOST). => periodic device drain does NOT
+     reduce per-launch submission rate inside graph-replay bursts
+     (where Q31 proved the race lives); K small enough to matter
+     (<=4 => 20-40ms bubble/step) fails no-degradation. APP-LEVEL
+     THROTTLE FAMILY CLOSED. Options A (26.18/trace/governor) and
+     B (kernel) EXHAUSTED.
+   - MODE-FLIP root cause (explains all "sick lane" readings incl.
+     historical conc8 123-148 vs ~360 spread): GPU graphics-clock
+     parking under light decode load — solo decode healthy = 2800
+     MHz max, sick = 950-1000 MHz parked; 18.4 tok/s x (2800/950)
+     ~= 52 ~= healthy. Prefill-heavy load forces boost => every
+     certified solo-50.4 rode post-prefill boost. Not GuC/fw/initrd/
+     microcode/CPU-freq. Diagnostic: xpu-smi clock during decode.
+   - POST-CRASH GPU POISONING (§24-endgame, event #6 aftermath):
+     a §14-class crash poisons HOST GPU state across container
+     restarts. Fresh container on un-rebooted host serves HTTP-200
+     with WRONG logits: f8ref 0b21bb2d/cb95c539/95e24129 != cert
+     cb8c/6833/05c8; MTP acceptance 0.663 vs 0.740 (per-position
+     0.580/0.276/0.149/0.046 vs 0.779/0.558/0.390/0.279); solo
+     4.5 tok/s; prefill TTFT 2x. Pre-crash 03:03 acceptance healthy
+     (0.77/0.59/0.44/0.34). ONLY HOST REBOOT HEALS (reboot #10:
+     cb8c EXACT + acc 0.744 + 50.2 tok/s + soak 16/16 restored).
+     => container-only relaunch INSUFFICIENT after §14-class death;
+     any watchdog must verify numerics post-relaunch.
+   - Standing lane re-certified post-reboot #10 (RESTORE26R10):
+     f8ref cb8c EXACT, bench3 TTFT 3.13/16.61/38.44 decode
+     394.6/363.1/345.8 acc 0.744, q17 50.1/50.1 + 141.7, soak 16/16
+     bad=0. lane-watchdog v1 (systemd lane-watchdog) deployed +
+     PAUSED; watchdog v2 (post-relaunch f8ref verify + optional
+     autoreboot escalation, .tmp-tq/lane_watchdog_v2.sh) written
+     but REJECTED by user — NOT deployed. Upstream #939 posted
+     (issuecomment-5686275999); follow-up draft HELD.
+
+F. NEO VERSION BISECT (user directive 2026-09-16: "run degradation
+   tests 26.15-26.17, 26.19-26.26, find candidate without or with
+   minimal degradation"):
+   - VERSIONS 26.15-26.17 / 26.19-26.26 DO NOT EXIST — Intel ships
+     compute-runtime quarterly: 26.14 -> 26.18 -> 26.22 -> 26.27 ->
+     26.31 (GitHub tags; no intermediate releases).
+   - Harness: repro_bootNV.sh <MODE> <DEBDIR> <FORCE> (Q21b/Q31
+     lineage, parametrized deb overlay) + nv_screen.sh <LABEL>
+     (f8ref MUST-equal cb8c + q17 solo/conc4 + bench3 cold + clock
+     mode-guard). All boots kernel 6.17.0-1010-intel, fw 3.1.
+   - S0 CONTROL (stock 26.14 standing lane, same-session): f8ref
+     cb8c EXACT; solo 50.0/50.2; conc4 141.3/147.3; bench3 decode
+     399.6/419.5/348.9; conc8 362.4; acc 0.744; resets 0.
+   - S1 DECOMPOSITION (NEO 26.18 runtime-only via --force-depends,
+     stock Ubuntu IGC 2.32.7 kept; gmmlib 22.10 constant everywhere):
+     f8ref cb8c EXACT; solo 38.2/38.3 == full-stack 38.4 (Q31);
+     conc4 warm 118.1; bench3 313.3/333.4/296.5; acc 0.745.
+     => THE -24% IS IN THE NEO RUNTIME (submission path), NOT IGC
+     CODEGEN (IGC 2.32.7 vs 2.34.4 identical solo; numerics EXACT
+     on both). 26.18 debs hard-pin igc ">= 2.34.4 << 2.34.4+~" —
+     mixed stack only via --force-depends; works, numerics OK.
+   - S2 (26.22.38646.4 full, IGC 2.36.3, sha ww22.sum verified):
+     f8ref cb8c EXACT; solo 38.1/38.3; conc4 warm 117.7; bench3
+     306.7/332.4/296.4; conc8 214.0; acc 0.742.
+     => 26.22 ≡ 26.18: cost is a STEP at 26.18 (26.14 50.0 ->
+     26.18 38.2), FLAT 26.18->26.22, second step by 26.27 (34-36,
+     Q22a §21). NO candidate version in the window: every existing
+     release >= 26.18 is 26.18-class or worse; nothing between
+     26.14 and 26.18 exists to test.
+   - S4 KNOB SOLVABILITY (26.18 + SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_
+     COMMANDLISTS=1; knob inert on 26.14 Q23/Q23b, but 26.18 changed
+     the very submission path it selects): f8ref cb8c EXACT; solo
+     38.0/38.3; bench3 294.9/333.2/296.5; conc8 214.4 — IDENTICAL
+     to S1 default. KNOB INERT ON 26.18 TOO: the -24% step is not in
+     the immediate-vs-regular command-list selection visible to the
+     SYCL PI layer; it is internal to NEO 26.18+ submission.
+   - S6 (26.31.39395.13 full, IGC 2.40.13, current release — the
+     "did upstream fix it" check): f8ref cb8c EXACT; solo 36.2/36.9;
+     conc4 warm 112.9; bench3 295.1/275.7/278.8; acc 0.744.
+     26.31 ≈ 26.27-class: WORSE than 26.18. No upstream recovery.
+   - FINAL MATRIX (solo tok/s, same-session S0 control 50.0/50.2):
+       26.14 = 50.0-50.4 (crashes, §14-class 6/6)
+       26.18 = 38.1-38.4 (CRASH-FREE, Q31 battery 18/18)  [-24%]
+       26.22 = 38.1-38.3 [-24%, crash behavior untested — same
+                 runtime class as 26.18 by perf]
+       26.27 = 34-36 [-29..-32%, §21 Q22a]
+       26.31 = 36.2-36.9 [~26.27-class]
+     All variants f8ref cb8c EXACT (numerics never drift — the cost
+     is throughput-only, and gmmlib 22.10 constant throughout).
+   - VERDICT: NOT SOLVABLE at less than -24% by any in-container
+     lever. (1) No intermediate versions exist (quarterly cadence;
+     nothing between 26.14 and 26.18). (2) Not IGC-pinnable (S1:
+     runtime-only overlay identical cost). (3) Not knob-reversible
+     (S4 inert; Q23/Q23b inert on stock). (4) Not fixed upstream
+     (S6 26.31 worse). => crash-free options remain exactly two:
+     stock 26.14 + §14-class crash exposure (watchdog posture), or
+     NEO 26.18 acceptance at -24% decode (Q31-certified 18/18).
+     Battery NOT spent: nothing screens at 50-class.
+
+Evidence: host lce1/{bootQ27,Q27_kernel,bootQ27r,bootQ28,Q28_kernel,
+bootQ28n,bootQ29,bootQ30,bootQ31,f8ref_q31e5m2,sustain_Q31,q31_watch,
+q31_armature,bootQ32,q17_Q32*,bootQ33,f15b_apply_bootQ33,
+arstage_apply_bootQ33,v58p1_apply_bootQ33,gov_apply_bootQ33,q17_Q33*,
+bootQ33S,q17_Q33S*,bench3_Q33S*,healthy_fingerprint_Q33S.txt,
+f8ref_q33e5m2.txt,bench3_Q33gov_cold.out,bench3_Q33gov_warm.out,
+q17_Q33gov.out,sustain_Q33,q33_watch}.*; host /root/build/{repro_bootQ27..
+Q33S.sh,make_q28n.sh,v72_fix_deb.sh,v73_install.sh,q31..q33_watch.sh,
+q31..q33_crash_capture.sh,q31_armature.sh,patch_gov.py,gov_diag.py};
+issue939_comment.md + issue939_followup_draft.md (repo .tmp-tq;
+follow-up HELD for user go-ahead).
+§24 E/F evidence: host lce1/{nv_S0_screen.out,f8ref_restore26R10_cold,
+bench3_restore26R10_cold.out,p1_soak_restore26R10.out,f8ref_restore26.txt,
+bench3_restore26_cold.out,bootS1,nv_S1_screen,f8ref_nv_S1.out,
+bench3_NVS1_cold.out,bootS2,nv_S2_screen,f8ref_nv_S2.out,
+bench3_NVS2_cold.out,bootS4,nv_S4_screen,f8ref_nv_S4.out,
+bench3_NVS4_cold.out,bootS6,nv_S6_screen,f8ref_nv_S6.out,
+bench3_NVS6_cold.out,bootRESTORE26F,nv_RESTORE26F_screen.*}; host
+/root/build/{repro_bootNV.sh,nv_screen.sh,repro_bootS4.sh,repro_bootS5.sh,
+neodl_S1/,neodl_2622/(+ww22.sum),neodl_2631/,neodl/}; repo .tmp-tq/
+lane_watchdog_v2.sh (NOT deployed — user rejected).
+
