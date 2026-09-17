@@ -2457,10 +2457,18 @@ crt/ (source clone w/ bisect history)}.
    is version-independent, hardware/CTC-level submission behavior;
    the ONLY crash-avoidance in any reachable software = NEO >=26.18
    lock-pointer semantics at the measured -24% (mechanism §24 H2e).
+   [OVERTURNED §24 I5 same-day: 26.18 does NOT eliminate the race —
+   events #10 (host contaminated by prior testing, TTF 1h00m04s) and
+   #11 (PRISTINE host, user-directed reboot control, TTF 2h46m onset /
+   2h49m hard-fail), identical guc_ids 22/32, same 'LR job cleanup'
+   class => NO crash-free lane exists in any reachable software; 26.18
+   offers at best an unproven rate reduction, at -16% solo decode.]
    POSTURE (unchanged, now fully evidence-backed): standing prod =
    stock 26.14 lane + lane-watchdog (crash-tolerant, full perf); 26.18
    available as crash-free degraded fallback (forbidden by no-
-   degradation rule absent emergency). Root fix requires Intel action
+   degradation rule absent emergency) [claim superseded by I5 — 26.18
+   is NOT crash-free; fallback value = different failure pacing only].
+   Root fix requires Intel action
    (GSD-12919; #939 updated with bisect, this matrix available as
    supplementary follow-up pending user go-ahead).
    H7 SESSION-END RESTORE: sideload removed (/lib/firmware/updates/xe/
@@ -2481,6 +2489,154 @@ sysfs 'LR job cleanup, guc_id=22'}(event#9 same set)};
 host /root/build/{patch_v58_p2.py,p2_cbench.py,p2_harness.sh,
 p2_profdiff.py,p2_native.py,p2_prof.sh,p2_prof_native*.sh,grub.backup.p3,
 fw494/bmg_guc_70.bin(70.49.4,sha328d57b5),lce1/p2_*}.
+
+§24 I (Sep 17) — POLICY CHANGE EXECUTED (user directive): "build crash
+   free image" + "improve get maximum tok/s" first + production naming
+   (user: next available llm-scaler-exp:v*) + comprehensive docs. The
+   §24-H6 fallback ("26.18 available as crash-free degraded fallback,
+   forbidden absent emergency") is now a BUILT, certified, registry-
+   resident contingency image. [OUTCOME §24 I5: the crash-free premise
+   was REFUTED the same session — events #10 (TTF 1h00m04s) + #11
+   (clean-host reboot control, TTF 2h49m) both on 26.18; image
+   reclassified as 26.18-TUNED contingency with NO proven crash-
+   avoidance benefit. All perf/numerics/determinism results stand.]
+   I1 setup: lane-watchdog PAUSED (touch lane_watchdog.paused) before
+   first teardown. Lever recon: VLLM_XPU_USE_SAMPLER_KERNEL default=1
+   (already on); no whole-step-capture knob in tree; no rps/freq sysfs
+   (clock = xpu-smi read-guard only, 2800/950, re-boost via prefill);
+   cmdlist env inert (§22) => live config lever = MTP draft length only
+   (fewer taxed eager proposer ops per accepted token under 26.18's
+   per-op host-blocking, §24 H2e). Greedy spec is lossless => f8ref
+   stays the gate.
+   I2 draft-len campaign (single-variable, repro_bootNV.sh neodl yes):
+   A0 draft4 solo 38.0 conc4-warm 117.8 f8ref EXACT 3/3; A1 draft3
+   solo 42.3-42.4 conc4 137.8-138.9 (+11%/+17% vs A0) f8ref 2/3
+   (probe3 95e2 = draft-len verify-shape near-tie; probes 1-2 EXACT);
+   A2 draft2 solo 40.2 conc4 135.0 (probe3 85b0). Interior optimum 3;
+   deficit vs standing 26.14 shrinks -24%/-20% => -16%/-6%. Full screen
+   P2E1F: solo 42.4, conc4 138.9, bench3 cold 400.9/309.4/289.6 warm
+   400.6/321.9/289.2, conc8 308.3, acc 0.817 (draft-3-calibrated; the
+   0.74 band is draft-4), resets 0. conc4 first-pass 33-43 = known
+   parked-clock artifact, warm = reading (nv_screen guard).
+   I3 pyc forensics (why image probe1 != overlay probe1): base
+   exp:v1.2.10 ships only 6 vllm .pyc; 3 byte-DIVERGE from fresh
+   compiles of their own .py (v1/worker/gpu_model_runner, v1/worker/
+   mamba_utils, v1/attention/ops/triton_fp8_mq) — every no-purge lane
+   (incl. ALL certified history) executes that shipped bytecode.
+   Single-variable proof P2EG (repro_bootP2EG.sh = repro_bootNV +
+   pycache purge only): flips probe1 cb8c->0b21 AND fixes draft-3
+   rep-nondeterminism (pyc draft-3 lanes f8ref distinct=MISMATCH 2/2;
+   purged lanes distinct=OK 4/4). Per-module attribution (restore-one-
+   pyc) deferred — needs lane reboots.
+   I4 image llm-scaler-exp:v1.2.11 (sha256:35003605bf14..., 23.2GB):
+   FROM exp:v1.2.10 + NEO 26.18 deb bake (dpkg census verified) +
+   f15b/arstage/v58p1 baked with grep guards + draft-3 serve_user.sh
+   baked + pycache purge (source-true) + py-spy + marker
+   .llm_scaler_exp_v1211_baked. (First build as prod:v2; user renamed
+   directive applied, prod tags removed, rebuilt under final name.)
+   Boot-from-image EXPV1211: HEALTH ~190s, marker OK, live_resets=0,
+   f8ref DETERMINISTIC {0b21bb2d3c6a,68332ec7c31b,95e24129958b} 3/3,
+   solo 42.5/42.7, conc4 138.7. Contract decision: source-true +
+   deterministic beats matching the wobbly pyc-path attractor (v19
+   precedent for image-specific hash sets). Docs:
+   crashfix-v58/image-exp-v1.2.11/README.md (comprehensive: build,
+   campaign, numerics contract, perf bands, deploy/swap/rollback
+   runbook incl. lane_watchdog lineage note + host serve_user.sh
+   draft-4 restore, limitations).
+   I5 crash-free sustain on the image lane => PREMISE REFUTED, twice:
+   * EVENT #10 (first battery, host up since 09-16 20:06 through all
+     §24 testing): 18-round repro_sustain + q33 watcher armed 05:43:45
+     base_resets=0 => crash at TTF 1h00m04s (watcher fire 06:43:51):
+     da:00.0 ccs guc_id=32 FIRST (devcoredump captured IN TTL, Reason:
+     'LR job cleanup, guc_id=32', GuC 70.44.1) + b1:00.0 guc_id=22;
+     worker died UR_RESULT_ERROR_DEVICE_LOST in sample_tokens->
+     copy_to_gpu (Worker_TP1). 10/10 identical class. Crash-free
+     premise refuted at n=1 — but CONFOUND raised (user): host had
+     accumulated all §17-§24 crash residue without reboot.
+   * EVENT #11 (user-directed CLEAN-HOST control): host REBOOTED
+     07:34:47 (fresh boot verified: resets=0, no prior lane); image
+     lane re-booted HEALTH 220s live_resets=0; watcher + 18-round
+     sustain armed 07:43:25 base_resets=0. Rounds 1-12 clean (2h49m,
+     beat #10's TTF at 1h13m, beat historical max 2h52m at ~3h17m
+     elapsed). ONSET ~10:28-10:30 round 13 (f15b stall detector dump
+     f15b_dump_520/526: sample_tokens + propose_begin last-progress
+     186.2s prior, last completed op an AR — same max-rate-dispatch
+     wedge signature); 10:31:17 shm-broadcast starvation logged;
+     10:32:15 round 13 exit=1 = RPC sample_tokens timeout ->
+     EngineDeadError; 10:33:35 GuC LR-cleanup BOTH cards b1:00.0
+     guc_id=22 + da:00.0 guc_id=32 (SAME guc_ids as #10); 10:33:37
+     watcher health-dead x2 -> capture + teardown (devcoredump TTL
+     already expired at capture => no fresh bin; class evidence =
+     dmesg guc_ids + app signature + config dump confirms
+     num_spec_tokens=3 image lane). TTF 2h46m onset / 2h48m50s
+     hard-fail / 2h50m resets.
+   VERDICT: contamination hypothesis DISPROVED — 26.18 crashes from a
+   pristine host. 11/11 identical §14 class (9 on 26.14, 2 on 26.18);
+   NO crash-free lane exists in any reachable software. Honest nuance:
+   both 26.18 failures are the image config (draft-3 + purged), while
+   the prior Q31 26.18 battery (draft-4, pyc path) passed 18/18 and
+   profiling lanes ran long — the "crash-free 26.18" claim was n=1
+   sample luck; the race is probabilistic and persists on 26.18
+   runtime. 26.18 n=2 TTFs {1h00m, 2h49m} overlap the 26.14
+   historical range (14m-2h52m) => no demonstrated rate reduction,
+   at -16% solo decode. The
+   #939 supplementary report gains the strongest possible data point:
+   clean-host 26.18 reproduction with identical guc_ids. p1_soak on
+   the image lane: NOT RUN (battery died at round 13; pointless after
+   verdict — soak screens numerics, not the race).
+   I6 session-end posture: host serve_user.sh restored to draft-4
+   (verified in engine config dump: num_spec_tokens=4, acceptance 2.97
+   / 4 positions). Standing 26.14 lane (repro_bootQ21b RESTORE26R14):
+   HEALTH ~140s. FIRST immediate screen FAILED — f8ref all-3-drift
+   {0b21,cb95,95e2} + solo 3.1 cold / 42.8 warm, conc4 140.8 — root-
+   caused to COLD-SETTLE artifact, NOT a lane defect: image provenance
+   verified (v1.2.10 Created 09-12, sha 341ca2fe), single vllm =
+   container's own draft-4 engine (cgroup match), f8ref.py unchanged
+   since 09-02, PCIe gen3 = host-normal (pre-reboot P2E1F dumps also
+   gen3/5), no stray processes, no new dmesg errors; clocks were still
+   ramping 2200<->2800 during the pass (clk dumps). NEW RULE: f8ref on
+   a freshly booted lane must run WARM (>=15 min post-boot) — clock-
+   ramp batch pacing flips near-tie probes (all 3). (Relatives: the
+   §24-G9 cold transient = hash-1-only + PERFECT perf; the §24-E
+   poisoning profile = all-3-wrong + solo collapse healed ONLY by
+   host reboot — today's variant sat between and SELF-HEALED via
+   20-min settle, no reboot needed.) Warm re-screen
+   RESTORE26R14W: F8REF_PASS EXACT cb8c/6833/05c8; solo 50.3/50.3;
+   conc4 146.8/139.2; bench3 2k 405.6-411.6, 16k 415.9/361.6 (the
+   documented cold-noise cell, cf. Q23b cold 367.1 on a certified
+   lane; all other gates in band), 65k 347.5-349.1; conc8 310.4-363.0;
+   acc 0.745; engine_resets static at 2 (= event #11, no new).
+   Watchdog RE-ARMED (pause flag removed 11:40, unit active, cycles
+   resumed; lineage still repro_bootQ21b = correct for standing).
+   Session host reboots: 2 (07:34 clean-host control; restore needed
+   NONE — post-event GPU state recovered via settle). exp:v1.2.11
+   resident in registry as 26.18-TUNED contingency (NOT crash-free —
+   I5; swap = boot_exp2618.sh; watchdog mandatory on it too). Root fix
+   still Intel-side (GSD-12919 / #939; clean-host 26.18 reproduction =
+   strongest supplementary datum, posting still pending user go-ahead).
+§24 I evidence: host lce1/{boot_P2E0,P2E1,P2E2,P2E1F,P2EG,EXPV1211,
+EXPV1211C,RESTORE26R14}.out, f8ref_nv_{P2E0,P2E1,P2E2,P2E1F,P2EG_R1,
+P2EG_R2,PRODV2,PRODV2B,PRODV2C,EXPV1211}.out, nv_*_q17_{cold,warm}.out,
+nvscreen_P2E1F.out, bench3_NVP2E1F_{cold,warm}.out, build_prodv2.out,
+build_expv1211.out, sustain_EXPV1211.out, expv1211_watch.out,
+sustain_EXPV1211C.out, expv1211c_watch.out,
+nvscreen_RESTORE26R14.out (cold-settle FAIL record), f8ref_nv_
+RESTORE26R14B.out (warm attractor rerun = EXACT), nvscreen_
+RESTORE26R14W.out (PASS cert), bench3_NVRESTORE26R14W_warm2.out,
+nv_RESTORE26R14/P2E1F_clk_*.txt (clock-ramp + pcie-gen evidence),
+pyc census
+/tmp/pyc_base.txt (6 md5s, 3 divergent); event#10 Q22_crash/
+{devcoredump_card2_Q22.bin (Reason 'LR job cleanup, guc_id=32'),
+fr_521/527, serve_full_Q22.log}; event#11 Q22_crash/ (Sep 17 10:33
+set: dmesg engine resets guc22+guc32, first_errors RPC sample_tokens
+timeout, f15b_dump_520/526 wedge onset, fr_520/526 rings, serve log,
+dump_lines/section config num_spec_tokens=3; no fresh devcoredump —
+TTL expired)};
+host /root/build/{p2e_ctx/{Dockerfile,neodl/,patch_*.py,serve_user.sh},
+boot_exp2618.sh, repro_bootP2EG.sh, p2eg_mk.sh, cleanhost_launch.sh,
+cleanhost_arm.sh, sustain_wait.sh, sustain_wait_c.sh};
+repo crashfix-v58/image-exp-v1.2.11/{README.md,Dockerfile,
+boot_exp2618.sh,repro_bootP2EG.sh,p2eg_mk.sh}.
 
 
 
