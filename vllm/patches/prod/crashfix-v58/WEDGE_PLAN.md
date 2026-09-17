@@ -2696,5 +2696,75 @@ bs64_*_clk_*.txt, f8ref_nv_RESTORE26BS64W.out; host /root/build/
 repro_bootBS64_{E5M2,E4M3,TQ4NC}.sh}; repo crashfix-v58/
 {bs64_mk.sh,bs64_run.sh,bs64_screen.sh}.
 
+§24 K — bs64 CRASH-BATTERY LADDER (user-directed, 5 arms, 2 host reboots):
+   events #12-#15 + FIRST CLEAN BATTERY SINCE Q31; crash-free pair found.
+   Battery protocol §20 F-bar unchanged: 18-round repro_sustain + q33
+   auto-arm watcher (base_resets reset each clean-host boot; capture
+   Q22 then teardown). Directive ladder (user): crash -> reboot + add
+   lever; clean -> confirm on second variable.
+   ARM 1 e4m3 bs64 gmu0.9 async ON pc ON (§24-J pick, 54.6 solo):
+     EVENT #12 TTF 1h13m01s (armed 15:01:40, first reset da ccs
+     guc32 16:14:41, round 6 exited 0 4s AFTER the reset; cascade b1
+     ccs22+bcs26, da bcs36). devcoredump card2 'Reason: LR job
+     cleanup, guc_id=32' — 12th identical.
+   ARM 2 e5m2 bs64 gmu0.9 async ON (same host, NO reboot — chained
+     precedent): EVENT #13 TTF 12m18s (armed 16:28:09 base 6, first
+     reset da ccs guc32 16:40:27, round 2/3). Same reason, 13th.
+   ARM 3 GMU7 = e4m3 bs64 gmu0.7 async ON, host rebooted 16:44:51
+     (baseline 0): EVENT #14 TTF 52m12s (first reset b1 ccs guc22
+     17:45:25 — FIRST-HANG on card1 this time; cascade 17:46:17;
+     round 6/7). Card2 dump 'LR job cleanup, guc32', 14th. gmu lever
+     INERT with async ON.
+   ARM 4 G7NS = e4m3 bs64 gmu0.7 async-scheduling REMOVED (standing
+     configs carried --async-scheduling since lineage start; removal =
+     first lever aimed at the convicted trigger profile — the V1
+     overlap scheduler is what sustains max-rate tiny-kernel dispatch),
+     host rebooted 17:49:57 (baseline 0): 18/18 CLEAN
+     SUSTAIN_COMPLETE_NO_WEDGE 2h36m34s (armed 17:57:02 -> 20:33:36),
+     engine resets 0, fence-hits 0/round, round pacing ~8.7-9.5min.
+     FIRST CRASH-FREE BATTERY SINCE Q31 (§20). Post-battery q17 spot
+     (fully warm): solo 54.2 / conc4 153.6 = PARITY with async-ON
+     54.6/154.2 — crash-avoidance at ~0.7% (noise). Round pacing note:
+     no-async rounds ~9min vs ~12min async (mixed-stream profile, not
+     comparable to solo throughput).
+   ARM 5 G9NS CONFIRMATION = identical but gmu back to 0.9 (isolate
+     the operative variable), host rebooted 20:44:34 (baseline 0),
+     30 rounds: EVENT #15 TTF 36m58s (first reset b1 ccs guc22
+     21:28:46, round 4/5; cascade 21:29:47 both cards). 15th identical
+     'LR job cleanup'. VERDICT: no-async ALONE insufficient.
+   FINDING — the crash-free candidate is the PAIR (async-scheduling
+   OFF + gmu 0.7), n=1, 2h36m. Matrix today: async ON crashes at
+   gmu0.9 (73m e4m3 / 12m e5m2) AND gmu0.7 (52m); async OFF crashes
+   at gmu0.9 (37m) but CLEAN at gmu0.7 (2h36m 18/18). Mechanism
+   (reading): overlap scheduler saturates the submission path AND
+   larger KV pool (0.9) widens the race window; removing either load
+   alone still trips it, removing both drops dispatch+alloc pressure
+   below trigger. Plausibly same phenomenon as NEO version deficit
+   (§21: newer drivers = slower submission = fewer hangs).
+   Image-build directive (v1.2.12 async-OFF) condition NOT met —
+   G9NS crashed; pair needs n>=2 before any promotion decision.
+   Standby arm G7NPC (also drop --enable-prefix-caching) built+shipped
+   but never fired (its trigger condition — G7NS crash — went false).
+   Post-battery: standing lane restored RESTORE26M (HEALTH_OK ~140s),
+   warm-settle 15min + f8ref + q17 re-cert, watchdog re-armed
+   (restore26m_cert.sh). Session host reboots: 2 (16:44, 17:49) +
+   20:44 = 3 total.
+§24 K evidence: host lce1/{bs64e4m3_battery,bs64e5m2_battery,
+bs64e4m3gmu7_battery,bs64e4m3g7ns_battery,bs64e4m3g9ns_battery}.out,
+boot_{BS64E4M3B,BS64E5M2B,BS64E4M3G7B,BS64E4M3G7NSB,BS64E4M3G9NSB}.out
+(+ _e12/_e14/_e15 archives), sustain_{BS64E4M3B,BS64E5M2B,BS64E4M3G7B,
+BS64E4M3G7NSB,BS64E4M3G9NSB}.out (+ _e12/_e14/_e15/_clean archives),
+{bs64e4m3b,bs64e5m2b,bs64e4m3g7b,bs64e4m3g7nsb,bs64e4m3g9nsb}_watch.out
+(+ _e14/_e15 archives), q17_G7NS_postbattery.out, Q22_crash/
+devcoredump_card2_Q22.bin (event-specific), serve_full_Q22.log,
+fr_{584,590}.log+cperr (#13), fr_{594,600}.log (#12), dmesg_tail.txt,
+boot_RESTORE26M.out, restore26m_cert.out, f8ref_RESTORE26M.out,
+q17_RESTORE26M.out; host /root/build/{bs64e4m3_battery,bs64e5m2_battery,
+bs64e4m3gmu7_battery,bs64e4m3g7ns_battery,bs64e4m3g7npc_battery,
+bs64e4m3g9ns_battery,restore26m_cert}.sh,
+serve_bs64_e4m3_{gmu7,g7ns,g9ns,g7npc}.sh,
+repro_bootBS64_E4M3_{GMU7,G7NS,G9NS,G7NPC}.sh (gmu7/g7ns/g9ns exercised;
+g7npc standby-never-fired); repo crashfix-v58/ same script set.
+
 
 
