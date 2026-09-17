@@ -2638,5 +2638,63 @@ cleanhost_arm.sh, sustain_wait.sh, sustain_wait_c.sh};
 repo crashfix-v58/image-exp-v1.2.11/{README.md,Dockerfile,
 boot_exp2618.sh,repro_bootP2EG.sh,p2eg_mk.sh}.
 
+§24 J (Sep 17) — BENCH3 × BLOCK-SIZE 64 (user directive: "rerun Bench3,
+   3 best candidates, --block-size 64; pick candidates validating fast
+   and stable"). DISCOVERY first: every certified band in the record was
+   measured at --block-size 512 (standing serve scripts since the v5x
+   lineage) => the directive is a 512->64 single-variable experiment
+   (8x smaller blocks, 8x more block-table entries per request).
+   Candidates = the three fastest VALIDATED dtypes on the 26.14 stack,
+   each its own single-variable lane (serve variant = one sed line,
+   verified single-line delta): e5m2 (standing, solo 50.4), e4m3
+   (54.4, §18 idle-green), tq4nc (55.5, §17 idle-green; first-ever
+   bench3 on tq4nc — Q18 died at 23 min before bench3 could run).
+   Harness: bs64_mk.sh / bs64_run.sh / bs64_screen.sh (= nv_screen
+   protocol + bench3 WARM cell added; f8ref gate per-dtype cert;
+   15-min boosted settle before gates per the §24-I6 f8ref-WARM rule;
+   q17 clock-guard retained). Watchdog paused for the 3 experiment
+   boots, restored after.
+   RESULTS (all f8ref EXACT + deterministic — block size is
+   NUMERICS-INVARIANT 3/3, the feared kernel-tiling near-tie flips did
+   NOT occur; engine resets static 2 through all lanes):
+   - e5m2 bs64: solo 49.7/50.4, conc4 147.4, bench3 cold
+     403.9/361.4/346.8 warm 397.4/364.2/348.2, conc8 246.5/363.1,
+     acc 0.744/0.745 == §19 bs512 band on EVERY cell (16k 361-364
+     inside the documented 361-492 noise cell) => PARITY, perf-neutral.
+   - e4m3 bs64: solo 54.5/54.6 (== Q19's 54.4), conc4 154.2 = NEW
+     HIGH-WATER (bs512 best 148.7 R1), bench3 cold 447.4/375.7/360.6
+     warm 462.5/377.2/359.1, conc8 368.3/371.6, acc 0.739-0.741 —
+     every cell in/above the Q19 idle band (65k 359-361 >= best bs512
+     sample 358.5) => FASTEST CLEAN LANE EVER MEASURED.
+   - tq4nc bs64: solo 55.5/55.7 (== Q18's 55.5), conc4 169.3 = new
+     overall high-water, conc8 317-323, acc 0.745-0.746, 2k 375-376 —
+     BUT long-context pathology: 16k 402.1 cold / 250.3 warm
+     (erratic), 65k 175.7/153.6 (-56% vs e5m2/e4m3 ~347-360).
+     Mechanism (reading): TQ MQ-decode walks the KV block table; at
+     bs64 a 73.9k ctx = 1155 entries vs 145 at bs512 => 8x metadata
+     walk per decode step. tq4nc@bs64 = short-ctx specialist only.
+   VERDICT (fast + stable pick): e4m3 bs64 — the only candidate that
+   is both faster than standing AND clean at every bench3 depth.
+   tq4nc disqualified for general serving by the 65k cliff (on top of
+   its standing §17 BLOCK); e5m2 bs64 = exact parity => no reason to
+   move the standing lane (unchanged, bs512). CAVEAT: screens only,
+   no batteries — §14 exposure is dtype/knob-independent (11/11) and
+   resets stayed static; any bs64 adoption decision inherits the
+   watchdog posture regardless.
+   Standing lane restored (RESTORE26BS64, bs512 verified in container
+   config) + warm-certified: f8ref EXACT cb8c/6833/05c8, solo 50.2
+   (conc4 44.0 first-pass = documented parked-clock artifact), guard
+   fires 0. lane-watchdog RE-ARMED (flag removed, unit active, cycle
+   observed). Session host reboots: 0.
+§24 J evidence: host lce1/{bs64_run_e5m2,bs64_run_e4m3,bs64_run_tq4nc,
+boot_BS64_E5M2,boot_BS64_E4M3,boot_BS64_TQ4NC,boot_RESTORE26BS64}.out,
+f8ref_bs64_{BS64_E5M2,BS64_E4M3,BS64_TQ4NC}.out,
+bs64_{BS64_E5M2,BS64_E4M3,BS64_TQ4NC}_q17_{cold,warm}.out,
+bench3_BS64{BS64_E5M2,BS64_E4M3,BS64_TQ4NC}_{cold,warm}.out,
+bs64_*_clk_*.txt, f8ref_nv_RESTORE26BS64W.out; host /root/build/
+{bs64_mk.sh,bs64_run.sh,bs64_screen.sh,serve_bs64_{e5m2,e4m3,tq4nc}.sh,
+repro_bootBS64_{E5M2,E4M3,TQ4NC}.sh}; repo crashfix-v58/
+{bs64_mk.sh,bs64_run.sh,bs64_screen.sh}.
+
 
 
