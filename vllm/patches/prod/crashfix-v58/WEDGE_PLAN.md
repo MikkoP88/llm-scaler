@@ -2766,5 +2766,58 @@ serve_bs64_e4m3_{gmu7,g7ns,g9ns,g7npc}.sh,
 repro_bootBS64_E4M3_{GMU7,G7NS,G9NS,G7NPC}.sh (gmu7/g7ns/g9ns exercised;
 g7npc standby-never-fired); repo crashfix-v58/ same script set.
 
+§24 L — GMU LADDER COMPLETION + FIRST CRASH-AVOIDANCE IMAGE (user-directed
+   arms 7-8): threshold pinned to (0.80, 0.85]; v1.2.12 built+verified.
+   ARM 7 G85NS = crash-free lineage (e4m3 bs64, async OFF) gmu 0.85,
+   host rebooted 04:11:50 (baseline 0), 30 rounds: EVENT #16 TTF
+   3h59m21s — LONGEST crash TTF ever (armed 04:19:42, first reset b1
+   ccs guc22 08:19:03; watcher fired health-dead 000000 + reset 0->1
+   08:19:53; card2 dump 'LR job cleanup, guc_id=32', 16th identical).
+   Rounds 1-20 clean (~9min each); threshold sits below 0.85.
+   ARM 8 G8NS = same lineage gmu 0.8, host rebooted 09:20:01 (baseline
+   0), 30 rounds LONG: 30/30 CLEAN SUSTAIN_COMPLETE_NO_WEDGE 4h21m44s
+   (armed 09:27:32 -> 13:49:16), engine resets 0, fence-hits 0/round
+   — LONGEST CRASH-FREE BATTERY EVER RUN (vs Q31 4h25m soak n=1;
+   this is a 30-round double-length F-bar). Post-battery on live warm
+   lane: f8ref EXACT e4m3 cert set 52f598e7d38a/6b1c26403bfc/
+   95e24129958b (deterministic); q17 solo 54.8 (fastest solo EVER
+   recorded, vs 54.6 async-ON) / conc4 153.7 aggregate / guard 0.
+   Crash-avoidance at ZERO cost.
+   FINAL LADDER (16 events + 3 clean batteries): async ON crashes
+   12m18s-1h13m at gmu {0.7,0.9} both dtypes; async OFF: gmu 0.9
+   crash 36m58s (#15), gmu 0.85 crash 3h59m21s (#16), gmu 0.8 CLEAN
+   30/30 4h21m, gmu 0.7 CLEAN 18/18 2h36m. Safe set = async OFF +
+   gmu <= 0.8. TTF monotone in gmu at async OFF (37m -> 4h0m crash ->
+   clean) — consistent w/ §24-K mechanism reading (submission-rate +
+   allocator-layout pressure; same phenomenon as §21 NEO deficit).
+   IMAGE llm-scaler-exp:v1.2.12 (user directive fired on G8NS clean):
+   thin layer FROM v1.2.10 — the STANDING 26.14 tree the battery
+   validated, NOT v1.2.11 (NEO 26.18 decode tax, §21) — baking ONLY
+   the validated serve config (e4m3 + bs64 + gmu 0.8 + async-scheduling
+   REMOVED; pc ON, mnbt 8192 unchanged). Build guards assert
+   async-count=0 + all three knobs; pycache purge + marker
+   /root/.llm_scaler_exp_v1212_baked. In-image verify: marker present,
+   serve_user.sh 996B executable, async_count 0, no v1211 marker
+   (base provenance). Runtime surface identical to the battery's
+   container (boot flow still docker-cps patchers+serve at boot; the
+   bake removes only the serve-script copy dependency). No docker
+   registry on host — 'push' = git push of build artifacts.
+   Standby arm 9 G85NS+mnbt4096 (vs #16 single-delta mnbt halved)
+   built+shipped, never fired (arm 8 went clean).
+   Post-battery: standing lane restore + re-cert + watchdog re-arm
+   (restore26n_cert.sh); promotion of v1.2.12 to standing = user
+   decision (2 clean batteries at gmu<=0.8, n=1 each at 0.7/0.8).
+§24 L evidence: host lce1/{bs64e4m3g85ns_battery,bs64e4m3g8ns_battery}.out,
+boot_{BS64E4M3G85NSB,BS64E4M3G8NSB}.out (+ G85NS _e16 archive),
+sustain_{BS64E4M3G85NSB,BS64E4M3G8NSB}.out (+ _e16 archive),
+{bs64e4m3g85nsb,bs64e4m3g8nsb}_watch.out (+ _e16 archive),
+f8ref_G8NS.out, q17_G8NS_postbattery.out, Q22_crash/ (event #16 set),
+boot_RESTORE26N.out, restore26n_cert.out; host /root/build/
+{bs64e4m3g85ns_battery,bs64e4m3g8ns_battery,bs64e4m3g85nsmb4k_battery,
+restore26n_cert}.sh, serve_bs64_e4m3_{g85ns,g8ns,g85ns_mb4k}.sh,
+repro_bootBS64_E4M3_{G85NS,G8NS,G85NS_MB4K}.sh, image-exp-v1.2.12/
+(Dockerfile+serve_user.sh); repo crashfix-v58/ same set +
+image-exp-v1.2.12/.
+
 
 
