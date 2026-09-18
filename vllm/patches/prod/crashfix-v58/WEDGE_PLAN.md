@@ -2856,5 +2856,56 @@ bench3_BS64{G8NSB3,G85NSMB4KB3}_{cold,warm}.out, restore26p_chain.out;
 host /root/build/{g8ns_mb4k_screen_run,restore26p_cert}.sh; repo
 crashfix-v58/g8ns_mb4k_screen_run.sh.
 
+§24 N (Sep 18) — bench3 MTP=3 vs MTP=4 on the crash-free config.
+   User directive: rerun lane A bench3 with MTP=3. Single delta vs
+   §24 M lane A: --speculative-config num_speculative_tokens 4 -> 3
+   (serve_bs64_e4m3_g8ns_mtp3.sh, boot repro_bootBS64_E4M3_G8NS_MTP3.sh;
+   runtime census confirmed 'num_speculative_tokens': 3 + gmu 0.8 +
+   bs64 + e4m3; runner g8ns_mtp3_screen_run.sh, I6 settle, 16:18:39 ->
+   16:37:59, resets 0).
+   f8ref: distinct=OK, hashes 52f598e7d38a/6b1c26403bfc/da6c67dd1575
+   — probes 1-2 EXACT e4m3 set, probe 3 DIFFERS (95e2... -> da6c...):
+   MTP depth changes verify batch shape -> fp16/fp8 numerics -> a token
+   divergence in one long-gen probe (expected class; spec-decode is
+   lossless only w.r.t. its own depth's numerics). compl_tok ctx2k 152
+   vs 181 confirms divergent generation. PARTIAL (2/3), recorded not
+   gated.
+   PERF vs §24 M lane A (MTP4): q17 warm solo 53.2 (-2.4%) / conc4
+   158.5 (+3.5%). bench3 cold 2k/16k/65k/conc8 = 478.4 (+1.2%) /
+   350.6 (-7.2%) / 284.6 (-21.1%) / 243.8 (-34.3% cold-start outlier,
+   wall 8.4s vs 5.5s); warm 497.6 (+6.1%) / 353.0 (-6.1%) / 285.8
+   (-6.7%) / 357.6 (-3.9%). Acceptance RISES 0.739->0.813 / 0.741->
+   0.815 (shallower draft = easier verify) but emitted-token budget
+   shrinks (2193 vs 2584 per window) — net decode LOSES on every
+   long-ctx and concurrency cell; only ctx2k-warm and conc4 win.
+   VERDICT: MTP=4 (standing depth) dominates aggregate throughput;
+   MTP=3 CLOSED for perf. No crash-battery spend (submission-rate
+   pressure unchanged-or-lower w/ 3-deep verify; risk profile at
+   gmu<=0.8 not retested and moot).
+   Post-screen: standing lane restore RESTORE26Q — EVENT #17 on the
+   async-ON standing config DURING re-cert: primary reset 16:48:00
+   da:00.0 ccs guc_id=32 + devcoredump (17th LR-job-cleanup class;
+   serve start ~16:42 -> TTF ~6min under boosted settle load — fastest
+   standing-lane crash recorded, async-ON band 12m18s-1h13m now
+   extended at the low end), bcs cascade 16:57:59 (b1 guc26 + da
+   guc36); cert f8ref NONDET/NOT_EXACT + q17 connection-refused
+   (crash hit mid-cert). LANE WATCHDOG CONTAINED AS DESIGNED: capture
+   then auto-relaunch — container back Up ~17:03, health 200 by
+   17:09:41, no further resets; re-cert re-run restore26q_cert2. The
+   standing lane has now crashed in-service TWICE since §24-L (events
+   #16-class config aside, #17 here) while the crash-free config holds
+   2 clean batteries + §24 M bench3 parity — promotion of v1.2.12 is
+   now urgent-user-decision.
+   Re-cert (restore26q_cert2) CLEAN 17:25:04: F8REF_EXACT (e5m2 set),
+   q17 solo 50.4 / conc4 44.7 (parked-clock class), watchdog active,
+   resets stable at 3 (no new).
+§24 N evidence: host lce1/{g8ns_mtp3_screen,boot_G8NSMTP3B3}.out,
+f8ref_bs64_G8NSMTP3B3.out, bs64_G8NSMTP3B3_q17_{cold,warm}.out,
+bench3_BS64G8NSMTP3B3_{cold,warm}.out, restore26q_chain.out,
+restore26q_cert2.out (event #17 + re-cert); host
+/root/build/{serve_bs64_e4m3_g8ns_mtp3.sh,repro_bootBS64_E4M3_G8NS_
+MTP3.sh,g8ns_mtp3_screen_run.sh,restore26q_cert.sh}; repo
+crashfix-v58/g8ns_mtp3_screen_run.sh.
+
 
 
