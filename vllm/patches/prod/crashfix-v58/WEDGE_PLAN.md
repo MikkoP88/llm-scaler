@@ -2819,5 +2819,42 @@ repro_bootBS64_E4M3_{G85NS,G8NS,G85NS_MB4K}.sh, image-exp-v1.2.12/
 (Dockerfile+serve_user.sh); repo crashfix-v58/ same set +
 image-exp-v1.2.12/.
 
+§24 M (Sep 18) — bench3 A/B: crash-free config vs arm-9 standby
+   (mnbt 4096 + gmu 0.85). User directive: two bench3 screens, one on
+   the crash-free config, one on e4m3 bs64 + mnbt 4096 + gmu 0.85.
+   Runner g8ns_mb4k_screen_run.sh <A|B>: per lane — watchdog pause,
+   teardown, boot variant, HEALTH_OK gate, knob census, 15-min boosted
+   warm-settle (I6 f8ref-WARM rule), then bs64_screen (f8ref e4m3 cert
+   52f598e7d38a + q17 cold/warm + bench3 cold/warm + census).
+   LANE A G8NSB3 = crash-free §24-L config (e4m3 bs64 gmu 0.8 no-async
+   mnbt 8192), 15:06:51: f8ref EXACT cert set; q17 warm solo 54.5 /
+   conc4 153.2; bench3 cold 2k/16k/65k/conc8 = 472.7/377.7/360.8/370.8
+   acc 0.739, warm 468.9/375.9/306.2/372.1 acc 0.741; resets 0.
+   LANE B G85NSMB4KB3 = arm-9 standby config (e4m3 bs64 gmu 0.85
+   no-async mnbt 4096), 15:29:14: f8ref EXACT cert set; q17 warm solo
+   54.3 / conc4 154.0; bench3 cold 469.1/377.1/360.0/371.8 acc 0.739,
+   warm 463.3/379.2/301.0/372.7 acc 0.743; resets 0.
+   VERDICT: lanes INDISTINGUISHABLE — deltas <= 1% on every cell
+   (2k -0.8%, 16k -0.2/+0.9%, 65k -0.2/-1.7%, conc8 +0.3/+0.2%, acc
+   +/-.002-.004); f8ref EXACT both (numerics invariant to gmu/mnbt).
+   mnbt 4096 + gmu 0.85 buys ZERO perf over the crash-free gmu 0.8 /
+   mnbt 8192 — while gmu 0.85 sits in the crash band (G85NS event #16
+   TTF 3h59m21s; mnbt-4096 crash behavior never battery-tested and now
+   moot). CRASH-FREE CONFIG DOMINATES; arm-9 standby config CLOSED
+   (no perf case). Both lanes' 65k-warm cell dips (~301-306 vs cold
+   ~360) — same shape both lanes = known single-shot warm-cell noise
+   class, not config-dependent.
+   Post-screens: standing lane restore RESTORE26P + re-cert
+   (restore26p_cert.sh clone) + watchdog re-arm — CLEAN 16:10:00:
+   f8ref DETERMINISTIC + EXACT (e5m2 set cb8c...), q17 solo 50.5 /
+   conc4 43.0 (parked-clock conc4 artifact class, documented),
+   lane-watchdog active, engine_resets 0.
+§24 M evidence: host lce1/{g8ns_mb4k_screen_A,g8ns_mb4k_screen_B}.out,
+boot_{G8NSB3,G85NSMB4KB3}.out, f8ref_bs64_{G8NSB3,G85NSMB4KB3}.out,
+bs64_{G8NSB3,G85NSMB4KB3}_q17_{cold,warm}.out,
+bench3_BS64{G8NSB3,G85NSMB4KB3}_{cold,warm}.out, restore26p_chain.out;
+host /root/build/{g8ns_mb4k_screen_run,restore26p_cert}.sh; repo
+crashfix-v58/g8ns_mb4k_screen_run.sh.
+
 
 
