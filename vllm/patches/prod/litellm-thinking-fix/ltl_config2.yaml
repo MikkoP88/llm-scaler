@@ -1,0 +1,121 @@
+model_list:
+  # ---- capture variants (point at local capture server) ----
+  # A — user's EXACT .bac-latest shape: strings under
+  #     default_params.extra_body.chat_template_kwargs
+  - model_name: coder-string
+    litellm_params:
+      model: openai/qwen3.8-27b-fp8
+      api_base: http://127.0.0.1:8901/v1
+      api_key: sk-dummy
+      request_timeout: 30
+      default_params:
+        temperature: 0.4
+        repetition_penalty: 1.15
+        extra_body:
+          chat_template_kwargs:
+            enable_thinking: "True"
+            preserve_thinking: "True"
+            reasoning_effort: "xhigh"
+
+  - model_name: nonthinking-string
+    litellm_params:
+      model: openai/qwen3.8-27b-fp8
+      api_base: http://127.0.0.1:8901/v1
+      api_key: sk-dummy
+      request_timeout: 30
+      default_params:
+        temperature: 0.7
+        extra_body:
+          chat_template_kwargs:
+            enable_thinking: "False"
+            preserve_thinking: "False"
+
+  # B — same shape, REAL booleans
+  - model_name: coder-bool
+    litellm_params:
+      model: openai/qwen3.8-27b-fp8
+      api_base: http://127.0.0.1:8901/v1
+      api_key: sk-dummy
+      request_timeout: 30
+      default_params:
+        temperature: 0.4
+        repetition_penalty: 1.15
+        extra_body:
+          chat_template_kwargs:
+            enable_thinking: true
+            preserve_thinking: true
+            reasoning_effort: "xhigh"
+
+  # C — docs pattern: extra_body directly under litellm_params
+  - model_name: coder-litellm-extra-body
+    litellm_params:
+      model: openai/qwen3.8-27b-fp8
+      api_base: http://127.0.0.1:8901/v1
+      api_key: sk-dummy
+      request_timeout: 30
+      temperature: 0.4
+      extra_body:
+        chat_template_kwargs:
+          enable_thinking: true
+          preserve_thinking: true
+          reasoning_effort: "xhigh"
+
+  # ---- end-to-end variants (real vLLM standing lane on ainode01) ----
+  - model_name: e2e-coder-bool
+    litellm_params:
+      model: openai/qwen3.8-27b-fp8
+      api_base: http://10.20.3.65:8000/v1
+      api_key: sk-dummy
+      request_timeout: 240
+      default_params:
+        temperature: 0.4
+        extra_body:
+          chat_template_kwargs:
+            enable_thinking: true
+            preserve_thinking: true
+            reasoning_effort: "xhigh"
+
+  - model_name: e2e-nonthinking-bool
+    litellm_params:
+      model: openai/qwen3.8-27b-fp8
+      api_base: http://10.20.3.65:8000/v1
+      api_key: sk-dummy
+      request_timeout: 240
+      default_params:
+        temperature: 0.7
+        extra_body:
+          chat_template_kwargs:
+            enable_thinking: false
+            preserve_thinking: false
+
+  # E — e2e with extra_body DIRECTLY under litellm_params (docs pattern)
+  - model_name: e2e-nonthinking-leb
+    litellm_params:
+      model: openai/qwen3.8-27b-fp8
+      api_base: http://10.20.3.65:8000/v1
+      api_key: sk-dummy
+      request_timeout: 240
+      temperature: 0.7
+      extra_body:
+        chat_template_kwargs:
+          enable_thinking: false
+          preserve_thinking: false
+
+  - model_name: e2e-coder-leb
+    litellm_params:
+      model: openai/qwen3.8-27b-fp8
+      api_base: http://10.20.3.65:8000/v1
+      api_key: sk-dummy
+      request_timeout: 240
+      temperature: 0.4
+      extra_body:
+        chat_template_kwargs:
+          enable_thinking: true
+          preserve_thinking: true
+          reasoning_effort: "xhigh"
+
+litellm_settings:
+  drop_params: true
+
+general_settings:
+  master_key: sk-dummy
