@@ -2964,5 +2964,41 @@ serve_bs64_e4m3_g9ns_mb4k_npc.sh,repro_bootBS64_E4M3_{G9NS_MB4K,
 G9NS_MB4K_NPC}.sh,bs64e4m3g9nsmb4k_battery.sh,bs64e4m3g9nsmb4knpc_
 battery.sh,restore26r_cert.sh}.
 
+§24 P (Sep 19) — bench3 PC-REMOVAL at the clean mnbt-4096 config.
+   User directive: bench3 on e4m3 bs64 + mnbt 4096 + gmu 0.85 with
+   --enable-prefix-caching REMOVED. Single delta vs §24 M lane B
+   (serve_bs64_e4m3_g85ns_mb4k_npc.sh; census pc_count=0 +
+   async_count=0 + gmu 0.85 + mnbt 4096 + e4m3; runtime args confirm
+   enable_prefix_caching absent). Runner g85ns_mb4k_npc_screen_run.sh
+   (I6 settle), 06:14:48 -> 06:35:24, resets stable 4 (no new).
+   f8ref EXACT cert set {52f598e7d38a,6b1c26403bfc,95e24129958b} —
+   PC removal is numerics-transparent (all 3 probes match PC-ON set).
+   PERF vs §24 M lane B (same cfg + PC ON): q17 warm solo 55.6 —
+   FASTEST SOLO EVER (+2.4% vs 54.3; new record) / conc4 155.7
+   (+1.1%); bench3 cold 475.6/387.1/361.4/375.1 acc 0.741 (+1.4/
+   +2.7/+0.4/+0.9%), warm 474.6/388.5/362.5/376.1 acc 0.742 (+2.4/
+   +2.5/+20.4/+0.9%). The 65k-warm dip class VANISHES (362.5 vs
+   301.0 PC-ON; warm == cold) — that dip was PC hit-path-state
+   dependent, now attributed. COST of PC removal = TTFT on cache-
+   eligible requests: warm ctx65k TTFT 4.60s (PC ON, prefix hit) ->
+   56.93s (PC OFF, full re-prefill), 12.4x; ctx16k 3.45s -> 12.64s.
+   Decode throughput never regresses.
+   VERDICT: PC OFF at the crash-free config trades prefix-hit TTFT
+   for +1-3% decode and the 65k-warm consistency; crash-side PC
+   removal at 0.9 extended TTF 6x (#19 vs #18) but 0.85 is already
+   clean PC-ON — PC OFF here is a workload-shape decision (shared-
+   prefix workloads want PC ON; cache-hostile ones lose nothing).
+   Post-screen: standing lane restore RESTORE26S + re-cert + watchdog
+   re-arm — CLEAN 06:54:54: F8REF_EXACT (e5m2 set), q17 solo 50.0 /
+   conc4 34.2 (parked-clock class), watchdog active, health 200,
+   resets stable 4 (no new).
+§24 P evidence: host lce1/{g85ns_mb4k_npc_screen,boot_G85NSMB4KNPCB3}.
+out, f8ref_bs64_G85NSMB4KNPCB3.out, bs64_G85NSMB4KNPCB3_q17_{cold,
+warm}.out, bench3_BS64G85NSMB4KNPCB3_{cold,warm}.out,
+restore26s_chain.out; host /root/build/{serve_bs64_e4m3_g85ns_mb4k_
+npc.sh,repro_bootBS64_E4M3_G85NS_MB4K_NPC.sh,g85ns_mb4k_npc_screen_
+run.sh,restore26s_cert.sh}; repo crashfix-v58/g85ns_mb4k_npc_screen_
+run.sh.
+
 
 
