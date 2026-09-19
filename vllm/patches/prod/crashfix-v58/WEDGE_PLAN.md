@@ -3221,5 +3221,50 @@ src/dst tables, drains both workers); host /root/build/{patch_v24pc2.
 py,repro_bootBS64_E4M3_G85NS_MB4K_COH2.sh,coh2_screen_run.sh,coh2_
 sanity.py,novel_probe.py}; repo crashfix-v58 same five.
 
+§24 U (Sep 19) — PROMOTION EXECUTED (user directive): llm-scaler-exp:
+   v1.2.12 IS NOW THE STANDING PRODUCTION LANE; watchdog relaunch
+   lineage re-pointed Q21b -> V1212; crash-band config retired.
+   Pre-flight recon: v1.2.12 tree = patches NOT baked (f15b/arstage
+   markers 0 -> applied at boot), .pyc purge confirmed (0 pyc in
+   vllm tree), marker .llm_scaler_exp_v1212_baked + baked /root/
+   serve_user.sh = the §24 K crash-free set. lane_watchdog.sh
+   relaunch target was HARDCODED repro_bootQ21b.sh — re-pointing is
+   order-critical (arm-before-repoint would resurrect the crash-band
+   lane on trigger).
+   Sequence (promote1212_run.sh, 12:03:20-12:21:10): pause watchdog
+   -> image verify (sha256:0d9fb6e8a7ea..., baked config gates all
+   pass) -> teardown standing Q21b lane (v1.2.10, 12:03:22) -> boot
+   repro_bootV1212.sh (NEW standing boot: docker env byte-identical
+   to Q21b; image v1.2.12; f15b/arstage/v58_p1 applied at boot;
+   baked serve asserted pre-launch: gmu0.8 + bs64 + e4m3 + pc-ON +
+   async_count=0; HEALTH_OK ~140s; live_resets=4 unchanged) ->
+   promote1212_cert.sh (15-min boosted settle, health 200) ->
+   f8ref PROMOTE1212 hashes=['52f598e7d38a','6b1c26403bfc',
+   '95e24129958b'] = certified e4m3 bs64 set EXACT, deterministic ->
+   q17 solo 54.7 / conc4 36.5 (FIRST concurrent cell of that shape
+   post-boot = known q17 cold band: G8NSB3-cold 36.7; warm re-run
+   q17_PROMOTE1212_warm2: solo 53.9 / conc4 152.5 agg = warm band
+   149.8-154.2 -> IN BAND) -> guard fires 0, engine resets 4 (no
+   new) -> lane_watchdog.sh re-pointed via write+mv+systemctl
+   restart (3 refs, never edit a running bash script in place) ->
+   watchdog ACTIVE + ARMED, log "watchdog start pid=350946 paused=no
+   lineage=repro_bootV1212.sh" -> pause flag rm'd -> final: lsv-test
+   llm-scaler-exp:v1.2.12 Up, health 200. PROMOTE1212_DONE 12:21:10.
+   STANDING CONFIG NOW (the §24 K crash-avoidance set, battery 30/30
+   CLEAN 4h21m44s + §24 M parity <=1%): image v1.2.12, e4m3 + bs64
+   + gmu 0.8 + async-scheduling OFF + prefix-caching ON + mnbt 8192,
+   MTP4, FULL_DECODE_ONLY graphs, f15b/arstage/v58p1 patchers.
+   ROLLBACK PATH (if ever needed): v1.2.10 image remains on host;
+   repro_bootQ21b.sh + restore26t_cert.sh + sed the watchdog lineage
+   back. NOTE: watchdog STAYS REQUIRED — GSD-12919 upstream race is
+   unfixed; the config avoids the trigger envelope (async OFF + gmu
+   <= 0.8) but §14-class capture-on-trigger + auto-relaunch remain
+   the containment floor.
+§24 U evidence: host lce1/{promote1212_run,boot_PROMOTE1212,pcert_
+   PROMOTE1212,f8ref_PROMOTE1212,q17_PROMOTE1212,q17_PROMOTE1212_
+   warm2}.out, lane_watchdog.log (lineage line); host /root/build/
+   {repro_bootV1212.sh,promote1212_run.sh,promote1212_cert.sh};
+   repo crashfix-v58 same three.
+
 
 
