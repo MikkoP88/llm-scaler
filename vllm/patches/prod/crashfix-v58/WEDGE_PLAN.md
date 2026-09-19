@@ -2907,5 +2907,62 @@ restore26q_cert2.out (event #17 + re-cert); host
 MTP3.sh,g8ns_mtp3_screen_run.sh,restore26q_cert.sh}; repo
 crashfix-v58/g8ns_mtp3_screen_run.sh.
 
+§24 O (Sep 18-19) — mnbt-4096 threshold sweep: 3 batteries, events
+   #18/#19, one clean — THRESHOLD IS JOINT IN (gmu, mnbt): safe gmu
+   band WIDENS to <= 0.85 at mnbt 4096; prefix caching is a TTF
+   (not threshold) factor at gmu 0.9.
+   ARM 1 G9NS_MB4K (e4m3 bs64 no-async gmu 0.9 mnbt 4096 pc ON;
+   serve_bs64_e4m3_g9ns_mb4k.sh), armed 17:39:45 (no reboot; base
+   resets 3 from #17): EVENT #18 TTF 26m21s — primary 18:06:06
+   b1:00.0 ccs guc_id=22 'LR job cleanup' (18th identical), both-
+   card cascade 18:06:47 (b1 ccs22 + bcs26, da ccs32 + bcs36).
+   Rounds 1-4 clean. vs G9NS (mnbt 8192) 36m58s: halving mnbt does
+   NOT rescue gmu 0.9 (slightly worse, in noise).
+   ARM 2 G85NS_MB4K (gmu 0.85 mnbt 4096 pc ON), host REBOOTED
+   18:12:16 (baseline 0) per user directive, armed 18:18:27:
+   30/30 CLEAN SUSTAIN_COMPLETE_NO_WEDGE 4h21m21s (-> 22:39:48),
+   resets 0 — ties G8NS's 4h21m44s. PASSES the G85NS mnbt-8192
+   reference crash point (3h59m21s, event #16) by 22+ min and
+   completes. => mnbt 4096 SHIFTS THRESHOLD: at gmu 0.85 the same
+   config with mnbt 8192 crashed (#16) but with 4096 is clean; at
+   gmu 0.9 mnbt 4096 still crashes (#18). Safe set now: async OFF +
+   (gmu <= 0.8 @ mnbt 8192) OR (gmu <= 0.85 @ mnbt 4096). Mechanism
+   consistent w/ §24-K reading: smaller per-step batch budget =
+   lower submission-rate/allocator pressure; KV-pool size + dispatch
+   pressure are the joint variables.
+   ARM 3 G9NS_MB4K_NPC (gmu 0.9 mnbt 4096, --enable-prefix-caching
+   REMOVED; serve_bs64_e4m3_g9ns_mb4k_npc.sh), user directive both-
+   branch (reboot only if #18-branch... arm 2 went clean -> no
+   reboot), first boot attempt 22:42:40 died CONTAINER DIED with
+   ZERO engine resets (§24-E transient boot-death class, retry OK),
+   armed 22:57:23: EVENT #19 TTF 2h42m18s — primary 01:39:41
+   da:00.0 ccs guc_id=32 'LR job cleanup' (19th identical), cascade
+   01:40:32 (b1 ccs22 + bcs26, da bcs36). Rounds 1-19 clean.
+   => removing prefix caching at gmu 0.9 extends TTF 26m21s ->
+   2h42m18s (~6.2x) but does NOT prevent the hang: PC is a strong
+   TTF factor (bs64-block hash-table dedup hot path adds pressure),
+   gmu remains the threshold variable. No config reaches crash-free
+   at 0.9.
+   FINAL §24 LADDER (async OFF unless noted): gmu 0.9 crashes at
+   every mnbt/pc combo tried (#15 36m58s, #18 26m21s, #19 2h42m18s);
+   gmu 0.85: crash @ mnbt 8192 (#16 3h59m21s), CLEAN @ mnbt 4096
+   (30/30); gmu 0.8: CLEAN (30/30); gmu 0.7: CLEAN (18/18).
+   Async ON crashes at all gmu (12m-1h13m). Crash-free surface:
+   {0.7, 0.8 @ mnbt 8192} U {0.85 @ mnbt 4096}, all at parity perf
+   (§24 M: mnbt4096+gmu0.85 indistinguishable from gmu0.8/8192).
+   Post-battery: standing lane restore RESTORE26R + re-cert + watchdog
+   re-arm — CLEAN 02:04:39: F8REF_EXACT (e5m2 set cb8c/6833/05c8),
+   q17 solo 50.4 / conc4 36.8 (parked-clock class), watchdog active,
+   health 200, resets stable at 4 (event #19 set, no new).
+§24 O evidence: host lce1/{bs64e4m3g9nsmb4k_battery,
+bs64e4m3g85nsmb4k_battery,bs64e4m3g9nsmb4knpc_battery}.out,
+boot_{BS64E4M3G9NSMB4KB,BS64E4M3G85NSMB4KB,BS64E4M3G9NSMB4KNPCB}.out
+(+ _e18/_e19 archives), sustain_* (+ _e18/_e19 archives),
+{bs64e4m3g9nsmb4kb,bs64e4m3g9nsmb4knpcb}_watch.out (+ _e18/_e19),
+restore26r_chain.out; host /root/build/{serve_bs64_e4m3_g9ns_mb4k.sh,
+serve_bs64_e4m3_g9ns_mb4k_npc.sh,repro_bootBS64_E4M3_{G9NS_MB4K,
+G9NS_MB4K_NPC}.sh,bs64e4m3g9nsmb4k_battery.sh,bs64e4m3g9nsmb4knpc_
+battery.sh,restore26r_cert.sh}.
+
 
 
