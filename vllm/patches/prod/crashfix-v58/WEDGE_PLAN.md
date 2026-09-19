@@ -3000,5 +3000,90 @@ npc.sh,repro_bootBS64_E4M3_G85NS_MB4K_NPC.sh,g85ns_mb4k_npc_screen_
 run.sh,restore26s_cert.sh}; repo crashfix-v58/g85ns_mb4k_npc_screen_
 run.sh.
 
+§24 Q (Sep 19) — COPY-ON-HIT prototype (patch_v24pc) + bench3x
+   (+ctx128k): 128k dip answer = SATURATES to zero; COH v1 REJECTED
+   (allocation-path unsafe near pool capacity).
+   User directive: prototype fix #1 (copy-on-hit, boot-patcher style)
+   and screen on extended bench3 with a ctx128k cell.
+   Inspection (vllm 0.21.1.dev0+gad7125a43): hit path = kv_cache_
+   manager.allocate_slots -> coordinator.allocate_new_computed_blocks
+   -> SingleTypeKVCacheManager.allocate_new_computed_blocks (single_
+   type_kv_cache_manager.py:169; FullAttentionManager :446 inherits
+   it). Landmines mapped: (a) block_pool.touch() INCREMENTS ref_cnt
+   (:423) — delegating fresh (get_new_blocks) blocks through the base
+   attach would double-ref and leak them at free(); (b) cache_blocks
+   hashes only [num_cached_block, num_full) so anonymous copies are
+   never re-registered (safe); (c) get_new_blocks = free_block_queue.
+   popleft_n + _maybe_evict_cached_block — pops can SILENTLY DESTROY
+   hash entries of cached blocks sitting in the LRU front (the one
+   that fired).
+   patch_v24pc.py: installs vllm/_v24pc.py; P1 = FullAttentionManager
+   .allocate_new_computed_blocks override (n >= VLLM_COH_MIN_BLOCKS
+   (16), no external tokens, free >= n+64, dst/src id-overlap guard ->
+   fresh = get_new_blocks(n), replicate attach sans touch, queue
+   (dst,src) pairs); P2 = execute_model entry drain (after f15b mark):
+   bitwise D2D t[:,dst]=t[:,src] on shape-signature full-attn tensors
+   (ndim==4 && shape[0]==2; mamba state tensors never match — hybrid
+   mamba slots are 1024-tok granularity, v52f PRE-COPY lines). Env
+   kill VLLM_COH=0; --check (read-only; on live lane: anchors=1/1,
+   module compiles) and --revert. Boot variant repro_bootBS64_E4M3_
+   G85NS_MB4K_COH.sh applies it after patch_v58_p1 (grep verify 1/2,
+   set -e fail-fast; env VLLM_COH=1 VLLM_COH_MIN_BLOCKS=16).
+   bench3x = dt_bench3 + ctx128k cell (long_prompt(128000) -> 145,514
+   actual tok; max-model-len 262144 headroom OK) = dt_bench3x.py +
+   bs64_screen_x.sh; runner coh_ab_screen_run.sh = two lanes on the
+   §24 M lane B config (e4m3 bs64 gmu0.85 mnbt4096 no-async MTP4
+   PC-ON): CTRL (no COH) then COH.
+   CTRL lane G85NSMB4KX (07:34-07:55): f8ref EXACT {52f598e7d38a,
+   6b1c26403bfc,95e24129958b}; q17 54.2/54.6 solo; bench3x COLD
+   459.1/375.0/361.4/276.5 conc8 367.7 acc 0.729, WARM 467.3/375.4/
+   298.8/278.5 conc8 369.6 acc 0.733. => 65k-warm dip REPRODUCES
+   (-17.3%; 298.8 == 301.0/306 band of §24 M/P); **128k warm dip =
+   NONE (+0.7%, 278.5 vs 276.5)** — the dip SATURATES: 128k cold
+   baseline is itself -23% vs 65k cold (2x KV read volume) and warm
+   == cold there. "15-25% at 128k" prediction falsified in the useful
+   direction: sublinear to zero.
+   COH lane G85NSMB4KCOHX (07:56-08:18; V24PC_INSTALLED, P1 grep=2,
+   P2 grep=1, census identical): f8ref EXACT (bitwise copies are
+   numerics-transparent); q17 53.9/54.5; bench3x COLD 461.7/378.2/
+   284.2/281.6 acc 0.721, WARM 461.6/446.2/360.1/275.6 acc 0.726 —
+   BUT warm ctx128k TTFT 140.37s vs CTRL 8.52s (16.5x WORSE, full
+   recompute; cold 65k -21% vs CTRL). Failure mechanism: only 3 COH
+   events fired (16/71/16 blocks, free~603) — pool = 9,313 blocks /
+   596,042 tok ("max concurrency 2.27x") runs near-exhaustion during
+   the big-cell screen, so the capacity gate correctly REFUSED big-
+   hit copies (65k hit ~1,155 blk, 128k ~2,274 blk vs free 603) —
+   and get_new_blocks pops from the LRU free-queue front where cached
+   blocks sit: _maybe_evict_cached_block silently destroyed their
+   hash entries, the ~103 copied blocks broke the 128k prefix hash
+   chain -> warm-128k full recompute. Copy destinations from a
+   disturbed front are not contiguous either (cold-65k 284.2
+   correlates). Warm-16k 446.2 single-cell spike = acceptance/compl-
+   length artifact (compl 171 vs 144), not claimed.
+   VERDICT: COH v1 REJECTED — the mechanism is numerics-safe and
+   crash-safe (f8ref EXACT both lanes, resets stable 4, no wedge) but
+   allocation-path unsafe near pool capacity: (a) copying consumes
+   cache capacity 1:1 — at free=603 a 2,274-block hit copy is
+   impossible without evicting ~1.7k cached blocks; (b) popleft
+   evictions break OTHER requests' future prefix hits (TTFT 16.5x).
+   If ever revisited: allocate dst only from never-cached free blocks
+   (skip+preserve hash-registered entries in the pop), tail-allocate
+   fresh ids, admission rule slack > n. Practical dip guidance stands
+   from §24 P: PC OFF removes the 65k dip at TTFT cost, and at 128k
+   the dip self-saturates to zero — COH is unnecessary at the sizes
+   where it was feared.
+   Post-screen: standing lane restore RESTORE26T + re-cert + watchdog
+   re-arm — CLEAN 08:45:22: F8REF_EXACT (e5m2 set), q17 solo 50.3,
+   health 200, watchdog active, resets stable 4 (no new).
+§24 Q evidence: host lce1/{coh_ab,boot_G85NSMB4KX,boot_G85NSMB4KCOHX,
+v24pc_apply_bootCOH}.out, f8ref_bs64_G85NSMB4K{X,COHX}.out,
+bs64_G85NSMB4K{X,COHX}_q17_{cold,warm}.out, bench3X_BS64G85NSMB4K{X,
+COHX}_{cold,warm}.out, restore26t_chain.out; container /root/
+serve_full.log [v24pc] lines (3 events, free counts); host /root/
+build/{patch_v24pc.py,dt_bench3x.py,bs64_screen_x.sh,repro_bootBS64_
+E4M3_G85NS_MB4K_COH.sh,coh_ab_screen_run.sh,restore26t_cert.sh};
+repo crashfix-v58/{patch_v24pc.py,dt_bench3x.py,bs64_screen_x.sh,
+repro_bootBS64_E4M3_G85NS_MB4K_COH.sh,coh_ab_screen_run.sh}.
+
 
 
