@@ -3085,5 +3085,141 @@ E4M3_G85NS_MB4K_COH.sh,coh_ab_screen_run.sh,restore26t_cert.sh};
 repo crashfix-v58/{patch_v24pc.py,dt_bench3x.py,bs64_screen_x.sh,
 repro_bootBS64_E4M3_G85NS_MB4K_COH.sh,coh_ab_screen_run.sh}.
 
+§24 R (Sep 19) — BLOCK-TABLE DIAGNOSTIC probe (patch_v24r, read-only)
+   + half-hit probe: bimodality theory DEAD; decode tracks physical id
+   density/span; v1's copies NEVER EXECUTED (cross-process bug found).
+   User directive: run the table-dump probe before committing to an
+   arena patch.
+   patch_v24r.py: installs vllm/_v24r.py; single anchor on the FullAtten
+   tionManager class line inserts BOTH overrides — allocate_new_computed
+   _blocks -> dbg_allocate (dump HIT block-id table: len/first/last/
+   runs/gaps/maxgap + tok) and free -> dbg_free (dump final table + hit
+   prefix + fresh tail separately). No behavior change; env VLLM_V24R=0;
+   log cap 300. dt_halfprobe.py = 65k prompt sharing ONLY first ~32k
+   with the cached ctx65k FILLER prefix then diverging filler (discrim
+   inates hit-presence vs near-full-length hit). Boot variant + runner
+   v24r_screen_run.sh (screen -> halfprobe -> export [v24r] events).
+   Lane G85NSMB4KV24R: f8ref EXACT; bench3x replicated the dip (COLD
+   463.5/375.6/359.3/273.7, WARM 464.0/371.8/301.1/276.8); half65k
+   decode 209.4/209.3 on BOTH submissions (-42% vs cold 65k!).
+   v24r event tables (the payload):
+   - manager block granularity = 1024 TOKENS (HIT n=71 <-> tok=72704),
+     NOT the CLI --block-size 64; pool ~582-606 manager blocks. The
+     runner's kernel_block_sizes machinery splits manager blocks into
+     kernel pages internally (kv tensors measured 1024-granular in S).
+   - cold-65k table: 73 blk first=88 last=151 span 163 (28% of pool),
+     21 runs. warm-65k table: 73 blk, 22 runs, wide span [320..478]+
+     wrap — structurally NEAR-IDENTICAL run counts => "bimodal table"
+     theory DEAD; the difference is WHERE the ids sit, not the shape.
+   - decode tok/s tracks physical id density/span MONOTONICALLY across
+     every cell: span 163 -> 359.3; wide span -> 301.1; 128k ~98% of
+     pool -> 273.7-276.8 (saturation = scatter-limited already);
+     half65k maxgap 616 (sparsest) -> 209. Fresh sweeps are dense
+     (popleft_n queue front); inherited cached prefixes are wide-
+     scattered (mamba slots interleave at id stride 16: 16,32,..304 =
+     hybrid allocator + LRU churn fragments everything).
+   - v24pc v1 post-mortem: NO "drained"/shape lines ever appeared =>
+     the copies NEVER EXECUTED: the allocate hook + pending queue live
+     in EngineCore (pid 413) while drain_copies ran in Worker_TP0/TP1
+     (612/618) — module-global state is per-process. The §24 Q warm
+     cells silently decoded from STALE dst pages (f8ref stayed EXACT
+     only because short prompts never reach the 16-block gate). The
+     140s warm-128k TTFT there was pure hash-eviction churn.
+   - half65k anomaly (low importance): FIRST submission TTFT 46.7s ~
+     no hit despite a designed 32k shared prefix (hash extra-keys or
+     chunk-boundary mismatch suspected); second hit 5.65s.
+   VERDICT: density mechanism promoted to leading theory; arena (con
+   tiguous dst) justified; v2 must deliver copies cross-process.
+§24 R evidence: host lce1/{v24r,boot_G85NSMB4KV24R,halfprobe_G85NSMB4K
+V24R,v24r_events_G85NSMB4KV24R}.out, bench3X_BS64G85NSMB4KV24R_{cold,
+warm}.out, f8ref_bs64_G85NSMB4KV24R.out, bs64_G85NSMB4KV24R_q17_{cold,
+warm}.out; container serve_full.log [v24r] lines; host /root/build/
+{patch_v24r.py,dt_halfprobe.py,repro_bootBS64_E4M3_G85NS_MB4K_V24R.sh,
+v24r_screen_run.sh}; repo crashfix-v58 same four.
+
+§24 S (Sep 19) — ARENA COPY-ON-HIT v2 (patch_v24pc2): mechanically
+   PERFECT, dip NOT fixed -> block-table layout ELIMINATED as mecha
+   nism; novel-probe reframe: the "warm dip" is a CELL-ORDER artifact
+   (late-lane long-ctx decode degradation); §24 optimization thread
+   CLOSED.
+   Design (fixes both v1 flaws): (1) ARENA — one-time contiguous reser
+   vation of 160 manager blocks held FOREVER (never re-enter BlockPool
+   free queue; ref_cnt 1; bump allocator; recycled at request free by
+   filtering arena blocks out of req_to_blocks BEFORE base free) —
+   built at the FIRST schedule() tick when the pool is pristine (zero
+   hash-carrying blocks in the free queue -> zero prefix evictions).
+   (2) IPC — copy pairs (dst_ids, src_ids) ride a new SchedulerOutput
+   field _v24pc2_copies (pickled to BOTH TP workers); worker drain
+   inserted AFTER the runner's new_block_ids_to_zero site (zero ->
+   copy -> forward order guaranteed), mapping mirrors upstream KVBlock
+   Zeroer.init_meta (ratio = spec.block_size // kernel_bs, block_dim
+   from backend.get_kv_cache_block_dim, kv tensors from static_forward
+   _context, dedup by data_ptr) -> index_copy_(index_select) per layer
+   = bitwise D2D. P1 allocate+free overrides; P4 attach_stash(sched
+   uler_output, self) just before scheduler.py `return scheduler_
+   output` (line 917, unique).
+   Mid-run fix: launch #1 killed at settle — allocate_new_computed_
+   blocks only fires when hit blocks EXIST (kv_cache_manager.py:380:
+   guarded by `new_computed_block_list is not empty_kv_cache_blocks.
+   blocks`), so fa_mgr registration via the hook never happens on
+   short-prompt traffic and the arena would have built late from a
+   churned pool (= v1 eviction damage). Fixed: attach_stash resolves
+   scheduler.kv_cache_manager.block_pool directly -> ARENA at first
+   tick: [len=160 first=17 last=176 runs=1 gaps=0 maxgap=0] — perfectly
+   contiguous, EngineCore pid confirmed.
+   Lane G85NSMB4KCOH2 (relaunch): f8ref EXACT; COLD == CTRL (466.4/
+   376.1/359.0/277.3, conc8 367.7 acc 0.728); WARM 468.5/373.6/302.2/
+   277.0 acc 0.733; warm-65k TTFT 4.66s (hit preserved). HIT2 events:
+   71-block warm-65k hit src[runs=27 gaps=26] -> dst[runs=1 gaps=0]
+   (arena 33..103); drains EXECUTED in both workers (Worker_TP0+TP1
+   "drained n=71 tensors=17", ratio self-discovered = 1 -> kv tensor
+   pages are 1024-tok manager-granular); sanity gate: 65k cold-vs-
+   warm greedy texts EQUAL, warm total 3.6s vs cold 35.1s (copy bit
+   wise-correct); arena leak-free (8 hits / 8 frees / af back to 160);
+   resets stable 4. BUT: warm-65k decode 302.2 == CTRL 301.1 — a
+   PERFECTLY CONTIGUOUS freshly-copied table decodes IDENTICALLY to
+   the scattered one. warm-128k TTFT 140.46s — v1's damage signature
+   via a new route: the arena removes 160 blocks from circulation
+   (effective pool 446 vs 606) -> intermediate cells' allocations
+   evicted the 128k chain under pressure. halfprobe 208 unchanged.
+   NOVEL PROBE (the reframe, run on the live COH2 lane after the
+   screen): novel65k = brand-new 82,562-tok filler (hash diverges at
+   block 1 -> guaranteed cold) submitted LATE-lane: decode 204.9 —
+   a genuinely COLD decode 43% below the early-lane cold rate (359).
+   bench65k3 (3rd submission of the bench 65k prompt right after):
+   hit FAILED (novel's 81-block insertion evicted the chain; TTFT
+   56.89s = recompute) -> decode 305.3. novel65k resubmission (now
+   cached, COH2 contiguous copy, TTFT 5.19s): decode 207.6 vs its
+   own cold 204.9 two minutes earlier = +1.3% = ZERO hit penalty.
+   CONCLUSION: (a) warm-hit costs NOTHING once lane-state is con
+   trolled (self-paired 204.9/207.6); (b) layout costs NOTHING
+   (CTRL 301.1 vs COH2 302.2, and scattered-vs-contiguous equalized
+   within the same lane); (c) the entire §24 M/P/Q "warm 65k dip"
+   (302 vs 359) was a CELL-ORDER artifact — cold cells always ran
+   ~20 min earlier; long-context decode itself degrades over lane
+   lifetime (359 early -> 205-305 late at 74-83k ctx; possibly a
+   cliff between 74k and 82.5k or time drift; NOT resets (4 stable),
+   NOT acceptance (0.728-0.733), NOT the cache).
+   VERDICT: COH v2 is numerics-safe, crash-safe, leak-free, and
+   delivers its copies correctly — and is UNNECESSARY: its premise
+   (cache-hit layout dip) does not exist. Arena also carries a real
+   cost (pool -160 blocks -> 128k-chain pressure eviction). §24
+   optimization thread CLOSED (three falsifications + artifact
+   reframe). Open if perf work ever resumes (§24 T candidate):
+   characterize late-lane long-ctx decode degradation on a STOCK
+   PC-OFF lane (cold-65k at t=5min vs t=45min, novel fillers only)
+   to separate time-drift from context-length cliff.
+   Post-screen: standing lane restore RESTORE26U + re-cert + watchdog
+   re-arm — CLEAN 11:05:39: F8REF_EXACT (e5m2 set), q17 solo 50.3,
+   health 200, watchdog active, pause flag cleared, resets stable 4.
+§24 S evidence: host lce1/{coh2_screen,boot_G85NSMB4KCOH2,v24pc2_
+apply_bootCOH2,v24pc2_events_G85NSMB4KCOH2,halfprobe_G85NSMB4KCOH2,
+sanity_G85NSMB4KCOH2}.out, bench3X_BS64G85NSMB4KCOH2_{cold,warm}.out,
+f8ref_bs64_G85NSMB4KCOH2.out, bs64_G85NSMB4KCOH2_q17_{cold,warm}.out;
+container serve_full.log [v24pc2]/[v24pc2w] lines (ARENA runs=1, HIT2
+src/dst tables, drains both workers); host /root/build/{patch_v24pc2.
+py,repro_bootBS64_E4M3_G85NS_MB4K_COH2.sh,coh2_screen_run.sh,coh2_
+sanity.py,novel_probe.py}; repo crashfix-v58 same five.
+
 
 
