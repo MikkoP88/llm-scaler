@@ -75,6 +75,7 @@ manifest (finds every post-install edit + marker coverage).
 | `dflash2-window-fix-v41/` | v41 | **closes v40 §6**: TurboQuantAttentionImpl silently DROPPED `sliding_window` — the draft's MQ kernel ramped causal attention over the FULL prefix instead of the trained trailing 2048 window (gradual decay, 9.3% @74k). Fix (11 era-3 hooks): store the window; MQ kernel `HAS_WINDOW` per-row lower bound; device-op block-table rebase + q0 shift (graph-safe, exact, inert when sw=None). Ladder 72.3/30.4/9.3% → **77.7/70.6/62.2%**; DFlash2-k7 now beats MTP @2k (412 vs 380) and @65k (189 vs 181), par @16k/conc8. First image CONTAINING DFlash2: `llm-scaler-exp:dflash2-v41` (prod:v1 + v40 + v41, md5-verified, battery-passed). Prod posture unchanged (v1 nospec) |
 | `dflash2-emitk-v42/` | v42/c/d | **Path A: k-adjustable DFlash2 emission with async+graphs preserved.** `DFLASH2_EMIT_K=1..7` (default 7 = byte-identical v41). v42c caps the AsyncScheduler placeholder width (async stays ON — the engine skips `update_draft_token_ids` under async, placeholder width IS the scheduled width; sync fallback is a convicted dead end, and async_scheduling is tri-state auto-on). v42d makes graph capture width-aware at THREE independent derivation sites (runner `uniform_decode_query_len`, config capture lattice → bs·(1+k), dispatcher `__init__`). Verified: k=3 207/179/167/111 acc .799, k=5 297/239/161/126 acc .708 (k=7 stock 412/262/189/124). **k=4 CONVICTED corrupt under graphs** (NaN target hidden states → token-0 flood, 100% garbage acceptance; boundary EXACTLY k=4 — k=3/k=5 bit-clean — matching the v29c MTP k4 conviction on a second spec method+graph mode; serve script refuses the combo). Follow-up engagement: `UPSTREAM_COMPARE.md` (vs upstream PR #52816 — MATCH on drafter math, SUPERIOR on k-adjust/async/graphs, no upstream deltas worth adopting; sole post-merge fix #54282 is in the unported probabilistic path) + **image `llm-scaler-exp:dflash2-v42` BUILT + VALIDATED** (6-patcher in-build bake, all 12 tree files md5-identical to the runtime lane, k=7/3/5 battery on the baked image passed with zero degradation; `Dockerfile` + `new/dflash2_proposer.py` knob-bearing copy committed). Prod posture unchanged (v1 nospec) |
 | `dflash2-prod-v49/` | v43–v49c | **DFlash2 prod-promotion arc: KV-dtype matrix, real-life perf fixes, long-context validation, prod images `llm-scaler-exp:v1`→`v1.2.1`.** KV matrix: 4bit_nc/k8v4/k3v4_nc ✓, 3bit_nc ✓@MAXLEN≤258048, fp8_e4m3 ✓ (draft inherits), e5m2 ✗ upstream, auto ✗ DFlash2 defect. Perf root cause (v49b): draft `CommonAttentionMetadata` lacked `seq_lens_cpu_upper_bound` → per-layer TQ `seq_lens.tolist()` D2H sync under async scheduling (propose h−d == tforward-d identity); fix = source the runner's pre-null upper bound — TQ fwd 7.5→0.43 ms, single 31.7→36.7, conc 52.3→71.2, conc2 68.2→77.4, numerics clean. v48 drafter-TP1 replication CONVICTED CORRUPT (acc ~0.2) — dropped; both drafters TP2. v49c: draft KV dtype now DEFAULTS to matching `--kv-cache-dtype` (v21c tq4nc auto-policy retired), `VLLM_DFLASH_DRAFT_KV_DTYPE` optional override; prod pins k8v4. Long-context (user-required): singles MTP wins, but concurrent 2×28k/2×56k MTP k=4 STALLS then DIES (wedge → `TimeoutError: RPC sample_tokens`; full-context draft attention = the #11 comm-stomper wedge family) while DFlash2 (O(2048) window draft) completes ALL concurrent runs clean — the honest superiority claim for DFlash2. Full battery on baked `llm-scaler-exp:v1.2` ≥ certified on every mode, coh bit-stable; prod lane UP on `v1.2.1` |
+| `prod/wedgefix-v60/` | v60 | **WEDGEFIX — closes the Claude-Code crash loop** (2026-09-21): async scheduling DEFAULT OFF on XPU (`xpu.py`, opt-in research env `VLLM_XPU_ALLOW_ASYNC=1`) + `VLLM_XPU_SPEC_DRAFT_BARRIER` default ON @MIN_CTX 8192 (reverses v37's short-context posture). NOT OOM — the `Killed` was v55.3 fast-clean SIGKILL after a spec-drafter device wedge (KNOWN_ISSUES #11 class; xe ccs/bcs engine resets both tiles), amplified into full-engine 0 tok/s by the silently-ON AsyncScheduler (§24 K "async OFF" label was a serve-flags grep, not runtime — every boot ran async). Controlled repro on v1.2.14: wedge in ~6 min of sustain, v55.3 KILL 11:30:55, +4 engine resets. Image `llm-scaler-exp:v1.2.15` = v1.2.12 crash-free pedigree (f15b/arstage/v55.3/v58p1/STALFIX) + v60, MTP ×4 and XGrammar-2 0.2.7 kept. Evidence `/root/build/lce1/v60_*.log`; see Invariant 0 |
 
 ## legacy/ — superseded eras
 
@@ -135,7 +136,12 @@ manifest (finds every post-install edit + marker coverage).
   `v1` (first DFlash2-capable, `f02fa561e900`) → `v1.1` (v43-era fixes,
   `468a61a7e79f`) → `v1.2` (v49 rebase + v49b perf fix + v48 overlays,
   full battery, `821b576f0642`) → `v1.2.1` (v49c draft-KV dtype policy,
-  `4a10b5f6c81b`, **current prod lane**). See
+  `4a10b5f6c81b`) → … crashfix/v52f/v58/kill-drill arc … → `v1.2.12`
+  (§24 K crash-avoidance set, standing prod) → `v1.2.13` (+STALFIX
+  tool-call stream-stall root fix) → `v1.2.14` (+xgrammar 0.2.7 =
+  XGrammar-2) → `v1.2.15` (+WEDGEFIX v60: async default OFF, spec draft
+  barrier default ON every step — **current standing lane**; see
+  `prod/wedgefix-v60/README.md` and Invariant 0). See also
   `diagnostics/dflash2-prod-v49/NOTES.md`.
 - **Historical:** `llm-scaler-vllm-adv:vN` (and `dspark`, `qwen36-b70…`
   ancestors) stay untouched as provenance — never rebuilt, never renamed.
@@ -145,6 +151,21 @@ manifest (finds every post-install edit + marker coverage).
 
 ## Invariants (do not break)
 
+0. **NEVER build or promote an image that boots with
+   `Asynchronous scheduling is enabled`.** The fork silently defaults
+   async scheduling ON (`config/scheduler.py` `bool | None`; the XPU
+   platform only forces it OFF for PP>1), and the AsyncScheduler event
+   pipeline is the amplifier of the spec-drafter device-wedge class
+   (crashfix-v58 / GSD-12919): under Claude-Code-shaped long-context
+   traffic one dead drafter stream freezes the whole engine at 0 tok/s
+   until the v55.3 fast-clean SIGKILL fires — xe ccs/bcs engine resets
+   on both tiles bracket every occurrence (2026-09-21 evidence:
+   `/root/build/lce1/killan_evidence*.log` on ainode01). Safe states
+   only: WEDGEFIX-A baked (`xpu.py` forces `async_scheduling = False`
+   unless research env `VLLM_XPU_ALLOW_ASYNC=1`) — every image from
+   `llm-scaler-exp:v1.2.15` — or an explicit `--no-async-scheduling`
+   serve flag. Speculative decoding (MTP ×4) stays fully supported on
+   the sync scheduler; XGrammar-2 ships untouched.
 1. **Patch `.py` contents are byte-identical to what was baked/verified.**
    Directory renames must never edit them — bake gates and `md5sum` checks
    reference these exact bytes (e.g. `v38_esimd_reroute.py` md5

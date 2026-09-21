@@ -65,3 +65,14 @@ Prod restored on `llm-scaler-prod:v1` (bootp nospec, single-cycle boot via
 new marker; P1 = `0ce080630035` verified post-restore). Historical
 `adv:v38` retained as provenance; future production = `llm-scaler-prod:vN`,
 experimental = `llm-scaler-exp:<purpose>`.
+
+## v60 async warning (2026-09-21) — read before ANY rebuild
+
+`llm-scaler-prod:v1` predates WEDGEFIX v60: its `platforms/xpu.py` still
+lets the fork default **async scheduling ON**. Any future
+`llm-scaler-prod` bake MUST include `prod/wedgefix-v60/` (or an explicit
+`--no-async-scheduling` serve flag) — see patches README **Invariant 0**
+and the 2026-09-21 crash-loop evidence (`/root/build/lce1/` on ainode01).
+The AsyncScheduler event pipeline amplifies the spec-drafter device-wedge
+class (KNOWN_ISSUES #11) into full-engine 0 tok/s + fast engine death under long-context traffic. Spec
+(MTP ×4) and XGrammar-2 stay fully supported on the sync scheduler.

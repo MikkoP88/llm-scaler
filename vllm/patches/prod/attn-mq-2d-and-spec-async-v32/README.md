@@ -177,3 +177,19 @@ Prod stays **v31.1 image, NOSPEC, turboquant_4bit_nc** (33.56/23.61,
 coh −0.451). The MQ regpatch is a validated, upstreamable kernel fix
 kept as a patch artifact (not baked into the prod image — spec itself is
 not shipped). k4 clamp unchanged.
+
+## v60 update (2026-09-21) — async-scheduling overlap posture RETIRED
+
+This window's analysis leaned on async scheduling as the mechanism that
+lets nospec hide the ~54ms host chain (TL;DR §4, P2). As of WEDGEFIX v60
+(images ≥ `llm-scaler-exp:v1.2.15`), **async scheduling is default OFF
+on XPU** (`VLLM_XPU_ALLOW_ASYNC=1` research-only): the AsyncScheduler
+event pipeline amplifies the KNOWN_ISSUES #11 spec-drafter device wedge
+into full-engine 0 tok/s stalls + xe engine resets under long-context
+traffic (evidence `/root/build/lce1/`, 2026-09-21). The host-chain
+conviction stands — spec still pays the exposed chain on the sync
+scheduler (now additionally the per-step `torch.xpu.synchronize()`
+drafter barrier, ~10-14% mid-ctx / ~31% short-decode measured A/B) — so
+P2 (worker-resident acceptance loop) remains the only real path to
+hiding it. Spec (MTP ×4) itself is fully supported and shipping on the
+standing lane; see `../wedgefix-v60/README.md`.

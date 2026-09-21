@@ -55,3 +55,22 @@ setsid nohup bash /root/build/bootp.sh nospec '' <log> '' \
   +0.3%, i.e. the v33 keeper numbers now come for free with no env.
   Spec boots no longer need `VLLM_XPU_SPEC_DRAFT_BARRIER=0`.
 - No #11 wedge signature anywhere in the suite (v31.1 posture holds).
+
+## v60 reversal (2026-09-21) — barrier back ON, async default OFF
+
+The v37 barrier-off default was certified under **short-context**
+posture. Claude-Code-intensive usage re-opened the KNOWN_ISSUES #11
+drafter wedge at long contexts (0 tok/s → v55.3 fast-clean SIGKILL
+crash loop; xe engine resets on both tiles; evidence
+`/root/build/lce1/killan_evidence*.log`, 2026-09-21). v60
+(`patch_wedge_v60.py`, images ≥ `llm-scaler-exp:v1.2.15`) flips the
+defaults: `VLLM_XPU_SPEC_DRAFT_BARRIER` **ON** at **every step**
+(`..._MIN_CTX=0`; the first cut gated at 8192 but the 2026-09-21 drill
+wedged on a request at `computed=3994` — below the gate — so the drain
+is now unconditional), and
+**asynchronous scheduling disabled by default on XPU** (see patches
+README invariant 0 — no image may boot with `Asynchronous scheduling
+is enabled`). Explicit `VLLM_XPU_SPEC_DRAFT_BARRIER=0` still restores
+this v37 posture for diagnosis (accepted cost: the v33-era ~10-14%
+short-ctx decode tax). Spec (MTP ×4) support unchanged on
+the sync scheduler.

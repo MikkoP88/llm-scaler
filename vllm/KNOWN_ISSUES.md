@@ -1556,6 +1556,45 @@ VERDICT, NATIVE-STACK EVIDENCE)*:
   post-log); oneCCL #212/#215 cross-posts reframed as triage datapoints
   (oneCCL exonerated) — all posted 2026-09-01.
 
+*v60 update (2026-09-21, exp images — #11 RE-OPENS UNDER CLAUDE-CODE
+TRAFFIC; CONTROLLED REPRO + WEDGEFIX LANDED)*:
+
+- **Re-opening.** The v31.1 config posture (short-context workload) did
+  not survive real Claude-Code-intensive usage: hours of concurrent
+  long-context decode re-enter the ≥32k spec-drafter envelope
+  probabilistically per step. On `llm-scaler-exp:v1.2.14` (MTP ×4,
+  XGrammar-2 0.2.7, e4m3, bs64) sustained CC-shaped traffic produces the
+  signature `0 tok/s` stall → v55.3 fast-clean SIGKILL (30 s decode
+  bound) → crash-loop. Control drill 2026-09-21 11:24–11:49
+  (`/root/build/lce1/v60_control_drill.log`): round 2 wedged within
+  ~6 min — v55.3 KILL at 11:30:55 pid=677 waiting
+  `async_output_copy event`, f15b ring tail shows the #11 fingerprint
+  (drafter ARs `numel=25600` then silence, `propose_gpu_done` PENDING),
+  generation decayed 38 → 11.5 → 0.0 tok/s, **+4 xe engine resets**
+  (dmesg 37→41), health 000 until kill. This is the #11 wedge class,
+  now with a designed-clean crash instead of a hang.
+- **Amplifier found: AsyncScheduler was silently ON.** Every prior boot
+  logged `Asynchronous scheduling is enabled` (fork default; the §24 K
+  "async OFF" label was a serve-flags grep, not a runtime check). The
+  async event pipeline turns the dead drafter stream into a full-engine
+  0 tok/s stall.
+- **v60 WEDGEFIX (patch_wedge_v60.py, images ≥ llm-scaler-exp:v1.2.15):**
+  (A) `platforms/xpu.py` forces `async_scheduling = False` unless
+  `VLLM_XPU_ALLOW_ASYNC=1` (runtime proof of sync: the async_scheduler
+  F8-guard banner no longer prints; the single remaining
+  `Asynchronous scheduling is enabled` line is the APIServer's
+  pre-platform-flip config echo — cosmetic); (B)
+  `VLLM_XPU_SPEC_DRAFT_BARRIER` default flipped OFF→ON with
+  `..._MIN_CTX=0` (**every step** — the first cut gated at 8192, but
+  drill 3 wedged on a request at `computed=3994`, below the gate: the
+  trigger is probabilistic per step, NOT context-size-gated; reverses
+  the v37 barrier-off posture, see
+  `patches/prod/image-bake-keepers-v37/README.md`). Spec (MTP ×4) and
+  XGrammar-2 remain fully supported — the fix removes the amplifier and
+  drains the pre-collective device, it does not disable spec.
+  Build/bake invariant: `patches/README.md` Invariant 0 — no image may
+  run the AsyncScheduler.
+
 
 ## 12 — temperature=0 outputs on LARGE CHUNKED prompts are not bit-stable
 run-to-run under MTP (fp near-tie flips); bare prompts ARE stable —
@@ -2060,5 +2099,41 @@ trails on 2k prefill (−37%, attribution open) and deep decode
 kernel vs fp8's native ESIMD flash decode; `VLLM_TQ_STAGE1_STAGES=2`,
 `VLLM_TQ_BLOCK_KV=8` and the v39a nibble-split patch all failed to move
 it — see `failed/tq-nibble-unpack-v39/`).
+
+
+## 21 — nospec FULL_DECODE_ONLY graph never materializes its
+hidden-state output rows: no-draft steps sample from NaN/zeros
+(v60g-sanitized, 2026-09-21)
+
+On the MTP lane, when the drafter proposes 0 tokens (rejection-tail
+steps), the scheduler runs a bare 1-token decode step with
+`spec_decode_metadata=None`. On that step class the fork's nospec
+`FULL_DECODE_ONLY` graph does NOT write the hidden rows the deferred
+`tlogits` gather reads (`gpu_model_runner.py` ~4732,
+`sample_hidden_states = hidden_states[logits_indices]`): the gathered
+rows are NaN (deferred logits zeros; an lm_head recompute over the same
+hidden states is still NaN — first-cut fix v60e disproven). The XPU
+`xpu_topk_topp_sampler` op deterministically returns token 0 for
+degenerate rows (offline repro3 sweep: only all−inf/NaN rows do this;
+the op itself is correct). Strict-JSON grammars reject token 0 →
+`Failed to advance FSM` → FINISHED_ERROR → deterministic HTTP 500 on
+every structured-output request whose lifetime contains a no-draft
+step (the async scheduler never hit this — async always runs the
+spec/verify pipeline; the regression surfaced when v60-A defaulted
+async OFF). Plain completions on the same step class silently sampled
+token 0.
+
+Graph wiring is NOT fixable from a Python patcher. Shipped mitigation
+= WEDGEFIX-E (v60g, baked ≥ v1.2.15): after the grammar bitmask apply,
+NaN entries → 0.0 so the sampler picks uniformly over grammar-ALLOWED
+tokens (−inf mask survives) — schema-legal token, no FSM reject, no
+500, XGrammar-2 crash-free. Known quality limitation: requests in a
+heavy no-draft stretch may emit whitespace runs and hit the length cap
+(schema-valid, non-fatal; observed as `finish=length` with whitespace
+content in ~half of repeat runs). The log line
+`llm-scaler v60g NO-DRAFT DEGENERATE-ROW SANITIZED` counts firings
+(first 10). Evidence: wedgefix-v60 README T2 arc; serve_full.log
+468-492 instrumented chain (17:48-17:54 2026-09-21); `/tmp/repro3_out`
+offline op sweep.
 
 
