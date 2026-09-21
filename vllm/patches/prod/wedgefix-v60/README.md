@@ -215,3 +215,80 @@ docker exec lsv-test /opt/venv/bin/python3 /root/patch_wedge_v60.py
 Modes: `--apply` (default) / `--check` / `--revert`; backups
 `<file>.v60bak`; anchor-count==1 asserted; `py_compile` with auto-restore
 on failure.
+
+# WEDGEFIX-F (v61) — replicated drafter: DEAD END (bisect 2026-09-22)
+
+`patch_wedge_v61.py` (archived here) tried to remove the wedge hazard at
+the source: TP1-view drafter (`sys.modules` swap during Qwen3_5MTP
+init/load), keep-own full-vocab embed/lm_head, `get_top_tokens`
+lm_head.tp_size, draft KV block 1024→512 for page unification, barrier
+default OFF. Mechanically it worked (acceptance 3.12 healthy, zero eager
+draft collectives) — and the 2×2 hardware bisect killed it:
+
+| boot | replication | barrier | result |
+|---|---|---|---|
+| 5 | ON | OFF | **C4 crash #3**: `UR_RESULT_ERROR_DEVICE_LOST` in target `gdn_attention` eager prefill |
+| 6 | ON | OFF | same crash at 3rd C4 (clean host first — deterministic, not #05 host-state) |
+| 7 | ON | ON (drain) | same crash — barrier irrelevant |
+| 8 | OFF | ON (drain) | 3×C4 clean, stock perf (S1 warms 23→49→60) |
+
+Both the crash AND the −40% S1 perf regression (27–33 tok/s stuck;
+full-vocab bf16 lm_head ×2/rank + full-width MoE per draft step) AND
++~4.7 GB/rank (gmu 0.8→0.87) come from the replication complex itself.
+Crash logs preserved: `/root/build/w61_boot{5,6,7}_crash.log` (md5s
+934a7e50…, be3a4dc6…, b10723bf…); perf `w61_b{6,7,8}_perf.txt`.
+**Conclusion: stock sharded drafter stays; the barrier is the fix.**
+
+# WEDGEFIX-G (v62) — host-side draft barrier: ROOT FIX, v1.2.16
+
+## Mechanism
+
+The v24 matrix already proved a device-side tiny-gather "barrier"
+wedges too (5/8) — it is itself a non-preemptible oneCCL spin. The v60
+drain works because it parks both HOSTS at a defined point with empty
+queues, but it forfeits run-ahead (−9…−31%). v62 keeps the host
+rendezvous and drops the device sync: at the same pre-drafter site,
+both TP worker processes meet in a **/dev/shm flock barrier**
+(`/dev/shm/llm_scaler_spec_hb_<EngineCore-pid>.{lock,state}`, 2-party
+sense-reversing, count+epoch as two int64; 60 s timeout degrades to
+unsynchronized rather than hang). Collective submission skew is bounded
+at the host; device queues keep their ≤1-step run-ahead; the guc
+640 ms preempt window is never approached.
+
+Env map (`VLLM_XPU_SPEC_DRAFT_BARRIER`): `0` off (v37 posture,
+unprotected) · `1` v60 full drain · `2|host` **v62 flock barrier
+(default in v1.2.16)**. Knobs: `VLLM_XPU_SPEC_HOST_BARRIER_PARTIES`
+(default 2), `VLLM_XPU_SPEC_HOST_BARRIER_TIMEOUT_S` (default 60).
+
+Files: `patch_wedge_v62.py` (test variant, boot 9, applied on top of
+v61-state gmr) · `patch_wedge_v62b_bake.py` (bake variant for fresh
+v1.2.15-state files: adds G2 = def-block default flip `"1"`→`"2"`;
+G0b machinery; G1 dispatch).
+
+## Boot-9 evidence (2026-09-22, REPLICATED_DRAFT=0 + BARRIER=2)
+
+- Perf vs boot-8 drain reference (same probe, 3 reps): S1 57.9→65.9 vs
+  49.2→60.0; L2 41.3/45.0 vs 39.3/39.6; C4 agg 83.7/102.7/86.0 (avg
+  92.3) vs 75.7/87.4/63.2 (avg 75.4, **+22%**). Every shape faster.
+- Wedge drill (3×14-phase sustain, ~33 min): `SUSTAIN_COMPLETE_NO_WEDGE`,
+  fence 0, engine resets 0→0, v55.3 kills 0, health 200 throughout,
+  p14 cycles 5/5 PASS ×3.
+- Stage4 soak+battery: done=105 tool_ok=105 err=0 (908 s); T1 litellm
+  tool_use OK; T2 XGrammar-2 VALID_JSON stop; T3 47.3 tok/s MTP active;
+  T4 clean; T5 strikeouts=0 zeroem=0 sycl_asserts=0.
+- XGrammar ×5 + thinking A–D ×2 all HTTP 200; zero barrier-timeout
+  warnings; `/dev/shm` barrier pair live and advancing.
+
+## v1.2.16 bake (`stage5_bake_v1216.sh`)
+
+Baked from a FRESH v1.2.15 container (never from the v61-test lane) +
+`patch_wedge_v62b_bake.py` only: image `llm-scaler-exp:v1.2.16`
+(6f883b07c526, 22.7 GB). 20/20 content gates OK (v62 marks ×3; v61
+absent; v60 pedigree ×10 incl. WEDGEFIX-E + STALFIX + v60c;
+`barrier_default=False True 0`; xgrammar 0.2.7; v1215 pedigree marker;
+baked serve gmu0.8 bs64 e4m3 pc-ON spec-ON async-OFF). Fresh V1216
+boot: HEALTH_OK ~140 s, SANITY `'READY-v1216'` stop, engine-side async
+disabled, live env BARRIER=2, barrier pair `hb_459` active, XGrammar-2
+clean, C4×1 S1 64.9 / L2 33.7 / C4 agg 105.2 (best C4 yet). Watchdog
+lineage `repro_bootV1212.sh` repointed (backup `.pre_v1216`); spec ×4
++ XGrammar-2 supported and crash-free, per standing directive.

@@ -1595,6 +1595,36 @@ TRAFFIC; CONTROLLED REPRO + WEDGEFIX LANDED)*:
   Build/bake invariant: `patches/README.md` Invariant 0 — no image may
   run the AsyncScheduler.
 
+*v61/v62 update (2026-09-22, exp images — REPLICATED-DRAFTER DEAD END;
+HOST-BARRIER ROOT FIX SHIPPED IN llm-scaler-exp:v1.2.16)*:
+
+- **v61 WEDGEFIX-F (replicated drafter) ruled out by 2×2 hardware
+  bisect.** TP1-view drafter + own full-vocab heads removes every eager
+  draft collective but is unshippable: with replication ON the lane
+  dies at the 3rd C4 concurrent-prefill burst with
+  `UR_RESULT_ERROR_DEVICE_LOST` inside the TARGET `gdn_attention`
+  eager prefill (boots 5/6/7) — with the drain barrier ON (boot 7) and
+  OFF (boots 5/6) alike, on clean hosts — and S1 decode sits at
+  27–33 tok/s (−40%; full-vocab bf16 lm_head ×2/rank + full-width MoE
+  per draft step) with +~4.7 GB/rank. The crash and the regression are
+  properties of the replication complex, not of the barrier. Logs:
+  `/root/build/w61_boot{5,6,7}_crash.log`, perf `w61_b{6,7,8}_perf.txt`.
+- **v62 WEDGEFIX-G (host-side draft barrier) = root fix, default ON in
+  v1.2.16.** The v60 every-step `torch.xpu.synchronize()` drain was
+  crash-safe but cost −9..−31% decode; the v24 tiny-gather failed
+  because it is itself a oneCCL spin. v62 parks the two TP worker
+  HOSTS at the same pre-drafter site in a /dev/shm flock barrier
+  (2-party sense-reversing, EngineCore-pid-keyed, 60 s timeout
+  degrades to unsynchronized instead of hanging): collective
+  submission skew is bounded host-side, device queues keep their
+  ≤1-step run-ahead, cost ≈ two flock round-trips per spec step.
+  Boot-9 (BARRIER=2, stock drafter): every probe shape ≥ the drain
+  reference (C4 agg avg 92.3 vs 75.4 = +22%), 3×14-phase sustain
+  drill `SUSTAIN_COMPLETE_NO_WEDGE`, stage4 soak err=0, XGrammar-2 +
+  thinking all 200. `VLLM_XPU_SPEC_DRAFT_BARRIER`: `0` off · `1` v60
+  drain · `2|host` **default (v1.2.16+)**. See
+  `patches/prod/wedgefix-v60/README.md` §WEDGEFIX-G.
+
 
 ## 12 — temperature=0 outputs on LARGE CHUNKED prompts are not bit-stable
 run-to-run under MTP (fp near-tie flips); bare prompts ARE stable —
