@@ -292,3 +292,60 @@ disabled, live env BARRIER=2, barrier pair `hb_459` active, XGrammar-2
 clean, C4×1 S1 64.9 / L2 33.7 / C4 agg 105.2 (best C4 yet). Watchdog
 lineage `repro_bootV1212.sh` repointed (backup `.pre_v1216`); spec ×4
 + XGrammar-2 supported and crash-free, per standing directive.
+
+
+# TTFTFIX (v63) — adaptive chunked-prefill budget under decode
+contention: v1.2.17
+
+## Problem (Phase-0 RCA, 2026-09-22)
+
+CC intensive usage: ~136k-token prompts, zero prefix reuse (head drift
+— reuse itself proven healthy end-to-end at 94-98.8% hit rate, warm
+TTFT 1.7-2.7 s), serialized 7168-token chunked prefill with GDN
+attention stretching chunk steps 4 -> 9 s. Every co-running decode
+request advances once per scheduler step: all other sessions freeze at
+0.1-0.5 tok/s for the whole prefill (reproduced: 0.255 tok/s, gaps up
+to 8.25 s; cold 106k TTFT 101.8 s).
+
+## Fix
+
+`patch_sched_v63_bake.py` (two needles in `v1/core/sched/scheduler.py`,
+identical to test variant `patch_sched_v63.py` except baked default):
+when >=1 RUNNING request is in decode phase and the step is shared,
+`token_budget` is capped to `VLLM_V63_CONTENDED_BUDGET` (default 2048;
+floor-clamped to one mamba block 1024 — smaller budgets yield
+zero-token block-aligned chunks and would stall the prefill; 0 =
+stock). Solo prefills keep the full budget; pure-decode steps are
+unaffected (min() clamps). One-time `V63_TTFTFIX_ACTIVE
+contended_budget=N running=M` INFO line in serve_full.log.
+
+## A/B evidence (probe_fair_v63, 106k cold prefill + concurrent decode)
+
+| budget | starved decode | big TTFT | gaps during |
+|--------|---------------|----------|-------------|
+| stock 8192 | 0.255 tok/s | 101.8 s | 6.7-8.25 s |
+| 4096       | 0.433 tok/s (+70%) | 106.2 s (+4%) | ~3.5 s |
+| 2048       | 0.998 tok/s (3.9x) | 118.0 s (+16%) | ~1.4 s |
+
+2048 baked (starvation is the named issue; every halving ~ doubles
+concurrent-decode fairness at ~10% prefill cost). Battery on 2048:
+S1 52.8/51.9/67.9, L2 44.3/46.8/44.9 (parity), C4 agg 87.5 (band
+75-105), XGrammar-2 x3 + alts + thinking A-D all 200 VALID_JSON,
+preemptions 0, 3x14-phase wedge drill SUSTAIN_COMPLETE_NO_WEDGE.
+
+## JIT warm (same bake)
+
+`probe_jitwarm_v63.py` runs ONE ~130k cold prefill + sampled decode
+inside the bake container before commit (lane must be down; bake serves
+on :8000) and stamps `/root/.v63_jit_warmed`. Kills the 3-5 s
+first-big-turn kernel_unified_attention / reduce_segments / topk_topp
+compile spikes on every fresh boot; torch JIT cache persists in the
+image layer. Boot script stamp-gates a re-warm as safety.
+
+## Files
+
+`patch_sched_v63.py` (test), `patch_sched_v63_bake.py` (bake, default
+2048), `probe_fair_v63.py` (fairness A/B), `probe_jitwarm_v63.py`
+(JIT warm), `stage5_bake_v1217.sh` (gates + commit + boot script).
+Spec MTP x4 + BARRIER=2 + XGrammar-2 0.2.7 untouched and crash-free,
+per standing directive.

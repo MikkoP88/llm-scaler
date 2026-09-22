@@ -2167,3 +2167,42 @@ content in ~half of repeat runs). The log line
 offline op sweep.
 
 
+
+
+## 22 — TTFT-under-mamba-recurrence with zero prefix reuse starves all
+co-running sessions; v63 adaptive chunk budget (2026-09-22)
+
+Claude Code sends ~136k-token prompts (26 tools + full history). On the
+hybrid GDN+dflash2 lane those prefills serialize in 7168-token chunks
+(mnbt 8192, mamba-block-aligned 1024); GDN attention over the growing
+prefix stretches chunk steps 4 -> 9 s; every co-running decode request
+advances exactly once per scheduler step -> concurrent sessions starve
+at 0.1-0.5 tok/s for the whole prefill window (user log; reproduced on
+v1.2.16: 0.255 tok/s, token gaps 6.7-8.25 s, cold 106k TTFT 101.8 s).
+Phase-0 also proved prefix reuse itself is HEALTHY end-to-end (direct
+chat/responses AND through litellm: 94-98.8% block hit rate, warm TTFT
+1.7-2.7 s vs cold 98-101 s; see #10 for the 4096-granularity ceiling)
+— the 0.0% in CC logs is head drift / cold turns on the client side,
+unfixable engine-side (KV + mamba state depend on the full prefix;
+chained block hashes break at the first differing 4096-block).
+
+v63 TTFTFIX (v1.2.17, baked): scheduler caps the per-step token budget
+to VLLM_V63_CONTENDED_BUDGET (default 2048, floor-clamped to one mamba
+block 1024, 0 = off) when >=1 RUNNING request is in decode phase
+(num_computed_tokens >= num_prompt_tokens) and the step is shared —
+chunked prefill advances in shorter steps so co-running decode runs
+~4x more often; solo prefills keep the full budget (no TTFT loss),
+pure-decode steps are unaffected (demand << cap). Validated A/B (106k
+cold prefill + concurrent decode stream): stock 8192: 0.255 tok/s /
+101.8 s / gaps 8.25 s; budget 4096: 0.433 tok/s (+70%) / 106.2 s (+4%)
+/ gaps ~3.5 s; budget 2048: 0.998 tok/s (3.9x) / 118.0 s (+16%) / gaps
+~1.4 s. Battery on 2048: S1/L2 parity with v1.2.16, C4 agg 87.5
+(historical band 75-105), XGrammar-2 x3 + alts + thinking A-D all 200
+VALID_JSON, preemptions 0, V63_TTFTFIX_ACTIVE logged, 3x14-phase wedge
+drill SUSTAIN_COMPLETE_NO_WEDGE. Residual cold-big-turn TTFT (~118 s at
+106k) is mamba-recurrence physics + zero reuse; the ops lever is CC
+head stability (warm reuse = 2.7 s). v1.2.17 also ships a JIT-warm
+stamp (.v63_jit_warmed, warmed during bake) killing the 3-5 s
+first-big-turn compile spikes. Env knob is read once at scheduler
+import; the one-time `V63_TTFTFIX_ACTIVE contended_budget=N` INFO line
+confirms engagement in serve_full.log.
