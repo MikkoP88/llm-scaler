@@ -2307,3 +2307,18 @@ next bake: extend warm to exercise post-prefill decode shapes.
 **Warm side:** 1.7-2.7 s at 94-98.8% prefix hit on stable CC heads; drift cost
 is quantized by the 4096-token mamba-align reuse granularity (tightening needs
 ESIMD mult-of-64-page kernel surgery — deep, deferred).
+
+**Phase-1 update (same day, Option b ladder):** layer-type attribution
+(test-only `patch_v65_lt.py`, env `VLLM_V65_LAYER_LOG`) on solo cold 102.63 s:
+FA2 full-attn 40.1 s (39%, linear 0.0422 ms/prefix-token, ≈41 TFLOP/s/rank) /
+GDN SYCL core 4.95 s (5% — **closed, not a target**; Phase-0's GDN weight was
+overestimated) / residual GEMM work 57.6 s (56%, ~3.4 s/step constant,
+moe_backend auto). Backend A/Bs: `VLLM_ATTENTION_BACKEND` env is dead in this
+fork's v1 selector (P8 inconclusive null); forced TRITON_ATTN via test patch
+(`patch_xpu_force_triton.py`, env `VLLM_V65_FORCE_TRITON`) → solo cold timed
+out at 420 s (>4× slower prefill; slow, not broken; zero errors). Cascade
+attention structurally inapplicable (num_reqs ≥ 8 gate). **All bounded
+deep-kernel levers closed with data; only weeks-scale DPC++/ESIMD kernel
+authorship remains. Option b declared failed at the bounded level → Option a
+(plateau, v1.2.18) per user directive.** Lane reverted to stock (probe +
+env + force patch all removed, clean boot verified).

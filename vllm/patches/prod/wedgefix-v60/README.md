@@ -467,3 +467,58 @@ mamba-align reuse granularity (ESIMD kernel surgery required to tighten).
 `patch_v65_probe.py` (test-only probe), `v65_p0.sh`/`v65_p1b.sh`/`v65_p1c.sh`
 (instrumentation + curve extraction), `v65_runFG.sh` (mnbt grid),
 `v65_runH2.sh` (fusion A/B), `v65_seed206.sh` (crash closure).
+
+
+### v65 Phase-1 — deep-kernel census (Option b): layer attribution + alternative-backend A/Bs (2026-09-22)
+
+Standing order: attempt deep kernel work (GDN/full-attn prefill efficiency —
+the only >5% solo-cold lever per Phase-0); on failure, stop at the plateau.
+Phase-1 ran the bounded-surgery ladder and closed every rung with data.
+
+**Layer-type attribution (new, measured).** Test-only layer probe
+(`patch_v65_lt.py`, env `VLLM_V65_LAYER_LOG`, NEVER baked; appended to
+flash_attn.py, wraps `FlashAttentionImpl.forward` for prefill steps and
+shadows `torch.ops.vllm.gdn_attention_core_xpu` — both gated >1024 tokens so
+decode/XPU-graph capture never syncs). Solo cold seed 210 = 102.63 s
+(instrumentation overhead ~0.3 s vs 102.3 stock):
+
+| pool | time | share | verdict |
+|---|---|---|---|
+| FA2 full-attn prefill (16 layers × 17 steps) | 40.1 s | 39% | kernel-bound; linear growth 0.0422 ms/prefix-token per step (≈345 ms per 8192-token chunk), intercept ≈ −0.3 s → essentially pure q×prefix product work ≈ 41 TFLOP/s/rank |
+| GDN core, SYCL `_xpu_C.gdn_attention` (48 layers × 17 steps) | 4.95 s | 5% | **closed — not a target**; ~6.9 ms/layer/8192-chunk, flat per step. Phase-0's guess that GDN sat inside the constant term was wrong in weight: the SYCL kernel is fast |
+| residual (MoE + projections + norms + TP allreduce + step overhead) | ~57.6 s | 56% | GEMM-bound, ~3.4 s/step constant; moe_backend='auto' (config/kernel.py:141) with no surfaced XPU alternative |
+
+(17 chunk steps for the ~119k probe: 14×8192 + 3072 + 1458.)
+
+**Alternative-backend A/Bs.**
+- `VLLM_ATTENTION_BACKEND=TRITON_ATTN` env flip: **dead** — this fork's v1
+  selector (v1/attention/selector.py) does not read that env at all; boot
+  stayed on FLASH_ATTN (inconclusive null, run P8).
+- Forced TRITON_ATTN via test patch (`patch_xpu_force_triton.py`, env
+  `VLLM_V65_FORCE_TRITON`, default off, NEVER baked; env-gated branch in
+  xpu.py get_attn_backend): force confirmed on boot, then solo cold seed 212
+  **timed out at 420 s** (vs 102.6 s) — Triton prefill attention is >4×
+  slower at q=8192 / head_dim 256 / GQA 6:1 / fp8 KV. Zero engine errors —
+  slow, not broken. **Lever closed.**
+- Cascade attention: structurally inapplicable — `use_cascade_attention`
+  gates on num_reqs ≥ 8 and a *common* prefix across a batch; a solo big
+  prefill (1 request) never qualifies (flash_attn.py:1737).
+- FlashInfer GDN prefill backend: CUDA sm90 only (gdn_linear_attn.py
+  ChunkGatedDeltaRule) — XPU uses the in-tree Triton/FLA kernels for the
+  generic path, but live XPU prefill runs the SYCL op anyway (5% pool).
+- `fuse_allreduce_rms` etc.: same XPU pass_config family Phase-0 already
+  rejected (platform hard-disable at xpu.py:544); upside <5% even if live.
+
+**Phase-1 conclusion.** Every bounded lever on both kernel-bound pools is
+closed with measurement. The remaining theoretical upside — a new
+DPC++/XeTLA/ESIMD prefill-attention kernel above FA2's ~41 TFLOP/s/rank, or
+deep MoE GEMM work — is weeks-scale kernel surgery in the v61 crash-family
+territory, out of bounded-change scope. **Option b failed at the bounded
+level; Option a (documented plateau, v1.2.18 standing) is the accepted
+posture.** The `expand_kernel` post-prefill-decode JIT warm gap (2.2 s per
+fresh boot) stays queued for the next bake that carries a real change.
+
+Files: patch_v65_lt.py (layer probe, test-only), v65_lt_run.sh (attribution
+run), v65_lt_tab.py (per-step analysis), v65_p8.sh (dead-env flip + revert),
+patch_xpu_force_triton.py + v65_p10.sh (forced A/B + revert), v65_p11.sh
+(lane cleanup + stock verification).
