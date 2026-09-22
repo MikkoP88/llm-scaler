@@ -349,3 +349,61 @@ image layer. Boot script stamp-gates a re-warm as safety.
 (JIT warm), `stage5_bake_v1217.sh` (gates + commit + boot script).
 Spec MTP x4 + BARRIER=2 + XGrammar-2 0.2.7 untouched and crash-free,
 per standing directive.
+
+
+# TTFTFIX-2 (v64) — decode-step interleave + budget-1024 default: v1.2.18
+
+Task: from certified v1.2.17, further minimize co-session starvation during
+big chunked prefills (user directive: MAXIMUM starved-decode tok/s).
+
+Two scheduler needles on top of the baked v63:
+
+1. **Budget default 2048 -> 1024** (N3 in `patch_sched_v64_bake.py`): at one
+   mamba block, the aligned chunk usually floors to 0 after decode tokens
+   are deducted — prefill naturally yields most steps; decode runs
+   near-continuously (0.06 s gaps). Env `VLLM_V63_CONTENDED_BUDGET`
+   unchanged (0=off, <1024 floors to 1024; 2048 restores v1.2.17 posture).
+2. **Decode-step interleave** (`VLLM_V64_DECODE_INTERLEAVE`, default 2):
+   every K-th contended step caps the budget to
+   `VLLM_V64_DECODE_BUDGET` (default 512, clamped [64,1023] — below one
+   mamba block) so the chunked prefill takes the certified
+   `num_new_tokens <= 0 -> continue` skip and co-running decode gets a
+   dedicated ~0.06-0.2 s graph step. Neutral at budget 1024 (already
+   skip-dominated); at 2048 it lifts fairness 1.0 -> 1.8 tok/s. Solo
+   prefills and pure-decode steps unaffected.
+
+## A/B evidence (probe_fair_v63, 106k cold prefill + concurrent decode)
+
+| config | starved decode | big TTFT | gaps during |
+|--------|---------------|----------|-------------|
+| stock 8192 | 0.255 tok/s | 101.8 s | 6.7-8.25 s |
+| v63 2048 (v1.2.17) | 1.007 tok/s | 117.1 s | ~1.4 s flat |
+| v64 K=3 @2048 | 1.411 tok/s | 121.7 s | 1.4/1.4/0.06 |
+| v64 K=2 @2048 | 1.794 tok/s | 125.2 s | 0.06/1.4 |
+| v63 1024 no-IL | 6.395 tok/s | 160.4 s | ~0.06 flat |
+| **v64 K=2 @1024 (baked)** | **6.361/5.818 tok/s** | 162.6/152.3 s | ~0.06 flat |
+
+~6.4 tok/s = 25x stock and the mechanism ceiling (~40-50% of the decoder's
+solo 13-17 tok/s; remaining chunk steps bound it). Probe acceptance is
+optimistic (counting task ~5.0); real CC acceptance ~2.4 halves absolute
+rates, ratios hold: ~3-3.5 real tok/s vs ~1 at the 2048 posture — for
+multi-session CC use that is the difference between alive-streaming and
+looks-hung (see KNOWN_ISSUES #23). Cost: contended big-turn TTFT +50-60%
+vs stock; solo/uncontended prefill untouched.
+
+## mnbt 16384 REJECTED (run D)
+
+Solo cold 106k = 112.7 s at mnbt 16384 vs ~102 s at 8192. Chunk splitting
+is FLOP-invariant; 15360-token chunks only move boundary overhead and at
+this width the GDN path gets slower (tiling/activation effects). mnbt
+stays 8192. C4/S1/L2 parity confirmed at 16384 (no memory issue); the
+rejection is purely perf.
+
+## Files
+
+`patch_sched_v64.py` (test), `patch_sched_v64_bake.py` (bake; N3 flips the
+v63 default to 1024), `probe_solo_cold.py` (solo cold TTFT), `battery_v64.sh`,
+`validate_v64.sh` (solo + battery + 3x drill chain), `sanity_v1218.sh`,
+`stage5_bake_v1218.sh` (gates + commit + boot script). Spec MTP x4 +
+BARRIER=2 + XGrammar-2 0.2.7 untouched and crash-free, per standing
+directive.

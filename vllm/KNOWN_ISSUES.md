@@ -2206,3 +2206,66 @@ stamp (.v63_jit_warmed, warmed during bake) killing the 3-5 s
 first-big-turn compile spikes. Env knob is read once at scheduler
 import; the one-time `V63_TTFTFIX_ACTIVE contended_budget=N` INFO line
 confirms engagement in serve_full.log.
+
+## 23 — v64 TTFTFIX-2: dedicated decode steps + budget-1024 default for maximum starved-decode throughput (2026-09-22)
+
+**Symptom (remaining after #22/v63):** with the v63 contended budget at 2048, a
+co-running decode session still advances only once per ~1.4 s chunk step during a
+big (~100k) cold prefill — ~1.0 tok/s measured, i.e. the session crawls for the
+full ~2 min of the prefill.
+
+**Mechanism:** decode advances once per scheduler step; step duration is set by
+the co-scheduled chunk compute. A decode-ONLY step (no prefill work) runs the
+FULL_DECODE_ONLY graph in ~0.06–0.2 s wall. At budget 1024 (= one mamba block)
+the aligned chunk usually floors to 0 after decode tokens are deducted, so the
+prefill naturally yields most steps and decode runs near-continuously (0.06 s
+gaps).
+
+**Fix (v64, baked in v1.2.18), per the max-starved-decode directive:**
+1. v63 contended-budget default flipped 2048 → **1024** (baked needle; env
+   `VLLM_V63_CONTENDED_BUDGET` still overrides).
+2. **Decode-step interleave:** on contended steps (same predicate as v63: >1
+   running and >=1 in decode phase), every K-th step caps `token_budget` to
+   `VLLM_V64_DECODE_BUDGET` (default 512 < one mamba block 1024). Decode
+   requests (~5 tok each) fit; the chunked prefill floors to 0 tokens and takes
+   the certified `num_new_tokens <= 0 -> continue` skip — no misaligned mamba
+   state is ever built. Neutral at budget 1024 (already skip-dominated);
+   decisive at higher budgets (2048: 1.0 → 1.8 tok/s). Solo prefills and
+   pure-decode steps unaffected.
+
+**Knobs (read once at import):**
+- `VLLM_V63_CONTENDED_BUDGET` — default now **1024** (0=off; <1024 floors to
+  1024; 2048 = v1.2.17 posture).
+- `VLLM_V64_DECODE_INTERLEAVE` — every K-th contended step is decode-only.
+  Default 2. 0/1 disables.
+- `VLLM_V64_DECODE_BUDGET` — interleave-step cap, default 512, clamped
+  [64, 1023].
+
+**A/B (106k cold prefill + concurrent decode stream, seeds 107–113):**
+
+| config | starved decode | big TTFT | gap pattern |
+|---|---|---|---|
+| stock 8192 | 0.255 tok/s | 101.8 s | 6.7–8.25 s |
+| v63 2048 (v1.2.17) | 1.007 tok/s | 117.1 s | ~1.4 s flat |
+| v64 K=3 @2048 | 1.411 tok/s | 121.7 s | 1.4/1.4/0.06 |
+| v64 K=2 @2048 | 1.794 tok/s | 125.2 s | 0.06/1.4 |
+| v63 1024, no interleave | 6.395 tok/s | 160.4 s | ~0.06 flat |
+| **v64 K=2 @1024 (baked)** | **6.361 / 5.818** | 162.6 / 152.3 | ~0.06 flat |
+
+~6.4 tok/s is the mechanism ceiling (≈40–50% of the decoder's solo 13–17 tok/s;
+the remaining chunk steps bound it). 25× stock fairness. Cost: big-turn cold
+TTFT +50–60% vs stock under contention — accepted per the max-starved-decode
+directive; solo (uncontended) prefill is untouched. `V64_INTERLEAVE_ACTIVE
+k=2 decode_budget=512` + `V63_TTFTFIX_ACTIVE contended_budget=1024` logged once
+per process.
+
+**mnbt 16384 REJECTED (run D):** solo cold 106k = 112.7 s vs ~102 s at 8192 —
+bigger chunks make GDN prefill SLOWER (tiling/activation effects), not faster;
+chunk-splitting is FLOP-invariant, so mnbt only moves boundary overhead and
+at 15360 it moves it the wrong way. mnbt stays 8192.
+
+**Notes:** probe acceptance is optimistic (deterministic counting task, mean
+acceptance ~5.0); real CC decode acceptance ~2.4 — absolute rates scale ~2×
+down, ratios hold. Env warnings for the new vars in envs.py are cosmetic (same
+class as v63's). Next phase (v65): attack the big-TTFT cost from the prefill
+side — shorter total prefill windows also shrink the starvation window.
