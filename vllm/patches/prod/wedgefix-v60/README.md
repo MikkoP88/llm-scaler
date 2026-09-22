@@ -407,3 +407,63 @@ v63 default to 1024), `probe_solo_cold.py` (solo cold TTFT), `battery_v64.sh`,
 `stage5_bake_v1218.sh` (gates + commit + boot script). Spec MTP x4 +
 BARRIER=2 + XGrammar-2 0.2.7 untouched and crash-free, per standing
 directive.
+
+
+# v65 Phase-0 — big-TTFT cost model + lever census (post v1.2.18)
+
+Goal (user directive): optimize big TTFT (cold/warm), maximum performance.
+
+## Instrumentation
+
+`patch_v65_probe.py` — TEST-ONLY module-level wrap of `Scheduler.schedule`
+(env `VLLM_V65_STEP_LOG=1`, default off, never baked). Gap between successive
+schedule() entries = full engine step wall (schedule + execute + process).
+This fork logs no per-step batch lines; the probe provides them.
+
+## Measured cost model (solo cold ~118k-token prefill, stock v1.2.18)
+
+Chunk step wall grows linearly in prefix: 4.7 -> 9.3 s across 14 chunks
+(slope 3.97e-5 s per prefix-token per 8192-chunk). Decomposition:
+
+- ~66 s constant per-chunk: 48 linear/GDN layers + MoE + chunk-local
+  self-attention + fixed step overhead (state COW, launches).
+- ~34 s quadratic total: prefix KV-read of the 16 full-attention layers
+  (`full_attention_interval: 4`, GQA 24q/4kv, head_dim 256, FA2, fp8 KV).
+- First chunk carries a consistent ~0.6 s premium; decode steps 0.11-0.12 s.
+
+## Lever census (all measured, 2026-09-22)
+
+| lever | result |
+|---|---|
+| mnbt 4096 | 103.08 s — self-attn halves, steps double: cancels |
+| mnbt 6144 | 102.06 s |
+| mnbt 8192 (kept) | 102.3 s — flat plateau 4096-8192 |
+| mnbt 15360 | 112.7 s (rejection reconfirmed) |
+| pass_config fuse_norm_quant | XPU platform rejects: `xpu.py:544` "not yet supported on XPU and will be disabled" — closed |
+| FlashInfer autotune | not exposed on this XPU backend — closed |
+| chunked-prefill budget | v63/v64 own this dimension; contended posture is the user-directed max-fairness point |
+
+Conclusion: solo cold is at its engine-side plateau (~102 s). Remaining levers
+are deep kernel work (GDN/full-attn prefill efficiency) or client-side warm
+hit-rate (CC head stability). Warm path is healthy: 1.7-2.7 s at 94-98.8%
+prefix hit on stable heads; drift recompute is bounded by the 4096-token
+mamba-align reuse granularity (ESIMD kernel surgery required to tighten).
+
+## Incidents
+
+- **Crash 14:54:28 (run H2):** `UR_RESULT_ERROR_DEVICE_LOST` on Worker during
+  solo prefill mid-run (15.9 s wedged chunk), respawn died OUT_OF_DEVICE_MEMORY,
+  shutdown drain wedged. Sporadic hardware-class event (same class as the v61
+  2x2 bisect crashes); NOT reproducible on stock — seed 206 clean (102.1 s)
+  after host reboot on stock config. Fusion flag was platform-disabled before
+  the crash, so it never executed. Host reboot = recovery (standing directive).
+- **`expand_kernel` Triton JIT spike:** 2.1-2.2 s on the FIRST big-turn decode
+  after every fresh boot, INCLUDING baked-image boots (warm cache does not
+  cover this shape). Fix queued for next bake: extend in-bake JIT warm to
+  exercise the post-prefill decode shape.
+
+## Files
+
+`patch_v65_probe.py` (test-only probe), `v65_p0.sh`/`v65_p1b.sh`/`v65_p1c.sh`
+(instrumentation + curve extraction), `v65_runFG.sh` (mnbt grid),
+`v65_runH2.sh` (fusion A/B), `v65_seed206.sh` (crash closure).

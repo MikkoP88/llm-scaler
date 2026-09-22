@@ -2269,3 +2269,41 @@ acceptance ~5.0); real CC decode acceptance ~2.4 — absolute rates scale ~2×
 down, ratios hold. Env warnings for the new vars in envs.py are cosmetic (same
 class as v63's). Next phase (v65): attack the big-TTFT cost from the prefill
 side — shorter total prefill windows also shrink the starvation window.
+## 24 — v65 Phase-0: big-TTFT cost model, lever exhaustion, and the sporadic DEVICE_LOST of run H2 (2026-09-22)
+
+**Context:** after v64 (#23) the remaining directive was big-TTFT (cold/warm)
+maximization. Phase-0 instrumented per-step cadence (test-only
+`patch_v65_probe.py`, env-gated `VLLM_V65_STEP_LOG`, never baked) and measured
+the full lever surface on v1.2.18.
+
+**Cost model (solo cold ~118k):** ~66 s constant per-chunk (48 linear/GDN +
+MoE + chunk-local self-attn + fixed overhead) + ~34 s quadratic prefix term
+(16 full-attn layers, interval 4). Chunk step wall 4.7→9.3 s linear in prefix.
+
+**Levers measured and closed:**
+- mnbt grid 4096/6144/8192/15360 = 103.1/102.1/102.3/112.7 s — flat plateau;
+  8192 retained. Smaller chunks halve self-attention but double step overhead.
+- `pass_config` quant fusions: **XPU platform hard-disables**
+  (`xpu.py:544` "RMSNorm + quant fusion is not yet supported on XPU") — the
+  flag is inert on this backend regardless of compilation-config.
+- FlashInfer autotune: not reachable on this backend.
+- Solo cold is at its engine-side plateau (~102 s); only deep kernel work
+  (GDN/full-attn prefill efficiency) or CC-side warm hit-rate remain.
+
+**Crash (run H2, 14:54:28):** `UR_RESULT_ERROR_DEVICE_LOST` (20) on Worker
+during solo prefill (one 15.9 s wedged chunk), auto-respawn failed with
+`OUT_OF_DEVICE_MEMORY` (39), shutdown drain timed out ("host may need a
+reboot"). Fusion flag was platform-disabled pre-crash and never executed;
+the SAME seed (206) ran clean on stock after host reboot (102.1 s, xgrammar
+200, zero fatals). Sporadic hardware-class event — same family as the v61
+2x2-bisect crashes. Recovery per standing directive: host reboot + lineage
+boot script.
+
+**Known small residual:** `expand_kernel` Triton JIT compile spike (2.1-2.2 s)
+on the first big-turn decode after every fresh boot — including baked-image
+boots; the in-bake JIT warm does not cover this shape. Queued fix for the
+next bake: extend warm to exercise post-prefill decode shapes.
+
+**Warm side:** 1.7-2.7 s at 94-98.8% prefix hit on stable CC heads; drift cost
+is quantized by the 4096-token mamba-align reuse granularity (tightening needs
+ESIMD mult-of-64-page kernel surgery — deep, deferred).
