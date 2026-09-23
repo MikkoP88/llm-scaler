@@ -2449,3 +2449,24 @@ truncate before the image name; `bash -n` cannot catch this — line-continuatio
 byte check is now part of the diff review). Recurrence guards from #25 still
 apply: litellm re-create MUST keep `-e LITELLM_MASTER_KEY=sk-dummy`; any
 plain recreate breaks CC with 400 "No connected db."
+
+**Addendum (same day): CC tool-args repair callback.** Post-finalize compat
+audit found the model stringifies deeply-nested tool arguments — `AskUserQuestion`
+emits `{"questions": "\n[{...}]\n"}` (string, not array) → CC's dropdown
+validation fails. Verified at the engine directly (:8000) — model emission
+(Qwen tool-call habit), plumbing faithful; `TodoWrite` (flat array-of-objects)
+emits natively, only array-in-array nesting stringifies; system-prompt nudge
+failed 3/3. Fix: `litellm_settings.callbacks: [custom_callbacks.custom_callback]`
+(/root/build/custom_callbacks.py, mounted into litellm site-packages) — buffers
+each tool_use block's input_json_delta in the streaming hook, un-stringifies
+container-shaped string values, re-emits one delta before content_block_stop;
+non-stream success hook repairs the anthropic-dict `input` (and openai
+`function.arguments`). Verified: streaming + all 3 non-stream tiers emit
+native arrays (VALID=True), full battery unchanged, repairs logged to
+/tmp/custom_cb.log. litellm-build contract notes: streaming hook must be an
+async GENERATOR function (called as `hook(response=...)`, never awaited);
+success hook receives `data=` not `request_data=` — first deployment 500'd
+both routes before this was fixed. Durability: container restart policy
+`unless-stopped` preserves the docker-cp'd module; explicit re-creates must
+use /root/build/recreate_litellm.sh (master-key env + config mount + module
+mount + pinned image 114aca7726c3).

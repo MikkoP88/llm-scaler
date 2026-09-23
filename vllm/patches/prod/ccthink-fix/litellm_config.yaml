@@ -193,6 +193,8 @@ model_list:
 
 litellm_settings:
   use_chat_completions_url_for_anthropic_messages: true   # 2026-09-23 CC-thinking fix: route /v1/messages via chat/completions adapter (Responses bridge drops vLLM reasoning)
+  callbacks:
+    - custom_callbacks.custom_callback
   drop_params: true
   request_timeout: 3000
   num_retries: 1                      # Try local once on transient error before fallback
