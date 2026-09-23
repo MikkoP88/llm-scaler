@@ -2271,6 +2271,7 @@ class as v63's). Next phase (v65): attack the big-TTFT cost from the prefill
 side — shorter total prefill windows also shrink the starvation window.
 ## 24 — v65 Phase-0: big-TTFT cost model, lever exhaustion, and the sporadic DEVICE_LOST of run H2 (2026-09-22)
 
+
 **Context:** after v64 (#23) the remaining directive was big-TTFT (cold/warm)
 maximization. Phase-0 instrumented per-step cadence (test-only
 `patch_v65_probe.py`, env-gated `VLLM_V65_STEP_LOG`, never baked) and measured
@@ -2322,3 +2323,72 @@ deep-kernel levers closed with data; only weeks-scale DPC++/ESIMD kernel
 authorship remains. Option b declared failed at the bounded level → Option a
 (plateau, v1.2.18) per user directive.** Lane reverted to stock (probe +
 env + force patch all removed, clean boot verified).
+
+## 25 — v66 FAIRFIX: waiting-admission starvation under the fairness caps; litellm db-less breakage; delta.reasoning + xhigh empty streams (2026-09-22/23)
+
+**The waiting deadlock.** With the v64 max-fairness posture (contended budget
+1024 + interleave K=2/512), any long decode session floors the
+mamba-aligned prefill chunk to 0 after decode deduction — so a NEW request
+waits indefinitely: `Running: 2 reqs, Waiting: 4 reqs, Avg prompt
+throughput: 0.0 tokens/s`, `--max-num-seqs 16` notwithstanding. Clients
+drop. Measured on stock v1.2.18 (probe_admission_v66.py, 3 decode sessions
++ 3 CC-shaped 12k clients): c0 TTFT 91.20 s, verdict STARVED.
+
+**Fix: v66 FAIRFIX (baked in v1.2.20).** If the waiting queue has been
+non-empty for > `VLLM_V66_PREFILL_STARVE_S` (2.0 s baked, 0=off), bypass
+both caps for one scheduler step (full 8192-token chunk for the head),
+then resume. Waiting-age-based; solo/empty-queue/pure-decode untouched.
+A/B: 91.20 s → 14.37 s max TTFT (verdict PASS); fairness 5.45 tok/s and
+solo cold 100.38 s unchanged; xgrammar + thinking + preemptions clean.
+Acceptance gate in the v1.2.20 ship: `ADMISSION_DONE verdict=PASS` on the
+fresh boot.
+
+**litellm was hard-down since 2026-09-20 21:36.** The litellm-proxy rebuild
+that evening pulled a new `main-latest` whose `user_api_key_auth` requires
+a database; without one EVERY route 400'd `No connected db.` — all Claude
+Code traffic (every model, OpenAI and anthropic formats) failed. Repaired
+by recreating the container with `LITELLM_MASTER_KEY=sk-dummy` (db-less
+master-key mode; CC already sends `ANTHROPIC_AUTH_TOKEN: sk-dummy`, so no
+client change). Recurrence risk: any future litellm image update that
+re-creates the container without the env will break CC again — keep the
+env on the run command.
+
+**Thinking-stream field + empty completions.** This fork streams reasoning
+as `delta.reasoning`, NOT `delta.reasoning_content` (both non-stream
+`reasoning_content` and anthropic `/v1/messages` behave differently
+again). With the baked serve defaults `preserve_thinking:true,
+reasoning_effort:xhigh`, requests with smallish max_tokens can consume
+their entire budget inside unterminated thinking → `finish=length`, 200
+OK, ZERO visible deltas (probe_raw_stream.py evidence: 65 data lines, 0
+content/reasoning_content deltas, first delta at 17.5 s). Any
+OpenAI-compatible client that looks for `reasoning_content` (or expects
+non-empty completions) sees empty responses. v1.2.20 removes the serve
+defaults; thinking is controlled per-request (litellm entries:
+enable_thinking/effort per tier). CC-format thinking round-trip verified
+OK (history thinking blocks accepted, no echo).
+
+**v1.2.19 uncertified.** 4640ec2449e3 baked but never shipped: sanity
+JIT-zero=7 (first-traffic shapes compile beyond any enumerable warm set —
+strict zero-JIT acceptance is unachievable, next bakes gate on the proven
+8-kernel set only), and the drill hit GPU engine resets + a real
+ASYNC-EVENT-STALL wedge (round 1) following the earlier host crash; ship
+aborted ABORT_DRILL_NOT_CLEAN. dt_warmup_v53.py itself is healthy (RC=0
+re-verified) — the ship-time "arguments were not expected: 0 -m / 1 -m"
+error came from the crash-corrupted execution environment, not the script.
+
+**v1.2.20 shipped 2026-09-23 05:09 UTC (image e1d92193a106, 22.7GB).** Full
+chain green: bake gates 30/30, fresh boot v66 APPLIED, admission PASS
+(14.81/8.38/9.54 s vs 91.2 s starved), solo cold 100.6 s, battery clean,
+3×14-phase drill SUSTAIN_COMPLETE_NO_WEDGE fence-hits=0 (the v1.2.19 drill
+failure did NOT reproduce — hardware-class event, not a v1.2.19 code
+property), fairness 6.77 tok/s @ 0.06 s gaps (v64 interleave intact),
+watchdog repointed + un-paused, lane healthy, litellm 200. Two ship-time
+tooling defects fixed en route (no image impact): (1) bake gate miscount
+`v66_bypass_v63 expected=1 got=2` — both v63+v64 sites insert the identical
+bypass line, gate corrected to `v66_bypass_sites 2`; (2) sanity exec'd
+`/root/probe_admission_v66.py` without docker-cp'ing it into the lane —
+sanity now copies the probe (resume_v1220.sh resumes post-boot without
+re-baking). Known residual (documented, not gated): fresh-boot JIT count
+7→8 on sanity/validate traffic shapes (first-touch compiles outside the
+warm enumeration; steady-state 0.06 s gaps prove no compile stalls in
+service) — same evidence class as the v65 Phase-0 expand_kernel residual.
