@@ -2470,3 +2470,45 @@ both routes before this was fixed. Durability: container restart policy
 `unless-stopped` preserves the docker-cp'd module; explicit re-creates must
 use /root/build/recreate_litellm.sh (master-key env + config mount + module
 mount + pinned image 114aca7726c3).
+
+**Addendum 2 (same day): the v1 callback itself nulled every plain-string
+tool argument — the "null parameters" CC outage.** Symptom: through any
+litellm proxy loading the callback, ALL tool calls arrived as
+`{"command": null, "description": null}` (keys present, values null) on
+every route (/v1/messages stream+nonstream, /v1/chat/completions) and every
+deployment (all qwen tiers AND the z.ai glm tiers — the callback is global);
+CC failed with `InputValidationError ... type is expected as 'string' but
+provided as 'unknown'`. Engine-direct and in-container `litellm.acompletion`
+were green, proving the engine emitted real values and the proxy layer
+nulled them. RCA chain: (1) a `--detailed_debug` container (:4010) captured
+the engine's response with INTACT args
+(`{"command": "echo hi", "description": "Print greeting text"}`) while the
+client got nulls → response-side; (2) config bisect on the pinned image
+(114aca) — full user config minus the `callbacks:` lines = GREEN, minimal
+config = GREEN, config with callbacks = nulls → the callback is the trigger;
+image build, config edits, penalties, system prompts all exonerated. Root
+cause: `_repair_obj()`'s dict comprehension used `_try_loads(v)` directly as
+the replacement value — `_try_loads` returns None for any string that is
+NOT a stringified container, so every plain string value ("echo hi") was
+replaced with None. The v1 verification only checked container structure
+(`questions` is a list), not leaf values — leaf strings were already being
+nulled in the "green" run. The old CBLOG even shows the smoking gun
+(`repaired stream tool_use len 60->35` = args shrinking). Fix (v2 module):
+pass the original string through unless `_try_loads` parses it to a
+list/dict; verified with 9/9 unit tests in-container (flat strings, scalars,
+unicode, non-JSON braces preserved; stringified containers still
+un-stringified with leaves intact) and full batteries: both hosts
+(ainode01 :4000 docker-cp deploy, GPUNODE01 :4004 bind-mounted dual module
+names), flat/stream/chatcompletions/nested AskUserQuestion for
+qwen3.8-27b-fp8-opus-max, -opus, -sonnet all VALID with real strings, and
+real CC client E2E (`claude -p --model <tier>` Bash tool round-trips) green
+for opus-max/opus/sonnet + glm-5.3 regression. Host topology correction:
+10.100.8.6 = GPUNODE01 (runs litellm-proxy :4000 old-config, litellm-shadow
+:4002, litellm-proxy-latest :4004 improved-config, vllm-server cu129);
+ainode01 = 10.20.3.65 (lsv-test engine :8000 + litellm-proxy :4000). CC's
+settings.json ANTHROPIC_BASE_URL repointed 10.100.8.6:4000 → :4004 (the
+improved instance; note: CC settings env OVERRIDES per-command env vars —
+the E2E runs initially hit :4000 silently, which is also why opus-max 400'd
+there: the old config lacks that tier). The `[claude-code:unrecognized_model]`
+stderr line on every -p run is cosmetic (custom model ids not in CC's
+registry; requests still route correctly).

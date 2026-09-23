@@ -52,3 +52,31 @@ sed-inserted `docker run` continuation lines can lose their trailing `\`
 (invisible to `bash -n`; docker run would truncate before the image name).
 After any edit to repro_bootV*.sh: `diff` against the predecessor and verify
 the mount block ends `ro \` with `sed -n 'Np' file | cat -A`.
+
+## v2 (2026-09-23): null-args defect fix + GPUNODE01 :4004 deployment
+
+v1 `_repair_obj()` nulled every plain-string tool-argument value
+(`_try_loads` returns None for non-container strings and that None was used
+as the replacement) → all tools arrived `{"command": null, ...}` on every
+route and deployment wherever the callback was loaded; v1 verification had
+only checked container structure, not leaf values. v2 passes the original
+string through unless it parses to a list/dict. Unit-tested 9/9 in-container
+(flat strings/scalars/unicode/non-JSON braces preserved; stringified
+containers still un-stringified, leaves intact).
+
+Deployment (both fixed with v2):
+- ainode01 (10.20.3.65) litellm-proxy :4000 — module docker-cp'd from
+  /root/build/custom_callbacks.py (v1 backed up as custom_callbacks_v1_buggy.py).
+- GPUNODE01 (10.100.8.6) litellm-proxy-latest :4004 — user's improved
+  /root/litellm_config.yaml (adds qwen3.8-27b-fp8-opus-max tier, z.ai glm
+  tiers, fallbacks) + dual module mounts (custom_callbacks.py AND
+  claude_custom_callbacks.py from /root/claude_custom_callbacks.py) +
+  pinned digest 114aca7726c3 + `-e LITELLM_MASTER_KEY=sk-dummy`, port 4004.
+- CC settings.json ANTHROPIC_BASE_URL now points at 10.100.8.6:4004.
+  NOTE: CC's settings env block OVERRIDES shell-provided env vars —
+  per-command `ANTHROPIC_BASE_URL=... claude` silently still uses settings.
+
+Validation: nested AskUserQuestion selector VALID=True with real labels for
+opus-max/opus/sonnet on :4004 and opus on ainode :4000; flat/stream/
+chatcompletions real values everywhere; real CC client E2E Bash round-trips
+green for qwen3.8-27b-fp8-opus-max, -opus, -sonnet and glm-5.3.

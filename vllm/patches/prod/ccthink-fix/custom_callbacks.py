@@ -51,7 +51,16 @@ def _try_loads(s: str):
 
 def _repair_obj(o):
     if isinstance(o, dict):
-        return {k: (_try_loads(v) if isinstance(v, str) else _repair_obj(v)) for k, v in o.items()}
+        def _val(v):
+            # v2 fix: _try_loads returns None for plain strings — that None used to
+            # REPLACE the value, nulling every non-container string in tool args
+            # ({"command": "echo hi"} -> {"command": null}). Pass the original
+            # string through unless it parses to a list/dict.
+            if isinstance(v, str):
+                parsed = _try_loads(v)
+                return v if parsed is None else parsed
+            return _repair_obj(v)
+        return {k: _val(v) for k, v in o.items()}
     if isinstance(o, list):
         return [_repair_obj(x) for x in o]
     return o
