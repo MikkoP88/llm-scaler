@@ -2392,3 +2392,60 @@ re-baking). Known residual (documented, not gated): fresh-boot JIT count
 7→8 on sanity/validate traffic shapes (first-touch compiles outside the
 warm enumeration; steady-state 0.06 s gaps prove no compile stalls in
 service) — same evidence class as the v65 Phase-0 expand_kernel residual.
+
+## 26 — litellm 1.103.0 routes /v1/messages for openai-provider deployments through the Responses-API bridge, silently dropping vLLM reasoning (CC thinking fix); reasoning_effort "high" rejected by stock template; durable V1221 lineage (2026-09-23)
+
+**Symptom.** Claude Code stopped showing thinking text ("✢ Skedaddling…
+(3m 55s)" with zero visible thought); worked earlier in the week.
+
+**Root cause (two stacked defects, both proven with in-container probes).**
+
+1. *litellm routing.* `/v1/messages` → `anthropic_response()` →
+   `anthropic_messages_handler`; the gate `_should_route_to_responses_api()`
+   (messages/handler.py:73) returns True unconditionally for provider
+   `openai` (`_RESPONSES_API_PROVIDERS = frozenset({"openai"})`) because our
+   deployments are `openai/qwen3.8-27b-fp8-*`. The Responses-API bridge
+   (`LiteLLMMessagesToResponsesAPIHandler`) drops vLLM reasoning entirely.
+   The good path (`LiteLLMMessagesToCompletionTransformationHandler` →
+   `ANTHROPIC_ADAPTER.translate_completion_output_params_streaming` →
+   reasoning_content→thinking_delta, transformation.py:1582/1642) is only
+   reached otherwise. Every hop below it was proven healthy: engine emits
+   `delta.reasoning` → openai `chunk_parser._map_reasoning_to_reasoning_content`
+   (gpt_transformation.py:841/857/885) renames to `reasoning_content`
+   (in-container acompletion probe: 11 rc chunks, proper Deltas) → direct
+   adapter call produced 2× content_block_start + 12× thinking_delta.
+   Only the endpoint routing was broken.
+   **Fix:** `litellm_settings.use_chat_completions_url_for_anthropic_messages:
+   true` in /root/litellm_config.yaml (first-class opt-out, read at
+   messages/handler.py:83; setting defined litellm/__init__.py:248, env
+   `LITELLM_USE_CHAT_COMPLETIONS_URL_FOR_ANTHROPIC_MESSAGES`). Required AND
+   sufficient on the latest `main-latest` image too (3def0387871a,
+   2026-09-23): plain config drops thinking, fixed config streams
+   72× thinking_delta.
+2. *Engine template.* CC `thinking:{type:enabled}` → litellm maps to
+   `reasoning_effort:"high"` → stock template rejects ("Supported types are
+   xhigh (default), medium, and low") → HTTP 400. **Fix:** user's
+   `/root/build/chat_template_qwen38_high.jinja` (9205 B) via
+   `--chat-template` on the lane serve.
+
+**Validation (all through :4000).** Stream+nonstream thinking counts; E2/E2B
+thinking-param (54 deltas); CC-shape (78 deltas); forced tool, thinking+tool,
+history replay with thinking/tool_use blocks (no 400), nonthinking tier — all
+green. Real CC runs: thinking display test (full thinking in stream-json) and
+tool test (tool_use=1, Bash executed, thinking blocks present, end_turn).
+Latest-image side-container test on :4004 completed then removed. Cosmetic
+residual: usage `thinking_tokens:0` annotation (reasoning token count not
+populated on this path; display unaffected).
+
+**Durability (V1221 lineage).** repro_bootV1221.sh = V1212 + template host
+mount (`-v /root/build/chat_template_qwen38_high.jinja:...:ro`) + boot-time
+injection of `--chat-template` into the baked /root/serve_user.sh + two
+fail-loud gates (TEMPLATE_MISSING exit 11 / TEMPLATE_FLAG_MISSING exit 12).
+lane_watchdog.sh:75 repointed V1212→V1221 (service stop/edit/start; backup
+lane_watchdog.sh.pre_v1221); live lsv-test serve_user.sh patched in place.
+Artifacts: vllm/patches/prod/ccthink-fix/. Ship-time defect caught in
+review: the sed-inserted mount line lost its trailing `\` (docker run would
+truncate before the image name; `bash -n` cannot catch this — line-continuation
+byte check is now part of the diff review). Recurrence guards from #25 still
+apply: litellm re-create MUST keep `-e LITELLM_MASTER_KEY=sk-dummy`; any
+plain recreate breaks CC with 400 "No connected db."

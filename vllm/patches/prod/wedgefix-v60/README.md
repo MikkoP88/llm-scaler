@@ -610,3 +610,44 @@ Files: patch_sched_v66.py (test), patch_sched_v66_bake.py (bake),
 probe_admission_v66.py (repro/acceptance), probe_raw_stream.py (SSE
 diagnosis), probe_think_cc.py (CC round-trip), stage5_bake_v1220.sh,
 sanity_v1220.sh, validate_v1220.sh, ship_v1220.sh, resume_v1220.sh.
+
+# CC-thinking fix + V1221 durable lineage (2026-09-23, no image change)
+
+Symptom: Claude Code stopped displaying thinking text ("✢ Skedaddling…").
+Two stacked defects, both engine-external — image v1.2.20 unchanged:
+
+1. **litellm 1.103.0 Responses-API bridge.** `/v1/messages` for
+   `openai/*` deployments (ours) unconditionally routes through
+   `LiteLLMMessagesToResponsesAPIHandler` (messages/handler.py:73,
+   `_RESPONSES_API_PROVIDERS = {"openai"}`), which drops vLLM reasoning.
+   Every downstream hop was proven healthy first (engine `delta.reasoning` →
+   gpt_transformation.py:841 rename to `reasoning_content` → adapter
+   transformation.py:1582/1642 emits thinking blocks when called directly) —
+   only the routing was broken. Fix:
+   `litellm_settings.use_chat_completions_url_for_anthropic_messages: true`
+   (opt-out read at messages/handler.py:83). Verified required AND sufficient
+   on the same-day `main-latest` (3def0387871a): plain config drops thinking,
+   fixed config streams 72× thinking_delta (side-container test on :4004,
+   removed after).
+2. **Template rejects reasoning_effort "high".** CC's thinking param maps to
+   `reasoning_effort:"high"`; the stock template only accepts
+   xhigh/medium/low → 400. Fix: user's `chat_template_qwen38_high.jinja`
+   served via `--chat-template`.
+
+Validation through :4000: stream+nonstream thinking counts, E2/E2B (54
+deltas), CC-shape (78 deltas), forced tool, thinking+tool, history replay
+with thinking/tool_use blocks, nonthinking tier — all green; real CC runs
+show thinking text and working tool flow. Cosmetic residual: usage
+`thinking_tokens:0` annotation.
+
+**Durability:** repro_bootV1221.sh = V1212 lineage + template host mount +
+boot-time `--chat-template` injection into baked serve_user.sh + fail-loud
+gates (exit 11/12); lane_watchdog.sh repointed V1212→V1221 (service
+stop/edit/start, backup .pre_v1221); live container's serve_user.sh patched.
+Ship-time defect caught in review: the sed-inserted mount line lost its
+trailing `\` — docker run would have truncated before the image name on
+every watchdog relaunch (invisible to `bash -n`); fixed via awk append +
+`diff` review against V1212 (exactly 5 added lines).
+
+Artifacts: ../ccthink-fix/ (template, litellm_config.yaml, repro_bootV1221.sh,
+lane_watchdog.sh, probes). Full RCA in KNOWN_ISSUES #26.

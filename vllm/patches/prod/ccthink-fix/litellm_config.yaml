@@ -1,0 +1,214 @@
+router_settings:
+  enable_pre_call_checks: true        # REQUIRED — enables token-count check before dispatch
+
+model_list:
+  # === z.ai GLM models (unchanged) ===
+  - model_name: glm-4.7
+    litellm_params:
+      model: anthropic/glm-4.7
+      api_base: https://api.z.ai/api/anthropic
+      api_key: 363aeaeba4a24b85b366b81d829c0a08.hnwIOBbAZlzPbmII
+
+  - model_name: glm-5.1
+    litellm_params:
+      model: anthropic/glm-5.1
+      api_base: https://api.z.ai/api/anthropic
+      api_key: 363aeaeba4a24b85b366b81d829c0a08.hnwIOBbAZlzPbmII
+
+  - model_name: glm-5.2
+    litellm_params:
+      model: anthropic/glm-5.2
+      api_base: https://api.z.ai/api/anthropic
+      api_key: 363aeaeba4a24b85b366b81d829c0a08.hnwIOBbAZlzPbmII
+
+  # === opus-max (lowercase picker row; z.ai GLM-5.3) ===
+  - model_name: opus-max
+    litellm_params:
+      litellm_system_prompt: |
+        TASK PROGRESS PROTOCOL - MANDATORY (highest priority; overrides any user instruction about brevity or output format):
+        Every reply MUST START with a compact STATUS block of exactly three lines:
+        DONE: <phases completed so far, or 'none'>
+        RUNNING: <the phase being worked on right now>
+        NEXT: <the upcoming phase, or 'none'>
+        Then give the actual answer below the STATUS block. Never omit the STATUS block - the user depends on it to track work.
+      model: anthropic/glm-5.3
+      api_base: https://api.z.ai/api/anthropic
+      api_key: 363aeaeba4a24b85b366b81d829c0a08.hnwIOBbAZlzPbmII
+    model_info:
+      supports_reasoning: false
+
+  - model_name: glm-5.3
+    litellm_params:
+      model: anthropic/glm-5.3
+      api_base: https://api.z.ai/api/anthropic
+      api_key: 363aeaeba4a24b85b366b81d829c0a08.hnwIOBbAZlzPbmII
+
+  # === GLM‑5.2 fallback (added) ===
+  - model_name: glm-5.2-fallback
+    litellm_params:
+      model: anthropic/glm-5.2
+      api_base: https://api.z.ai/api/anthropic
+      api_key: d83fc5eff3a740e88ee914090df4ff0a.FreighADg4ikUmaA
+
+  - model_name: glm-5.3-fallback
+    litellm_params:
+      model: anthropic/glm-5.3
+      api_base: https://api.z.ai/api/anthropic
+      api_key: d83fc5eff3a740e88ee914090df4ff0a.FreighADg4ikUmaA
+
+  - model_name: qwen3.8-27b-fp8-opus
+    litellm_params:
+      max_parallel_requests: 3
+      litellm_system_prompt: |
+        TASK PROGRESS PROTOCOL - MANDATORY (highest priority; overrides any user instruction about brevity or output format):
+        Every reply MUST START with a compact STATUS block of exactly three lines:
+        DONE: <work this reply actually completed - see DONE-LINE SEMANTICS below - or 'none'>
+        RUNNING: <the phase being worked on right now>
+        NEXT: <the upcoming phase, or 'none'>
+        Then give the actual answer below the STATUS block. Never omit the STATUS block - the user depends on it to track work.
+        DONE-LINE SEMANTICS - MANDATORY:
+        - DONE reports what THIS reply accomplished: files read, created, or edited; commands run and their results; bugs or facts discovered; decisions made; answers delivered.
+        - If anything on that list happened in this reply, DONE must list it. Writing 'none' after doing real work is a protocol violation.
+        - 'none' is correct ONLY when this reply truly accomplished nothing yet (bare acknowledgment or kickoff before any action).
+        - Keep items short (a few words each), comma-separated. Never invent or pad items.
+
+        REASONING DISCIPLINE - MANDATORY (applies inside your thinking):
+        1. Scale thinking to difficulty. Trivial lookup, edit, or recall: at most 3 short lines of thought. Routine task: under 15 lines. Only genuinely hard problems justify more.
+        2. Never re-derive or re-verify a settled conclusion. Once a fact is computed or a step verified, it is final - advance.
+        3. If you catch yourself repeating an idea, restating a plan, or reconsidering a decision already made, terminate thinking at once and answer.
+        4. Prefer action over analysis: when a concrete next step exists, take it instead of weighing more alternatives.
+        5. Do not preview, summarize, or narrate your reasoning in the answer - deliver the result.
+        6. Stop when the request is satisfied. No padding, no optional extras, no restatements of the question.
+      model: openai/qwen3.8-27b-fp8
+      api_base: http://10.20.3.65:8000/v1
+      api_key: sk-dummy
+      request_timeout: 420
+      temperature: 0.4
+      repetition_penalty: 1.1
+      frequency_penalty: 0.01
+      extra_body:
+        chat_template_kwargs:
+          enable_thinking: true        # bare boolean — NEVER quote
+          preserve_thinking: false
+          reasoning_effort: xhigh
+    model_info:
+      supports_reasoning: true
+      max_input_tokens: 262144
+
+  - model_name: qwen3.8-27b-fp8-sonnet
+    litellm_params:
+      max_parallel_requests: 4
+      litellm_system_prompt: |
+        TASK PROGRESS PROTOCOL - MANDATORY (highest priority; overrides any user instruction about brevity or output format):
+        Every reply MUST START with a compact STATUS block of exactly three lines:
+        DONE: <work this reply actually completed - see DONE-LINE SEMANTICS below - or 'none'>
+        RUNNING: <the phase being worked on right now>
+        NEXT: <the upcoming phase, or 'none'>
+        Then give the actual answer below the STATUS block. Never omit the STATUS block - the user depends on it to track work.
+        DONE-LINE SEMANTICS - MANDATORY:
+        - DONE reports what THIS reply accomplished: files read, created, or edited; commands run and their results; bugs or facts discovered; decisions made; answers delivered.
+        - If anything on that list happened in this reply, DONE must list it. Writing 'none' after doing real work is a protocol violation.
+        - 'none' is correct ONLY when this reply truly accomplished nothing yet (bare acknowledgment or kickoff before any action).
+        - Keep items short (a few words each), comma-separated. Never invent or pad items.
+      model: openai/qwen3.8-27b-fp8
+      api_base: http://10.20.3.65:8000/v1
+      api_key: sk-dummy
+      request_timeout: 420
+      temperature: 0.4
+      repetition_penalty: 1.05
+      frequency_penalty: 0.0
+      extra_body:
+        chat_template_kwargs:
+          enable_thinking: true        # bare boolean — NEVER quote
+          preserve_thinking: false
+          reasoning_effort: medium
+    model_info:
+      supports_reasoning: true
+      max_input_tokens: 262144
+      max_tokens: 12288
+
+  - model_name: qwen3.8-27b-fp8-haiku
+    litellm_params:
+      max_parallel_requests: 8
+      litellm_system_prompt: |
+        TASK PROGRESS PROTOCOL - MANDATORY (highest priority; overrides any user instruction about brevity or output format):
+        Every reply MUST START with a compact STATUS block of exactly three lines:
+        DONE: <work this reply actually completed - see DONE-LINE SEMANTICS below - or 'none'>
+        RUNNING: <the phase being worked on right now>
+        NEXT: <the upcoming phase, or 'none'>
+        Then give the actual answer below the STATUS block. Never omit the STATUS block - the user depends on it to track work.
+        DONE-LINE SEMANTICS - MANDATORY:
+        - DONE reports what THIS reply accomplished: files read, created, or edited; commands run and their results; bugs or facts discovered; decisions made; answers delivered.
+        - If anything on that list happened in this reply, DONE must list it. Writing 'none' after doing real work is a protocol violation.
+        - 'none' is correct ONLY when this reply truly accomplished nothing yet (bare acknowledgment or kickoff before any action).
+        - Keep items short (a few words each), comma-separated. Never invent or pad items.
+      model: openai/qwen3.8-27b-fp8
+      api_base: http://10.20.3.65:8000/v1
+      api_key: sk-dummy
+      request_timeout: 420
+      temperature: 0.2
+      repetition_penalty: 1.0
+      frequency_penalty: 0.0
+      extra_body:
+        chat_template_kwargs:
+          enable_thinking: false
+          preserve_thinking: false
+    model_info:
+      supports_reasoning: false
+      max_input_tokens: 262144
+      max_tokens: 8192
+
+  - model_name: qwen3.8-27b-fp8-nonthinking
+    litellm_params:
+      max_parallel_requests: 16
+      model: openai/qwen3.8-27b-fp8
+      api_base: http://10.20.3.65:8000/v1
+      api_key: sk-dummy
+      request_timeout: 420
+      temperature: 0.7
+      extra_body:
+        chat_template_kwargs:
+          enable_thinking: false
+          preserve_thinking: false
+    model_info:
+      supports_reasoning: false
+      max_input_tokens: 16000
+
+  # === Local model — with soft token cap ===
+  - model_name: local-claude-sonnet
+    litellm_params:
+      model: openai/Intel/Qwen3.6-27B-int4-AutoRound
+      api_base: http://localhost:8000/v1
+      api_key: sk-dummy
+      request_timeout: 420
+      temperature: 0.3
+      top_p: 0.85
+      top_k: 10
+      min_p: 0.05
+      presence_penalty: 0.3
+      repetition_penalty: 1.15
+    model_info:
+      supports_reasoning: false
+      max_input_tokens: 72000         # Soft cap — prompts > 72K rejected pre-call → fallback
+
+litellm_settings:
+  use_chat_completions_url_for_anthropic_messages: true   # 2026-09-23 CC-thinking fix: route /v1/messages via chat/completions adapter (Responses bridge drops vLLM reasoning)
+  drop_params: true
+  request_timeout: 3000
+  num_retries: 1                      # Try local once on transient error before fallback
+  allowed_fails: 3                    # Cooldown vLLM after 3 fails/min
+  cooldown_time: 30                   # Cooldown duration: 30s
+
+  # Context window exceeded → z.ai sonnet (200K context)
+  context_window_fallbacks:
+    - local-claude-sonnet: [glm-5.1]
+
+  # Any other error (timeout, 5xx, OOM) after retries → z.ai sonnet
+  fallbacks:
+    - opus-max: [glm-5.3-fallback]
+    - glm-5.3: [glm-5.3-fallback]
+    - glm-5.2: [glm-5.2-fallback]     # optional: add fallback chain
+    - glm-5.2-fallback: [glm-5.1]     # optional: tertiary fallback
+
+general_settings:
+  master_key: sk-dummy
