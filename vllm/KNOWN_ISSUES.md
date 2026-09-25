@@ -2512,3 +2512,52 @@ the E2E runs initially hit :4000 silently, which is also why opus-max 400'd
 there: the old config lacks that tier). The `[claude-code:unrecognized_model]`
 stderr line on every -p run is cosmetic (custom model ids not in CC's
 registry; requests still route correctly).
+## 27 — int32 pool-offset overflow in the GDN conv-state update kernels: the tiny-step wedge root cause; v88 int64 fix + v1.2.21 (2026-09-25)
+
+**Defect.** The xe2 prefill conv kernel computes the per-request state
+pointer as `conv_states + states_id * conv_states_stride_0` with `int`
+operands (`chunk_causal_conv1d_xe2.hpp:186/547`; same pattern in the
+native path `causal_conv1d.hpp:232/452/736/833`). The unified mamba pool
+uses padded 1-MiB pages — `stride(0) = 524,288` fp16 elements (measured
+live, v87 probe) — so the product overflows signed int32 for every state
+id ≥ 4097 (4096 wraps to INT32_MIN). Wrapped-negative pointers write
+~3.9 GiB below the layer base: mapped target → silent state corruption;
+unmapped → `UR_RESULT_ERROR_DEVICE_LOST` → engine wedge + GPU reset.
+This is the entire "wedge crash after prompt changes" family: any
+workload driving cumulative fresh mamba state ids past 4096 (multi-client
+serialized traffic crossed it at request 17, ids 4118–4173, layer 16;
+single long CC prompts cross it in one request). Present since the
+v26-era wheel (`d20260830`) — the int64 hardening then covered the
+delta-rule kernels but not the conv kernels.
+
+**Evidence chain** (RCA_TINYSTEP_WEDGE.md P24n–P24v, wedgefix-v75):
+pool geometry probes (8050 rows, 65 groups), gmu-0.6 survival (ids stay
+<4097), v86 fault-point capture (ring-of-2 preserved the faulting GDN
+call: layer-16 prefill, ssi=4173), v87 stride print (524,288), and the
+deterministic standalone repro `repro_v88_int32.py` — the EXACT captured
+fault call replayed against a serve-geometry strided pool: ssi=100 clean,
+ssi=4173 DEVICE_LOST (twice, across boots), zero serve stack involved.
+
+**Fix (v88).** `static_cast<int64_t>` at all six sites (matching the
+already-safe `chunk_gated_delta_rule_kernels_xe2.hpp:1046` pattern);
+`// [V88FIX]` marks; wheel rebuilt with KERNELS_MAX_JOBS=52 (standing:
+all kernels builds use 52). Post-fix: ssi=4173 and 4096 write exactly
+the right row, finite; in-range outputs bit-identical to the pre-fix
+wheel (numerics-neutral).
+
+**Ship (v1.2.21 = 09e114a46903, 24.7GB).** Bake from v1.2.20 with a
+bake-time acceptance gate (standalone repro exit 0 inside the bake
+container before warm); 50 content gates OK incl. v84–v87 probe absence
+and no-GDN_CAPTURE; fresh-boot validation: sanity READY-v1221, admission
+PASS, solo cold TTFT 101.04 s (parity), serialized 24/24 SURVIVED
+(historically dead at 17), bursts 72/72, 3× drill no-wedge, fairness
+6.997 tok/s @ 0.05–0.06 s gaps, JIT recheck 0. Watchdog repointed
+(backup .pre_v1221). CC round-trip through litellm green post-ship.
+
+**Tooling notes for the record.** pip rejects non-canonical wheel
+filenames (docker-cp with the original basename, and gate on the
+installed version before trusting it); the v88 bake/ship generation seds
+needed both cases (`v1220` AND `V1220` — marker lines are upper-case);
+the patch-script mark must be a `//` comment or the kernel build dies.
+Artifacts in `vllm/patches/prod/wedgefix-v75/` (patch script, repro,
+fix diff, leg scripts, bake/ship v1221).

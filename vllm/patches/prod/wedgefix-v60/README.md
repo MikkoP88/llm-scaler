@@ -651,3 +651,51 @@ every watchdog relaunch (invisible to `bash -n`); fixed via awk append +
 
 Artifacts: ../ccthink-fix/ (template, litellm_config.yaml, repro_bootV1221.sh,
 lane_watchdog.sh, probes). Full RCA in KNOWN_ISSUES #26.
+
+# v88 int64 pool-offset fix — tiny-step WEDGE ROOT FIX, v1.2.21 (2026-09-25)
+
+The "wedge crash after prompt changes" family (KNOWN_ISSUES #11 residual,
+reopened by multi-client CC traffic) is root-caused and fixed at the kernels
+level. Full evidence chain: ../wedgefix-v75/RCA_TINYSTEP_WEDGE.md P24n–P24v;
+summary in KNOWN_ISSUES #27.
+
+Root cause: the xe2 prefill conv kernel computes the per-request mamba state
+pointer as `conv_states + states_id * conv_states_stride_0` in signed int32
+(chunk_causal_conv1d_xe2.hpp:186/547; same at causal_conv1d.hpp:232/452/736/
+833). The unified mamba pool pads rows to 1 MiB — stride(0)=524,288 fp16
+elements (measured live) — so ids ≥ 4097 wrap: mapped targets get silently
+corrupted, unmapped ones UR_RESULT_ERROR_DEVICE_LOST (the wedge; captured
+fault: layer-16 prefill, ssi=4173). Deterministic standalone repro:
+repro_v88_int32.py replays the captured fault call against a strided
+serve-geometry pool — DEVICE_LOST at 4173 pre-fix, exact-row write post-fix,
+bit-identical in-range outputs (numerics-neutral).
+
+Fix: `static_cast<int64_t>` at all six sites (the pattern the delta-rule
+kernels already used); wheel rebuilt KERNELS_MAX_JOBS=52 (standing for all
+kernels builds). Present since the v26-era wheel d20260830 — v26 hardened
+the delta-rule kernels but not the conv kernels.
+
+**v1.2.21 SHIPPED (2026-09-25 19:27).** Image `09e114a46903` (24.7GB) =
+v1.2.20 + fixed wheel, baked from a fresh lsv-bake with a bake-time
+acceptance gate (standalone repro exit 0 inside the bake container before
+warm). 50 content gates OK (lineage marks, v84–v87 probe absence,
+no-GDN_CAPTURE, serve config). Fresh-boot validation: READY-v1221,
+admission PASS, solo cold 101.04 s (parity), serialized 24/24 SURVIVED
+(historically dead at 17), bursts 72/72, 3× drill no-wedge, fairness
+6.997 tok/s @ 0.06 s gaps, JIT recheck 0, CC round-trip through litellm
+green (incl. explicit thinking-param shapes, nonstream + stream, on the
+template-less lane — v1.2.20's per-tier litellm kwargs make the
+ccthink --chat-template boot additions unnecessary; that lineage is
+preserved at repro_bootV1221_ccthink.sh / repro_bootV1212.sh.pre_v1221 —
+name collision resolved by renaming ours in place).
+
+Ship-time tooling defects caught and fixed (recorded for the next bake):
+pip rejects non-canonical wheel filenames (docker-cp with the original
+basename + version-gate the install); generation seds needed BOTH cases
+(v1220 AND V1220 markers); patch marks must be `//` comments or the
+kernel build dies; and `docker start lsv-test` is required after host
+reboots in install legs.
+
+Artifacts: ../wedgefix-v75/ (patch_v88_int64fix.py, repro_v88_int32.py,
+v88_int64_fix.diff, v88a–v88d leg scripts, build_vxk_wheel_v88.sh,
+stage5_bake_v1221.sh, ship_v1221.sh).

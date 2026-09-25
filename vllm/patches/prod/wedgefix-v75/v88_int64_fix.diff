@@ -1,0 +1,76 @@
+--- csrc/xpu/gdn_attn/xe_2/chunk_causal_conv1d_xe2.hpp.v88bak	2026-08-26 17:36:51.000000000 +0000
++++ csrc/xpu/gdn_attn/xe_2/chunk_causal_conv1d_xe2.hpp	2026-09-25 15:44:55.751655650 +0000
+@@ -183,7 +183,7 @@
+     const bool has_init_conv_states =
+         (has_initial_state == nullptr ||
+          (has_initial_state != nullptr && has_initial_state[batch_id]));
+-    T* conv_states_ptr = conv_states + states_id * conv_states_stride_0;
++    T* conv_states_ptr = conv_states + static_cast<int64_t>(states_id) * conv_states_stride_0;
+ 
+     // load weights
+     T local_weights[Width * elems_per_item];
+@@ -544,7 +544,7 @@
+     }
+ 
+     int states_id = cache_indices[batch_id];
+-    T* conv_states_ptr = conv_states + states_id * conv_states_stride_0;
++    T* conv_states_ptr = conv_states + static_cast<int64_t>(states_id) * conv_states_stride_0;
+     const T* conv_states_tmp_ptr =
+         conv_states_tmp + batch_id * (width - 1) * conv_elems;
+     // BUGFIX: clamp i to conv_elems. Without this, the last group writes past conv_elems
+@@ -735,7 +735,7 @@
+   const int qkvz_elems = mixed_qkvz.size(1);
+   const int conv_elems = conv_weights.size(0);
+   const int width = conv_weights.size(1);
+-  const int conv_states_stride_0 = conv_states.stride(0);
++  const int conv_states_stride_0 = conv_states.stride(0);  // [V88FIX] int64 pool offsets (id*stride overflows int32 at id>=4097)
+ 
+   auto dtype = conv_states.dtype();
+   auto device = conv_states.device();
+--- csrc/xpu/gdn_attn/causal_conv1d.hpp.v88bak	2026-08-30 13:37:45.978091105 +0000
++++ csrc/xpu/gdn_attn/causal_conv1d.hpp	2026-09-25 15:44:55.752188249 +0000
+@@ -229,7 +229,7 @@
+     const bool has_init_conv_states =
+         (has_initial_state == nullptr ||
+          (has_initial_state != nullptr && has_initial_state[batch_id]));
+-    T* conv_states_ptr = conv_states + states_id * conv_states_stride_0;
++    T* conv_states_ptr = conv_states + static_cast<int64_t>(states_id) * conv_states_stride_0;
+ 
+     // load weights
+     T local_weights[Width * elems_per_item];
+@@ -449,7 +449,7 @@
+     }
+ 
+     int states_id = cache_indices[batch_id];
+-    T* conv_states_ptr = conv_states + states_id * conv_states_stride_0;
++    T* conv_states_ptr = conv_states + static_cast<int64_t>(states_id) * conv_states_stride_0;
+     const T* conv_states_tmp_ptr =
+         conv_states_tmp + batch_id * (width - 1) * conv_elems;
+     for (int i = elems_start_offset_group + local_id;
+@@ -733,7 +733,7 @@
+     }
+     if (Width > 1 && init_state_id != pad_slot_id) {
+       const T* init_state_ptr =
+-          conv_states + init_state_id * conv_states_stride_0;
++          conv_states + static_cast<int64_t>(init_state_id) * conv_states_stride_0;
+ #pragma unroll
+       for (int i = 0; i < Width - 1; ++i) {
+ #pragma unroll
+@@ -830,7 +830,7 @@
+             cache_indices[batch_id * cache_indices_stride_0 + t_local];
+         if (save_state_id != pad_slot_id) {
+           T* save_state_ptr =
+-              conv_states + save_state_id * conv_states_stride_0;
++              conv_states + static_cast<int64_t>(save_state_id) * conv_states_stride_0;
+ #pragma unroll
+           for (int i = 0; i < Width - 1; ++i) {
+ #pragma unroll
+@@ -1058,7 +1058,7 @@
+   const int qkvz_elems = mixed_qkvz.size(1);
+   const int conv_elems = conv_weights.size(0);
+   const int width = conv_weights.size(1);
+-  const int conv_states_stride_0 = conv_states.stride(0);
++  const int conv_states_stride_0 = conv_states.stride(0);  // [V88FIX] int64 pool offsets (id*stride overflows int32 at id>=4097)
+ 
+   int num_spec_tokens = 0;
+   int cache_indices_stride_0 = 0;
