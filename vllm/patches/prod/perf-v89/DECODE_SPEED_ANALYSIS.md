@@ -175,3 +175,42 @@ Host reboot first (standing directive) → change on the validation path (never 
 - GPU: `xpu-smi dump --device 0 --metrics UTILIZATION,MEMORY --number 2` (long flags only — `-m`/short combos are rejected by this build)
 - Health: `dmesg | grep -iE 'xe|reset|fault'`, watchdog/servecap: `systemctl cat lane-servecap`, `head -30 /root/build/serve_live_capture.sh`
 - Traffic: litellm DEBUG monitor `/root/livemodels.sh` (GPUNODE01; pollution-hardened anchors)
+
+## 8. Implementation results (2026-09-27, v1.2.22 ship — full record in PHASES.md P2-P7)
+
+- **T0 (certified relaunch):** DONE — lane re-certified on baked defaults;
+  manual-launch flag drift (max-num-seqs 32, stale chat template) eliminated
+  by the bake; **parser qwen3_coder validated under live CC traffic and
+  BAKED** (qwen3_xml lineage retained in-tree).
+- **T1 (scheduler reallocation): REJECTED by measurement** — V63=512:
+  77.0/76.8 vs 77.1 baseline (no gain, real TTFT risk); V64=3: 77.6 ≈ 77.1
+  (no gain). Baked defaults stay **V63=1024 / V64 K=2, B=512**; new env-knob
+  floor `if 0 < V63 < 1024: = 1024` guards against future mis-sets. The §3
+  hypothesis is refuted on this workload: contended throughput is not
+  scheduler-starved; it is step-cost-bound (T3's domain).
+- **T2a (capture sizes): SHIPPED** — 85 sizes, exact-fit spec-verify graphs:
+  **solo +3-4 %** (71.2-71.4 → 73.6/74.1 tok/s; ship-boot 72.6/73.9/74.0),
+  contention neutral, boot neutral (64 graphs / 31 s / 2.32 GiB, KV
+  unchanged 476,451 tok). Keep standing.
+- **T2b (barrier-off): REJECTED — keep BARRIER=2.** Identical solo
+  (73.3/73.0 vs 73.6/74.1) and contention distributions; per §3.6's decision
+  rule, no measurable improvement → the crash-free certified posture stands.
+  PATCH_STACK_ANALYSIS §3.6 is now closed with live post-v88 measurement.
+- **T3 (profiling → kernel plan): scoped, not in this image.** py-spy under
+  live 8-stream contention: EngineCore ~100 % healthy idle (NOT Python-bound
+  — v63/v64 knobs act purely via GPU work allocation); Worker_TP0 74.6 % of
+  host samples in `rejection_sampler.parse_output` (MTP acceptance parse /
+  device sync). Plan: (1) keep acceptance bookkeeping on device / batch the
+  host sync (per-step win at all batch sizes); (2) mamba/GDN state ops + KV
+  reads at 38k contexts (xpu-smi EU-stall 57 % headroom). Weeks-scale; all
+  kernels builds KERNELS_MAX_JOBS=52.
+- **Ship:** `llm-scaler-exp:v1.2.22` = **89b17e0b0f8d** (24.9 GB; lane-commit
+  carrying the 74-entry warm triton cache — 0 cache writes through the full
+  decisive traffic chain vs raw's +2), `v1.2.22-raw` = e6735a4c72a2
+  preserved. Spec MTP×4 + XGrammar-2 0.2.7 intact (standing requirement).
+  lane-watchdog repointed. Triton monitor lines are first-use events (loads
+  included) — see KNOWN_ISSUES #28; gate on cache-dir delta, not line count.
+- **Net position:** solo decode +3-4 % now; per-stream throughput under the
+  CC fleet remains demand-arithmetic (fixed ~82 tok/s aggregate ÷ streams).
+  The remaining lever is T3 kernel work — the analysis of §2-§4 stands
+  unrefuted.

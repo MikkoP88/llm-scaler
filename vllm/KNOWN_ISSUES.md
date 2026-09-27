@@ -2577,3 +2577,53 @@ unmeasured µs tax), NEVER `1` (standing user constraint), retire only
 via the validation leg in PATCH_STACK_ANALYSIS.md §3.6. All other guards
 are independently load-bearing (v31.1 inductor gate, v27 allreduce fix,
 v55.3 watchdog, f15b, WEDGEFIX-A/C/E, v63/v64/v66) — keep.
+
+## #28 (2026-09-27, v1.2.22 ship) — triton "JIT" monitor lines are first-use events (loads included), NOT all compiles; and a grep -c gate pitfall
+
+**Defect class:** misread monitoring semantics that produced a false
+ship-blocker ("11 JIT compilations on the fresh v1.2.22 boot despite a
+shipped warm cache").
+
+**Root cause (code-level, triton 3.7):**
+`triton/compiler/compiler.py:274-289` returns the disk-cached
+`CompiledKernel` on a cache hit without compiling, and
+`triton/runtime/jit.py:878/886` fires `knobs.runtime.jit_post_compile_hook`
+after `compile()` returns **regardless of hit or miss**. vllm's
+`triton_utils/jit_monitor.py` warning ("JIT compilation during inference:
+<name>") is that hook — so a line means *first use of a kernel
+specialization in that process*, whether compiled or **loaded from the
+shipped cache**. `logger.warning_once` dedups per kernel NAME per process.
+
+**Consequences / standing guidance:**
+- Every fresh boot of every image logs ~11 such lines on this lane
+  (the 11-name set: _zero_kv_blocks, _compute_slot_mapping,
+  eagle_prepare_next_token_padded, eagle_step_slot_mapping_metadata,
+  expand, eagle_prepare_inputs_padded, batch_memcpy, _topk_topp,
+  kernel_unified_attention, reduce_segments, rejection_greedy_sample) —
+  all cache loads on v1.2.22, ~ms each. **Never gate on monitor-line
+  count == 0; gate on triton cache-dir delta == 0 during traffic.**
+- The earlier "bake-window triton cache entries lost across docker
+  commit" theory is RETRACTED: the bake warm round wrote nothing because
+  all its first-use events were loads; the raw lane's +2 dirs were real
+  first-time compiles of autotune kernels under the novel 85-size traffic
+  mix. No cache loss across commit ever occurred. (The decisive/
+  gates scripts of 2026-09-27 carry the superseded interpretation in
+  their comments — kept as-run; this entry supersedes.)
+- Shipping a warm cache via docker commit of a validated lane
+  (v1.2.22 = 89b17e0b0f8d) works and is load-serving: 0 cache-dir writes
+  through the full decisive traffic chain (74→74) vs raw's +2.
+- Autotune-group cache writes (`__grp__*.json`, `TRITON_CACHE_AUTOTUNING=1`
+  — set by vllm env_override.py itself) are the only dirs a fresh traffic
+  mix adds; pre-shipping them in the image avoids the first-use autotune
+  re-runs (seconds-class).
+
+**Ship-time gate-script pitfall (same night):** a count gate written as
+`grep -c ... || echo 0` double-prints `0` because `grep -c` ALWAYS prints
+the count (even on zero matches, exit 1). Use plain `grep -c` (or pipe to
+`wc -l` inside command substitution) — never append `|| echo 0`.
+
+**Operational gotchas (plink lane, recorded):** staging a local file via
+`plink "cat > remote" < local` must run FOREGROUND (backgrounding breaks
+the stdin redirect); complex inline one-liners fail quoting — stage a
+script instead; `repro_bootV1222.sh` REQUIRES a MODE argument (e.g.
+`bash repro_bootV1222.sh v1222wb`).

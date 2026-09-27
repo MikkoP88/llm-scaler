@@ -727,3 +727,44 @@ reboots in install legs.
 Artifacts: ../wedgefix-v75/ (patch_v88_int64fix.py, repro_v88_int32.py,
 v88_int64_fix.diff, v88a–v88d leg scripts, build_vxk_wheel_v88.sh,
 stage5_bake_v1221.sh, ship_v1221.sh).
+
+**v1.2.22 SHIPPED (2026-09-27).** Performance release from the v89
+decode-speed plan (../perf-v89/) — NO engine-code or wheel change
+(v88 wheel `d20260925` inherited and version-gated). Two serve-config
+changes over v1.2.21: tool parser **qwen3_coder** (validated all day
+under the live CC fleet; qwen3_xml lineage retained in-tree) and
+**cudagraph_capture_sizes extended to 85 sizes** (dense 1..16 ∪ 5k,
+k=1..64 ∪ legacy extras) = exact-fit spec-verify graphs — solo decode
++3-4 % (71.2-71.4 → 73.6/74.1 tok/s), contention neutral, zero boot
+penalty (64 graphs, 31 s, KV unchanged). Scheduler A/B legs REJECTED by
+measurement and NOT shipped: V63=512 (77.0/76.8 vs 77.1 baseline) and
+V64=3 (77.6 ≈ 77.1) — baked defaults stay 1024/K=2 with the new
+`if 0 < V63 < 1024: = 1024` floor guarding the env knob; barrier-off
+leg identical (73.3/73.0 vs 73.6/74.1) → **BARRIER=2 kept standing**
+(PATCH_STACK_ANALYSIS §3.6 closed with live measurement). Spec MTP×4
+and XGrammar-2 0.2.7 intact (standing user requirement).
+
+Two images: `v1.2.22-raw` = `e6735a4c72a2` (the stage5 bake commit,
+24.7 GB) and production **`v1.2.22` = `89b17e0b0f8d`** (24.9 GB) — a
+docker commit of the fully-validated warm lane carrying the complete
+74-entry warm triton cache. Documented exception to the never-bake-from-
+the-lane rule: the full 60+ gate battery was re-run against the
+committed image itself (gates_v1222_lane.sh, ALL PASS), and the raw bake
+is preserved untouched for re-derivation.
+
+Triton first-use semantics established during ship validation (code-level
+evidence, triton 3.7): `jit_post_compile_hook` fires on disk-cache LOADS
+as well as compiles (compiler.py:274-289 hit-return + jit.py:878/886), so
+every fresh boot logs ~11 once-per-boot "JIT compilation during
+inference" lines that are cache loads, not compiles. Gate on cache-dir
+delta (== 0 on v1.2.22 through the full decisive traffic chain), never
+on monitor-line count. Full record: ../perf-v89/PHASES.md P6b-P7,
+KNOWN_ISSUES #28.
+
+Validation on ship: fresh-boot sanity+ADMISSION PASS, solo cold rc=0,
+genspeed 72.6/73.9/74.0, 4 sampler shapes 200×4, warm_ext replay OK,
+resets 0, CC battery green through litellm :4000. lane-watchdog repointed
+(repro_bootV1222 content at the V1212 lineage name; `.pre_v1222`
+backup). Artifacts: ../perf-v89/ (stage5_bake_v1222.sh, gates_v1222_
+lane.sh, decisive_v1222_wb.sh, probe_jit_mech.sh, t_jit_probe.py,
+patch_cc_sizes.py).
