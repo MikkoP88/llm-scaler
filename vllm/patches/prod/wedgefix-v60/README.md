@@ -238,8 +238,13 @@ full-vocab bf16 lm_head ×2/rank + full-width MoE per draft step) AND
 Crash logs preserved: `/root/build/w61_boot{5,6,7}_crash.log` (md5s
 934a7e50…, be3a4dc6…, b10723bf…); perf `w61_b{6,7,8}_perf.txt`.
 **Conclusion: stock sharded drafter stays; the barrier is the fix.**
+*(2026-09-27 correction: "the barrier is the fix" was an over-attribution
+— the v61-boot-5/6/7 DEVICE_LOST crashes were the v88 int32 pool-offset
+class [KNOWN_ISSUES #27], which the barrier demonstrably does not
+prevent. See the v62 addendum below and
+`wedgefix-v75/PATCH_STACK_ANALYSIS.md`.)*
 
-# WEDGEFIX-G (v62) — host-side draft barrier: ROOT FIX, v1.2.16
+# WEDGEFIX-G (v62) — host-side draft barrier: default since v1.2.16 ("ROOT FIX" attribution superseded by v88 — see addendum below)
 
 ## Mechanism
 
@@ -292,6 +297,29 @@ disabled, live env BARRIER=2, barrier pair `hb_459` active, XGrammar-2
 clean, C4×1 S1 64.9 / L2 33.7 / C4 agg 105.2 (best C4 yet). Watchdog
 lineage `repro_bootV1212.sh` repointed (backup `.pre_v1216`); spec ×4
 + XGrammar-2 supported and crash-free, per standing directive.
+
+## v62 addendum (2026-09-27) — "ROOT FIX" superseded by v88; is the barrier still needed?
+
+The v88 investigation (`wedgefix-v75/RCA_TINYSTEP_WEDGE.md` P24n–P24v,
+KNOWN_ISSUES #27) proved the era's dominant wedge was the **int32
+pool-offset overflow in the GDN conv kernels** (live since the v26-era
+wheel `d20260830` — i.e., throughout the v60/v62 record above), fixed by
+the v88 int64 wheel shipped in v1.2.21. Against that class **the draft
+barrier is demonstrably inert**: the v61 bisect crashed identically with
+the drain ON (boot 7); v1.2.20 with `BARRIER=2` died deterministically at
+serialized cycle 17; the v86 fault capture (layer-16 prefill, ssi=4173)
+was taken on a barrier-2 lane. The boot-9 clean drill was pool-id-
+lifecycle fortune, not causality — and the barrier's original v2x
+justification (#11) had already been fixed BY CONFIG at v31.1
+(`TORCH_COMPILE_DISABLE` for spec+TP2, still active in v1.2.21).
+
+Post-v88 posture (full analysis: `wedgefix-v75/PATCH_STACK_ANALYSIS.md`):
+keep `VLLM_XPU_SPEC_DRAFT_BARRIER=2` standing — µs-class host-side
+insurance, zero observed firings or faults, and v1.2.21 is certified WITH
+it — never `1` (standing user constraint; strictly dominated by mode 2),
+and retire `2` only via a controlled barrier-off validation leg
+(PATCH_STACK_ANALYSIS.md §3.6) if and when live lane changes are
+permitted and it shows a measurable improvement.
 
 
 # TTFTFIX (v63) — adaptive chunked-prefill budget under decode

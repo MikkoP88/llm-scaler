@@ -2561,3 +2561,19 @@ needed both cases (`v1220` AND `V1220` — marker lines are upper-case);
 the patch-script mark must be a `//` comment or the kernel build dies.
 Artifacts in `vllm/patches/prod/wedgefix-v75/` (patch script, repro,
 fix diff, leg scripts, bake/ship v1221).
+
+**Addendum (2026-09-27): is the spec draft barrier still needed after
+v88?** Analysis-only review (no instances touched —
+`wedgefix-v75/PATCH_STACK_ANALYSIS.md`, RCA P25): `VLLM_XPU_SPEC_DRAFT_
+BARRIER=2` is **not provably load-bearing** — its #11-era justification
+was voided by the v31.1 inductor conviction (config fix, still active in
+v1.2.21), and its v60/v62-era justification is confounded by the then-
+live int32 defect, which bypassed the barrier in every direct test (v61
+boot 7 crash with drain ON; v1.2.20+BARRIER=2 deterministic cycle-17
+death; v86 capture on a barrier-2 lane). It is also never observed
+costly (µs flock rendezvous, zero firings/timeouts in any log). Posture:
+KEEP `2` standing (v1.2.21 is certified WITH it; crash-free beats an
+unmeasured µs tax), NEVER `1` (standing user constraint), retire only
+via the validation leg in PATCH_STACK_ANALYSIS.md §3.6. All other guards
+are independently load-bearing (v31.1 inductor gate, v27 allreduce fix,
+v55.3 watchdog, f15b, WEDGEFIX-A/C/E, v63/v64/v66) — keep.
