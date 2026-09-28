@@ -214,3 +214,60 @@ Host reboot first (standing directive) → change on the validation path (never 
   CC fleet remains demand-arithmetic (fixed ~82 tok/s aggregate ÷ streams).
   The remaining lever is T3 kernel work — the analysis of §2-§4 stands
   unrefuted.
+
+## 9. The async-scheduling reframe (2026-09-28, T3 round — supersedes the "~82 tok/s aggregate ceiling" verdict of §2-§4)
+
+**The §2-§4 model's ceiling was substantially a SYNC-SCHEDULING artifact.**
+With `--async-scheduling` (the fork's `AsyncGPUModelRunnerOutput` path:
+dedicated copy stream + `wait_stream` + `non_blocking` D2H + event; the
+post-verify host handoff chain — parse → IPC → scheduler → launch — leaves
+the step critical path):
+
+| Metric | sync (v1.2.22) | async (same config otherwise) |
+|---|---|---|
+| solo genspeed 4×1024 aggregate | 72.6-74.0 tok/s | **122.5-156.1 tok/s (+85-110 %)** |
+| contended 8×600×6k agg median | 75.4 | 76.3 (neutral — prefill-dominated wall unchanged) |
+| per-stream decode tps p50 (8 streams) | 10-15 | **25.3-26.1 (~2×)** |
+| py-spy Worker_TP0 parse_output share (8-stream contention) | 74.6 % | **30.9 %** (`__call__` dispatch 50.4 %) |
+| EngineCore | ~100 % idle | 95.6 % idle |
+
+Reading of the v89 telemetry that now changes: "EU active 16 % / memory read
+50-53 % of peak at decode" was measured on a SYNC lane whose host handoff
+chain kept the GPU idle between steps at low batch. The GPU was never
+bandwidth-saturated at decode batch ≤ 4 — the sync host path was the
+bottleneck. Demand arithmetic still governs the contended fleet mix (prefill
+wall), so per-stream gains there are ~2×, not ~2× aggregate.
+
+**The async crash class, root-caused and closed (KNOWN_ISSUES #29):**
+`--async-scheduling` moves `sample_tokens` to a BLOCKING `collective_rpc`
+(EngineCore core.py:478 → multiproc_executor.py:388) with
+`VLLM_RPC_TIMEOUT` default **10000 ms** (envs.py:94). A sample RPC landing
+behind heavy queued GPU work (14-phase drill p13/p14-class mixes) exceeds
+10 s → TimeoutError → EngineDeadError → serve death (attempt-1: dead at
+9m45s into drill round 1; dmesg CLEAN, fence-hits 0 — NOT the v88 wedge
+class). Fix = env `VLLM_RPC_TIMEOUT=60000`. Attempt-2 with the fix passed
+the identical drill that killed attempt-1 (3/3 rounds, fence-hits 0) **and
+the full wedge battery**: serial24 24/24, bursts 108/108 ×3, resets 0,
+stalls 0, battery-end genspeed 153/138/158 tok/s agg
+(`ASYNC2_FULL_BATTERY_DONE 07:52:15`). The historical "async scheduling
+forbidden (crash history)" posture is superseded ON THIS CONFIG by that
+fix + the battery.
+
+**What this does to the T3 kernel plan ranking (§5/§8 T3):**
+- The 74.6 % py-spy share = host sleeping inside `.cpu()` was NEVER
+  recoverable from Python on the sync path (P9 microbench: pinned+event
+  staging is 12 % WORSE — no deferral point). Under async the parse is
+  already off the critical path; its cost now hides behind dispatch.
+- **Device-side acceptance bookkeeping (plan item 1) drops in priority**:
+  the [B,5] int64 D2H (~2.5 KB) no longer serializes the step. It becomes
+  attractive only if fused into the verify epilogue (weeks-scale wheel
+  work, KERNELS_MAX_JOBS=52) — evidence first via the spec_timing facility
+  (`VLLM_SPEC_TIMING=1`, segments tforward/tlogits/propose + step wall).
+- **Mamba/GDN state ops + KV-read gather (plan item 2) rises**: with the
+  host chain gone, step time is now dominated by the 4 draft forwards +
+  1 verify forward + sampler on device; EU-stall 57 % headroom (measured
+  on the sync lane) is the remaining ceiling. Next measurement: xpu-smi
+  EU active/stall on the ASYNC lane under solo + contention to re-baseline
+  before any kernel work is scoped.
+- Barrier default is now OFF in v1.2.23 (user directive; T2b measured
+  identical) — one less host-side µs-class serialization in the draft path.

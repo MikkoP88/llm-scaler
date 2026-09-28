@@ -768,3 +768,69 @@ resets 0, CC battery green through litellm :4000. lane-watchdog repointed
 backup). Artifacts: ../perf-v89/ (stage5_bake_v1222.sh, gates_v1222_
 lane.sh, decisive_v1222_wb.sh, probe_jit_mech.sh, t_jit_probe.py,
 patch_cc_sizes.py).
+
+**v1.2.23 SHIPPED (2026-09-28).** T3 round release (../perf-v123/,
+record ../perf-v89/T3_ROUND_REPORT.md + PHASES.md P8-P14) — engine code
+unchanged (v88 wheel `d20260925` version-gated again). Three posture
+changes over v1.2.22, all under the same v88 wedge-fix lineage:
+
+1. **`--async-scheduling` baked ON** (serve_user.sh, one flag). The
+   fork's AsyncGPUModelRunnerOutput path moves the post-verify host
+   handoff (parse → IPC → scheduler → launch) off the step critical
+   path: 4×1024 aggregate decode **122-158 tok/s vs 72.6-74.0 sync
+   (+85-110 %)**, per-stream p50 ~25 tok/s vs 10-15 under fleet
+   contention, py-spy Worker_TP0 parse_output 74.6 % → 30.9 %,
+   EngineCore ~96 % idle. Solo 1×1024 = 73-74 tok/s (sync parity — the
+   win is pipelining, not single-stream). The v89 "~82 tok/s aggregate
+   ceiling / bandwidth-bound" verdict was substantially a
+   sync-serialization artifact (DECODE_SPEED_ANALYSIS §9).
+2. **`VLLM_RPC_TIMEOUT=60000`** (env, bake+boot). NEW ROOT CAUSE found
+   by attempt-1's drill death: under async, EngineCore samples via
+   `collective_rpc("sample_tokens")` — an RPC that waits behind
+   everything queued in the worker; default 10000 ms < heavy-chunk
+   queued latency → `TimeoutError` → EngineDeadError (dmesg clean, NOT
+   a GPU wedge). 60000 ms passed the identical killer drill 3/3 plus
+   the full wedge battery (KNOWN_ISSUES #29). Rule: the value must
+   exceed worst QUEUED-work latency, not just the call's own work.
+3. **`VLLM_XPU_SPEC_DRAFT_BARRIER` default 2 → 0** (single-site code
+   flip, patch_barrier_v123_bake.py, v123 marker; env `=0` also passed
+   at boot — belt+suspenders). User directive 2026-09-28; T2b had
+   measured barrier-off identical (73.3/73.0 vs 73.6/74.1); the v62
+   mode-2 machinery is retained for emergency re-enable. Full wedge
+   suite re-certified on the posture: serialized 24 ×3 SURVIVED 24/24
+   (72/72), bursts ×3 108/108 resets 0, drills ×3 fence-hits 0.
+
+Spec MTP×4 and XGrammar-2 0.2.7 intact (standing user requirement),
+parser qwen3_coder + 85 capture sizes inherited from v1.2.22.
+
+Two images: `v1.2.23-raw` = `480840080515` (stage5 bake from
+v1.2.22-raw, 67 bake gates 0-fail, 24.7 GB) and production
+**`v1.2.23` = `23a07b1e5ff6`** (24.7 GB) — clean-warm lane-commit per
+the v1222 exception, full gate battery re-run against the committed
+image (gates_v1223_lane.sh ALL PASS incl. dynamic triton floor
+shipped 72 ≥ raw 72), fresh-boot prod sanity + admission + posture
+(async-engaged, barrier `False False 0`, RPC_TIMEOUT env) PASS, CC
+battery through litellm :4000 green (after fixing two defects in the
+battery script itself: missing `Authorization: Bearer` and a JSON
+template tail missing the object close brace — cc_battery_fix_
+v1223.sh; the image/lane were healthy throughout). lane-watchdog
+repointed to repro_bootV1223_prod.sh (`.pre_v1223` backup), armed.
+
+P13 validation (fresh host after reboot): solo cold 100.99 s parity,
+battery clean, drills ×3 SUSTAIN_COMPLETE_NO_WEDGE, serial24 ×3 all
+SURVIVED, bursts ×3 all SURVIVED, fairness V66 PASS (0.06 s gaps),
+parser T1/T2/T3 PASS, tracebacks 0, resets 0, async 4×1024 135.45
+tok/s. The inherited zero-JIT-lines gate aborted post-chain (8 lines)
+— adjudicated per the #28 cache-delta standard: 11 lines = first-use
+loads + 1 bounded compile (cache 72→73, rejection_greedy drill shape)
+= the accepted v1222-raw precedent; gate recalibrated to cache-delta
+≤ 2 inside validate_v1223_run.sh (p13_jit_adjudicate_v1223.sh, all 21
+acceptances re-verified). Boot-script TRAP fixed for the async era:
+the V1212-lineage baked-config gate FORBADE `--async-scheduling`
+(exit 10); repro_bootV1223.sh inverts it (async REQUIRED) — older
+watchdog/boot scripts must NOT be reused as-is on this posture.
+
+Artifacts: ../perf-v123/ (patch_barrier_v123_bake.py, stage5_bake_
+v1223.sh, gates_v1223_lane.sh, validate_v1223_run.sh, ship_v1223.sh,
+p13_jit_adjudicate_v1223.sh, cc_battery_fix_v1223.sh, preflight_v123
+under ../../.tmp-v123/).

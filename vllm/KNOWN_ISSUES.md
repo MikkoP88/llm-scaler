@@ -2627,3 +2627,54 @@ the count (even on zero matches, exit 1). Use plain `grep -c` (or pipe to
 the stdin redirect); complex inline one-liners fail quoting — stage a
 script instead; `repro_bootV1222.sh` REQUIRES a MODE argument (e.g.
 `bash repro_bootV1222.sh v1222wb`).
+
+## #29 (2026-09-28, T3/v1.2.23 round) — async-scheduling sample_tokens RPC timeout (VLLM_RPC_TIMEOUT 10 s default) kills the engine under heavy queued GPU work; plus staging/boot-gate gotchas
+
+**Defect class:** configuration-blind spot that reproduced as an engine
+death ONLY under `--async-scheduling`, mis-attributable to the historical
+"async = crashy" lore.
+
+**Root cause (code-level):** under async scheduling the sampler runs via
+`EngineCore.step()` → `sample_tokens(grammar_output)` → `collective_rpc`
+(multiproc_executor.py:403 → future.result() → :388 raise TimeoutError) —
+a BLOCKING RPC with timeout from **`VLLM_RPC_TIMEOUT`, default 10000 ms**
+(vllm/envs.py:94, plain `os.getenv`). A sample_tokens RPC that lands behind
+heavy queued GPU work (the 14-phase drill's p13/p14-class concurrent +
+big-prefill mixes) can wait > 10 s for the worker to service it →
+TimeoutError → EngineDeadError → serve death. On the SYNC path sampling
+runs in-process on the worker (`gpu_model_runner.py` `if not
+self.use_async_scheduling:` branch) — no RPC, no timeout, no death class.
+That asymmetry is why years of sync-lane stability never surfaced it.
+
+**Evidence (attempt-1 leg, 2026-09-28):** death at 9 m 45 s into drill
+round 1 (the exact phase mix that all sync images survive); serve log shows
+the full chain `TimeoutError: RPC call to sample_tokens timed out` →
+EngineDeadError; dmesg CLEAN (no GPU reset — explicitly NOT the v88
+int32-overflow wedge class), fence-hits 0. Fairness probe (34k-word prefill
++ concurrent decode, v63-capped 1024-token chunks) SURVIVED the same leg —
+the 10 s threshold sits right at this model's heavy-chunk latency scale.
+
+**Fix (env-only, no code):** `VLLM_RPC_TIMEOUT=60000` (bake/boot env of
+v1.2.23). Attempt-2 with the fix passed the identical killer drill that
+killed attempt-1 (3/3 rounds, fence-hits 0) **and the full wedge battery**
+(serial24 24/24, bursts 108/108 ×3, resets 0, stalls 0 —
+`ASYNC2_FULL_BATTERY_DONE 07:52:15`). Rule when
+raising it: the value must exceed the worst
+QUEUED-work latency the config can produce (RPC waits for everything ahead
+of it in the worker, not just its own work).
+
+**Operational gotchas (this round, recorded):**
+- `docker exec` heredoc without `-i` feeds python EMPTY stdin (docker exec
+  does not forward stdin without it) — a staged variant script silently
+  never got created and the relaunch hit a missing file (6 min lane gap).
+  Stage via single-line `sed` inside `sh -c`, or use `docker exec -i`.
+- The V1212-lineage boot scripts (incl. what lane-watchdog runs) contain a
+  baked-config gate that FORBIDS `--async-scheduling` (`! grep -q` →
+  exit 10). Any async-era boot script derivation must INVERT that check.
+- The boot scripts re-apply the lineage patchers on every boot; all are
+  mark-skipping on already-marked files (`if mark in src: ALREADY`), so a
+  later default-flip (v123 barrier "2"→"0") survives every boot — but this
+  must be verified from the patcher source, not assumed (v1222 boots could
+  not distinguish skip vs re-apply since both yield "2").
+- Backgrounded `nohup` through plink keeps the session alive until timeout;
+  always append `< /dev/null` to the nohup launch inside remote scripts.
