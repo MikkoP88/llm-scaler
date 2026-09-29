@@ -1,0 +1,46 @@
+3a4ebd54c886501afb8665da2775c1e47f66efa79333ddf8200404e48148cc83
+BOOT_SHIP container launched (image v1.2.14) 16:59:20
+[f15b] gmr: already patched
+[f15b] xpu_comm: already patched
+[f15b] dflash: already patched
+[f15b] preflight: all anchors unique OK
+[f15b] module vllm/_f15b.py installed
+[f15b] gmr: marker present, skipping
+[f15b] xpu_comm: marker present, skipping
+[f15b] dflash: marker present, skipping
+F15B_APPLY_OK
+[v55.3] FAIL: /opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py: anchor 'wrapper def + crash fn' matched 0 times (need exactly 1)
+6
+[arstage] xpu_comm: already patched
+[arstage] preflight: anchor unique OK
+[arstage] module vllm/_arstage.py installed (v2 census)
+[arstage] xpu_comm: marker present, skipping
+ARSTAGE_APPLY_OK
+5
+1
+v58p1: ALREADY APPLIED (/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py)
+[A] ALREADY-APPLIED /opt/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/responses/streaming_events.py
+[B] ALREADY-APPLIED /opt/venv/lib/python3.12/site-packages/vllm/tool_parsers/qwen3xml_tool_parser.py
+[C] ALREADY-APPLIED /opt/venv/lib/python3.12/site-packages/vllm/entrypoints/openai/responses/serving.py
+[v60] A ALREADY-APPLIED /opt/venv/lib/python3.12/site-packages/vllm/platforms/xpu.py
+[v60] B ALREADY-APPLIED /opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py
+[v60] C ALREADY-APPLIED /opt/venv/lib/python3.12/site-packages/vllm/v1/core/sched/scheduler.py
+[v60] all patches OK
+[v62b] G2 ALREADY /opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py
+[v62b] G0 ALREADY /opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py
+[v62b] G1 ALREADY /opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py
+[v62b] pass complete
+1
+ALREADY-APPLIED /opt/venv/lib/python3.12/site-packages/vllm/v1/core/sched/scheduler.py
+CHECK /opt/venv/lib/python3.12/site-packages/vllm/v1/core/sched/scheduler.py: marks=2 active_str=True default2048=False -> NOT-APPLIED
+2
+ALREADY-APPLIED /opt/venv/lib/python3.12/site-packages/vllm/v1/core/sched/scheduler.py
+CHECK /opt/venv/lib/python3.12/site-packages/vllm/v1/core/sched/scheduler.py: marks=2 active_str=True baked_defaults=True v63_1024=True v63_2048_gone=True -> OK
+2
+BOOT_SHIP verify baked serve config
+BOOT_SHIP baked config verified (gmu0.8 bs64 e4m3 pc-ON async-ON)
+BOOT_SHIP serve started (v1.2.14 baked crash-free config) 16:59:24
+BOOT_SHIP HEALTH_OK after ~150s
+live_resets=0
+PROD_STANDING_V1212 17:01:58
+PROD_STANDING_V1213_STALFIX_XG7 17:01:58

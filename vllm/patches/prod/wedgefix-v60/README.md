@@ -834,3 +834,103 @@ Artifacts: ../perf-v123/ (patch_barrier_v123_bake.py, stage5_bake_
 v1223.sh, gates_v1223_lane.sh, validate_v1223_run.sh, ship_v1223.sh,
 p13_jit_adjudicate_v1223.sh, cc_battery_fix_v1223.sh, preflight_v123
 under ../../.tmp-v123/).
+
+# v1.2.24 + fp8-KV certified posture (2026-09-28)
+
+`llm-scaler-exp:v1.2.24` = `b13f56543057` (raw `0423c13f8c21`, 24.7 GB).
+Certified posture from the perf-v124 chain: **fp16 GDN pool + spec MTP×4 +
+`--kv-cache-dtype fp8_e4m3`** — fp8 KV cache is quality-clean (0/104 wrong
+answers + 60/60 tools through the heaviest later probe, P23F control arm)
+and is the realized fp8 capacity lever; in production since this image.
+gmu0.8 bs64 pc-ON spec-ON mnbt8192 async-ON no-template; async/barrier-0/
+RPC-60000 posture inherited from v1.2.23. Ship chain: stage5_bake_v1224 →
+validate → ship_v1224_cont (gates ALL PASS, CC battery green via
+cc_battery_fix_v1224.sh). NOTE (recorded for honesty): v1.2.24's prod-boot
+sed (`s/v1\.2\.23-raw/v1\.2\.24/`) was a NO-OP — the script already said
+v1.2.24-raw, so the "prod" fresh-boot verification re-ran -raw; fixed
+properly in v1225 (`sed 's/llm-scaler-exp:v1\.2\.25-raw/llm-scaler-exp:v1.2.25/g'`
+— tag actually swaps; verified by grep). KNOWN_ISSUES #30(1).
+
+# v1.2.25 — opsall ROOT FIX + C7 fp8-state refusal; fp8 round closed by measurement (2026-09-29)
+
+Full record: ../perf-v125/COMPLETE_ROUND_WRITEUP.md (PHASES.md Runs 1-7y
+live). Task: "both fp8(e4m3/e5m2) implementations has to be superior of
+baseline on any possible cases but degradation is not allowed and has to
+work end-to-end" — verdict by measurement:
+
+1. **fp8 GDN-state (=1 ESIMD, =2 SYCL; both formats) NOT certifiable —
+   documented known-broken, refused in-code.** Speed below fp16 in every
+   family (solo −2.4…−12.5 %, agg −2.6…−13.9 %, Run 7n uniform matrix) AND
+   quality broken under concurrency: P23D =2 20 % post-prefix tool salad
+   (both formats, fp16 control 0/30, healing poisoned-state windows);
+   P23F =1 8.75-13.75 % fresh-boot wrong answers exploding to 25-41.7 %
+   post-prefix, 18/18 concurrent-wrong→serial-right flips (pure
+   per-request state-slot crosstalk when prefills coalesce — the v88
+   int32 root family; SILENT: tracebacks 0, resets 0). Ship gate for any
+   future claim: P23F 0/80 + 0 flips + P23D 0-salad + full battery +
+   speed parity, BOTH formats.
+2. **fp8 KV (e4m3) IS the superior fp8 surface and ships as default**
+   (--kv-cache-dtype fp8_e4m3): quality-clean through the P23F control
+   arm, +1.16-3.50 % KV capacity. e4m3/e5m2 dtype resolution stays
+   gate-verified on every boot (end-to-end support standing); spec MTP×4
+   + XGrammar-2 0.2.7 intact everywhere.
+3. **v125 opsall ROOT FIX (the round's non-fp8 win):** stale
+   `custom_ops='none'` from pass-1 resolution survived the TP>1
+   TORCH_COMPILE_DISABLE gate (mode flips to NONE, custom_ops doesn't) →
+   native fallback NaN'd every single-token GDN decode forward; spec-4
+   survived only because verify steps are multi-token. patch_v125_
+   opsall_fix.py restores 'none'→'all' at the gate site (guarded), boot
+   line `v125 root fix`. This unblocked the spec-off surface entirely and
+   moved cert boots off the accidental-'none' posture.
+4. **C7 refusal (in-code verdict carrier):** import-time RuntimeError in
+   `_xpu_ops.py` when VLLM_XPU_GDN_FP8_NATIVE ∈ {"1","2"} — message cites
+   P23D/P23F + kernel-round scope; refuses if the env name is already
+   referenced (lineage guard). Discovery en route: the P22B env switches
+   were NEVER on the raw base (zero references in `_xpu_ops.py` on
+   v1.2.24-raw — live-only lane-venv handling), so =1 was silently inert
+   on raw-lineage boots; C7 upgrades inert→REFUSED.
+5. **Images:** v1.2.25-raw = `4e83528bfd66` (bake 93/0, 08:48:00) →
+   **v1.2.25 = `3f3c91637692`** clean-warm lane-commit, ship gates
+   **97 OK / 0 FAIL 10:29:56** (incl. opsall marker + backup, C7 marker +
+   functional refusal trio, wheel_no_fp8_strings==0, no C5/C6, full
+   v1218→v1225 pedigree + v64→v1225 jit-warm stamps, triton floor
+   shipped 79 ≥ raw 72). Fresh-boot validation ALL GATES PASS 10:14:08
+   (P23F probe A/B clean on the shipped default, drills 3/3, serial24 ×3,
+   bursts 36/36, resets 0, solo 78.6/79.7/79.5, async 4×1024 agg
+   149.80 tok/s). CC battery ALL GREEN via python-built bodies; watchdog
+   armed on repro_bootV1225_prod.sh (code=200 10:54:34). Standing trap
+   unchanged: V1212-lineage boot scripts FORBID async — V1225 lineage
+   only.
+
+## KNOWN_ISSUES #30 — v1.2.24/v1.2.25 round entries
+
+1. **ship_v1224 prod-boot sed no-op** (see v1.2.24 section): a sed that
+   pattern-matches nothing replaces nothing — prod-boot "verification"
+   must grep the swapped tag in the generated script before trusting it.
+2. **Shell-assembled curl JSON is a recurring corruption source** (3rd
+   occurrence: v1223 missing brace, v1225 stray trailing quote
+   `)}]}\""` → litellm 400 "unexpected content after document"). Rule:
+   bodies built ENTIRELY in python (json.dumps) and passed `-d @file`,
+   pre-validated. ship_v1223.sh still carries the buggy line in-repo —
+   do not copy it; cc_battery_v1225.sh is the canonical pattern.
+3. **litellm probe semantics:** `/health` requires the master key (401
+   bare) AND round-trips the backend (times out mid-boot);
+   `/health/liveness` (200, unauthenticated) is the correct up-probe.
+   Requests need `Authorization: Bearer sk-dummy` through :4000.
+4. **Gate-script stdout is `tail -80`** — early GATE-FAILs fall outside
+   the window; always grep the full log. And `\"` inside single quotes
+   is a literal backslash pair — gate literals with double quotes must
+   use plain `'"… "…"'` quoting.
+5. **lane-watchdog status cadence is 10 cycles × 60 s** (~10 min to the
+   first armed-line after restart) — armed-verify windows must match,
+   and `systemctl restart` (not reload) is required to re-parse the
+   repointed script.
+6. **Single-exposure probes cannot certify state-format quality** (n2val
+   + agg2 passed; P23F later measured 8-42 % wrong-answer rates on the
+   same postures). Certification = rate study: ≥80 fresh + post-prefix +
+   serial control + flip detection.
+
+Artifacts: ../perf-v125/ (COMPLETE_ROUND_WRITEUP.md, PHASES.md Runs 1-7y,
+all p22*/p23*/patch_v125* scripts, stage5_bake_v1225.sh, gates_v1225_
+lane.sh, ship_v1225*.sh, cc_battery_v1225.sh, repro_bootV1225*.sh,
+evidence/); ../perf-v124/ (v1.2.24 chain + evidence).

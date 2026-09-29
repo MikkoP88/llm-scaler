@@ -1,0 +1,20 @@
+=== SHIP_V1225_FINISH start 2026-09-29 10:44:32 ===
+--- preconditions ---
+lane UP
+lane on v1.2.25 (committed image)
+--- 6. CC battery through litellm :4000 ---
+litellm_liveness=200
+cc_t1 http=400 blocks=EMPTY
+cc_t2 http=400 blocks=EMPTY
+cc_t3 http=400 blocks=EMPTY
+cc_thinking=thinking
+--- 7. watchdog repoint + re-arm (systemctl RESTART: stale-parse trap) ---
+75:  nohup bash repro_bootV1225_prod.sh WD_$TS > lce1/boot_WD_$TS.out 2>&1 < /dev/null &
+active
+SHIP WARN: no fresh armed-line yet (10-cycle = 100s cadence; check log)
+--- summary ---
+llm-scaler-exp:v1.2.25 3f3c91637692 24.7GB
+llm-scaler-exp:v1.2.25-raw 4e83528bfd66 24.7GB
+llm-scaler-exp:v1.2.24 b13f56543057 24.7GB
+llm-scaler-exp:v1.2.24-raw 0423c13f8c21 24.7GB
+=== SHIP_V1225 COMPLETED WITH WARNINGS (CC battery) 10:48:22 ===

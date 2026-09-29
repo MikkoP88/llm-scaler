@@ -1,0 +1,101 @@
+=== V1224 SHIP GATES 2026-09-28 16:58:51 ===
+image_id=sha256:b13f56543057906057fa25893d5cc17f63c81a7b2a417e84bf977eb57e95542e
+GATE-OK   image_is_expected_commit sha256:b13f56543057906057fa25893d5cc17f63c81a7b2a417e84bf977eb57e95542e
+raw_image_id=sha256:0423c13f8c21b19493bdc424d8a0d4bec76d2463434247013a54908d66baf302
+GATE-OK   raw_image_is_bake_commit sha256:0423c13f8c21b19493bdc424d8a0d4bec76d2463434247013a54908d66baf302
+--- throwaway gate container from the shipped image ---
+7a46b01c6b546f873d17d612d91d724793d7951806408b1d2d5c7085b8707596
+--- v124 deltas: P16 gate fix + P19.5a fp8 plumbing (inert on fp16 serve) ---
+GATE-OK   v124_p16_markers=2
+GATE-OK   v124_p195_cache_literal=1
+GATE-OK   v124_p195_mamba_resolver=1
+GATE-OK   v124_p195_sycl_bridge=1
+GATE-OK   v124_serve_mamba_fp16_default=1
+GATE-OK   v124_serve_mamba_fp8_absent=0
+v124_runtime_fp8_resolution: torch.float8_e4m3fn torch.float8_e5m2
+GATE-OK   v124_fp8_e4m3_resolves
+GATE-OK   v124_fp8_e5m2_resolves
+--- v88 kernels wheel INHERITED: version gate ---
+wheel: Version: 0.1.8.3.dev0+g3cab97a.d20260925
+--- no debug instrumentation in image ---
+GATE-OK   no_gdn_capture=0
+--- v1222 serve-config (parser qwen3_coder + 85 capture sizes) ---
+GATE-OK   serve_parser_coder=1
+GATE-OK   serve_parser_xml_gone=0
+GATE-OK   serve_capture_sizes=1
+GATE-OK   serve_cudagraph_mode=1
+--- v123 layer: async-scheduling BAKED + barrier default OFF ---
+GATE-OK   serve_async_sched=1
+GATE-OK   no_v123_async_variant=0
+GATE-OK   v123_barrier_check=1
+GATE-OK   barrier_default=False False 0
+--- content gates (full v1221 lineage chain, must hold on ship image) ---
+GATE-OK   mark_g62_def=1
+GATE-OK   mark_g62_mach=1
+GATE-OK   mark_g62_site=1
+GATE-OK   no_v61_marks=0
+GATE-OK   no_v61_repl=0
+GATE-OK   no_v61_diag=0
+GATE-OK   v64_backup_present=1
+GATE-OK   v63_backup_present=1
+GATE-OK   v66_backup_present=1
+GATE-OK   mark_xpu_v60=1
+GATE-OK   mark_gmr_v60b=1
+GATE-OK   mark_gmr_v60g=1
+GATE-OK   mark_gmr_v60e=0
+GATE-OK   mark_f15b=1
+GATE-OK   mark_v553=1
+GATE-OK   mark_arstage=1
+GATE-OK   mark_stalfix=1
+GATE-OK   mark_sched_v60c=1
+GATE-OK   mark_parser=1
+GATE-OK   mark_sched_v63=2
+GATE-OK   v63_default=1
+GATE-OK   v63_no_2048=0
+GATE-OK   v63_active_str=1
+GATE-OK   v63_floor_1024=1
+GATE-OK   v63_no_512floor=0
+GATE-OK   mark_sched_v64=2
+GATE-OK   v64_def_k=1
+GATE-OK   v64_def_b=1
+GATE-OK   v64_active_str=1
+GATE-OK   v64_no_k3=0
+GATE-OK   mark_sched_v66=4
+GATE-OK   v66_starve_default=1
+GATE-OK   v66_active_str=1
+GATE-OK   v66_bypass_sites=2
+GATE-OK   v66_check_applied=1
+--- v65 instrumentation absence (test-only probes NEVER baked) ---
+GATE-OK   no_v65_sched=0
+GATE-OK   no_v65_flash=0
+GATE-OK   no_v65_xpu=0
+--- v88 test-probe absence (test-only patches NEVER baked) ---
+GATE-OK   no_v84_probe=0
+GATE-OK   no_v85_skip=0
+GATE-OK   no_v86_cap=0
+GATE-OK   no_v87_stride=0
+--- v89/v123 test-probe absence (py-spy probe NEVER baked) ---
+GATE-OK   no_v89_pyspy_probe=0
+GATE-OK   xgrammar=0.2.7
+GATE-OK   serve_spec_mtp4=1
+GATE-OK   v1218_pedigree_marker
+GATE-OK   v1220_pedigree_marker
+GATE-OK   v1221_pedigree_marker
+GATE-OK   v1222_pedigree_marker
+GATE-OK   v1224_pedigree_marker
+GATE-OK   v64_jit_warm_stamp
+GATE-OK   v1220_jit_warm_stamp
+GATE-OK   v1221_jit_warm_stamp
+GATE-OK   v1222_jit_warm_stamp
+GATE-OK   v1224_jit_warm_stamp
+GATE-OK   baked_serve_config (gmu0.8 bs64 e4m3 pc-ON spec-ON mnbt8192 async-ON no-template)
+--- warm triton cache shipped in the image (warmed under the v123 async posture) ---
+cache_dir=/root/.triton/cache entries=72
+total 288
+drwxr-xr-x 2 root root 4096 Sep 21 15:13 TAB4GT7TRPZSVCI3X6QXZAI5XAXR47F3TNUANCG2JLJZM3I5GY3Q
+drwxr-xr-x 2 root root 4096 Sep 21 15:13 RNGOJK5ZHV5TUUTWMDVQMP2SJLUCGONLXD33YB4H2QJCTQGLSGPQ
+drwxr-xr-x 2 root root 4096 Sep 21 15:13 T4DHQHJHSYGAFRF42KFLGALK2AKF5MFJX2P4MQEESN7BGRJANJUQ
+drwxr-xr-x 2 root root 4096 Sep 21 15:10 CWWHIAGYJ52FVVLZSSPF62HK6SIU4G4EZR7PKZ6TKBQ3TBHMTU3Q
+shipped_triton_cache_entries=72 raw_image_triton_cache_entries=72 (floor: shipped >= raw)
+GATE-OK   triton_cache_ge_raw=1
+=== V1224 SHIP GATES: ALL PASS 16:59:19 ===

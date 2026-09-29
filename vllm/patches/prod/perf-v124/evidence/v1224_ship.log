@@ -1,0 +1,79 @@
+=== SHIP_V1224 start 2026-09-28 16:43:22 ===
+--- preconditions ---
+lane UP
+raw_id=sha256:0423c13f8c21b19493bdc424d8a0d4bec76d2463434247013a54908d66baf302
+--- 1. clean-warm relaunch from -raw (fresh container for the lane-commit) ---
+--- 2. standard warm rounds (mirror of bake warm; async posture) ---
+JITWARM big_seed731 code=200 wall=142.4s err=None
+JITWARM decode code=200 wall=0.9s err=None
+JITWARM_OK
+[s4.t1] 6.4s finish=length len=0
+[s3.t1] 6.9s finish=length len=0
+[s2.t1] 7.8s finish=stop len=9
+[s4.t2] 16.9s finish=length len=0
+[s3.t2] 16.8s finish=length len=0
+[s2.t2] 16.3s finish=length len=0
+[s1.t1] 26.7s finish=length len=0
+[s1.t2] 2.6s finish=length len=0
+WARM_EXT_V1219_DONE verify=False wall=29.2s
+sampler_default http=200
+sampler_topp http=200
+sampler_topk http=200
+sampler_all http=200
+--- warm-verify: zero JIT on replay (log-delta) ---
+[v3.t1] 7.7s finish=length len=0
+[v1.t1] 7.7s finish=length len=0
+[v2.t1] 7.7s finish=length len=0
+[v3.t2] 3.0s finish=length len=0
+[v1.t2] 3.0s finish=length len=0
+[v2.t2] 3.5s finish=length len=0
+WARM_EXT_V1219_DONE verify=True wall=11.2s
+shipwarm_new_jit=0 (0 = fully warm)
+shipwarm_triton_cache_entries=72
+--- 3. lane-commit -> llm-scaler-exp:v1.2.24 ---
+sha256:b13f56543057906057fa25893d5cc17f63c81a7b2a417e84bf977eb57e95542e
+shipped_id=sha256:b13f56543057906057fa25893d5cc17f63c81a7b2a417e84bf977eb57e95542e
+llm-scaler-exp:v1.2.24 b13f56543057 24.7GB
+--- 4. full gate battery on the committed image ---
+drwxr-xr-x 2 root root 4096 Sep 21 15:13 T4DHQHJHSYGAFRF42KFLGALK2AKF5MFJX2P4MQEESN7BGRJANJUQ
+drwxr-xr-x 2 root root 4096 Sep 21 15:10 CWWHIAGYJ52FVVLZSSPF62HK6SIU4G4EZR7PKZ6TKBQ3TBHMTU3Q
+shipped_triton_cache_entries=72 raw_image_triton_cache_entries=72 (floor: shipped >= raw)
+GATE-OK   triton_cache_ge_raw=1
+=== V1224 SHIP GATES: FAIL 16:52:08 ===
+SHIP ABORT: gates failed rc=1
+=== SHIP_V1224_CONT start 2026-09-28 16:58:51 shipped_id=sha256:b13f56543057906057fa25893d5cc17f63c81a7b2a417e84bf977eb57e95542e ===
+--- 4. full gate battery on the committed image (gates fixed: v124 block relocated + SPR) ---
+drwxr-xr-x 2 root root 4096 Sep 21 15:13 T4DHQHJHSYGAFRF42KFLGALK2AKF5MFJX2P4MQEESN7BGRJANJUQ
+drwxr-xr-x 2 root root 4096 Sep 21 15:10 CWWHIAGYJ52FVVLZSSPF62HK6SIU4G4EZR7PKZ6TKBQ3TBHMTU3Q
+shipped_triton_cache_entries=72 raw_image_triton_cache_entries=72 (floor: shipped >= raw)
+GATE-OK   triton_cache_ge_raw=1
+=== V1224 SHIP GATES: ALL PASS 16:59:19 ===
+--- 5. fresh-boot verification on the committed production image ---
+51:    llm-scaler-exp:v1.2.24
+prod fresh-boot sanity + admission + v123 posture PASS
+--- 6. CC battery through litellm :4000 ---
+cc_t1 http=400 blocks=EMPTY
+cc_t2 http=400 blocks=EMPTY
+cc_t3 http=400 blocks=EMPTY
+cc_thinking=thinking
+--- 7. watchdog repoint + re-arm ---
+75:  nohup bash repro_bootV1224_prod.sh WD_$TS > lce1/boot_WD_$TS.out 2>&1 < /dev/null &
+active
+SHIP WARN: no fresh armed-line yet (10-cycle = 100s cadence; check log)
+--- summary ---
+llm-scaler-exp:v1.2.24 b13f56543057 24.7GB
+llm-scaler-exp:v1.2.24-raw 0423c13f8c21 24.7GB
+llm-scaler-exp:v1.2.23 23a07b1e5ff6 24.7GB
+llm-scaler-exp:v1.2.23-raw 480840080515 24.7GB
+llm-scaler-exp:v1.2.22 89b17e0b0f8d 24.9GB
+llm-scaler-exp:v1.2.22-raw e6735a4c72a2 24.7GB
+=== SHIP_V1224 COMPLETED WITH WARNINGS (CC battery) 17:10:51 ===
+=== CC_BATTERY_FIX_V1224 start 2026-09-28 17:11:49 ===
+body_valid
+cc_t1 http=200 blocks=text
+body_valid
+cc_t2 http=200 blocks=text
+body_valid
+cc_t3 http=200 blocks=text
+cc_thinking http=200 blocks=thinking
+=== CC_BATTERY_FIX_V1224 ALL GREEN 17:12:12 ===

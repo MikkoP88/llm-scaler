@@ -1,0 +1,176 @@
+=== V1224 BAKE v1.2.24 2026-09-28 14:47:33 ===
+--- fresh bake container from v1.2.23-raw ---
+3a126ff0b6b3951479dd29f5db4deaf5101c85548c44f67e70a136b8459bac78
+--- v88 kernels wheel INHERITED (no reinstall): version gate ---
+wheel: Version: 0.1.8.3.dev0+g3cab97a.d20260925
+--- no debug instrumentation in baked image ---
+GATE-OK   no_gdn_capture=0
+--- v124 patch 1: P16 non-spec compile gate (TP>1, spec or not) ---
+PATCHED_OK
+GATE-OK   p16_patch_exit=1
+GATE-OK   p16_markers=2
+GATE-OK   p16_syntax=1
+--- v124 patch 2: P19.5a fp8 mamba SSM-cache plumbing (INERT on float16) ---
+OK: /opt/venv/lib/python3.12/site-packages/vllm/config/cache.py
+OK: /opt/venv/lib/python3.12/site-packages/vllm/model_executor/layers/mamba/mamba_utils.py
+OK: /opt/venv/lib/python3.12/site-packages/vllm/_xpu_ops.py
+OK: /opt/venv/lib/python3.12/site-packages/vllm/_xpu_ops.py
+OK: /opt/venv/lib/python3.12/site-packages/vllm/_xpu_ops.py
+OK: /opt/venv/lib/python3.12/site-packages/vllm/_xpu_ops.py
+OK: /opt/venv/lib/python3.12/site-packages/vllm/_xpu_ops.py
+P195A_PATCHED_OK (7/7)
+GATE-OK   p195_patch_exit=1
+GATE-OK   p195_literal=1
+GATE-OK   p195_dtype_e4m3=1
+GATE-OK   p195_dtype_e5m2=1
+GATE-OK   p195_bridge=1
+GATE-OK   p195_scatter_uint8=1
+GATE-OK   p195_runtime_resolution=1
+--- serve-config posture INHERITED from v1.2.23-raw (gated, never re-sed'd) ---
+GATE-OK   serve_async_sched=1
+GATE-OK   serve_parser_coder=1
+GATE-OK   serve_parser_xml_gone=0
+GATE-OK   serve_capture_sizes=1
+GATE-OK   serve_cudagraph_mode=1
+GATE-OK   serve_mamba_fp16_default=1
+GATE-OK   serve_mamba_fp8_absent=0
+GATE-OK   barrier_default=False False 0
+--- bake warm serve (async posture) ---
+bake HEALTH_OK after ~150s
+GATE-OK   bake_async_config=1
+GATE-OK   bake_graph_count_64=1
+GATE-OK   bake_p16_gate_fired=1
+--- warm round 0: legacy v63 warm (solo big prefill + decode burst) ---
+JITWARM big_seed412 code=200 wall=141.5s err=None
+JITWARM decode code=200 wall=0.9s err=None
+JITWARM_OK
+jitwarm_rc=0
+--- warm round 1: concurrent multi-session multi-turn (warm_ext) ---
+[s4.t1] 6.5s finish=length len=0
+[s2.t1] 7.5s finish=stop len=9
+[s2.t2] 15.3s finish=stop len=13
+[s3.t1] 23.0s finish=length len=0
+[s4.t2] 17.6s finish=length len=0
+[s3.t2] 2.6s finish=length len=0
+[s1.t1] 25.8s finish=length len=0
+[s1.t2] 2.9s finish=length len=0
+WARM_EXT_V1219_DONE verify=False wall=28.7s
+warmext_rc=0
+--- warm round 1b: xgrammar structured-output paths ---
+[t2-run1] HTTP=200 wall=2.4s keys=choices finish=stop content='{\n  "city": "Tokyo",\n  "temperature_c": 18.5\n  }'
+[t2-run1]   PARSED_JSON keys=['city', 'temperature_c']
+[t2-run2] HTTP=200 wall=35.2s keys=choices finish=stop content='{\n  "city": "Tokyo",\n  "temperature_c": 22                    \n                                   \t\t\t\t\t\t\t\t\t\t\t\t\t\t     \n\t\t'
+[t2-run2]   PARSED_JSON keys=['city', 'temperature_c']
+[alt-run1] HTTP=200 wall=0.9s keys=choices finish=stop content='{\n  "name": "Elara Vance",\n  "age": 29\n  }'
+[alt-run1]   PARSED_JSON keys=['age', 'name']
+[alt-run2] HTTP=200 wall=16.5s keys=choices finish=stop content='{\n  "name": "Elara Vance",\n  "age": 34                                   \t\t\t\t\t     \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n'
+[alt-run2]   PARSED_JSON keys=['age', 'name']
+PROBE_DONE
+--- warm round 1c: sampler-shape round (default / top_p / top_k / all, 2000 tok) ---
+sampler_default_http=200
+sampler_topp_http=200
+sampler_topk_http=200
+sampler_all_http=200
+sampler-round jit evidence:
+(Worker_TP0 pid=1027) WARNING 09-28 14:52:54 [jit_monitor.py:103] Triton kernel JIT compilation during inference: _topk_topp_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+--- round-1 JIT coverage evidence (kernels compiled during warm) ---
+      1 _compute_slot_mapping_kernel
+      1 _zero_kv_blocks_kernel
+      1 batch_memcpy_kernel
+      1 eagle_prepare_inputs_padded_kernel
+      1 eagle_prepare_next_token_padded_kernel
+      1 eagle_step_slot_mapping_metadata_kernel
+      1 expand_kernel
+--- warm round 2 (verify replay, fresh seeds -> cache miss) ---
+log_offset_before_round2=481
+[v2.t1] 7.7s finish=length len=0
+[v3.t1] 7.7s finish=length len=0
+[v2.t2] 1.6s finish=length len=0
+[v1.t1] 9.4s finish=length len=0
+[v3.t2] 3.3s finish=length len=0
+[v1.t2] 2.8s finish=length len=0
+WARM_EXT_V1219_DONE verify=True wall=12.2s
+warmext_verify_rc=0
+round2_new_jit_warnings=0
+GATE-OK   warm_round2_zero_jit=0
+bake serve stopped
+--- content gates (full lineage chain, must hold on v1.2.23-raw base) ---
+GATE-OK   mark_g62_def=1
+GATE-OK   mark_g62_mach=1
+GATE-OK   mark_g62_site=1
+GATE-OK   no_v61_marks=0
+GATE-OK   no_v61_repl=0
+GATE-OK   no_v61_diag=0
+GATE-OK   v64_backup_present=1
+GATE-OK   v63_backup_present=1
+GATE-OK   v66_backup_present=1
+GATE-OK   mark_xpu_v60=1
+GATE-OK   mark_gmr_v60b=1
+GATE-OK   mark_gmr_v60g=1
+GATE-OK   mark_gmr_v60e=0
+GATE-OK   mark_f15b=1
+GATE-OK   mark_v553=1
+GATE-OK   mark_arstage=1
+GATE-OK   mark_stalfix=1
+GATE-OK   mark_sched_v60c=1
+GATE-OK   mark_parser=1
+GATE-OK   mark_sched_v63=2
+GATE-OK   v63_default=1
+GATE-OK   v63_no_2048=0
+GATE-OK   v63_active_str=1
+GATE-OK   v63_floor_1024=1
+GATE-OK   v63_no_512floor=0
+GATE-OK   mark_sched_v64=2
+GATE-OK   v64_def_k=1
+GATE-OK   v64_def_b=1
+GATE-OK   v64_active_str=1
+GATE-OK   v64_no_k3=0
+GATE-OK   mark_sched_v66=4
+GATE-OK   v66_starve_default=1
+GATE-OK   v66_active_str=1
+GATE-OK   v66_bypass_sites=2
+GATE-OK   v66_check_applied=1
+--- v65 instrumentation absence (test-only probes NEVER baked) ---
+GATE-OK   no_v65_sched=0
+GATE-OK   no_v65_flash=0
+GATE-OK   no_v65_xpu=0
+--- v88 test-probe absence (test-only patches NEVER baked) ---
+GATE-OK   no_v84_probe=0
+GATE-OK   no_v85_skip=0
+GATE-OK   no_v86_cap=0
+GATE-OK   no_v87_stride=0
+--- v89/v123/v124 test-artifact absence (test-only, NEVER baked) ---
+GATE-OK   no_v89_pyspy_probe=0
+GATE-OK   no_v123_async_variant=0
+GATE-OK   no_v124_serve_variants=0
+GATE-OK   xgrammar=0.2.7
+GATE-OK   serve_spec_mtp4=1
+GATE-OK   v1218_pedigree_marker
+GATE-OK   v1220_pedigree_marker
+GATE-OK   v1221_pedigree_marker
+GATE-OK   v1222_pedigree_marker
+GATE-OK   v1223_pedigree_marker
+GATE-OK   v64_jit_warm_stamp
+GATE-OK   v1220_jit_warm_stamp
+GATE-OK   v1221_jit_warm_stamp
+GATE-OK   v1222_jit_warm_stamp
+GATE-OK   v1223_jit_warm_stamp
+GATE-OK   baked_serve_config (gmu0.8 bs64 e4m3 pc-ON spec-ON mnbt8192 async-ON mamba-fp16 no-template)
+--- gates PASS: committing v1.2.24-raw (production v1.2.24 = clean warm lane-commit after full validation, v1223 precedent) ---
+GATE-OK   no_bake_scripts_left=0
+sha256:0423c13f8c21b19493bdc424d8a0d4bec76d2463434247013a54908d66baf302
+commit_rc=0
+llm-scaler-exp:v1.2.24-raw 0423c13f8c21 24.7GB
+--- build repro_bootV1224.sh from V1223 (image + marker; async gate already inverted in lineage) ---
+--- diff V1223 -> V1224 boot (expect image + marker lines only) ---
+51c51
+<     llm-scaler-exp:v1.2.23-raw
+---
+>     llm-scaler-exp:v1.2.24-raw
+85c85
+< docker exec lsv-test test -f /root/.llm_scaler_exp_v1223_baked || { echo "BOOT_$MODE MARKER MISSING"; exit 9; }
+---
+> docker exec lsv-test test -f /root/.llm_scaler_exp_v1224_baked || { echo "BOOT_$MODE MARKER MISSING"; exit 9; }
+51:    llm-scaler-exp:v1.2.24-raw
+85:docker exec lsv-test test -f /root/.llm_scaler_exp_v1224_baked || { echo "BOOT_$MODE MARKER MISSING"; exit 9; }
+=== BAKE DONE (image committed, boot script ready) 14:58:25 ===

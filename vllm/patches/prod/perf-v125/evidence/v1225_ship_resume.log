@@ -1,0 +1,16 @@
+=== SHIP_V1225_RESUME start 2026-09-29 10:29:12 ===
+--- 4r. full gate battery on the committed image (fixed gates) ---
+raw_id=sha256:4e83528bfd66283252e49ba1153895b733538002dd3624e184477e8f6095c31e shipped_id=sha256:3f3c91637692ba6ced93e37975301a812d4ac558d43e0666e3355cba2356f9a1
+drwxr-xr-x 2 root root 4096 Sep 29 08:38 CFWXBGBT5CWEOC56SNQLXMZMUQLHFXATKGDZLFZPHI4Q3VHTINNA
+drwxr-xr-x 2 root root 4096 Sep 29 08:38 UBL4KVJQO3UZSSYKF6ZRDG2TSAZAUEPOKZDA63K3JKPF5TEQ6XOQ
+shipped_triton_cache_entries=79 raw_image_triton_cache_entries=79 (floor: shipped >= raw)
+GATE-OK   triton_cache_ge_raw=1
+=== V1225 SHIP GATES: ALL PASS 10:29:56 ===
+97
+no GATE-FAIL lines
+--- 5. fresh-boot verification on the committed production image ---
+51:    llm-scaler-exp:v1.2.25
+prod fresh-boot sanity + admission + v123 posture + v125 opsall PASS
+--- 6. CC battery through litellm :4000 ---
+litellm_health=401
+SHIP ABORT: litellm :4000 down (restart litellm-proxy with -e LITELLM_MASTER_KEY=sk-dummy before re-running)

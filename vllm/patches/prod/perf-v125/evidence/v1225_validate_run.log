@@ -1,0 +1,29 @@
+=== VALIDATE_V1225_RUN start 09:19:28 ===
+v1225 sanity/validate generated 09:19:28
+sanity+admission+v125-posture PASS 09:24:06
+v125 deltas: opsall=1 c7=2 fixline=1
+v125 C7 functional PASS (refuse+raise on =2, clean import unset)
+MATH[fresh] SUMMARY wrong=0/80
+MATH[fresh] SERIAL SUMMARY wrong=0/80 concurrent-vs-serial flips=0
+TOOL[fresh] SUMMARY clean=30 salad=0 other=0 error=0 of 30
+jit_recheck_lines=8 cache_now=80 cache_raw=79 delta=1 (bound 2)
+v124 deltas: p16=2 p195_cache=1 p195_mamba=1 p195_ops=1 mamba_fp16=1 mamba_fp8=0
+P23F quality gate PASS: fresh 0/80+0 flips+30/30, post-battery 0/24+30/30
+SANITY finish=stop content_head='\n\nREADY-v1225'
+== V125 GENSPEED EVIDENCE (verify manually: solo parity ~70+ / 4x1024 >= 100 agg) ==
+== V1225 SOLO GENSPEED (expect 120+ async (floor 70 = sync parity)) ==
+GENSPEED r0: 1x1024 total=276 tok wall=3.5s aggregate=78.62 tok/s per-stream=[78.6]
+GENSPEED r1: 1x1024 total=276 tok wall=3.5s aggregate=79.66 tok/s per-stream=[79.7]
+GENSPEED r2: 1x1024 total=276 tok wall=3.5s aggregate=79.46 tok/s per-stream=[79.5]
+== V123 ASYNC GENSPEED 4x1024 (acceptance: aggregate >= 100; sync was 72-74) ==
+GENSPEED r0: 4x1024 total=1066 tok wall=7.1s aggregate=149.80 tok/s per-stream=[50.4 63.3 52.0 46.5]
+== V123 SERVE LOG ERRORS (acceptance: 0 tracebacks after boot) ==
+== V123 ASYNC GENSPEED 4x1024 (acceptance: aggregate >= 100; sync was 72-74) ==
+GENSPEED r0: 4x1024 total=1066 tok wall=7.1s aggregate=149.80 tok/s per-stream=[50.4 63.3 52.0 46.5]
+== V123 SERVE LOG ERRORS (acceptance: 0 tracebacks after boot) ==
+0
+== V124 RUNTIME FP8 RESOLUTION (acceptance: float8_e4m3fn float8_e5m2) ==
+torch.float8_e4m3fn torch.float8_e5m2
+== V125 C7 FUNCTIONAL ON LANE (informational dup of the pre-chain gate) ==
+=== VALIDATE_V1225_RUN ALL GATES PASS 10:14:08 ===
+V1225_VALIDATION_COMPLETE

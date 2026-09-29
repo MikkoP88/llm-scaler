@@ -1,0 +1,6 @@
+litellm_liveness=200
+cc_t1 http=200 blocks=text
+cc_t2 http=200 blocks=text
+cc_t3 http=200 blocks=text
+cc_thinking=thinking
+CC_BATTERY_V1225: ALL GREEN

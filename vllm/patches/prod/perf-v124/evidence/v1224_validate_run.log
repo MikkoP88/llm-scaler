@@ -1,0 +1,23 @@
+=== VALIDATE_V1224_RUN start 15:24:54 ===
+v1224 sanity/validate generated 15:24:54
+sanity+admission+v124-posture PASS 15:32:17
+jit_recheck_lines=8 cache_now=73 cache_raw=72 delta=1 (bound 2)
+v124 deltas: p16=2 p195_cache=1 p195_mamba=1 p195_ops=1 mamba_fp16=1 mamba_fp8=0
+SANITY finish=stop content_head='\n\nREADY-v1224'
+== V124 GENSPEED EVIDENCE (verify manually: solo parity ~70+ / 4x1024 >= 100 agg) ==
+== V1224 SOLO GENSPEED (expect 120+ async (floor 70 = sync parity)) ==
+GENSPEED r0: 1x1024 total=276 tok wall=3.8s aggregate=72.96 tok/s per-stream=[73.0]
+GENSPEED r1: 1x1024 total=276 tok wall=3.7s aggregate=73.81 tok/s per-stream=[73.8]
+GENSPEED r2: 1x1024 total=276 tok wall=3.7s aggregate=73.62 tok/s per-stream=[73.6]
+== V123 ASYNC GENSPEED 4x1024 (acceptance: aggregate >= 100; sync was 72-74) ==
+GENSPEED r0: 4x1024 total=1069 tok wall=7.8s aggregate=137.60 tok/s per-stream=[45.3 57.8 47.5 42.6]
+== V123 SERVE LOG ERRORS (acceptance: 0 tracebacks after boot) ==
+== V123 ASYNC GENSPEED 4x1024 (acceptance: aggregate >= 100; sync was 72-74) ==
+GENSPEED r0: 4x1024 total=1069 tok wall=7.8s aggregate=137.60 tok/s per-stream=[45.3 57.8 47.5 42.6]
+== V123 SERVE LOG ERRORS (acceptance: 0 tracebacks after boot) ==
+0
+== V124 RUNTIME FP8 RESOLUTION (acceptance: float8_e4m3fn float8_e5m2) ==
+torch.float8_e4m3fn torch.float8_e5m2
+VALIDATE_V1224_DONE
+=== VALIDATE_V1224_RUN ALL GATES PASS 16:28:49 ===
+V1224_VALIDATION_COMPLETE

@@ -1,0 +1,43 @@
+=== SHIP_V1225 start 2026-09-29 10:16:23 ===
+--- preconditions ---
+lane UP
+raw_id=sha256:4e83528bfd66283252e49ba1153895b733538002dd3624e184477e8f6095c31e
+--- 1. clean-warm relaunch from -raw (fresh container for the lane-commit) ---
+--- 2. standard warm rounds (mirror of bake warm; async posture) ---
+JITWARM big_seed831 code=200 wall=138.8s err=None
+JITWARM decode code=200 wall=0.8s err=None
+JITWARM_OK
+[s4.t1] 6.0s finish=stop len=13
+[s2.t1] 6.6s finish=length len=0
+[s3.t1] 6.6s finish=length len=0
+[s4.t2] 16.3s finish=length len=0
+[s2.t2] 16.0s finish=length len=0
+[s3.t2] 16.8s finish=length len=0
+[s1.t1] 25.1s finish=length len=0
+[s1.t2] 2.7s finish=length len=0
+WARM_EXT_V1219_DONE verify=False wall=27.8s
+sampler_default http=200
+sampler_topp http=200
+sampler_topk http=200
+sampler_all http=200
+--- warm-verify: zero JIT on replay (log-delta) ---
+[v2.t1] 7.3s finish=length len=0
+[v3.t1] 7.3s finish=length len=0
+[v2.t2] 1.6s finish=stop len=0
+[v1.t1] 9.5s finish=length len=0
+[v3.t2] 2.3s finish=length len=0
+[v1.t2] 2.0s finish=length len=0
+WARM_EXT_V1219_DONE verify=True wall=11.5s
+shipwarm_new_jit=0 (0 = fully warm)
+shipwarm_triton_cache_entries=79
+--- 3. lane-commit -> llm-scaler-exp:v1.2.25 ---
+sha256:3f3c91637692ba6ced93e37975301a812d4ac558d43e0666e3355cba2356f9a1
+shipped_id=sha256:3f3c91637692ba6ced93e37975301a812d4ac558d43e0666e3355cba2356f9a1
+llm-scaler-exp:v1.2.25 3f3c91637692 24.7GB
+--- 4. full gate battery on the committed image ---
+drwxr-xr-x 2 root root 4096 Sep 29 08:38 CFWXBGBT5CWEOC56SNQLXMZMUQLHFXATKGDZLFZPHI4Q3VHTINNA
+drwxr-xr-x 2 root root 4096 Sep 29 08:38 UBL4KVJQO3UZSSYKF6ZRDG2TSAZAUEPOKZDA63K3JKPF5TEQ6XOQ
+shipped_triton_cache_entries=79 raw_image_triton_cache_entries=79 (floor: shipped >= raw)
+GATE-OK   triton_cache_ge_raw=1
+=== V1225 SHIP GATES: FAIL 10:25:20 ===
+SHIP ABORT: gates failed rc=1
