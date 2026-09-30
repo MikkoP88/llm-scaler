@@ -2678,3 +2678,83 @@ of it in the worker, not just its own work).
   not distinguish skip vs re-apply since both yield "2").
 - Backgrounded `nohup` through plink keeps the session alive until timeout;
   always append `< /dev/null` to the nohup launch inside remote scripts.
+
+## #30 (2026-09-30, v126 / perf-v126 round — dualbridge ship + fp8-superiority closed)
+
+Full record: patches/prod/perf-v126/COMPLETE_ROUND_WRITEUP.md (PHASES.md P27-P31e).
+
+1. **e4m3/e5m2 GDN SSM-state storage is FORMAT-IMPOSSIBLE for the state math
+   (measurement, not concession).** Live telemetry (P29M timer-thread): e5m2
+   pool = NaN from the FIRST traffic tick (pmx=nan premx=nan with ba finite
+   15.57 — recurrence overflow/precision-collapse that never clears; the
+   mechanism behind e5m2 garbage answers from request 1). Op-level real-scale
+   sweeps (P29I): legit SSM states ≥1280 vs the XPU e4m3 cast ceiling 448
+   with NO satfinite — the pool cannot even be SEEDED (the cast itself
+   NaNs); e5m2 holds the range but 2-mantissa-bit error grows out-diff to
+   0.93-1.84 on large states. Certified endgame = fp16 GDN pool + fp8_e4m3
+   KV (v1.2.24+ posture, shipped on in v1.2.26 with the dualbridge). Only
+   conceivable future: per-head scaled-space kernel arithmetic (weeks-scale,
+   NOT a clamp — clamp-to-448 is saturated-state corruption, not a fix).
+   Related law: synthetic-scale probes (randn*0.5) were 20-100x below real
+   activation scale and stayed green while the serve lane NaN-poisoned —
+   exoneration probes must sweep REAL magnitudes.
+2. **Pre-existing nsd>1 spec-kernel sibling ring-row race (root-caused and
+   fixed in the DIAGNOSTIC .so only — never shipped).**
+   gdn_conv_fused_seq_spec's ring init row is a SAVE row; at nsd=2/HV=24 the
+   launch (48 work-groups) exceeds ~32 HW residency slots, so late sibling
+   work-groups read the init row AFTER early siblings rewrote it.
+   Reproduces BIT-IDENTICALLY on the STOCK production .so (p29b12) — an
+   upstream latent bug never exercised in production (the model layer gates
+   the ESIMD spec path at nsd==1). Fixed via pre-launch ring-row snapshot
+   (v131 .so), verified bitwise; not shipped per the no-degradation rule.
+   Sibling-hazard audit of the non-spec gdn_conv_fused_seq = open kernel-team
+   item.
+3. **P29H diagnostic overlay wedges the engine on BOTH pool dtypes
+   (diagnostic-only; never ships).** EngineDeadError via sample_tokens RPC
+   timeout; bisection convicted the overlay itself — poolpath, dualbridge
+   (incl. its fp16-pool decode-under-graphs cell, first time run), and the
+   v131 .so are ALL battery-green on fp16. PARADOX (open micro-mechanism):
+   the fp16-lane P29H executed footprint is a provably near-inert STRICT
+   SUBSET of the stable fp8-lane footprint (PRE/POST never execute: ctr=0,
+   pmx=0.0 through capture AND traffic). READOUT LAW (permanent): never read
+   device state from the forward path — host syncs are async-hostile AND
+   gate sites are unreachable on serial lanes; readout belongs to a daemon
+   TIMER thread (P29M pattern). Capture-legality laws (each earned by a
+   crash): host syncs inside XPU graph capture are ILLEGAL; pin_memory needs
+   device="cpu"; no dot/norm/sum inside capture (max-reductions are legal);
+   gate-site code may reference only module globals/self attrs (FUNCTION-
+   SCOPE LAW). Activation-transport: env vars do NOT reach spawned TP
+   workers on this build — diagnostics activate via MARKER FILE.
+4. **Diagnostic .so taint + SHIP-MEASUREMENT LAW.** A "ship-posture" speed
+   matrix was banked while the lane silently ran the v131 diagnostic .so:
+   ring-row snapshot ≈ +7 ms × ~12 GDN layer calls ≈ +88 ms/step = 3x step
+   cost (spec acceptance healthy 3.21-3.28 — pure kernel cost). Impossible
+   readings exposed it (131 ms flat gaps vs 43-48 certified; contended
+   stream "faster" than solo). LAW: every ship-posture measurement asserts
+   the production .so sha (1d9dcf4e…) BEFORE numbers are banked (PRODSO
+   legs). Cross-check physically-impossible readings before adjudicating a
+   regression — they convict the measurement setup, not the stack.
+5. **Marker/gate-contract laws (three ship-chain failures, all root-fixed
+   in-round).** (a) CAPS-MARKER CONVENTION: every patch consumed by a gate
+   must emit its machine-greppable caps status as its FINAL output line —
+   inventing gate literals the patch never prints is a generator defect the
+   bake catches only at apply time (P31 run-1 abort). (b) SITE-MOVE AUDIT:
+   when a marker's SITE moves (v124 block → v126 lineage comment), EVERY
+   consumer (battery, ship gates, patch asserts, boot gates) must be
+   re-audited in the same edit — P29T fixed 3 of 4 and the 4th (==1 vs >=1)
+   surfaced at ship time (run-1 abort). (c) QUOTING-LAYER: awk `$1`
+   escaping is a property of the sh -c INNER context — an awk piped OUTSIDE
+   the `sh -c "..."` quotes needs BARE `$1`; `\$1` there is a syntax error
+   and the gate reads got= EMPTY (run-2 abort). Test the exact generated
+   line standalone (echo-pipe both branches) before any consumer run.
+6. **Caps-literal rename-carryover trap:** validate_v1226_run.sh emits the
+   v1225 caps literals (VALIDATE_V1225_RUN / V1225_VALIDATION_COMPLETE) —
+   the v1226 ship precondition greps the V1225 literal against the v1226
+   log BY DESIGN. When copying script chains, distinguish intentional
+   carryovers from missed renames before "fixing" them.
+7. **Watchdog cadence truth:** lane_watchdog.sh loop = sleep 60/cycle; the
+   "alive armed" line logs every 10 CYCLES = 10 MINUTES (plus a 420 s
+   post-launch grace). The v1226 ship comment "10-cycle = 100s cadence" is
+   STALE — early "no armed-line yet" checks are benign; `systemctl restart`
+   (not reload) is required after repointing. Watchdog LOG path is
+   /root/build/lane_watchdog.log (NOT lce1/).

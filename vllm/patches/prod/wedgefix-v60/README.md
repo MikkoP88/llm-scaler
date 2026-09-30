@@ -849,7 +849,7 @@ cc_battery_fix_v1224.sh). NOTE (recorded for honesty): v1.2.24's prod-boot
 sed (`s/v1\.2\.23-raw/v1\.2\.24/`) was a NO-OP — the script already said
 v1.2.24-raw, so the "prod" fresh-boot verification re-ran -raw; fixed
 properly in v1225 (`sed 's/llm-scaler-exp:v1\.2\.25-raw/llm-scaler-exp:v1.2.25/g'`
-— tag actually swaps; verified by grep). KNOWN_ISSUES #30(1).
+— tag actually swaps; verified by grep). Round entries (1) below.
 
 # v1.2.25 — opsall ROOT FIX + C7 fp8-state refusal; fp8 round closed by measurement (2026-09-29)
 
@@ -902,7 +902,56 @@ work end-to-end" — verdict by measurement:
    unchanged: V1212-lineage boot scripts FORBID async — V1225 lineage
    only.
 
-## KNOWN_ISSUES #30 — v1.2.24/v1.2.25 round entries
+# v1.2.26 — dualbridge ship + fp8-superiority round CLOSED by measurement (2026-09-30)
+
+Full record: ../perf-v126/COMPLETE_ROUND_WRITEUP.md (PHASES.md P27-P31e live).
+Task: "both fp8(e4m3/e5m2) implementations has to be superior of baselane on
+any possible cases and work to end-to-end(e4m3/e5m2)" + all "fresh math
+wrong, serial wrong and post-prefix math wrong" fp8 issues fixed — verdict:
+
+1. **P23D/P23F ROOT-FIXED (not tuned around):** the v124/v125 bridge remapped
+   ONLY the ssm-pool indices; the conv kernel kept REAL slot ids against the
+   REAL conv pool → conv states read/written at COMPACT rows → cross-request
+   crosstalk whenever batches coalesce (op-level conviction: bridge sim
+   writes rows {0,1} where real slots are [5,9]). **Dual bridge** (gather
+   BOTH pools with ONE index set, static-flat arange remap for capture-safe
+   decode, per-value unique for eager prefill, scatter both home) → lane
+   quality **0/80 fresh wrong + 0 flips + 0/24 post-prefix + 60/60 tools,
+   BOTH formats** (was 7-11/80, 18/18 flips, 10-25% post-prefix).
+2. **Full-fp8 SSM arithmetic pipeline proven FORMAT-IMPOSSIBLE by telemetry**
+   (the no-roundtrips directive, answered by measurement): e5m2 pool = NaN
+   from the FIRST traffic tick (P29M timer-thread telemetry: pmx=nan with
+   finite ba; recurrence never clears); e4m3 cannot even be seeded (legit
+   states ≥1280 vs cast ceiling 448, no satfinite). Certified endgame =
+   **fp16 GDN pool + fp8_e4m3 KV**; dualbridge makes fp8 SSM STORAGE a
+   certified-selectable option (`--mamba-ssm-cache-dtype fp8_e4m3|fp8_e5m2`,
+   quality-clean both formats); legacy env route refused in-code.
+3. **SUPERIORITY banked on every axis** (SHIPMAT2, production-.so-sha-
+   asserted, exact Run-7n methodology): agg4x256 236.80/253.74 vs fp16
+   baseline 181.81/244.88 (+30.2%/+3.6%), solo 75.58/75.69 vs 75.06/74.89,
+   agg8x256 423.11/422.93 (52.9×8, hardware high-water); capacity +3.50%
+   banked at v1.2.25; P30 + P31b full batteries ALL GATES PASS.
+4. **En-route root fix (diagnostic-only, not shipped):** pre-existing
+   nsd>1 spec-kernel sibling ring-row race (reproduces on the STOCK
+   production .so; production gates the ESIMD spec path at nsd==1) —
+   root-caused via instrumented-kernel value forensics, fixed with a
+   pre-launch ring-row snapshot (v131 .so), exhaustively verified; never
+   ships (no-degradation rule). SHIP-MEASUREMENT LAW born from its taint:
+   every ship-posture measurement asserts the production .so sha first.
+5. **Images:** v1.2.26-raw = `e805da1449b0` (bake 101/0 02:41:34; fresh-host
+   battery ALL GATES PASS 03:57:43 incl. async 4×1024 agg 147.66, solo
+   78.5-79.7) → **v1.2.26 = `92cf94b232e1`** clean-warm lane-commit, ship
+   gates **ALL PASS 04:45:06** (dualbridge marker ==1, C7 v126 marker + 3
+   refs + functional 5/5, prod .so exact sha, P29 artifacts absent, full
+   v1218→v1226 pedigree, triton floor 79 ≥ 79); prod fresh-boot verified
+   (dualbridge marker on the RUNNING container); CC battery green through
+   litellm; watchdog ARMED on repro_bootV1226_prod.sh 05:02:27 (armed-line
+   cadence = every 10 MINUTES — ship comment "100s" is stale). Ship-chain
+   process failures root-fixed en route: patch caps-marker convention,
+   lineage-marker site-move audit (==1→>=1 across ALL consumers), awk
+   quoting-layer (bare $1 outside sh -c) — all recorded as standing laws.
+
+## Round entries — v1.2.24/v1.2.25 (2026-09-28/29)
 
 1. **ship_v1224 prod-boot sed no-op** (see v1.2.24 section): a sed that
    pattern-matches nothing replaces nothing — prod-boot "verification"
