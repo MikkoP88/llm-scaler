@@ -1,0 +1,1344 @@
+(EngineCore pid=12122) INFO 10-01 20:06:17 [block_pool.py:63] V131_SOFTPOP_ARMED slack=64
+(EngineCore pid=12122) INFO 10-01 20:06:17 [kv_cache_manager.py:31] V131_MTRACE_ARMED
+(EngineCore pid=12122) INFO 10-01 20:08:01 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=29508 hit=0 kmiss=0 freeq=497 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:15 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-807 ptok=35149 hit=0 kmiss=0 freeq=451 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:24 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:31 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:31 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:31 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:31 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:31 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:31 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:31 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:31 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:35 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:35 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:37 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:37 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:37 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:37 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:37 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:37 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:37 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:37 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:37 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:37 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:37 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:37 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:37 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8c3 ptok=35012 hit=0 kmiss=0 freeq=444 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=423 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:47 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:51 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:51 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:51 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:51 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:51 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:51 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:51 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:51 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:51 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:51 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:51 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:51 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:51 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:52 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:52 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:52 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:52 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:52 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:52 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:52 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:52 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:52 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:52 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:52 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:52 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:52 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:52 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:53 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:53 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:53 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:57 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:57 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:57 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:57 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:57 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:57 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:57 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:08:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:03 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a54 ptok=35222 hit=0 kmiss=0 freeq=445 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:08 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:12 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=405 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:22 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=405 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:28 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e4 ptok=35139 hit=0 kmiss=0 freeq=445 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:32 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:09:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98c ptok=35200 hit=0 kmiss=0 freeq=445 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:00 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:05 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:11 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:11 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:11 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:15 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:15 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:15 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:15 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:15 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:15 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:15 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:15 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:22 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:22 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:22 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:22 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:22 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:22 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:22 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:22 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:22 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:22 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:22 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:22 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:22 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:23 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:23 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:23 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:23 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:23 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:23 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:23 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:23 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:23 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b07 ptok=2858 hit=0 kmiss=0 freeq=445 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:23 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-97c ptok=2904 hit=0 kmiss=0 freeq=429 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:23 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b9c ptok=2818 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:23 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a2e ptok=29523 hit=0 kmiss=0 freeq=397 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=360 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=365 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:47 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=365 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:47 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=365 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:47 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=365 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:47 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=365 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:47 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=365 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:47 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=365 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=365 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=365 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=365 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=365 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=365 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=365 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=365 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=365 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=365 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=365 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=365 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:53 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:53 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:53 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:53 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:53 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:53 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:54 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:54 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:54 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:54 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:54 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:54 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=407 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:54 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=407 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:54 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=404 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:54 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=404 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:54 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=404 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:54 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=404 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:54 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=404 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:54 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=407 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=407 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=407 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=407 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=407 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=407 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=407 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=407 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=407 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=407 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=407 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=407 pre=0
+(EngineCore pid=12122) INFO 10-01 20:10:55 [block_pool.py:425] V131_SOFTPOP rot=1 hard=0 freeq=408
+(EngineCore pid=12122) INFO 10-01 20:10:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=400 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:00 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=400 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:00 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:00 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:00 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:00 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=399 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:00 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=418 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:00 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:01 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:01 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:01 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=414 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:01 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:01 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=414 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:01 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=414 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:01 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=414 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:01 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=414 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:01 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:01 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:01 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:01 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:02 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=436 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:02 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=436 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:02 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=436 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:02 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=436 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:02 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ab5 ptok=29500 hit=2048 kmiss=2 freeq=432 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:02 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:07 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=411 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:08 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=411 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:08 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=411 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:08 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=411 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:08 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=411 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:08 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:12 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:12 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:12 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:12 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:12 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:12 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:12 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:12 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:13 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:13 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:13 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:13 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:13 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:13 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:13 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:13 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:13 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:13 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:13 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:13 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:13 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:13 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:13 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:14 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:14 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:14 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:14 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:14 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:14 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:14 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:14 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:14 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:28 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-850 ptok=29607 hit=5120 kmiss=2 freeq=450 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:28 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=423 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:32 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:32 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:32 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:32 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:33 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:33 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:33 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:33 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:33 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:33 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:33 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:33 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:33 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:33 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:33 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:33 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:33 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:33 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:33 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=418 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:38 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=418 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-96b ptok=29572 hit=5120 kmiss=2 freeq=451 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:53 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:57 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:57 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:57 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:57 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:57 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:57 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:57 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:59 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:59 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:59 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:59 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:59 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:59 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:59 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:59 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:59 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:59 [block_pool.py:425] V131_SOFTPOP rot=4097 hard=3 freeq=414
+(EngineCore pid=12122) INFO 10-01 20:11:59 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-803 ptok=2870 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:59 [block_pool.py:425] V131_SOFTPOP rot=8193 hard=7 freeq=405
+(EngineCore pid=12122) INFO 10-01 20:11:59 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b20 ptok=2846 hit=0 kmiss=0 freeq=394 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:59 [block_pool.py:425] V131_SOFTPOP rot=12289 hard=11 freeq=389
+(EngineCore pid=12122) INFO 10-01 20:11:59 [block_pool.py:470] V131_EVICT ev_total=35 freeq=384 new=5
+(EngineCore pid=12122) INFO 10-01 20:11:59 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-ae0 ptok=2836 hit=0 kmiss=0 freeq=378 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:59 [block_pool.py:425] V131_SOFTPOP rot=16385 hard=15 freeq=373
+(EngineCore pid=12122) INFO 10-01 20:11:59 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-860 ptok=2842 hit=0 kmiss=0 freeq=362 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:59 [block_pool.py:425] V131_SOFTPOP rot=20481 hard=19 freeq=357
+(EngineCore pid=12122) INFO 10-01 20:11:59 [block_pool.py:470] V131_EVICT ev_total=67 freeq=352 new=5
+(EngineCore pid=12122) INFO 10-01 20:11:59 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b92 ptok=2814 hit=0 kmiss=0 freeq=346 pre=0
+(EngineCore pid=12122) INFO 10-01 20:11:59 [block_pool.py:425] V131_SOFTPOP rot=24577 hard=22 freeq=346
+(EngineCore pid=12122) INFO 10-01 20:12:03 [block_pool.py:425] V131_SOFTPOP rot=28673 hard=26 freeq=333
+(EngineCore pid=12122) INFO 10-01 20:12:04 [block_pool.py:425] V131_SOFTPOP rot=32769 hard=30 freeq=329
+(EngineCore pid=12122) INFO 10-01 20:12:04 [block_pool.py:470] V131_EVICT ev_total=96 freeq=329 new=1
+(EngineCore pid=12122) INFO 10-01 20:12:04 [block_pool.py:425] V131_SOFTPOP rot=36865 hard=34 freeq=328
+(EngineCore pid=12122) INFO 10-01 20:12:04 [block_pool.py:425] V131_SOFTPOP rot=40961 hard=38 freeq=327
+(EngineCore pid=12122) INFO 10-01 20:12:05 [block_pool.py:425] V131_SOFTPOP rot=45057 hard=42 freeq=329
+(EngineCore pid=12122) INFO 10-01 20:12:06 [block_pool.py:425] V131_SOFTPOP rot=49153 hard=46 freeq=328
+(EngineCore pid=12122) INFO 10-01 20:12:07 [block_pool.py:425] V131_SOFTPOP rot=53249 hard=50 freeq=327
+(EngineCore pid=12122) INFO 10-01 20:12:07 [block_pool.py:425] V131_SOFTPOP rot=57345 hard=54 freeq=326
+(EngineCore pid=12122) INFO 10-01 20:12:08 [block_pool.py:425] V131_SOFTPOP rot=61441 hard=58 freeq=325
+(EngineCore pid=12122) INFO 10-01 20:12:08 [block_pool.py:425] V131_SOFTPOP rot=65537 hard=62 freeq=321
+(EngineCore pid=12122) INFO 10-01 20:12:09 [block_pool.py:470] V131_EVICT ev_total=128 freeq=324 new=1
+(EngineCore pid=12122) INFO 10-01 20:12:09 [block_pool.py:425] V131_SOFTPOP rot=69633 hard=66 freeq=323
+(EngineCore pid=12122) INFO 10-01 20:12:10 [block_pool.py:425] V131_SOFTPOP rot=73729 hard=70 freeq=322
+(EngineCore pid=12122) INFO 10-01 20:12:10 [block_pool.py:425] V131_SOFTPOP rot=77825 hard=74 freeq=321
+(EngineCore pid=12122) INFO 10-01 20:12:20 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-bbf ptok=35358 hit=0 kmiss=0 freeq=497 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:38 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f0 ptok=2963 hit=2048 kmiss=2 freeq=445 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:38 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9d5 ptok=2989 hit=2048 kmiss=2 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:38 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a58 ptok=29657 hit=1024 kmiss=1 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:38 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=11264 kmiss=1 freeq=379 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:43 [block_pool.py:425] V131_SOFTPOP rot=81921 hard=78 freeq=382
+(EngineCore pid=12122) INFO 10-01 20:12:43 [block_pool.py:425] V131_SOFTPOP rot=86017 hard=82 freeq=387
+(EngineCore pid=12122) INFO 10-01 20:12:43 [block_pool.py:425] V131_SOFTPOP rot=90113 hard=85 freeq=384
+(EngineCore pid=12122) INFO 10-01 20:12:43 [block_pool.py:470] V131_EVICT ev_total=160 freeq=377 new=7
+(EngineCore pid=12122) INFO 10-01 20:12:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=377 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:47 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=380 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:47 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=380 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:47 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=380 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:47 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=380 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:47 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=380 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:47 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=380 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=380 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=380 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=380 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=380 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=380 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=380 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=380 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=380 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=380 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=379 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:48 [block_pool.py:425] V131_SOFTPOP rot=94209 hard=89 freeq=377
+(EngineCore pid=12122) INFO 10-01 20:12:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=376 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=379 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=379 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=429 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=428 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=425 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:54 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b4b ptok=29755 hit=0 kmiss=0 freeq=451 pre=0
+(EngineCore pid=12122) INFO 10-01 20:12:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-849 ptok=29636 hit=1024 kmiss=1 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:03 [block_pool.py:425] V131_SOFTPOP rot=98305 hard=93 freeq=428
+(EngineCore pid=12122) INFO 10-01 20:13:03 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-849 ptok=29636 hit=1024 kmiss=1 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:07 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-849 ptok=29636 hit=1024 kmiss=1 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:07 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-849 ptok=29636 hit=1024 kmiss=1 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:07 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-849 ptok=29636 hit=1024 kmiss=1 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:07 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-849 ptok=29636 hit=1024 kmiss=1 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:07 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-849 ptok=29636 hit=1024 kmiss=1 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:07 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-849 ptok=29636 hit=1024 kmiss=1 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:08 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-849 ptok=29636 hit=1024 kmiss=1 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:08 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-849 ptok=29636 hit=1024 kmiss=1 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:08 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-849 ptok=29636 hit=1024 kmiss=1 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:13 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-849 ptok=29636 hit=1024 kmiss=1 freeq=450 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:13 [block_pool.py:425] V131_SOFTPOP rot=102401 hard=96 freeq=446
+(EngineCore pid=12122) INFO 10-01 20:13:13 [block_pool.py:470] V131_EVICT ev_total=195 freeq=436 new=5
+(EngineCore pid=12122) INFO 10-01 20:13:17 [block_pool.py:425] V131_SOFTPOP rot=106497 hard=100 freeq=432
+(EngineCore pid=12122) INFO 10-01 20:13:17 [block_pool.py:425] V131_SOFTPOP rot=110593 hard=104 freeq=431
+(EngineCore pid=12122) INFO 10-01 20:13:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b17 ptok=35349 hit=2048 kmiss=0 freeq=421 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:21 [block_pool.py:425] V131_SOFTPOP rot=114689 hard=108 freeq=427
+(EngineCore pid=12122) INFO 10-01 20:13:21 [block_pool.py:470] V131_EVICT ev_total=226 freeq=417 new=7
+(EngineCore pid=12122) INFO 10-01 20:13:21 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b17 ptok=35349 hit=2048 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:25 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b17 ptok=35349 hit=2048 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:25 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b17 ptok=35349 hit=2048 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:26 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b17 ptok=35349 hit=2048 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:26 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b17 ptok=35349 hit=2048 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:26 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b17 ptok=35349 hit=2048 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:26 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b17 ptok=35349 hit=2048 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:26 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b17 ptok=35349 hit=2048 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:26 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b17 ptok=35349 hit=2048 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:26 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b17 ptok=35349 hit=2048 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:26 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b17 ptok=35349 hit=2048 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:26 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b17 ptok=35349 hit=2048 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:26 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b17 ptok=35349 hit=2048 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:26 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b17 ptok=35349 hit=2048 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:26 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b17 ptok=35349 hit=2048 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:32 [block_pool.py:425] V131_SOFTPOP rot=118785 hard=112 freeq=452
+(EngineCore pid=12122) INFO 10-01 20:13:32 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b17 ptok=35349 hit=2048 kmiss=0 freeq=451 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:32 [block_pool.py:425] V131_SOFTPOP rot=122881 hard=116 freeq=432
+(EngineCore pid=12122) INFO 10-01 20:13:36 [block_pool.py:425] V131_SOFTPOP rot=126977 hard=120 freeq=426
+(EngineCore pid=12122) INFO 10-01 20:13:36 [block_pool.py:425] V131_SOFTPOP rot=131073 hard=124 freeq=425
+(EngineCore pid=12122) INFO 10-01 20:13:36 [block_pool.py:470] V131_EVICT ev_total=262 freeq=418 new=7
+(EngineCore pid=12122) INFO 10-01 20:13:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29652 hit=3072 kmiss=1 freeq=418 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:41 [block_pool.py:425] V131_SOFTPOP rot=135169 hard=127 freeq=422
+(EngineCore pid=12122) INFO 10-01 20:13:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29652 hit=3072 kmiss=1 freeq=414 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29652 hit=3072 kmiss=1 freeq=414 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29652 hit=3072 kmiss=1 freeq=414 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29652 hit=3072 kmiss=1 freeq=414 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29652 hit=3072 kmiss=1 freeq=414 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:50 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29652 hit=3072 kmiss=1 freeq=445 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:50 [block_pool.py:425] V131_SOFTPOP rot=139265 hard=131 freeq=434
+(EngineCore pid=12122) INFO 10-01 20:13:50 [block_pool.py:470] V131_EVICT ev_total=290 freeq=424 new=5
+(EngineCore pid=12122) INFO 10-01 20:13:55 [block_pool.py:425] V131_SOFTPOP rot=143361 hard=135 freeq=423
+(EngineCore pid=12122) INFO 10-01 20:13:55 [block_pool.py:425] V131_SOFTPOP rot=147457 hard=139 freeq=422
+(EngineCore pid=12122) INFO 10-01 20:13:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:13:59 [block_pool.py:425] V131_SOFTPOP rot=151553 hard=143 freeq=418
+(EngineCore pid=12122) INFO 10-01 20:13:59 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:04 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:04 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:04 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:04 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:04 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:04 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:04 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:04 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:04 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:04 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:04 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:05 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:05 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:05 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:05 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:05 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:05 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:05 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:05 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:05 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:05 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:05 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:11 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b0 ptok=29703 hit=3072 kmiss=1 freeq=450 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:11 [block_pool.py:425] V131_SOFTPOP rot=155649 hard=146 freeq=446
+(EngineCore pid=12122) INFO 10-01 20:14:11 [block_pool.py:470] V131_EVICT ev_total=321 freeq=442 new=5
+(EngineCore pid=12122) INFO 10-01 20:14:11 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a62 ptok=35270 hit=0 kmiss=0 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a62 ptok=35270 hit=0 kmiss=0 freeq=429 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a62 ptok=35270 hit=0 kmiss=0 freeq=429 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a62 ptok=35270 hit=0 kmiss=0 freeq=429 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a62 ptok=35270 hit=0 kmiss=0 freeq=429 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a62 ptok=35270 hit=0 kmiss=0 freeq=429 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a62 ptok=35270 hit=0 kmiss=0 freeq=429 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a62 ptok=35270 hit=0 kmiss=0 freeq=429 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a62 ptok=35270 hit=0 kmiss=0 freeq=429 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a62 ptok=35270 hit=0 kmiss=0 freeq=429 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a62 ptok=35270 hit=0 kmiss=0 freeq=429 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a62 ptok=35270 hit=0 kmiss=0 freeq=429 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:21 [block_pool.py:425] V131_SOFTPOP rot=159745 hard=150 freeq=460
+(EngineCore pid=12122) INFO 10-01 20:14:34 [block_pool.py:425] V131_SOFTPOP rot=163841 hard=154 freeq=453
+(EngineCore pid=12122) INFO 10-01 20:14:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a62 ptok=35270 hit=0 kmiss=0 freeq=450 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:34 [block_pool.py:470] V131_EVICT ev_total=355 freeq=445 new=5
+(EngineCore pid=12122) INFO 10-01 20:14:34 [block_pool.py:425] V131_SOFTPOP rot=167937 hard=158 freeq=435
+(EngineCore pid=12122) INFO 10-01 20:14:38 [block_pool.py:425] V131_SOFTPOP rot=172033 hard=162 freeq=430
+(EngineCore pid=12122) INFO 10-01 20:14:38 [block_pool.py:425] V131_SOFTPOP rot=176129 hard=166 freeq=426
+(EngineCore pid=12122) INFO 10-01 20:14:38 [block_pool.py:470] V131_EVICT ev_total=384 freeq=419 new=7
+(EngineCore pid=12122) INFO 10-01 20:14:38 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-823 ptok=35297 hit=0 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-823 ptok=35297 hit=0 kmiss=0 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-823 ptok=35297 hit=0 kmiss=0 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-823 ptok=35297 hit=0 kmiss=0 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-823 ptok=35297 hit=0 kmiss=0 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-823 ptok=35297 hit=0 kmiss=0 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-823 ptok=35297 hit=0 kmiss=0 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-823 ptok=35297 hit=0 kmiss=0 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-823 ptok=35297 hit=0 kmiss=0 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-823 ptok=35297 hit=0 kmiss=0 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-823 ptok=35297 hit=0 kmiss=0 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-823 ptok=35297 hit=0 kmiss=0 freeq=422 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:53 [block_pool.py:425] V131_SOFTPOP rot=180225 hard=169 freeq=453
+(EngineCore pid=12122) INFO 10-01 20:14:53 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-823 ptok=35297 hit=0 kmiss=0 freeq=445 pre=0
+(EngineCore pid=12122) INFO 10-01 20:14:53 [block_pool.py:425] V131_SOFTPOP rot=184321 hard=173 freeq=440
+(EngineCore pid=12122) INFO 10-01 20:14:53 [block_pool.py:470] V131_EVICT ev_total=416 freeq=428 new=2
+(EngineCore pid=12122) INFO 10-01 20:14:58 [block_pool.py:425] V131_SOFTPOP rot=188417 hard=177 freeq=430
+(EngineCore pid=12122) INFO 10-01 20:14:58 [block_pool.py:425] V131_SOFTPOP rot=192513 hard=181 freeq=426
+(EngineCore pid=12122) INFO 10-01 20:14:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b1a ptok=35141 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:03 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b1a ptok=35141 hit=0 kmiss=0 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:03 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b1a ptok=35141 hit=0 kmiss=0 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:03 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b1a ptok=35141 hit=0 kmiss=0 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:03 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b1a ptok=35141 hit=0 kmiss=0 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:03 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b1a ptok=35141 hit=0 kmiss=0 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:03 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b1a ptok=35141 hit=0 kmiss=0 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:03 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b1a ptok=35141 hit=0 kmiss=0 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:03 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b1a ptok=35141 hit=0 kmiss=0 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:03 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b1a ptok=35141 hit=0 kmiss=0 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:03 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b1a ptok=35141 hit=0 kmiss=0 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:04 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b1a ptok=35141 hit=0 kmiss=0 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:04 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b1a ptok=35141 hit=0 kmiss=0 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:04 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b1a ptok=35141 hit=0 kmiss=0 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:04 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b1a ptok=35141 hit=0 kmiss=0 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:04 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b1a ptok=35141 hit=0 kmiss=0 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:21 [block_pool.py:425] V131_SOFTPOP rot=196609 hard=185 freeq=457
+(EngineCore pid=12122) INFO 10-01 20:15:26 [block_pool.py:425] V131_SOFTPOP rot=200705 hard=189 freeq=449
+(EngineCore pid=12122) INFO 10-01 20:15:26 [block_pool.py:470] V131_EVICT ev_total=448 freeq=448 new=1
+(EngineCore pid=12122) INFO 10-01 20:15:26 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b1a ptok=35141 hit=0 kmiss=0 freeq=445 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:26 [block_pool.py:425] V131_SOFTPOP rot=204801 hard=193 freeq=445
+(EngineCore pid=12122) INFO 10-01 20:15:31 [block_pool.py:425] V131_SOFTPOP rot=208897 hard=197 freeq=426
+(EngineCore pid=12122) INFO 10-01 20:15:31 [block_pool.py:425] V131_SOFTPOP rot=212993 hard=201 freeq=422
+(EngineCore pid=12122) INFO 10-01 20:15:31 [block_pool.py:470] V131_EVICT ev_total=480 freeq=419 new=1
+(EngineCore pid=12122) INFO 10-01 20:15:31 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:35 [block_pool.py:425] V131_SOFTPOP rot=217089 hard=205 freeq=418
+(EngineCore pid=12122) INFO 10-01 20:15:35 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:40 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:43 [block_pool.py:425] V131_SOFTPOP rot=221185 hard=209 freeq=411
+(EngineCore pid=12122) INFO 10-01 20:15:43 [block_pool.py:425] V131_SOFTPOP rot=225281 hard=212 freeq=408
+(EngineCore pid=12122) INFO 10-01 20:15:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f5 ptok=2993 hit=0 kmiss=0 freeq=445 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:49 [block_pool.py:470] V131_EVICT ev_total=515 freeq=430 new=5
+(EngineCore pid=12122) INFO 10-01 20:15:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a0e ptok=2967 hit=0 kmiss=0 freeq=429 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:49 [block_pool.py:425] V131_SOFTPOP rot=229377 hard=216 freeq=429
+(EngineCore pid=12122) INFO 10-01 20:15:54 [block_pool.py:425] V131_SOFTPOP rot=233473 hard=220 freeq=416
+(EngineCore pid=12122) INFO 10-01 20:15:54 [block_pool.py:425] V131_SOFTPOP rot=237569 hard=224 freeq=412
+(EngineCore pid=12122) INFO 10-01 20:15:54 [block_pool.py:425] V131_SOFTPOP rot=241665 hard=228 freeq=407
+(EngineCore pid=12122) INFO 10-01 20:15:54 [block_pool.py:470] V131_EVICT ev_total=544 freeq=404 new=1
+(EngineCore pid=12122) INFO 10-01 20:15:54 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a31 ptok=3052 hit=0 kmiss=0 freeq=402 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:54 [block_pool.py:425] V131_SOFTPOP rot=245761 hard=232 freeq=402
+(EngineCore pid=12122) INFO 10-01 20:15:54 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-983 ptok=2955 hit=0 kmiss=0 freeq=386 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:54 [block_pool.py:425] V131_SOFTPOP rot=249857 hard=236 freeq=386
+(EngineCore pid=12122) INFO 10-01 20:15:54 [block_pool.py:470] V131_EVICT ev_total=577 freeq=371 new=5
+(EngineCore pid=12122) INFO 10-01 20:15:54 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-af5 ptok=2999 hit=0 kmiss=0 freeq=370 pre=0
+(EngineCore pid=12122) INFO 10-01 20:15:58 [block_pool.py:425] V131_SOFTPOP rot=253953 hard=240 freeq=379
+(EngineCore pid=12122) INFO 10-01 20:16:00 [block_pool.py:425] V131_SOFTPOP rot=258049 hard=244 freeq=378
+(EngineCore pid=12122) INFO 10-01 20:16:01 [block_pool.py:425] V131_SOFTPOP rot=262145 hard=248 freeq=377
+(EngineCore pid=12122) INFO 10-01 20:16:01 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-af5 ptok=2999 hit=0 kmiss=0 freeq=372 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:01 [block_pool.py:425] V131_SOFTPOP rot=266241 hard=252 freeq=372
+(EngineCore pid=12122) INFO 10-01 20:16:01 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8bb ptok=2982 hit=0 kmiss=0 freeq=356 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:01 [block_pool.py:425] V131_SOFTPOP rot=270337 hard=256 freeq=356
+(EngineCore pid=12122) INFO 10-01 20:16:01 [block_pool.py:470] V131_EVICT ev_total=612 freeq=351 new=5
+(EngineCore pid=12122) INFO 10-01 20:16:04 [block_pool.py:425] V131_SOFTPOP rot=274433 hard=260 freeq=343
+(EngineCore pid=12122) INFO 10-01 20:16:05 [block_pool.py:425] V131_SOFTPOP rot=278529 hard=264 freeq=342
+(EngineCore pid=12122) INFO 10-01 20:16:14 [block_pool.py:425] V131_SOFTPOP rot=282625 hard=268 freeq=359
+(EngineCore pid=12122) INFO 10-01 20:16:20 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8a8 ptok=3095 hit=0 kmiss=0 freeq=497 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9a4 ptok=3144 hit=1024 kmiss=1 freeq=475 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-954 ptok=3134 hit=0 kmiss=0 freeq=455 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98e ptok=3195 hit=2048 kmiss=2 freeq=438 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a0f ptok=3098 hit=1024 kmiss=1 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9aa ptok=35495 hit=0 kmiss=0 freeq=396 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:29 [block_pool.py:470] V131_EVICT ev_total=640 freeq=380 new=1
+(EngineCore pid=12122) INFO 10-01 20:16:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=380 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:33 [block_pool.py:425] V131_SOFTPOP rot=286721 hard=271 freeq=386
+(EngineCore pid=12122) INFO 10-01 20:16:34 [block_pool.py:425] V131_SOFTPOP rot=290817 hard=275 freeq=385
+(EngineCore pid=12122) INFO 10-01 20:16:34 [block_pool.py:425] V131_SOFTPOP rot=294913 hard=279 freeq=381
+(EngineCore pid=12122) INFO 10-01 20:16:39 [block_pool.py:425] V131_SOFTPOP rot=299009 hard=283 freeq=383
+(EngineCore pid=12122) INFO 10-01 20:16:39 [block_pool.py:425] V131_SOFTPOP rot=303105 hard=287 freeq=385
+(EngineCore pid=12122) INFO 10-01 20:16:39 [block_pool.py:425] V131_SOFTPOP rot=307201 hard=291 freeq=380
+(EngineCore pid=12122) INFO 10-01 20:16:39 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=370 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=376 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:44 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=376 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:44 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=376 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:44 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=376 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:44 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=376 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:44 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=376 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:44 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=376 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:44 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=376 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:44 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=395 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:44 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=433 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=433 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=433 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=433 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=433 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=433 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=433 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=433 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=433 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=433 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=433 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=452 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=452 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=452 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=452 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:45 [block_pool.py:425] V131_SOFTPOP rot=311297 hard=295 freeq=455
+(EngineCore pid=12122) INFO 10-01 20:16:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=445 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=445 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=445 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=445 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:50 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=445 pre=0
+(EngineCore pid=12122) INFO 10-01 20:16:50 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=445 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:00 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8e9 ptok=35481 hit=0 kmiss=0 freeq=445 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:05 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=414 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:16 [block_pool.py:470] V131_EVICT ev_total=673 freeq=410 new=7
+(EngineCore pid=12122) INFO 10-01 20:17:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:31 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:31 [block_pool.py:425] V131_SOFTPOP rot=315393 hard=298 freeq=411
+(EngineCore pid=12122) INFO 10-01 20:17:31 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:35 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:35 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e5 ptok=35401 hit=0 kmiss=0 freeq=444 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:41 [block_pool.py:425] V131_SOFTPOP rot=319489 hard=301 freeq=439
+(EngineCore pid=12122) INFO 10-01 20:17:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8ba ptok=29773 hit=0 kmiss=0 freeq=423 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8ba ptok=29773 hit=0 kmiss=0 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8ba ptok=29773 hit=0 kmiss=0 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8ba ptok=29773 hit=0 kmiss=0 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8ba ptok=29773 hit=0 kmiss=0 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8ba ptok=29773 hit=0 kmiss=0 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:46 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8ba ptok=29773 hit=0 kmiss=0 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:46 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8ba ptok=29773 hit=0 kmiss=0 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:46 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8ba ptok=29773 hit=0 kmiss=0 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:46 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8ba ptok=29773 hit=0 kmiss=0 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:46 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8ba ptok=29773 hit=0 kmiss=0 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:46 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8ba ptok=29773 hit=0 kmiss=0 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:46 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8ba ptok=29773 hit=0 kmiss=0 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:46 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8ba ptok=29773 hit=0 kmiss=0 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:46 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8ba ptok=29773 hit=0 kmiss=0 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:46 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8ba ptok=29773 hit=0 kmiss=0 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:46 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8ba ptok=29773 hit=0 kmiss=0 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:46 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8ba ptok=29773 hit=0 kmiss=0 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:46 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8ba ptok=29773 hit=0 kmiss=0 freeq=426 pre=0
+(EngineCore pid=12122) INFO 10-01 20:17:51 [block_pool.py:470] V131_EVICT ev_total=710 freeq=456 new=8
+(EngineCore pid=12122) INFO 10-01 20:17:56 [block_pool.py:425] V131_SOFTPOP rot=323585 hard=305 freeq=459
+(EngineCore pid=12122) INFO 10-01 20:18:01 [block_pool.py:425] V131_SOFTPOP rot=327681 hard=309 freeq=451
+(EngineCore pid=12122) INFO 10-01 20:18:01 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8ba ptok=29773 hit=0 kmiss=0 freeq=445 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:01 [block_pool.py:425] V131_SOFTPOP rot=331777 hard=313 freeq=445
+(EngineCore pid=12122) INFO 10-01 20:18:01 [block_pool.py:470] V131_EVICT ev_total=737 freeq=435 new=5
+(EngineCore pid=12122) INFO 10-01 20:18:06 [block_pool.py:425] V131_SOFTPOP rot=335873 hard=317 freeq=428
+(EngineCore pid=12122) INFO 10-01 20:18:06 [block_pool.py:425] V131_SOFTPOP rot=339969 hard=321 freeq=424
+(EngineCore pid=12122) INFO 10-01 20:18:06 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b62 ptok=29834 hit=5120 kmiss=0 freeq=414 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:10 [block_pool.py:425] V131_SOFTPOP rot=344065 hard=325 freeq=420
+(EngineCore pid=12122) INFO 10-01 20:18:10 [block_pool.py:470] V131_EVICT ev_total=771 freeq=410 new=7
+(EngineCore pid=12122) INFO 10-01 20:18:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b62 ptok=29834 hit=5120 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b62 ptok=29834 hit=5120 kmiss=0 freeq=410 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:20 [block_pool.py:425] V131_SOFTPOP rot=348161 hard=329 freeq=413
+(EngineCore pid=12122) INFO 10-01 20:18:20 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b62 ptok=29834 hit=5120 kmiss=0 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:25 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b62 ptok=29834 hit=5120 kmiss=0 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:25 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b62 ptok=29834 hit=5120 kmiss=0 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:25 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b62 ptok=29834 hit=5120 kmiss=0 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:25 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b62 ptok=29834 hit=5120 kmiss=0 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:25 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b62 ptok=29834 hit=5120 kmiss=0 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:25 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b62 ptok=29834 hit=5120 kmiss=0 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:25 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b62 ptok=29834 hit=5120 kmiss=0 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:25 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b62 ptok=29834 hit=5120 kmiss=0 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:25 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b62 ptok=29834 hit=5120 kmiss=0 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:25 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b62 ptok=29834 hit=5120 kmiss=0 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:25 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b62 ptok=29834 hit=5120 kmiss=0 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:26 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b62 ptok=29834 hit=5120 kmiss=0 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:26 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b62 ptok=29834 hit=5120 kmiss=0 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:26 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b62 ptok=29834 hit=5120 kmiss=0 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:26 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b62 ptok=29834 hit=5120 kmiss=0 freeq=403 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:26 [block_pool.py:425] V131_SOFTPOP rot=352257 hard=333 freeq=456
+(EngineCore pid=12122) INFO 10-01 20:18:26 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b62 ptok=29834 hit=5120 kmiss=0 freeq=450 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:30 [block_pool.py:425] V131_SOFTPOP rot=356353 hard=336 freeq=426
+(EngineCore pid=12122) INFO 10-01 20:18:30 [block_pool.py:425] V131_SOFTPOP rot=360449 hard=340 freeq=425
+(EngineCore pid=12122) INFO 10-01 20:18:30 [block_pool.py:470] V131_EVICT ev_total=805 freeq=416 new=7
+(EngineCore pid=12122) INFO 10-01 20:18:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:35 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:35 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:35 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:35 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:35 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:35 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:35 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:35 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:37 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:37 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:37 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:37 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-84e ptok=29789 hit=5120 kmiss=0 freeq=450 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:42 [block_pool.py:425] V131_SOFTPOP rot=364545 hard=344 freeq=447
+(EngineCore pid=12122) INFO 10-01 20:18:46 [block_pool.py:425] V131_SOFTPOP rot=368641 hard=348 freeq=430
+(EngineCore pid=12122) INFO 10-01 20:18:46 [block_pool.py:425] V131_SOFTPOP rot=372737 hard=352 freeq=429
+(EngineCore pid=12122) INFO 10-01 20:18:46 [block_pool.py:470] V131_EVICT ev_total=832 freeq=428 new=1
+(EngineCore pid=12122) INFO 10-01 20:18:46 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=419 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:51 [block_pool.py:425] V131_SOFTPOP rot=376833 hard=356 freeq=425
+(EngineCore pid=12122) INFO 10-01 20:18:51 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:56 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:56 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:56 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:56 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:56 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:56 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:56 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:56 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:56 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:56 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:56 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:56 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:56 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:56 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:56 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:57 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:57 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:57 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:57 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:57 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:57 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:57 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:18:57 [block_pool.py:425] V131_SOFTPOP rot=380929 hard=360 freeq=459
+(EngineCore pid=12122) INFO 10-01 20:18:57 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82f ptok=29898 hit=5120 kmiss=0 freeq=450 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:02 [block_pool.py:425] V131_SOFTPOP rot=385025 hard=363 freeq=432
+(EngineCore pid=12122) INFO 10-01 20:19:02 [block_pool.py:470] V131_EVICT ev_total=864 freeq=430 new=1
+(EngineCore pid=12122) INFO 10-01 20:19:02 [block_pool.py:425] V131_SOFTPOP rot=389121 hard=367 freeq=431
+(EngineCore pid=12122) INFO 10-01 20:19:02 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=421 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:07 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:13 [block_pool.py:425] V131_SOFTPOP rot=393217 hard=371 freeq=427
+(EngineCore pid=12122) INFO 10-01 20:19:13 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:19 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:20 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:20 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:20 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:20 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:20 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:26 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8b6 ptok=35278 hit=0 kmiss=0 freeq=449 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:26 [block_pool.py:425] V131_SOFTPOP rot=397313 hard=375 freeq=448
+(EngineCore pid=12122) INFO 10-01 20:19:26 [block_pool.py:470] V131_EVICT ev_total=900 freeq=434 new=5
+(EngineCore pid=12122) INFO 10-01 20:19:26 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b96 ptok=3136 hit=0 kmiss=0 freeq=428 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b96 ptok=3136 hit=0 kmiss=0 freeq=431 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b96 ptok=3136 hit=0 kmiss=0 freeq=431 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b96 ptok=3136 hit=0 kmiss=0 freeq=431 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b96 ptok=3136 hit=0 kmiss=0 freeq=431 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b96 ptok=3136 hit=0 kmiss=0 freeq=431 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b96 ptok=3136 hit=0 kmiss=0 freeq=431 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b96 ptok=3136 hit=0 kmiss=0 freeq=431 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b96 ptok=3136 hit=0 kmiss=0 freeq=431 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:31 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b96 ptok=3136 hit=0 kmiss=0 freeq=431 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:31 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b96 ptok=3136 hit=0 kmiss=0 freeq=431 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:31 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b96 ptok=3136 hit=0 kmiss=0 freeq=431 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:31 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b96 ptok=3136 hit=0 kmiss=0 freeq=431 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:31 [block_pool.py:425] V131_SOFTPOP rot=401409 hard=379 freeq=476
+(EngineCore pid=12122) INFO 10-01 20:19:44 [block_pool.py:425] V131_SOFTPOP rot=405505 hard=382 freeq=457
+(EngineCore pid=12122) INFO 10-01 20:19:49 [block_pool.py:425] V131_SOFTPOP rot=409601 hard=386 freeq=449
+(EngineCore pid=12122) INFO 10-01 20:19:49 [block_pool.py:470] V131_EVICT ev_total=930 freeq=445 new=3
+(EngineCore pid=12122) INFO 10-01 20:19:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b96 ptok=3136 hit=0 kmiss=0 freeq=445 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:49 [block_pool.py:425] V131_SOFTPOP rot=413697 hard=390 freeq=435
+(EngineCore pid=12122) INFO 10-01 20:19:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8de ptok=29789 hit=5120 kmiss=0 freeq=428 pre=0
+(EngineCore pid=12122) INFO 10-01 20:19:49 [block_pool.py:425] V131_SOFTPOP rot=417793 hard=394 freeq=411
+(EngineCore pid=12122) INFO 10-01 20:19:49 [block_pool.py:470] V131_EVICT ev_total=962 freeq=406 new=5
+(EngineCore pid=12122) INFO 10-01 20:19:53 [block_pool.py:425] V131_SOFTPOP rot=421889 hard=398 freeq=403
+(EngineCore pid=12122) INFO 10-01 20:19:53 [block_pool.py:425] V131_SOFTPOP rot=425985 hard=402 freeq=399
+(EngineCore pid=12122) INFO 10-01 20:19:53 [block_pool.py:425] V131_SOFTPOP rot=430081 hard=406 freeq=397
+(EngineCore pid=12122) INFO 10-01 20:19:53 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b8b ptok=3098 hit=0 kmiss=0 freeq=390 pre=0
+(EngineCore pid=12122) INFO 10-01 20:20:06 [block_pool.py:425] V131_SOFTPOP rot=434177 hard=410 freeq=397
+(EngineCore pid=12122) INFO 10-01 20:20:06 [block_pool.py:470] V131_EVICT ev_total=994 freeq=389 new=7
+(EngineCore pid=12122) INFO 10-01 20:20:06 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b8b ptok=3098 hit=0 kmiss=0 freeq=389 pre=0
+(EngineCore pid=12122) INFO 10-01 20:20:11 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b8b ptok=3098 hit=0 kmiss=0 freeq=389 pre=0
+(EngineCore pid=12122) INFO 10-01 20:20:12 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b8b ptok=3098 hit=0 kmiss=0 freeq=389 pre=0
+(EngineCore pid=12122) INFO 10-01 20:20:12 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b8b ptok=3098 hit=0 kmiss=0 freeq=389 pre=0
+(EngineCore pid=12122) INFO 10-01 20:20:12 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b8b ptok=3098 hit=0 kmiss=0 freeq=389 pre=0
+(EngineCore pid=12122) INFO 10-01 20:20:12 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b8b ptok=3098 hit=0 kmiss=0 freeq=389 pre=0
+(EngineCore pid=12122) INFO 10-01 20:20:12 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b8b ptok=3098 hit=0 kmiss=0 freeq=389 pre=0
+(EngineCore pid=12122) INFO 10-01 20:20:12 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b8b ptok=3098 hit=0 kmiss=0 freeq=389 pre=0
+(EngineCore pid=12122) INFO 10-01 20:20:12 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b8b ptok=3098 hit=0 kmiss=0 freeq=389 pre=0
+(EngineCore pid=12122) INFO 10-01 20:20:12 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b8b ptok=3098 hit=0 kmiss=0 freeq=439 pre=0
+(EngineCore pid=12122) INFO 10-01 20:20:20 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b8b ptok=3098 hit=0 kmiss=0 freeq=449 pre=0
+(EngineCore pid=12122) INFO 10-01 20:20:20 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b22 ptok=3119 hit=0 kmiss=0 freeq=432 pre=0
+(EngineCore pid=12122) INFO 10-01 20:20:20 [block_pool.py:425] V131_SOFTPOP rot=438273 hard=413 freeq=427
+(EngineCore pid=12122) INFO 10-01 20:20:20 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9b3 ptok=35440 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:20:20 [block_pool.py:425] V131_SOFTPOP rot=442369 hard=417 freeq=410
+(EngineCore pid=12122) INFO 10-01 20:20:20 [block_pool.py:470] V131_EVICT ev_total=1026 freeq=400 new=5
+(EngineCore pid=12122) INFO 10-01 20:20:25 [block_pool.py:425] V131_SOFTPOP rot=446465 hard=421 freeq=400
+(EngineCore pid=12122) INFO 10-01 20:20:36 [block_pool.py:425] V131_SOFTPOP rot=450561 hard=425 freeq=399
+(EngineCore pid=12122) INFO 10-01 20:20:36 [block_pool.py:425] V131_SOFTPOP rot=454657 hard=429 freeq=395
+(EngineCore pid=12122) INFO 10-01 20:20:51 [block_pool.py:425] V131_SOFTPOP rot=458753 hard=433 freeq=397
+(EngineCore pid=12122) INFO 10-01 20:21:40 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9e2 ptok=3252 hit=3072 kmiss=0 freeq=497 pre=0
+(EngineCore pid=12122) INFO 10-01 20:21:40 [block_pool.py:425] V131_SOFTPOP rot=462849 hard=436 freeq=476
+(EngineCore pid=12122) INFO 10-01 20:21:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-861 ptok=3229 hit=2048 kmiss=0 freeq=478 pre=0
+(EngineCore pid=12122) INFO 10-01 20:21:41 [block_pool.py:470] V131_EVICT ev_total=1060 freeq=458 new=5
+(EngineCore pid=12122) INFO 10-01 20:21:41 [block_pool.py:425] V131_SOFTPOP rot=466945 hard=440 freeq=458
+(EngineCore pid=12122) INFO 10-01 20:21:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-966 ptok=29923 hit=9216 kmiss=0 freeq=456 pre=0
+(EngineCore pid=12122) INFO 10-01 20:21:41 [block_pool.py:425] V131_SOFTPOP rot=471041 hard=444 freeq=429
+(EngineCore pid=12122) INFO 10-01 20:21:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-865 ptok=35416 hit=6144 kmiss=0 freeq=423 pre=0
+(EngineCore pid=12122) INFO 10-01 20:21:47 [block_pool.py:425] V131_SOFTPOP rot=475137 hard=448 freeq=426
+(EngineCore pid=12122) INFO 10-01 20:21:47 [block_pool.py:470] V131_EVICT ev_total=1094 freeq=418 new=8
+(EngineCore pid=12122) INFO 10-01 20:21:47 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-865 ptok=35416 hit=6144 kmiss=0 freeq=418 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:01 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-865 ptok=35416 hit=6144 kmiss=0 freeq=418 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:01 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-865 ptok=35416 hit=6144 kmiss=0 freeq=418 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:01 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-865 ptok=35416 hit=6144 kmiss=0 freeq=418 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:02 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-865 ptok=35416 hit=6144 kmiss=0 freeq=418 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:02 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-865 ptok=35416 hit=6144 kmiss=0 freeq=418 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:02 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-865 ptok=35416 hit=6144 kmiss=0 freeq=418 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:02 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-865 ptok=35416 hit=6144 kmiss=0 freeq=418 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:02 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-865 ptok=35416 hit=6144 kmiss=0 freeq=418 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:02 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-865 ptok=35416 hit=6144 kmiss=0 freeq=418 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:02 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-865 ptok=35416 hit=6144 kmiss=0 freeq=418 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:02 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-865 ptok=35416 hit=6144 kmiss=0 freeq=418 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:02 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-865 ptok=35416 hit=6144 kmiss=0 freeq=418 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:02 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-865 ptok=35416 hit=6144 kmiss=0 freeq=418 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:02 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-865 ptok=35416 hit=6144 kmiss=0 freeq=418 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:02 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-865 ptok=35416 hit=6144 kmiss=0 freeq=418 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:02 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-865 ptok=35416 hit=6144 kmiss=0 freeq=437 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:02 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-865 ptok=35416 hit=6144 kmiss=0 freeq=437 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:03 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-865 ptok=35416 hit=6144 kmiss=0 freeq=431 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:03 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=406 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:18 [block_pool.py:425] V131_SOFTPOP rot=479233 hard=452 freeq=409
+(EngineCore pid=12122) INFO 10-01 20:22:23 [block_pool.py:425] V131_SOFTPOP rot=483329 hard=456 freeq=408
+(EngineCore pid=12122) INFO 10-01 20:22:23 [block_pool.py:425] V131_SOFTPOP rot=487425 hard=460 freeq=407
+(EngineCore pid=12122) INFO 10-01 20:22:23 [block_pool.py:470] V131_EVICT ev_total=1121 freeq=397 new=8
+(EngineCore pid=12122) INFO 10-01 20:22:23 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=397 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=400 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:38 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:50 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:50 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:50 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:50 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:50 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:50 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:50 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:50 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:50 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:50 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:50 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:50 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:50 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:50 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:50 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b69 ptok=35537 hit=0 kmiss=0 freeq=445 pre=0
+(EngineCore pid=12122) INFO 10-01 20:22:58 [block_pool.py:425] V131_SOFTPOP rot=491521 hard=463 freeq=441
+(EngineCore pid=12122) INFO 10-01 20:23:12 [block_pool.py:425] V131_SOFTPOP rot=495617 hard=467 freeq=429
+(EngineCore pid=12122) INFO 10-01 20:23:12 [block_pool.py:425] V131_SOFTPOP rot=499713 hard=471 freeq=425
+(EngineCore pid=12122) INFO 10-01 20:23:12 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b56 ptok=35573 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:23:17 [block_pool.py:425] V131_SOFTPOP rot=503809 hard=475 freeq=421
+(EngineCore pid=12122) INFO 10-01 20:23:17 [block_pool.py:470] V131_EVICT ev_total=1152 freeq=419 new=1
+(EngineCore pid=12122) INFO 10-01 20:23:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b56 ptok=35573 hit=0 kmiss=0 freeq=411 pre=0
+(EngineCore pid=12122) INFO 10-01 20:23:28 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b56 ptok=35573 hit=0 kmiss=0 freeq=411 pre=0
+(EngineCore pid=12122) INFO 10-01 20:23:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b56 ptok=35573 hit=0 kmiss=0 freeq=411 pre=0
+(EngineCore pid=12122) INFO 10-01 20:23:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b56 ptok=35573 hit=0 kmiss=0 freeq=411 pre=0
+(EngineCore pid=12122) INFO 10-01 20:23:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b56 ptok=35573 hit=0 kmiss=0 freeq=411 pre=0
+(EngineCore pid=12122) INFO 10-01 20:23:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b56 ptok=35573 hit=0 kmiss=0 freeq=411 pre=0
+(EngineCore pid=12122) INFO 10-01 20:23:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b56 ptok=35573 hit=0 kmiss=0 freeq=411 pre=0
+(EngineCore pid=12122) INFO 10-01 20:23:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b56 ptok=35573 hit=0 kmiss=0 freeq=411 pre=0
+(EngineCore pid=12122) INFO 10-01 20:23:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b56 ptok=35573 hit=0 kmiss=0 freeq=411 pre=0
+(EngineCore pid=12122) INFO 10-01 20:23:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b56 ptok=35573 hit=0 kmiss=0 freeq=411 pre=0
+(EngineCore pid=12122) INFO 10-01 20:23:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b56 ptok=35573 hit=0 kmiss=0 freeq=411 pre=0
+(EngineCore pid=12122) INFO 10-01 20:23:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b56 ptok=35573 hit=0 kmiss=0 freeq=411 pre=0
+(EngineCore pid=12122) INFO 10-01 20:23:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b56 ptok=35573 hit=0 kmiss=0 freeq=411 pre=0
+(EngineCore pid=12122) INFO 10-01 20:23:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b56 ptok=35573 hit=0 kmiss=0 freeq=411 pre=0
+(EngineCore pid=12122) INFO 10-01 20:23:29 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b56 ptok=35573 hit=0 kmiss=0 freeq=411 pre=0
+(EngineCore pid=12122) INFO 10-01 20:23:30 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b56 ptok=35573 hit=0 kmiss=0 freeq=411 pre=0
+(EngineCore pid=12122) INFO 10-01 20:23:30 [block_pool.py:425] V131_SOFTPOP rot=507905 hard=479 freeq=464
+(EngineCore pid=12122) INFO 10-01 20:23:52 [block_pool.py:425] V131_SOFTPOP rot=512001 hard=482 freeq=446
+(EngineCore pid=12122) INFO 10-01 20:23:52 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b56 ptok=35573 hit=0 kmiss=0 freeq=444 pre=0
+(EngineCore pid=12122) INFO 10-01 20:23:52 [block_pool.py:425] V131_SOFTPOP rot=516097 hard=486 freeq=434
+(EngineCore pid=12122) INFO 10-01 20:23:52 [block_pool.py:470] V131_EVICT ev_total=1185 freeq=429 new=5
+(EngineCore pid=12122) INFO 10-01 20:23:52 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=423 pre=0
+(EngineCore pid=12122) INFO 10-01 20:23:58 [block_pool.py:425] V131_SOFTPOP rot=520193 hard=490 freeq=424
+(EngineCore pid=12122) INFO 10-01 20:23:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:07 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:08 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:08 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:08 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:08 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:08 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:08 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:08 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:08 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:08 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:08 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:10 [block_pool.py:425] V131_SOFTPOP rot=524289 hard=494 freeq=416
+(EngineCore pid=12122) INFO 10-01 20:24:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:23 [block_pool.py:425] V131_SOFTPOP rot=528385 hard=498 freeq=409
+(EngineCore pid=12122) INFO 10-01 20:24:23 [block_pool.py:470] V131_EVICT ev_total=1222 freeq=401 new=7
+(EngineCore pid=12122) INFO 10-01 20:24:23 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:33 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-9f8 ptok=29970 hit=0 kmiss=0 freeq=445 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:33 [block_pool.py:425] V131_SOFTPOP rot=532481 hard=502 freeq=430
+(EngineCore pid=12122) INFO 10-01 20:24:40 [block_pool.py:425] V131_SOFTPOP rot=536577 hard=506 freeq=428
+(EngineCore pid=12122) INFO 10-01 20:24:40 [block_pool.py:425] V131_SOFTPOP rot=540673 hard=510 freeq=424
+(EngineCore pid=12122) INFO 10-01 20:24:40 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:53 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=420 pre=0
+(EngineCore pid=12122) INFO 10-01 20:24:55 [block_pool.py:470] V131_EVICT ev_total=1248 freeq=421 new=1
+(EngineCore pid=12122) INFO 10-01 20:24:55 [block_pool.py:425] V131_SOFTPOP rot=544769 hard=514 freeq=420
+(EngineCore pid=12122) INFO 10-01 20:24:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:04 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:05 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:05 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:05 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:06 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:06 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:06 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:06 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:06 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:06 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:06 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:06 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:06 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:06 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:06 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:06 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:06 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:21 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-98b ptok=35628 hit=0 kmiss=0 freeq=450 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:21 [block_pool.py:425] V131_SOFTPOP rot=548865 hard=517 freeq=445
+(EngineCore pid=12122) INFO 10-01 20:25:34 [block_pool.py:425] V131_SOFTPOP rot=552961 hard=521 freeq=434
+(EngineCore pid=12122) INFO 10-01 20:25:34 [block_pool.py:470] V131_EVICT ev_total=1280 freeq=432 new=1
+(EngineCore pid=12122) INFO 10-01 20:25:34 [block_pool.py:425] V131_SOFTPOP rot=557057 hard=525 freeq=430
+(EngineCore pid=12122) INFO 10-01 20:25:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=421 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:42 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=424 pre=0
+(EngineCore pid=12122) INFO 10-01 20:25:43 [block_pool.py:425] V131_SOFTPOP rot=561153 hard=529 freeq=426
+(EngineCore pid=12122) INFO 10-01 20:25:43 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=417 pre=0
+(EngineCore pid=12122) INFO 10-01 20:26:09 [block_pool.py:425] V131_SOFTPOP rot=565249 hard=532 freeq=452
+(EngineCore pid=12122) INFO 10-01 20:26:16 [block_pool.py:425] V131_SOFTPOP rot=569345 hard=536 freeq=446
+(EngineCore pid=12122) INFO 10-01 20:26:16 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b0b ptok=29906 hit=0 kmiss=0 freeq=445 pre=0
+(EngineCore pid=12122) INFO 10-01 20:26:16 [block_pool.py:470] V131_EVICT ev_total=1316 freeq=440 new=5
+(EngineCore pid=12122) INFO 10-01 20:26:16 [block_pool.py:425] V131_SOFTPOP rot=573441 hard=540 freeq=430
+(EngineCore pid=12122) INFO 10-01 20:26:20 [block_pool.py:425] V131_SOFTPOP rot=577537 hard=544 freeq=423
+(EngineCore pid=12122) INFO 10-01 20:26:20 [block_pool.py:425] V131_SOFTPOP rot=581633 hard=548 freeq=419
+(EngineCore pid=12122) INFO 10-01 20:26:20 [block_pool.py:470] V131_EVICT ev_total=1347 freeq=412 new=7
+(EngineCore pid=12122) INFO 10-01 20:26:20 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-989 ptok=3235 hit=0 kmiss=0 freeq=412 pre=0
+(EngineCore pid=12122) INFO 10-01 20:26:25 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-989 ptok=3235 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:26:26 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-989 ptok=3235 hit=0 kmiss=0 freeq=415 pre=0
+(EngineCore pid=12122) INFO 10-01 20:26:28 [block_pool.py:425] V131_SOFTPOP rot=585729 hard=552 freeq=415
+(EngineCore pid=12122) INFO 10-01 20:26:28 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-989 ptok=3235 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:26:38 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-989 ptok=3235 hit=0 kmiss=0 freeq=408 pre=0
+(EngineCore pid=12122) INFO 10-01 20:26:45 [block_pool.py:425] V131_SOFTPOP rot=589825 hard=556 freeq=408
+(EngineCore pid=12122) INFO 10-01 20:26:45 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-989 ptok=3235 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:26:52 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-989 ptok=3235 hit=0 kmiss=0 freeq=401 pre=0
+(EngineCore pid=12122) INFO 10-01 20:26:55 [block_pool.py:425] V131_SOFTPOP rot=593921 hard=560 freeq=401
+(EngineCore pid=12122) INFO 10-01 20:26:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-989 ptok=3235 hit=0 kmiss=0 freeq=400 pre=0
+(EngineCore pid=12122) INFO 10-01 20:26:55 [block_pool.py:470] V131_EVICT ev_total=1376 freeq=395 new=5
+(EngineCore pid=12122) INFO 10-01 20:26:55 [block_pool.py:425] V131_SOFTPOP rot=598017 hard=564 freeq=385
+(EngineCore pid=12122) INFO 10-01 20:26:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-a1c ptok=29927 hit=0 kmiss=0 freeq=383 pre=0
+(EngineCore pid=12122) INFO 10-01 20:26:55 [block_pool.py:425] V131_SOFTPOP rot=602113 hard=568 freeq=368
+(EngineCore pid=12122) INFO 10-01 20:26:55 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-901 ptok=3283 hit=0 kmiss=0 freeq=364 pre=0
+(EngineCore pid=12122) INFO 10-01 20:27:02 [block_pool.py:470] V131_EVICT ev_total=1408 freeq=366 new=1
+(EngineCore pid=12122) INFO 10-01 20:27:05 [block_pool.py:425] V131_SOFTPOP rot=606209 hard=572 freeq=401
+(EngineCore pid=12122) INFO 10-01 20:27:05 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-901 ptok=3283 hit=0 kmiss=0 freeq=398 pre=0
+(EngineCore pid=12122) INFO 10-01 20:27:21 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-901 ptok=3283 hit=0 kmiss=0 freeq=404 pre=0
+(EngineCore pid=12122) INFO 10-01 20:27:24 [block_pool.py:425] V131_SOFTPOP rot=610305 hard=576 freeq=404
+(EngineCore pid=12122) INFO 10-01 20:27:24 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-901 ptok=3283 hit=0 kmiss=0 freeq=397 pre=0
+(EngineCore pid=12122) INFO 10-01 20:27:33 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-901 ptok=3283 hit=0 kmiss=0 freeq=397 pre=0
+(EngineCore pid=12122) INFO 10-01 20:27:33 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-901 ptok=3283 hit=0 kmiss=0 freeq=397 pre=0
+(EngineCore pid=12122) INFO 10-01 20:27:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-901 ptok=3283 hit=0 kmiss=0 freeq=397 pre=0
+(EngineCore pid=12122) INFO 10-01 20:27:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-901 ptok=3283 hit=0 kmiss=0 freeq=397 pre=0
+(EngineCore pid=12122) INFO 10-01 20:27:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-901 ptok=3283 hit=0 kmiss=0 freeq=397 pre=0
+(EngineCore pid=12122) INFO 10-01 20:27:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-901 ptok=3283 hit=0 kmiss=0 freeq=397 pre=0
+(EngineCore pid=12122) INFO 10-01 20:27:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-901 ptok=3283 hit=0 kmiss=0 freeq=397 pre=0
+(EngineCore pid=12122) INFO 10-01 20:27:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-901 ptok=3283 hit=0 kmiss=0 freeq=442 pre=0
+(EngineCore pid=12122) INFO 10-01 20:27:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-901 ptok=3283 hit=0 kmiss=0 freeq=442 pre=0
+(EngineCore pid=12122) INFO 10-01 20:27:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-901 ptok=3283 hit=0 kmiss=0 freeq=442 pre=0
+(EngineCore pid=12122) INFO 10-01 20:27:34 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-901 ptok=3283 hit=0 kmiss=0 freeq=442 pre=0
+(EngineCore pid=12122) INFO 10-01 20:27:50 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-901 ptok=3283 hit=0 kmiss=0 freeq=450 pre=0
+(EngineCore pid=12122) INFO 10-01 20:27:50 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-b8a ptok=3328 hit=0 kmiss=0 freeq=433 pre=0
+(EngineCore pid=12122) INFO 10-01 20:27:50 [block_pool.py:425] V131_SOFTPOP rot=614401 hard=579 freeq=428
+(EngineCore pid=12122) INFO 10-01 20:27:50 [block_pool.py:470] V131_EVICT ev_total=1440 freeq=418 new=5
+(EngineCore pid=12122) INFO 10-01 20:27:50 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89c ptok=35615 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:27:50 [block_pool.py:425] V131_SOFTPOP rot=618497 hard=583 freeq=411
+(EngineCore pid=12122) INFO 10-01 20:27:58 [block_pool.py:425] V131_SOFTPOP rot=622593 hard=587 freeq=402
+(EngineCore pid=12122) INFO 10-01 20:27:58 [block_pool.py:425] V131_SOFTPOP rot=626689 hard=591 freeq=398
+(EngineCore pid=12122) INFO 10-01 20:27:58 [block_pool.py:425] V131_SOFTPOP rot=630785 hard=595 freeq=393
+(EngineCore pid=12122) INFO 10-01 20:27:58 [block_pool.py:470] V131_EVICT ev_total=1472 freeq=389 new=2
+(EngineCore pid=12122) INFO 10-01 20:27:58 [block_pool.py:425] V131_SOFTPOP rot=634881 hard=599 freeq=388
+(EngineCore pid=12122) INFO 10-01 20:27:58 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-944 ptok=30031 hit=4096 kmiss=0 freeq=381 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:02 [block_pool.py:425] V131_SOFTPOP rot=638977 hard=603 freeq=392
+(EngineCore pid=12122) INFO 10-01 20:28:02 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-944 ptok=30031 hit=4096 kmiss=0 freeq=383 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:09 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-944 ptok=30031 hit=4096 kmiss=0 freeq=383 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-944 ptok=30031 hit=4096 kmiss=0 freeq=383 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-944 ptok=30031 hit=4096 kmiss=0 freeq=383 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-944 ptok=30031 hit=4096 kmiss=0 freeq=383 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-944 ptok=30031 hit=4096 kmiss=0 freeq=383 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-944 ptok=30031 hit=4096 kmiss=0 freeq=383 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-944 ptok=30031 hit=4096 kmiss=0 freeq=383 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-944 ptok=30031 hit=4096 kmiss=0 freeq=383 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-944 ptok=30031 hit=4096 kmiss=0 freeq=383 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-944 ptok=30031 hit=4096 kmiss=0 freeq=428 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:11 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-944 ptok=30031 hit=4096 kmiss=0 freeq=428 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:11 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-944 ptok=30031 hit=4096 kmiss=0 freeq=428 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:11 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-944 ptok=30031 hit=4096 kmiss=0 freeq=447 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:11 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-944 ptok=30031 hit=4096 kmiss=0 freeq=440 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:27 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-944 ptok=30031 hit=4096 kmiss=0 freeq=440 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:36 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-944 ptok=30031 hit=4096 kmiss=0 freeq=445 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:41 [block_pool.py:425] V131_SOFTPOP rot=643073 hard=606 freeq=423
+(EngineCore pid=12122) INFO 10-01 20:28:41 [block_pool.py:425] V131_SOFTPOP rot=647169 hard=610 freeq=422
+(EngineCore pid=12122) INFO 10-01 20:28:41 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=413 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:47 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:48 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:49 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:28:49 [block_pool.py:470] V131_EVICT ev_total=1504 freeq=418 new=1
+(EngineCore pid=12122) INFO 10-01 20:28:50 [block_pool.py:425] V131_SOFTPOP rot=651265 hard=614 freeq=418
+(EngineCore pid=12122) INFO 10-01 20:28:50 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:29:07 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=409 pre=0
+(EngineCore pid=12122) INFO 10-01 20:29:10 [block_pool.py:425] V131_SOFTPOP rot=655361 hard=618 freeq=411
+(EngineCore pid=12122) INFO 10-01 20:29:10 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=402 pre=0
+(EngineCore pid=12122) INFO 10-01 20:29:17 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=402 pre=0
+(EngineCore pid=12122) INFO 10-01 20:29:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=402 pre=0
+(EngineCore pid=12122) INFO 10-01 20:29:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=402 pre=0
+(EngineCore pid=12122) INFO 10-01 20:29:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=402 pre=0
+(EngineCore pid=12122) INFO 10-01 20:29:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-89b ptok=3274 hit=0 kmiss=0 freeq=450 pre=0
+(EngineCore pid=12122) INFO 10-01 20:29:18 [block_pool.py:425] V131_SOFTPOP rot=659457 hard=622 freeq=435
+(EngineCore pid=12122) INFO 10-01 20:29:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-82a ptok=3283 hit=0 kmiss=0 freeq=433 pre=0
+(EngineCore pid=12122) INFO 10-01 20:29:18 [block_pool.py:470] V131_EVICT ev_total=1539 freeq=423 new=5
+(EngineCore pid=12122) INFO 10-01 20:29:18 [block_pool.py:425] V131_SOFTPOP rot=663553 hard=626 freeq=418
+(EngineCore pid=12122) INFO 10-01 20:29:18 [kv_cache_manager.py:262] V131_MATCH rid=chatcmpl-8ba ptok=3234 hit=0 kmiss=0 freeq=416 pre=0
+(EngineCore pid=12122) INFO 10-01 20:29:18 [block_pool.py:425] V131_SOFTPOP rot=667649 hard=630 freeq=401
+(EngineCore pid=12122) INFO 10-01 20:29:24 [block_pool.py:425] V131_SOFTPOP rot=671745 hard=634 freeq=399
+(EngineCore pid=12122) INFO 10-01 20:29:24 [block_pool.py:470] V131_EVICT ev_total=1568 freeq=397 new=1
+(EngineCore pid=12122) INFO 10-01 20:29:24 [block_pool.py:425] V131_SOFTPOP rot=675841 hard=637 freeq=396
+(EngineCore pid=12122) INFO 10-01 20:29:24 [block_pool.py:425] V131_SOFTPOP rot=679937 hard=641 freeq=391
+(EngineCore pid=12122) INFO 10-01 20:29:24 [block_pool.py:425] V131_SOFTPOP rot=684033 hard=645 freeq=386

@@ -154,7 +154,13 @@ MTRACE/ETRACE armed through the legs — hit/EVICT distributions are
 the treatment readout. One-shot V131_SOFTPOP_ARMED line; rotation
 counter logged every 4096 rotations (V131_SOFTPOP rot=... hard=...).
 
-Status: PENDING.
+Status: CLOSED 2026-10-01 (~21:15) — implemented, applied, armed
+(SLACK=64), measured in P61 leg A. patch_v131_softpop.py: dual S1
+anchor (post-ETRACE tail, pristine fallback for watchdog-recreate
+order), S2 soft-pop block with the annotated stock line as the
+else branch; backups .v131sbak (restore order softpop -> etrace ->
+pristine). Dry-certified markers 2, compile-checked, restore
+round-trip.
 
 ## P61 — A/B/C legs + split (gates: TOTAL COMPUTED / wall)
 
@@ -169,7 +175,54 @@ numerator and denominator shrink together). Secondary: SMALL/SHARED
 turn>=2 hit rates, cohort walls, ok/N parity, HEAD_RETAINED floor
 5120, no 500s/timeouts/DEVICE_LOST.
 
-Status: PENDING.
+Status: CLOSED 2026-10-01 (~21:40) — leg A (SLACK=64) REJECTED by
+measurement, decisively, on every gate.
+
+**Leg A (soft-pop SLACK=64):** 72/72 ok, wall 1307 s vs control
+876 s (+49%). Gate: total_computed 1,324,003 vs control 1,168,355
+(+13.3% WORSE — recompute increased). WASTE_PCT 99.3 (vs 99.1);
+MISS_TOK_PER_AFFECTED 18,540 (vs 15,372). Split: HEAD_EVICTED
+(SHARED cached floor min=0 med=3072 — the always-immortal head
+DIED), SMALL_PRESSURED (mean hit 0.177). Counters: rot=684,033
+rotations, hard=645 guard-trip fallbacks. Forensics
+(v131_p59_join.py on the boot-scoped trace, 1125 MATCH lines):
+the clean all-or-nothing control world became scattered partials —
+SHARED t2 firsthit max 11,264 / min 0 (some rids lost the head
+entirely), PRIV t4 max 6,144, SMALL max 2,048-3,072 — and TOTAL
+evictions ROSE to 1,568 (vs control 1,505). Artifacts:
+v131_stage/{v131_traceA_full.txt, wsc_perreq_v131p61a.jsonl,
+wsc_pressure_v131p61a.jsonl, wsc_v131p61a.out}.
+
+**Failure mechanism (understood, structural):** with the working
+set ~0.7x pool, the free queue front is dominated by hash-bearing
+blocks — every soft scan must chew through hundreds of cached
+blocks (guard 4n+1024) to find ~5 expendable ones; the guard trips
+645 times and each trip's fallback popleft_n evicts whatever
+cached chain sits at the scan front, in VISIT order, not recency
+order. Rotation-to-tail reorders the queue by hash-presence, which
+destroys the LRU recency semantics that were the head's ONLY
+protection (match -> re-reference -> free-to-tail immortality).
+
+**RECENCY-PROTECTION LAW (the round's second payload):** the LRU
+order IS the protection. Any pop-time policy that reorders the
+free queue by hash-presence (soft-pop rotation, two-tier evictors,
+visit-order scans) converts reliable head/full-chain survivors
+into scattered partials AND raises total mapping destruction.
+Slack tuning cannot rescue it (SLACK=8 = more rotations = worse;
+large SLACK = off = control); the harm scales with soft-path
+activity, not slack magnitude. Pop-time segregation of the free
+queue is a dead lever in this abstraction.
+
+**Handed forward (surviving designs, v132 candidates):**
+1. CHURN-EVENT ELIMINATION at the source — the mamba-align
+   rotation frees block N-2 then allocates N via the free queue;
+   making that alloc REUSE the just-freed block (bypass the queue
+   for that pair) removes the guillotine allocations P59
+   identified, without touching queue order. MambaManager-scope
+   surgery.
+2. Two-free-list segregation (hash-bearing vs expendable) — a
+   real FreeKVCacheBlockQueue redesign, out of surgical scope
+   this round.
 
 ## P62 — verdict + ship decision
 
@@ -178,4 +231,11 @@ v1.2.28 with the policy default-ON (official "WS-C baked-default
 policy" trigger). Lose: close by measurement, no bake, v1.2.27
 stands.
 
-Status: PENDING.
+Status: CLOSED 2026-10-01 — **LOSE. No bake; v1.2.27 stands.**
+Soft-pop measured +13.3% total_computed / +49% wall / HEAD_EVICTED
+(P61 leg A). No ship trigger fired; lane restored to pristine
+v1.2.27 posture (softpop -> etrace -> mtrace restored, env lines
+stripped, markers 0, .so sha re-asserted, watchdog resumed).
+Round payload: CHURN-DESTRUCTION LAW + RECENCY-PROTECTION LAW +
+soft-pop/two-tier pop-time policies measured dead + handed-forward
+mamba-rotation-reuse design.
