@@ -1,0 +1,36 @@
+joined 72/72 driver rows (unmatched engine rows: 0)
+
+cohort  turn     n    prompt    cached  computed       hit ttft_p50
+SHARED  1        5     29542      2458     27084     0.083   209.01
+SHARED  2        5     29681      8806     20874     0.297    71.39
+SHARED  3        5     29817     13926     15890     0.467    36.60
+SHARED  4        5     29951      5120     24831     0.171   109.42
+PRIV    1        5     35144         0     35144     0.000    89.06
+PRIV    2        5     35283         0     35283     0.000   115.33
+PRIV    3        5     35419     13517     21902     0.382    91.88
+PRIV    4        5     35554      6758     28795     0.190   255.27
+SMALL   1        8      2848         0      2848     0.000   248.53
+SMALL   2        8      2988       768      2220     0.256    50.70
+SMALL   3        8      3127         0      3127     0.000   104.25
+SMALL   4        8      3265       896      2369     0.274   363.35
+
+MISS rows (turn>=2, computed>1.5x delta): 53  (SHARED 15 / PRIV 15 / SMALL 23)
+  p01 t4 prompt=35628 cached=0 computed=35628 delta=133 miss=35495
+  p04 t4 prompt=35615 cached=0 computed=35615 delta=134 miss=35481
+  p03 t4 prompt=35537 cached=0 computed=35537 delta=136 miss=35401
+  p04 t3 prompt=35481 cached=0 computed=35481 delta=132 miss=35349
+  p02 t3 prompt=35440 cached=0 computed=35440 delta=143 miss=35297
+  p00 t4 prompt=35416 cached=0 computed=35416 delta=138 miss=35278
+  p03 t3 prompt=35401 cached=0 computed=35401 delta=131 miss=35270
+  p01 t2 prompt=35358 cached=0 computed=35358 delta=136 miss=35222
+  p04 t2 prompt=35349 cached=0 computed=35349 delta=149 miss=35200
+  p02 t2 prompt=35297 cached=0 computed=35297 delta=148 miss=35149
+  p03 t2 prompt=35270 cached=0 computed=35270 delta=131 miss=35139
+  p00 t2 prompt=35141 cached=0 computed=35141 delta=129 miss=35012
+
+WASTE_PCT=99.1 (turn>=2 recompute share of computed; P48: 18.8%)
+MISS_TOK_PER_AFFECTED=14946 (P48: ~640)
+SHARED miss cached floor: min=4096 med=5120 (head target ~8000, bar 4800) -> HEAD_RETAINED
+SMALL turn>=2 mean hit=0.177 -> SMALL_PRESSURED
+
+WSC_SPLIT_DONE verdict1=HEAD_RETAINED verdict2=SMALL_PRESSURED
