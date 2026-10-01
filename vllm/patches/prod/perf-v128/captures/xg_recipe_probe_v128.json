@@ -1,0 +1,11 @@
+{
+ "tag": "xg_recipe_probe_v128",
+ "n": 20,
+ "n_ok": 20,
+ "degenerate": 0,
+ "finish_length": 0,
+ "parse_fail": 0,
+ "max_digit_run_max": 4,
+ "max_ws_after_sep_max": 1,
+ "recipe_zero_by_construction": true
+}

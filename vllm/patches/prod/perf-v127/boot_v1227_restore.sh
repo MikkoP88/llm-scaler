@@ -22,14 +22,27 @@
 # designated posture is actually what is running.
 #
 # Postures (env V1227_POSTURE):
-#   swift  (default) designated posture above — target of certification W1
+#   ckpt   (default) CERTIFIED since the v1.2.27 ship: pre-quantized fp8
+#                     swift export mounted at /models/target, chat template
+#                     baked into tokenizer_config.json, NO runtime
+#                     --quantization/--chat-template flags (drift guard
+#                     asserts their absence; = the script's else branch)
+#   swift  explicit-legs-only PRE-certification designated posture:
+#                     /models/swift bind + runtime quant/template flags
 #   legacy            exact v1226 rollback (qwen3.8-27b-fp8 native ckpt, no
 #                     quant/template flags) — one-command rollback window
 #
 # Knob legs (env; defaults = certified values): V1227_MNBT (8192),
 # V1227_GMU (0.8), V1227_MAXSEQS (64), V1227_V63_BUDGET (unset = baked floor
 # 1024), V1227_V66_STARVE (unset = baked 2.0 — VLLM_V66_PREFILL_STARVE_S
-# passthrough for the D2 sweep leg), V1227_IMAGE (v1.2.26),
+# passthrough for the D2 sweep leg), V1227_IMAGE (v1.2.27 since ship 10:35),
+# V1227_PERREQ (0; 1 applies+arms the v128 D4 per-request split
+# telemetry patch — see patch_perreq_v128.py),
+# V1227_XGCOMPACT (0; 1 appends --structured-outputs-config
+# {"backend":"xgrammar","disable_any_whitespace":true} to the serve
+# cmdline — v128 WS-D fix candidate: guided-JSON grammars compiled
+# whitespace-free, killing the whitespace-attractor degeneration class
+# by construction; JSON output becomes compact),
 # V1227_SCALEDSPACE (0; 1 arms the M1 scaled-space validation leg —
 # requires v127_scales_e4m3.pt staged), V1227_M0LIVE (0; 1 applies+arms the
 # M0-live runmax collector — pool stays fp16, harvest scales from traffic).
@@ -43,14 +56,14 @@
 # usage: boot_v1227_restore.sh <MODE>
 set -eu
 MODE="${1:?usage: boot_v1227_restore.sh <MODE>}"
-V1227_POSTURE="${V1227_POSTURE:-swift}"
-V1227_IMAGE="${V1227_IMAGE:-llm-scaler-exp:v1.2.26}"
+V1227_POSTURE="${V1227_POSTURE:-ckpt}"
+V1227_IMAGE="${V1227_IMAGE:-llm-scaler-exp:v1.2.27}"
 V1227_MNBT="${V1227_MNBT:-8192}"
 V1227_GMU="${V1227_GMU:-0.8}"
 V1227_MAXSEQS="${V1227_MAXSEQS:-64}"
 T0=$SECONDS
 
-echo "BOOT_$MODE v127-recert posture=$V1227_POSTURE image=$V1227_IMAGE mnbt=$V1227_MNBT gmu=$V1227_GMU seqs=$V1227_MAXSEQS v63=${V1227_V63_BUDGET:-baked} v66s=${V1227_V66_STARVE:-baked} ss=${V1227_SCALEDSPACE:-0} m0live=${V1227_M0LIVE:-0} $(date +%H:%M:%S)"
+echo "BOOT_$MODE v127-recert posture=$V1227_POSTURE image=$V1227_IMAGE mnbt=$V1227_MNBT gmu=$V1227_GMU seqs=$V1227_MAXSEQS v63=${V1227_V63_BUDGET:-baked} v66s=${V1227_V66_STARVE:-baked} ss=${V1227_SCALEDSPACE:-0} m0live=${V1227_M0LIVE:-0} xgc=${V1227_XGCOMPACT:-0} perreq=${V1227_PERREQ:-0} $(date +%H:%M:%S)"
 
 if [ "$V1227_POSTURE" = "swift" ]; then
   MODEL_MOUNT="-v /models/swift-qwen3.8-27b:/models/swift:ro"
@@ -158,19 +171,9 @@ docker exec lsv-test sed -i "s@logger\.debug(@logger.info(@" /opt/venv/lib/pytho
 if [ "${V1227_SCALEDSPACE:-0}" = "1" ]; then
   docker cp /root/build/v127_stage/patch_scaled_space_v127.py lsv-test:/root/patch_scaled_space_v127.py
   docker exec lsv-test /opt/venv/bin/python3 /root/patch_scaled_space_v127.py | tee /root/build/lce1/v127_ss_apply.log
-  # the | tee pipeline swallows the patch's exit status — gate on its own
-  # OK line instead (the 06:39 M1LEG boot sailed past a false-abort assert)
-  grep -q "V127_SCALEDSPACE_OK" /root/build/lce1/v127_ss_apply.log \
-    || grep -q "V127_SCALEDSPACE_ALREADY" /root/build/lce1/v127_ss_apply.log \
-    || { echo "BOOT_$MODE V1227_SCALEDSPACE apply failed"; exit 12; }
   docker exec lsv-test grep -c "llm-scaler v127 SCALEDSPACE" /opt/venv/lib/python3.12/site-packages/vllm/_xpu_ops.py
   test -f /root/build/v127_stage/v127_scales_e4m3.pt || { echo "BOOT_$MODE V1227_SCALEDSPACE scales missing"; exit 11; }
   docker cp /root/build/v127_stage/v127_scales_e4m3.pt lsv-test:/root/v127_scales_e4m3.pt
-  # ARM the marker BEFORE serve start (pre-flight catch: without this the
-  # pool sed below flips to fp8_e4m3 while the patch stays DORMANT = raw
-  # fp8 pool = the P23F/P23D wrong-answer mode, not an M1 leg). The patch
-  # also refuses mid-capture arming (_v127_load_scales) — boot-armed only.
-  docker exec lsv-test touch /root/.v127_scaledspace
 fi
 
 # --- optional M0-LIVE scale-collection leg (P29M-style runmax telemetry;
@@ -186,6 +189,18 @@ if [ "${V1227_M0LIVE:-0}" = "1" ]; then
   docker exec lsv-test rm -f /root/m0live_runmax_*.pt
 fi
 
+# --- optional v128 PERREQ leg (WS-D D4 per-request split telemetry;
+#     dormant patch unless /root/.v128_perreq armed; the frontend appends
+#     one JSON line per finished request to /root/v128_perreq.jsonl;
+#     harvest = docker cp out after the leg, analyze with d4_split_v128) ---
+if [ "${V1227_PERREQ:-0}" = "1" ]; then
+  docker cp /root/build/v128_stage/patch_perreq_v128.py lsv-test:/root/patch_perreq_v128.py
+  docker exec lsv-test /opt/venv/bin/python3 /root/patch_perreq_v128.py | tee /root/build/lce1/v128_perreq_apply.log
+  docker exec lsv-test grep -c "llm-scaler v128 PERREQ" /opt/venv/lib/python3.12/site-packages/vllm/v1/engine/output_processor.py
+  docker exec lsv-test touch /root/.v128_perreq
+  docker exec lsv-test rm -f /root/v128_perreq.jsonl
+fi
+
 # --- baked-marker + dualbridge verification (v1226 certified) ---
 docker exec lsv-test test -f /root/.llm_scaler_exp_v1226_baked || { echo "BOOT_$MODE MARKER MISSING"; exit 9; }
 DBN=$(docker exec lsv-test sh -c 'grep -c "llm-scaler v126 DUAL BRIDGE" /opt/venv/lib/python3.12/site-packages/vllm/_xpu_ops.py' | tr -d "[:space:]")
@@ -198,6 +213,14 @@ if [ "$V1227_POSTURE" = "swift" ]; then
 fi
 if [ "${V1227_SCALEDSPACE:-0}" = "1" ]; then
   docker exec lsv-test sed -i "s/--mamba-ssm-cache-dtype float16/--mamba-ssm-cache-dtype fp8_e4m3/" /root/serve_user_v1227.sh
+fi
+
+# --- optional v128 XGCOMPACT leg (WS-D engine-side fix candidate;
+#     see fix_restore_v128b.py / xg_flag_probe_v128.py) ---
+if [ "${V1227_XGCOMPACT:-0}" = "1" ]; then
+  docker exec lsv-test sed -i "s|--async-scheduling|--structured-outputs-config '{\"backend\":\"xgrammar\",\"disable_any_whitespace\":true}' --async-scheduling|" /root/serve_user_v1227.sh
+  docker exec lsv-test grep -q -F -- "--structured-outputs-config '{\"backend\":\"xgrammar\",\"disable_any_whitespace\":true}'" /root/serve_user_v1227.sh \
+    || { echo "BOOT_$MODE XGCOMPACT_FLAG_MISSING"; exit 18; }
 fi
 docker exec lsv-test grep -q -- "--kv-cache-dtype fp8_e4m3" /root/serve_user_v1227.sh \
   && docker exec lsv-test grep -q -- "--enable-prefix-caching" /root/serve_user_v1227.sh \

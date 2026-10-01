@@ -1,0 +1,43 @@
+{
+ "tag": "genfold_probe_v128",
+ "mode": "pre",
+ "seed_base": 1234,
+ "reps": 5,
+ "pairwise_exact_counts": {
+  "A==B (omitted vs 0.9)": 5,
+  "A==C (omitted vs 0.6)": 0
+ },
+ "pairwise_prefix30_counts": {
+  "A~B": 5,
+  "A~C": 2
+ },
+ "bars": {
+  "min_match_claimed": 3,
+  "max_match_other": 1
+ },
+ "contents": {
+  "A": [
+   "A bruised purple sky bleeds into the steel-grey water, where the masts of silent fishing boats sway gently against the first trembling light of day.",
+   "Amber light spills across the rippling water, catching the gulls' cries and the creak of mooring lines as the fishing boats begin their slow, rhythmic sway against the grey mist.",
+   "Gilded fingers of sunrise stretched across the still, mirror-like water, catching the rusted hulls of sleeping fishing boats and turning the fog into a soft, breathing amber haze.",
+   "Fog clung to the water like a damp woolen shawl while the first pale gold of sunrise bled through the mist, turning the black silhouettes of the moored yachts into shimmering embers.",
+   "Copper light fractured across the oil-slicked water, igniting the mist that clung to the rusted masts of the sleeping fishing fleet."
+  ],
+  "B": [
+   "A bruised purple sky bleeds into the steel-grey water, where the masts of silent fishing boats sway gently against the first trembling light of day.",
+   "Amber light spills across the rippling water, catching the gulls' cries and the creak of mooring lines as the fishing boats begin their slow, rhythmic sway against the grey mist.",
+   "Gilded fingers of sunrise stretched across the still, mirror-like water, catching the rusted hulls of sleeping fishing boats and turning the fog into a soft, breathing amber haze.",
+   "Fog clung to the water like a damp woolen shawl while the first pale gold of sunrise bled through the mist, turning the black silhouettes of the moored yachts into shimmering embers.",
+   "Copper light fractured across the oil-slicked water, igniting the mist that clung to the rusted masts of the sleeping fishing fleet."
+  ],
+  "C": [
+   "A bruised purple sky bleeds into the still water, where the masts of sleeping yachts stand like silent sentinels against the first pale sliver of sun.",
+   "The first pale sliver of sun sliced through the mist, igniting the wet hulls of the moored sloops into streaks of molten gold against the bruised purple water.",
+   "Gilded mist clung to the blackened hulls of idle barges as the first slant of sunlight shattered the mirror-still water into a thousand trembling shards of amber and rose.",
+   "Fog clung to the water like a damp wool blanket, softening the silhouettes of the moored trawlers until only the rhythmic creak of the pilings and the first pale sliver of sun breaking through the mist remained.",
+   "Crimson light spills across the still water, igniting the masts of the anchored boats like a field of burning torches."
+  ]
+ },
+ "verdict": "PRE_BASELINE_OK",
+ "ts": "2026-10-01 12:43:18"
+}

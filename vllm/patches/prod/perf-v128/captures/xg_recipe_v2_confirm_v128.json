@@ -1,0 +1,70 @@
+{
+ "C0_corrupt@t0.6": {
+  "pattern": "^-?[0-9]{1,4}(\\.[0-9]{1,4})?$",
+  "temp": 0.6,
+  "conform": 0,
+  "VIOLATION": 20,
+  "length": 0,
+  "unparseable": 0,
+  "bad": [
+   "'3141592'",
+   "'3141592'",
+   "'3141592'",
+   "'3141592'",
+   "'3141592'",
+   "'3141592'"
+  ]
+ },
+ "C0_corrupt@t1.0": {
+  "pattern": "^-?[0-9]{1,4}(\\.[0-9]{1,4})?$",
+  "temp": 1.0,
+  "conform": 0,
+  "VIOLATION": 20,
+  "length": 0,
+  "unparseable": 0,
+  "bad": [
+   "'3141592'",
+   "'3141592'",
+   "'3141592'",
+   "'3141592'",
+   "'3141592'",
+   "'3141592'"
+  ]
+ },
+ "C1_alt@t0.6": {
+  "pattern": "^-?[0-9]{1,4}$|^-?[0-9]{1,4}\\.[0-9]{1,4}$",
+  "temp": 0.6,
+  "conform": 20,
+  "VIOLATION": 0,
+  "length": 0,
+  "unparseable": 0,
+  "bad": []
+ },
+ "C1_alt@t1.0": {
+  "pattern": "^-?[0-9]{1,4}$|^-?[0-9]{1,4}\\.[0-9]{1,4}$",
+  "temp": 1.0,
+  "conform": 20,
+  "VIOLATION": 0,
+  "length": 0,
+  "unparseable": 0,
+  "bad": []
+ },
+ "C2_brace01@t0.6": {
+  "pattern": "^-?[0-9]{1,4}(\\.[0-9]{1,4}){0,1}$",
+  "temp": 0.6,
+  "conform": 20,
+  "VIOLATION": 0,
+  "length": 0,
+  "unparseable": 0,
+  "bad": []
+ },
+ "C2_brace01@t1.0": {
+  "pattern": "^-?[0-9]{1,4}(\\.[0-9]{1,4}){0,1}$",
+  "temp": 1.0,
+  "conform": 20,
+  "VIOLATION": 0,
+  "length": 0,
+  "unparseable": 0,
+  "bad": []
+ }
+}

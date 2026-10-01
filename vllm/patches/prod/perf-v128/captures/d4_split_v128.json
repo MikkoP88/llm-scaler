@@ -1,0 +1,63 @@
+{
+ "tag": "d4_split_v128",
+ "source": "/root/build/v128_stage/v128_perreq.jsonl",
+ "rows_total": 194,
+ "rows_bigprompt": 25,
+ "finish_classes": {
+  "length": 76,
+  "stop": 118
+ },
+ "full_hit_tol": 512,
+ "cohorts": {
+  "full_hit": {
+   "n": 22
+  },
+  "low_hit": {
+   "n": 3
+  }
+ },
+ "gdn_law": {
+  "snap_total_full_hit": 210,
+  "snap_mean_full_hit": 9.5,
+  "hit_span_mod_gran_fit": {
+   "1024": {
+    "mean_abs_diff": 558.5,
+    "p50_abs_diff": 1024,
+    "max_abs_diff": 1024
+   },
+   "2048": {
+    "mean_abs_diff": 884.4,
+    "p50_abs_diff": 1024,
+    "max_abs_diff": 2048
+   },
+   "4096": {
+    "mean_abs_diff": 1536.0,
+    "p50_abs_diff": 1024,
+    "max_abs_diff": 4096
+   },
+   "8192": {
+    "mean_abs_diff": 2839.3,
+    "p50_abs_diff": 1024,
+    "max_abs_diff": 8192
+   }
+  },
+  "best_granularity": 1024,
+  "note": "mean_abs_diff ~0 at the true granularity = per-row law holds"
+ },
+ "eviction": {
+  "miss_total": 1914,
+  "miss_mean": 638.0,
+  "miss_p50": 611,
+  "prompt_mean": 8809.3
+ },
+ "fleet_split": {
+  "computed_total": 11312,
+  "suffix_total": 9188,
+  "excess_total": 2124,
+  "excess_share_of_computed_pct": 18.8,
+  "gdn_snap_share_pct": 9.9,
+  "eviction_share_pct": 90.1,
+  "residual_share_pct": 0.0,
+  "verdict": "EVICTION DOMINANT -> the win is cache/pool policy (WS-C track), not a GDN kernel; do not commit kernel effort"
+ }
+}

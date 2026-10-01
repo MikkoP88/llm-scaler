@@ -1,0 +1,38 @@
+{
+ "tag": "xg_flag_probe_v128",
+ "n_per_arm": 20,
+ "arms": {
+  "f10": {
+   "n_ok": 20,
+   "n_total": 20,
+   "degenerate": 14,
+   "ws_degenerate": 0,
+   "finish_length": 12,
+   "finish_stop": 8,
+   "parse_fail": 12,
+   "max_digit_run_max": 2035,
+   "max_ws_after_sep_max": 1,
+   "wall_p50": 24.6
+  },
+  "f07": {
+   "n_ok": 20,
+   "n_total": 20,
+   "degenerate": 17,
+   "ws_degenerate": 0,
+   "finish_length": 15,
+   "finish_stop": 5,
+   "parse_fail": 15,
+   "max_digit_run_max": 2035,
+   "max_ws_after_sep_max": 1,
+   "wall_p50": 24.3
+  }
+ },
+ "verdict": {
+  "H1_whitespace_class_dead": true,
+  "H2_parse_clean": false,
+  "H3_digit_residual_per_arm": {
+   "f10": 14,
+   "f07": 17
+  }
+ }
+}

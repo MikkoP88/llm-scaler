@@ -1,0 +1,46 @@
+{
+ "tag": "xg_sweep_v128",
+ "n_per_arm": 20,
+ "arms": {
+  "t10": {
+   "n_ok": 20,
+   "n_total": 20,
+   "degenerate": 11,
+   "finish_length": 10,
+   "finish_stop": 10,
+   "parse_fail": 10,
+   "max_digit_run_max": 2031,
+   "wall_p50": 23.1
+  },
+  "t07": {
+   "n_ok": 20,
+   "n_total": 20,
+   "degenerate": 10,
+   "finish_length": 9,
+   "finish_stop": 11,
+   "parse_fail": 9,
+   "max_digit_run_max": 2031,
+   "wall_p50": 2.7
+  },
+  "t06": {
+   "n_ok": 20,
+   "n_total": 20,
+   "degenerate": 10,
+   "finish_length": 7,
+   "finish_stop": 13,
+   "parse_fail": 7,
+   "max_digit_run_max": 2031,
+   "wall_p50": 11.7
+  },
+  "pb1": {
+   "n_ok": 20,
+   "n_total": 20,
+   "degenerate": 7,
+   "finish_length": 7,
+   "finish_stop": 13,
+   "parse_fail": 7,
+   "max_digit_run_max": 4,
+   "wall_p50": 1.6
+  }
+ }
+}

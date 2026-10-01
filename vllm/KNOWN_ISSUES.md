@@ -2758,3 +2758,69 @@ Full record: patches/prod/perf-v126/COMPLETE_ROUND_WRITEUP.md (PHASES.md P27-P31
    STALE — early "no armed-line yet" checks are benign; `systemctl restart`
    (not reload) is required after repointing. Watchdog LOG path is
    /root/build/lane_watchdog.log (NOT lce1/).
+
+## #31 (2026-10-01, perf-v128 round) — xgrammar regex→grammar conversion trap: `?`-optionality after a bounded repetition silently destroys the bound
+
+**Symptom.** A json_schema string pattern like
+`^-?[0-9]{1,4}(\.[0-9]{1,4})?$` (int part bounded to 4 digits, optional
+decimal group) produces guided completions with 5-8 integer digits and
+`finish=stop` — clean structure, valid JSON, pattern VIOLATED. No
+backend error, no fallback warning; `structured_outputs_config`
+backend=auto resolves to xgrammar normally.
+
+**Root cause (proven engine-side, model removed).** xgrammar 0.2.7's
+regex→grammar conversion mishandles optionality directly following a
+bounded repetition: the bounded quantifier's limit is silently dropped.
+`GrammarMatcher.accept_string` on the COMPILED grammar ACCEPTS
+`{"t": "3141592"}` for the pattern above, in BOTH `any_whitespace`
+modes. Lived confirmation: under a prompt that demands the 7-digit
+constant 3141592, the corrupt shape conforms 0/40 (emits the full
+constant) while the fixed shapes conform 40/40, at temp 0.6 AND 1.0.
+Guided decoding is faithfully following a corrupted grammar — this is
+NOT a spec-decode mask leak (group-free bounds `^A[0-9]{3}Z$` /
+`^A[0-9]{16}Z$` enforce exactly, 12/12 + 4/4 under the same pull) and
+NOT backend fallback (sentinel `^ZZ[0-9]{2}$` shows in-grammar behavior
+on the same lane).
+
+**The law.** `X{n,m}?`-OPTIONALITY (a group `(...)?` OR a single atom
+`\.?`) after a bounded repetition destroys the bound. Measured shape
+matrix (7 shapes × 8 probe strings × 2 aw modes):
+
+| Shape | Example | Verdict |
+|---|---|---|
+| optional group `(...)? ` | `^-?[0-9]{1,4}(\.[0-9]{1,4})?$` | CORRUPT — accepts 7 int digits |
+| optional atom `\.?` | `^-?[0-9]{1,4}\.?[0-9]{0,4}$` | CORRUPT — accepts 8 |
+| leading `{0,4}` + optional group | `^-?[0-9]{0,4}(\.[0-9]{1,4})?$` | PARTIALLY corrupt — rejects 8, accepts 5-7 |
+| brace `{0,1}` instead of `?` | `^-?[0-9]{1,4}(\.[0-9]{1,4}){0,1}$` | SOUND |
+| alternation of full branches | `^-?[0-9]{1,4}$\|^-?[0-9]{1,4}\.[0-9]{1,4}$` | SOUND |
+| alternation inside group | `^-?([0-9]{1,4}\|[0-9]{1,4}\.[0-9]{1,4})$` | SOUND |
+
+**Fix / usage law.** In any json_schema `pattern` that must bound a
+numeric-ish string: never write `?`-optionality after a bounded run —
+use `(...){0,1}` or an alternation of full branches. Full recipe for
+degeneration-free guided numbers (recipe v2, certified 40/40 under
+maximal pull): bounded-shape pattern + `disable_any_whitespace`
+(OPT-IN via `V1227_XGCOMPACT` knob — as a global default it
+redistributes mass onto digits and makes digit degeneration WORSE;
+see perf-v128 P47). Note the composure law: the trap alone does not
+cause runaway — a wanted value is emitted cleanly (20/20 finish=stop);
+runaway still needs a flat post-mask distribution (the P47 sampling
+attractor). The two mechanisms are independent.
+
+**Detection discipline.** Sweep-style "degeneration" metrics
+(max-digit-run > 15, finish=length) DO NOT catch this class — a
+clean 7-digit stop passes them. Any pattern-conformance claim needs a
+pattern-match assertion on emitted values (or the membership harness:
+`GrammarCompiler(tokenizer_info=...)` → `compile_json_schema` →
+`GrammarMatcher.accept_string` — the model-free law-tester used here).
+
+**Impact at discovery.** None on the fleet (no production schema uses
+the corrupt shape; probes only). The v128 recipe-v1 "certified 0/20 by
+construction" result was re-adjudicated as weak-pull luck on a corrupt
+pattern and superseded by recipe v2.
+
+Evidence: `vllm/patches/prod/perf-v128/captures/xg_membership_v128.json`,
+`xg_fix_shapes_v128.json`, `xg_repro_violation_v128.json`,
+`xg_recipe_v2_confirm_v128.json`; PHASES.md P50; repro scripts
+`xg_membership_test_v128.py`, `xg_fix_shapes_v128.py` (in-container,
+`/opt/venv/bin/python3`).

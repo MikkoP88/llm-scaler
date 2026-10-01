@@ -1,0 +1,242 @@
+[
+ {
+  "pattern": "A0_full",
+  "any_whitespace": true,
+  "string": "bad7digit",
+  "verdict": "ACCEPTED"
+ },
+ {
+  "pattern": "A0_full",
+  "any_whitespace": true,
+  "string": "good4",
+  "verdict": "ACCEPTED"
+ },
+ {
+  "pattern": "A0_full",
+  "any_whitespace": true,
+  "string": "good_dec",
+  "verdict": "ACCEPTED"
+ },
+ {
+  "pattern": "A0_full",
+  "any_whitespace": true,
+  "string": "good_wrap",
+  "verdict": "REJECTED"
+ },
+ {
+  "pattern": "A0_full",
+  "any_whitespace": true,
+  "string": "ws_inside",
+  "verdict": "ACCEPTED"
+ },
+ {
+  "pattern": "A0_full",
+  "any_whitespace": false,
+  "string": "bad7digit",
+  "verdict": "ACCEPTED"
+ },
+ {
+  "pattern": "A0_full",
+  "any_whitespace": false,
+  "string": "good4",
+  "verdict": "ACCEPTED"
+ },
+ {
+  "pattern": "A0_full",
+  "any_whitespace": false,
+  "string": "good_dec",
+  "verdict": "ACCEPTED"
+ },
+ {
+  "pattern": "A0_full",
+  "any_whitespace": false,
+  "string": "good_wrap",
+  "verdict": "REJECTED"
+ },
+ {
+  "pattern": "A0_full",
+  "any_whitespace": false,
+  "string": "ws_inside",
+  "verdict": "REJECTED"
+ },
+ {
+  "pattern": "A1_noopt",
+  "any_whitespace": true,
+  "string": "bad7digit",
+  "verdict": "REJECTED"
+ },
+ {
+  "pattern": "A1_noopt",
+  "any_whitespace": true,
+  "string": "good4",
+  "verdict": "ACCEPTED"
+ },
+ {
+  "pattern": "A1_noopt",
+  "any_whitespace": true,
+  "string": "good_dec",
+  "verdict": "REJECTED"
+ },
+ {
+  "pattern": "A1_noopt",
+  "any_whitespace": true,
+  "string": "good_wrap",
+  "verdict": "REJECTED"
+ },
+ {
+  "pattern": "A1_noopt",
+  "any_whitespace": true,
+  "string": "ws_inside",
+  "verdict": "REJECTED"
+ },
+ {
+  "pattern": "A1_noopt",
+  "any_whitespace": false,
+  "string": "bad7digit",
+  "verdict": "REJECTED"
+ },
+ {
+  "pattern": "A1_noopt",
+  "any_whitespace": false,
+  "string": "good4",
+  "verdict": "ACCEPTED"
+ },
+ {
+  "pattern": "A1_noopt",
+  "any_whitespace": false,
+  "string": "good_dec",
+  "verdict": "REJECTED"
+ },
+ {
+  "pattern": "A1_noopt",
+  "any_whitespace": false,
+  "string": "good_wrap",
+  "verdict": "REJECTED"
+ },
+ {
+  "pattern": "A1_noopt",
+  "any_whitespace": false,
+  "string": "ws_inside",
+  "verdict": "REJECTED"
+ },
+ {
+  "pattern": "A2_nominus",
+  "any_whitespace": true,
+  "string": "bad7digit",
+  "verdict": "ACCEPTED"
+ },
+ {
+  "pattern": "A2_nominus",
+  "any_whitespace": true,
+  "string": "good4",
+  "verdict": "ACCEPTED"
+ },
+ {
+  "pattern": "A2_nominus",
+  "any_whitespace": true,
+  "string": "good_dec",
+  "verdict": "ACCEPTED"
+ },
+ {
+  "pattern": "A2_nominus",
+  "any_whitespace": true,
+  "string": "good_wrap",
+  "verdict": "REJECTED"
+ },
+ {
+  "pattern": "A2_nominus",
+  "any_whitespace": true,
+  "string": "ws_inside",
+  "verdict": "ACCEPTED"
+ },
+ {
+  "pattern": "A2_nominus",
+  "any_whitespace": false,
+  "string": "bad7digit",
+  "verdict": "ACCEPTED"
+ },
+ {
+  "pattern": "A2_nominus",
+  "any_whitespace": false,
+  "string": "good4",
+  "verdict": "ACCEPTED"
+ },
+ {
+  "pattern": "A2_nominus",
+  "any_whitespace": false,
+  "string": "good_dec",
+  "verdict": "ACCEPTED"
+ },
+ {
+  "pattern": "A2_nominus",
+  "any_whitespace": false,
+  "string": "good_wrap",
+  "verdict": "REJECTED"
+ },
+ {
+  "pattern": "A2_nominus",
+  "any_whitespace": false,
+  "string": "ws_inside",
+  "verdict": "REJECTED"
+ },
+ {
+  "pattern": "A3_wrapped",
+  "any_whitespace": true,
+  "string": "bad7digit",
+  "verdict": "REJECTED"
+ },
+ {
+  "pattern": "A3_wrapped",
+  "any_whitespace": true,
+  "string": "good4",
+  "verdict": "REJECTED"
+ },
+ {
+  "pattern": "A3_wrapped",
+  "any_whitespace": true,
+  "string": "good_dec",
+  "verdict": "REJECTED"
+ },
+ {
+  "pattern": "A3_wrapped",
+  "any_whitespace": true,
+  "string": "good_wrap",
+  "verdict": "ACCEPTED"
+ },
+ {
+  "pattern": "A3_wrapped",
+  "any_whitespace": true,
+  "string": "ws_inside",
+  "verdict": "REJECTED"
+ },
+ {
+  "pattern": "A3_wrapped",
+  "any_whitespace": false,
+  "string": "bad7digit",
+  "verdict": "REJECTED"
+ },
+ {
+  "pattern": "A3_wrapped",
+  "any_whitespace": false,
+  "string": "good4",
+  "verdict": "REJECTED"
+ },
+ {
+  "pattern": "A3_wrapped",
+  "any_whitespace": false,
+  "string": "good_dec",
+  "verdict": "REJECTED"
+ },
+ {
+  "pattern": "A3_wrapped",
+  "any_whitespace": false,
+  "string": "good_wrap",
+  "verdict": "ACCEPTED"
+ },
+ {
+  "pattern": "A3_wrapped",
+  "any_whitespace": false,
+  "string": "ws_inside",
+  "verdict": "REJECTED"
+ }
+]

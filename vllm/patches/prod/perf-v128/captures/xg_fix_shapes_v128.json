@@ -1,0 +1,674 @@
+[
+ {
+  "shape": "B1_alt",
+  "aw": true,
+  "string": "bad8",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B1_alt",
+  "aw": true,
+  "string": "bad7",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B1_alt",
+  "aw": true,
+  "string": "bad6",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B1_alt",
+  "aw": true,
+  "string": "bad5",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B1_alt",
+  "aw": true,
+  "string": "good4",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B1_alt",
+  "aw": true,
+  "string": "good_dec",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B1_alt",
+  "aw": true,
+  "string": "good_neg",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B1_alt",
+  "aw": true,
+  "string": "good2",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B1_alt",
+  "aw": false,
+  "string": "bad8",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B1_alt",
+  "aw": false,
+  "string": "bad7",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B1_alt",
+  "aw": false,
+  "string": "bad6",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B1_alt",
+  "aw": false,
+  "string": "bad5",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B1_alt",
+  "aw": false,
+  "string": "good4",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B1_alt",
+  "aw": false,
+  "string": "good_dec",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B1_alt",
+  "aw": false,
+  "string": "good_neg",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B1_alt",
+  "aw": false,
+  "string": "good2",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B3_alt_in_group",
+  "aw": true,
+  "string": "bad8",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B3_alt_in_group",
+  "aw": true,
+  "string": "bad7",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B3_alt_in_group",
+  "aw": true,
+  "string": "bad6",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B3_alt_in_group",
+  "aw": true,
+  "string": "bad5",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B3_alt_in_group",
+  "aw": true,
+  "string": "good4",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B3_alt_in_group",
+  "aw": true,
+  "string": "good_dec",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B3_alt_in_group",
+  "aw": true,
+  "string": "good_neg",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B3_alt_in_group",
+  "aw": true,
+  "string": "good2",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B3_alt_in_group",
+  "aw": false,
+  "string": "bad8",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B3_alt_in_group",
+  "aw": false,
+  "string": "bad7",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B3_alt_in_group",
+  "aw": false,
+  "string": "bad6",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B3_alt_in_group",
+  "aw": false,
+  "string": "bad5",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B3_alt_in_group",
+  "aw": false,
+  "string": "good4",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B3_alt_in_group",
+  "aw": false,
+  "string": "good_dec",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B3_alt_in_group",
+  "aw": false,
+  "string": "good_neg",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B3_alt_in_group",
+  "aw": false,
+  "string": "good2",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B4_brace01",
+  "aw": true,
+  "string": "bad8",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B4_brace01",
+  "aw": true,
+  "string": "bad7",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B4_brace01",
+  "aw": true,
+  "string": "bad6",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B4_brace01",
+  "aw": true,
+  "string": "bad5",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B4_brace01",
+  "aw": true,
+  "string": "good4",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B4_brace01",
+  "aw": true,
+  "string": "good_dec",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B4_brace01",
+  "aw": true,
+  "string": "good_neg",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B4_brace01",
+  "aw": true,
+  "string": "good2",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B4_brace01",
+  "aw": false,
+  "string": "bad8",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B4_brace01",
+  "aw": false,
+  "string": "bad7",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B4_brace01",
+  "aw": false,
+  "string": "bad6",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B4_brace01",
+  "aw": false,
+  "string": "bad5",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B4_brace01",
+  "aw": false,
+  "string": "good4",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B4_brace01",
+  "aw": false,
+  "string": "good_dec",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B4_brace01",
+  "aw": false,
+  "string": "good_neg",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B4_brace01",
+  "aw": false,
+  "string": "good2",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B5_lead04",
+  "aw": true,
+  "string": "bad8",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B5_lead04",
+  "aw": true,
+  "string": "bad7",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B5_lead04",
+  "aw": true,
+  "string": "bad6",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B5_lead04",
+  "aw": true,
+  "string": "bad5",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B5_lead04",
+  "aw": true,
+  "string": "good4",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B5_lead04",
+  "aw": true,
+  "string": "good_dec",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B5_lead04",
+  "aw": true,
+  "string": "good_neg",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B5_lead04",
+  "aw": true,
+  "string": "good2",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B5_lead04",
+  "aw": false,
+  "string": "bad8",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B5_lead04",
+  "aw": false,
+  "string": "bad7",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B5_lead04",
+  "aw": false,
+  "string": "bad6",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B5_lead04",
+  "aw": false,
+  "string": "bad5",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B5_lead04",
+  "aw": false,
+  "string": "good4",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B5_lead04",
+  "aw": false,
+  "string": "good_dec",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B5_lead04",
+  "aw": false,
+  "string": "good_neg",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B5_lead04",
+  "aw": false,
+  "string": "good2",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B7_opt_atom",
+  "aw": true,
+  "string": "bad8",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B7_opt_atom",
+  "aw": true,
+  "string": "bad7",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B7_opt_atom",
+  "aw": true,
+  "string": "bad6",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B7_opt_atom",
+  "aw": true,
+  "string": "bad5",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B7_opt_atom",
+  "aw": true,
+  "string": "good4",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B7_opt_atom",
+  "aw": true,
+  "string": "good_dec",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B7_opt_atom",
+  "aw": true,
+  "string": "good_neg",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B7_opt_atom",
+  "aw": true,
+  "string": "good2",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B7_opt_atom",
+  "aw": false,
+  "string": "bad8",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B7_opt_atom",
+  "aw": false,
+  "string": "bad7",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B7_opt_atom",
+  "aw": false,
+  "string": "bad6",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B7_opt_atom",
+  "aw": false,
+  "string": "bad5",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B7_opt_atom",
+  "aw": false,
+  "string": "good4",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B7_opt_atom",
+  "aw": false,
+  "string": "good_dec",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B7_opt_atom",
+  "aw": false,
+  "string": "good_neg",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B7_opt_atom",
+  "aw": false,
+  "string": "good2",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B6_unbounded",
+  "aw": true,
+  "string": "bad8",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B6_unbounded",
+  "aw": true,
+  "string": "bad7",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B6_unbounded",
+  "aw": true,
+  "string": "bad6",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B6_unbounded",
+  "aw": true,
+  "string": "bad5",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B6_unbounded",
+  "aw": true,
+  "string": "good4",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B6_unbounded",
+  "aw": true,
+  "string": "good_dec",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B6_unbounded",
+  "aw": true,
+  "string": "good_neg",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B6_unbounded",
+  "aw": true,
+  "string": "good2",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B6_unbounded",
+  "aw": false,
+  "string": "bad8",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B6_unbounded",
+  "aw": false,
+  "string": "bad7",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B6_unbounded",
+  "aw": false,
+  "string": "bad6",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B6_unbounded",
+  "aw": false,
+  "string": "bad5",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B6_unbounded",
+  "aw": false,
+  "string": "good4",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B6_unbounded",
+  "aw": false,
+  "string": "good_dec",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B6_unbounded",
+  "aw": false,
+  "string": "good_neg",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B6_unbounded",
+  "aw": false,
+  "string": "good2",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B8_alt_recipe",
+  "aw": true,
+  "string": "bad8",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B8_alt_recipe",
+  "aw": true,
+  "string": "bad7",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B8_alt_recipe",
+  "aw": true,
+  "string": "bad6",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B8_alt_recipe",
+  "aw": true,
+  "string": "bad5",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B8_alt_recipe",
+  "aw": true,
+  "string": "good4",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B8_alt_recipe",
+  "aw": true,
+  "string": "good_dec",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B8_alt_recipe",
+  "aw": true,
+  "string": "good_neg",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B8_alt_recipe",
+  "aw": true,
+  "string": "good2",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B8_alt_recipe",
+  "aw": false,
+  "string": "bad8",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B8_alt_recipe",
+  "aw": false,
+  "string": "bad7",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B8_alt_recipe",
+  "aw": false,
+  "string": "bad6",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B8_alt_recipe",
+  "aw": false,
+  "string": "bad5",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B8_alt_recipe",
+  "aw": false,
+  "string": "good4",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B8_alt_recipe",
+  "aw": false,
+  "string": "good_dec",
+  "verdict": "ACCEPT"
+ },
+ {
+  "shape": "B8_alt_recipe",
+  "aw": false,
+  "string": "good_neg",
+  "verdict": "REJECT"
+ },
+ {
+  "shape": "B8_alt_recipe",
+  "aw": false,
+  "string": "good2",
+  "verdict": "ACCEPT"
+ }
+]

@@ -1,0 +1,52 @@
+{
+ "A0_full": {
+  "pattern": "^-?[0-9]{1,4}(\\.[0-9]{1,4})?$",
+  "conform": 3,
+  "VIOLATION": 27,
+  "unparseable": 0,
+  "length": 0,
+  "bad": [
+   "pull:'3141592'",
+   "pull:'3141592'",
+   "pull:'3141592'",
+   "pull:'3141592'",
+   "pull:'3141592'",
+   "pull:'3141592'",
+   "pull:'3141592'",
+   "pull:'3141592'"
+  ]
+ },
+ "A1_noopt": {
+  "pattern": "^-?[0-9]{1,4}$",
+  "conform": 30,
+  "VIOLATION": 0,
+  "unparseable": 0,
+  "length": 0,
+  "bad": []
+ },
+ "A2_nominus": {
+  "pattern": "^[0-9]{1,4}(\\.[0-9]{1,4})?$",
+  "conform": 4,
+  "VIOLATION": 24,
+  "unparseable": 0,
+  "length": 2,
+  "bad": [
+   "pull:'3141592'",
+   "pull:'3141592'",
+   "pull:'3141592'",
+   "pull:'3141592'",
+   "pull:'3141592'",
+   "pull:'3141592'",
+   "pull:'3141592'",
+   "pull:'3141592'"
+  ]
+ },
+ "A3_wrapped": {
+  "pattern": "^A[0-9]{1,4}Z$",
+  "conform": 28,
+  "VIOLATION": 0,
+  "unparseable": 0,
+  "length": 2,
+  "bad": []
+ }
+}
