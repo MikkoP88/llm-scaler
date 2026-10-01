@@ -1,0 +1,14 @@
+===PLAN_W2===
+214:| **W2+** (one leg per window, order by expected leverage) | C2 gmu 0.85 → D1 mnbt → D2 v63/v66 sweep → C2 gmu 0.88 → D3 HoL priority → C4 sticky-prefix (only if C2/D legs leave a tail) | per-leg replay JSONs + recorder intervals; keep/rollback decision per leg |
+215-| **Weeks track (parallel, no lane impact until validation legs)** | M1 validation leg → M2 kernel build+bench (≥v132 .so, bitwise harness) → M3 bake v1.2.28; K2 prefill kernels | M-gate reports; superiority matrices; ship gates |
+216-| **Final** | bake v1.2.27 (tuning winners) → v1.2.28 (scaled-space) → full-fleet soak with WS-B running; program closed when the replay gate passes against the LIVE fleet regime (p99<20 s, max<45 s, re-prefills ≈ first-turns only) | closing PHASES entry + round write-up |
+217-
+218-## Acceptance = the definition of FIXED
+219-
+220-1. `cc_fleet_replay` PASS (TTFT p99 < 20 s, max < 45 s, re-prefill volume ≈
+221-   first-turn totals) on the shipped image, at 8 streams × 50k base ctx.
+222-2. Live-fleet recorder interval (≥24 h) shows: TTFT tail (>40 s) requests
+223-   → ~0, kv sawtooth amplitude reduced or capacity raised, preemptions 0,
+224-   no wedge/reset lines.
+225-3. Full v1226-class crash battery green on the shipped image; spec MTP×4 +
+226-   XGrammar-2 + qwen3_coder parser intact; CC battery through litellm

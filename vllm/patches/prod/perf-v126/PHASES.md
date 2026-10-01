@@ -1326,3 +1326,1034 @@ update, git commit.
 
 
 
+
+## P32 — multi-agent hard-stall deep-dive + v127 program start (2026-09-30)
+
+Task: "do deep analyze there is now running multiple agents and has major
+issue multiple sessions has hard stalling, this has to be solved, using any
+possible solutions" + start the weeks-scale scaled-space fp8 SSM kernel
+project + "Start implementing improvements but currently do not stop running
+vllm instance."
+
+Live triage at 12:00 UTC (lane NOT touched — read-only):
+
+- Lane up: lsv-test (Up 3h) health=200, dmesg Engine resets 0 (current
+  boot), watchdog alive cycles=180, load 3.58. litellm-proxy up 3h,
+  error/timeout lines 0.
+- Engine counters (cumulative): 247 requests, avg prompt 48,214 tok
+  (53% 5-50k, 47% 50-100k); prefix hit 91.4% (10.67M/11.67M); local_compute
+  1.003M tok = ~10 full 100k re-prefills; TTFT p50 ~4s p90 ~15s, 8 reqs
+  40-160s + 2 reqs 160-640s; TPOT avg 62.8ms, NO request >0.75s/token;
+  KV 16.4%, waiting 0, waiting_by_reason capacity/deferred 0.
+- VERDICT: decode flows; the "hard stall" = TTFT tail from full-prefix
+  re-prefills under the multi-agent long-context regime (48k avg prompts,
+  ~493k-token KV pool fits only ~4-5 resident 100k sessions).
+- ROOT CAUSE A (config drift, the trigger): serve at 08:56 launched
+  MANUALLY (.bash_history 1072-1080, pts/1) — model mount
+  /models/swift-qwen3.8-27b (52GB BF16, no quantization_config) +
+  --quantization fp8 (on-the-fly) + --chat-template
+  chat_template_qwen38_high.jinja + serve stdout NOT captured
+  (serve_full.log untouched since 04:44 = telemetry blind). Four
+  deviations from the certified v1.2.26 posture.
+- ROOT CAUSE B (load regime beyond certified envelope): every certified
+  battery uses <=1024-token contexts; v63/v64 tuned on that regime.
+- EXONERATED: GPU wedge (resets 0; f15b_dmesg reset lines = historical
+  baked content), 09:10 f15b capture = BOOT-PHASE false-fire (py-spy #1
+  stack _init_executor, #2 idle run_busy_loop), preemption/retraction 0,
+  spec acceptance 3.19 healthy.
+
+v127 program (perf-v127/): STALL_ROOT_CAUSE.md + FIX_AND_TEST_PLAN.md
+(4 layers) + cc_fleet_replay.py (new long-context replay gate: 6 streams,
+20k base ctx, 8 turns, TTFT/TPOT/re-prefill counters; PASS = p99<20s,
+max<45s) + boot_v1227_restore.sh (window restore script: certified chain +
+knob legs V1227_MNBT/GMU/MAXSEQS/V63_BUDGET + drift assertions + caps
+BOOT_V1227_RESTORED) + watchdog_v2_drift_check.sh (WARN-only drift guard:
+image/model/--quantization/--chat-template/async/KV/spec/log-freshness)
++ scaled-space kernel project START:
+  M0 calibrate_offline.py (per-feature runmax -> scale=0.98*448/runmax,
+  e4m3 representability report; demo prior from P29M constants)
+  M1 patch_scaled_space_v127.py (v126 dual-bridge extension: gather
+  dequant x inv_scale, scatter requant x scale; dormant unless
+  /root/.v127_scaledspace + /root/v127_scales_e4m3.pt present; capture-
+  safe lazy load, fp8_e4m3-only refusal otherwise; caps
+  V127_SCALEDSPACE_OK/ALREADY)
+  M2 native scaled-space kernel (ESIMD in-register dequant/requant, no
+  roundtrips; diagnostic .so >= v132; KERNELS_MAX_JOBS=52) — the speed
+  prize, gated by SHIPMAT-style superiority.
+  M3 static-scale capture-safe bake -> v1.2.28.
+Execution order: NOW stage only (no lane stop, per directive); window W1 =
+Layer-1 restore + watchdog v2 wiring + M0 telemetry capture + replay
+baseline (one restart); W2+ = Layer-2 A/B legs (T-A mnbt 16384, T-B v63
+4096, T-C gmu 0.85, T-D sticky-prefix) -> v1.2.27 if a winner; weeks =
+M1 validation leg -> M2 -> M3 ship.
+
+### P32 amendment — posture redesignation (2026-09-30, user directive)
+
+User: "change plan so swift-qwen3.8-27b and --quantization fp8, and also
+--chat-template chat_template_qwen38_high.jinja is added to certificated
+configurations". The 08:56 model/quant/template choice was INTENTIONAL, not
+drift — it is now the DESIGNATED certified posture. Cause A residue =
+uncertified rollout (no boot chain, no marker discipline, no battery) +
+telemetry blindness; Cause B (re-prefill storms) stands unchanged.
+
+Facts pinned for the redesignation (live checks):
+- 08:56 serve also carried `--served-model-name qwen3.8-27b-fp8` — that is
+  what kept the fleet working: litellm_config.yaml local entries
+  (qwen3.8-27b-fp8-opus/-sonnet/-haiku/-nonthinking) all send
+  `openai/qwen3.8-27b-fp8` to http://10.20.3.65:8000/v1. Served name is
+  now MANDATORY in the certified posture.
+- chat_template_qwen38_high.jinja (9205 B) is ABSENT from the v1.2.26
+  image (docker run --rm ls verified) — it only ever lived inside the
+  08:56 container. Extracted via docker cp to
+  /root/build/v127_stage/chat_template_qwen38_high.jinja + versioned in
+  perf-v127/; the boot chain now stages it, and its ABSENCE inside a
+  running container is a watchdog drift tripwire (proof of a relaunch
+  outside the chain).
+- serve_user.sh: exactly one `--model /models/target` token; log redirect
+  `>> /root/serve_full.log 2>&1` baked in — posture applied via single sed
+  on the model token; telemetry restored without touching the redirect.
+
+Artifacts updated: boot_v1227_restore.sh (V1227_POSTURE=swift default:
+swift mount + served-model-name + --quantization fp8 + template + posture
+assertions exits 12-15 + 25-min health ceiling for 52GB bf16 on-the-fly
+quant + KV-pool evidence greps; V1227_POSTURE=legacy = one-command
+rollback); watchdog_v2_drift_check.sh (enforces the designated posture:
+binds + cmdline + template-in-container + log freshness; legacy windows
+via V1227_EXPECT_POSTURE; scaled-space legs via V1227_EXPECT_SSM);
+cc_fleet_replay.py (--model auto discovers the served id from /v1/models);
+FIX_AND_TEST_PLAN.md Layer 1 = RECERTIFY with a full W1 certification
+battery (boot gate, crash battery subset, CC quality battery through
+litellm under the NEW template = highest-risk item, speed spot-check vs
+banked 74 tok/s class, replay baseline) — designated != certified until
+that battery is green; STALL_ROOT_CAUSE.md amendment appended.
+
+W1 remains the single restart that applies everything; until then the
+running lane serves the designated config uncertified-and-blind and the
+Layer-2/3 program is unchanged.
+
+### P33 — deep-analysis round + program rev 2 + telemetry LIVE (2026-09-30)
+
+User directive: "Do deep analyze captures, codebase, pipelines and plan,
+improve plan and add missing phases, partition, notes… plan has to be
+comprehensive issue fix and improvement plan, add directive note to plan
+use comprehensive telemetry capture points make easier to capture root
+issues. Plan has to contain full root fix of stalling… these are Major
+issues, weeks work is not issue, issues has to be fixed."
+
+Evidence gathered (all read-only; lane untouched, still the 08:56 serve):
+- Fresh metric capture (~16:05 UTC, 314 reqs; 336 by recorder start):
+  prompt mix 49% 50-100k / 44% 20-50k; TTFT ≤5s=166, ≤20s=257 (82%),
+  20-40s=29, 40-80s=10, 80-160s=10, 160-640s=8 (tail GREW vs the 12:00
+  snapshot); prefix hit 91.4% (14.33M/15.68M); local_compute 1.357M tok;
+  preemptions 0; litellm errors 0 in 3h; dmesg Engine resets 0 (current
+  boot). Decode flows throughout — the "hard stall" is confirmed to be
+  exactly the TTFT tail.
+- Metric-name catalog verified live: kv_cache_usage_perc,
+  num_requests_waiting_by_reason{capacity,deferred},
+  prompt_tokens_by_source_total{local_compute,local_cache_hit},
+  request_prompt_tokens_bucket, time_to_first_token_seconds_bucket,
+  inter_token_latency_seconds_*, num_preemptions_total, engine_sleep_state.
+- Code recon (container vLLM): v1/core/block_pool.py — running-request
+  blocks are unevictable (ref_cnt>0); free_blocks() appends finished
+  prefixes to the free_block_queue TAIL (evict-last); get_new_blocks()
+  popleft_n from the HEAD (evict-first); touch() on cache hit. => LRU is
+  near-optimal for the between-turns access pattern; the miss rate is set
+  by CAPACITY, not policy. Consequence recorded in the plan: priority is
+  capacity + prefill speed + storm scheduling, NOT eviction rework
+  (sticky-prefix demoted to a measurement-gated last leg).
+- scheduler.py anchors pinned: v63 TTFTFIX ~L61; v66 FAIRFIX L78-112
+  (_V66_STARVE_S=2.0 default, stateful _v66_bypass_now, announces
+  V66_FAIRFIX_ACTIVE); v64 TTFTFIX-2 ~L112; patch sites L576-613.
+- Host facts: python3 3.12.3 (stdlib-only recorder OK); /root/build/
+  {captures,telemetry} created; xpu-smi long-flag syntax required.
+
+FIX_AND_TEST_PLAN.md rewritten as the comprehensive program (rev 2):
+- STANDING TELEMETRY DIRECTIVE at top (user quote): every phase defines
+  capture points BEFORE the change lands; phase complete only when
+  recorder/replay evidence exists and PHASES names the file.
+- Root-cause hierarchy RC1..RC6, each code-anchored: RC1 capacity gap
+  (~800k working set vs ~493k pool), RC2 prefill throughput (FA2+GEMM),
+  RC3 storm scheduling (v63/v64/v66 frozen on ≤1024-ctx regime; V66
+  firing at 100k unverified), RC4 SSM pool bytes, RC5 blindness +
+  uncertified rollout, RC6 amplifiers (client abort/re-send; GDN 4096
+  granularity). Exonerations kept recorded (wedge, decode starvation,
+  preemption storms, litellm, spec).
+- Partitions: WS-A Stabilize&Certify (W1 recert battery + watchdog v2
+  wiring + one-command rollback), WS-B Telemetry, WS-C Capacity (C1 pool
+  split measure, C2 gmu 0.85/0.88, C3 M2-pool-halving→KV, C4 sticky-prefix
+  gated), WS-D Prefill&Scheduling (D1 mnbt 16384, D2 V63 4096 + V66 sweep
+  with firing telemetry, D3 re-prefill head-of-line admission priority
+  patch, D4 GDN granularity measurement, D5→K2 FA2/GEMM kernel program),
+  WS-E scaled-space M0-M3, WS-F fleet hygiene (litellm retry=0 local —
+  aborting client must not double-queue a 100k prefill; config restart
+  coordination note), WS-G ship discipline (v1.2.27/v1.2.28, gates,
+  SHIP-MEASUREMENT LAW).
+- Acceptance (definition of FIXED): cc_fleet_replay PASS (p99<20s, max
+  <45s, re-prefills ≈ first-turns) + ≥24h live recorder interval (tail
+  >40s → ~0, no preemptions) + full battery green on shipped image +
+  drift guards armed + every phase's evidence file named.
+- Window schedule: NOW (no restart) = WS-B live; W1 = A1+A2+A3 + C1 + M0
+  live scales + replay baseline (the single restart); W2+ = one tuning leg
+  per window ordered by leverage; weeks track = M1 validation → M2 → M3
+  bake v1.2.28 (K2 parallel); final = 8-stream replay PASS + fleet soak.
+
+TELEMETRY DEPLOYED LIVE 13:03 host time (zero lane impact, GET /metrics
+only, WARN/read-only, READOUT LAW respected — all host-side):
+- metrics_recorder.py daemon (PID 16753): 10 s JSONL →
+  /root/build/telemetry/metrics_20260930.jsonl; parses scalars +
+  by_source/by_reason label maps + full TTFT/TPOT bucket vectors
+  (verified: first sample has ttft/tpot vector + waiting_by_reason).
+  Storm fingerprint: kv_perc sawtooth, waiting backlog onset,
+  local_compute deltas = re-prefill volume, TTFT vector = tail growth.
+- stall_scope.sh --watch daemon (PID 16802): waiting>3 for 30s OR
+  kv_perc>0.97 for 60s, 300 s cooldown → full bundle tarball in
+  /root/build/captures/ (metrics snapshot, serve-log tail with
+  "telemetry blind" marker if not chain-launched, py-spy dumps of
+  EngineCore+workers, xpu-smi both devices, dmesg tail, ps, litellm
+  30 m, recorder tail). bc-free (awk BEGIN comparisons — bc availability
+  risk), get_val via grep+cut (host-side awk/grep legal).
+- boot_v1227_restore.sh now RE-ARMS both idempotently (pgrep guard; mkdir
+  telemetry/captures; runs before the patcher chain so boot itself is
+  recorded; recorder error-tolerant while :8000 is down).
+
+Also answered (user, mid-round): --async-scheduling is ON by default on
+every image since v1.2.23 — baked into the in-image /root/serve_user.sh
+(lane default, not an engine default); the running 08:56 serve carries
+it; V1212-lineage boot scripts FORBID it = standing trap.
+
+Open diagnostic debt carried unchanged: P29H strict-subset wedge
+micro-mechanism; non-spec seq kernel sibling-hazard audit; cosmetic
+carryovers (V1225 caps literals, V1212 usage line, watchdog "100s"
+comment). Next action = W1 window on user go.
+
+## P34 — W1 CERTIFICATION WINDOW EXECUTED (2026-09-30, rev 2 program start)
+
+Task: "start implementing full plan, reboot host before testing" + mid-round
+"CC is now running by me, continue and fix issues". Host rebooted first
+(standing directive). ALL day-long execution ran under a LIVE user CC fleet
+— the first certification round ever executed inside the storm it is meant
+to fix. Every load-sensitive verdict below carries its adjudication class.
+
+### Boot + quiet-window gates (GREEN)
+- Reboot → `BOOT_V1227_RESTORED posture=swift` in 196 s (52 GB bf16 mount +
+  on-the-fly fp8; far under the 25-min ceiling). KV pool 497,499 tok
+  (+~4.5k vs legacy ~493k); max concurrency 1.90x @262144; mamba page
+  917,504 B → padded 1,048,576 B banked for C1. Telemetry auto-re-armed
+  by boot script (recorder + stall_scope). Posture asserted on live cmdline.
+- Quiet-window protocol (quiet_legs_v127.sh, 40-min window wait) fixed the
+  admission-gate load contamination: v66 admission PASS [13.38, 23.93,
+  19.09] (two earlier live-load verdicts STARVED — banked as RC3 evidence,
+  NOT posture failures; lesson: the admission gate is quiet-lane
+  calibrated). Solo genspeed 73.71 tok/s (74-class banked), async agg
+  124.97 (banked 122-158) → on-the-fly fp8 costs NOTHING vs legacy.
+
+### Crash battery under live storm (engine survival GREEN; request-completion legs load-adjudicated)
+Storm quantified by storm_summary_v127.py over 16:05-16:49 (user CC fleet
++ drills): waiting max=67 p50=48 ALL reason=capacity, running max=9 p50=4,
+**KV usage p50=0.42 max=0.71 while 67 wait on capacity** = live proof the
+concurrency cap is the SSM/mamba pool, NOT KV (RC1/RC4 evidence for C1/C3).
+27/34 requests (79%) waited 160-640 s TTFT; token-level prefix-cache
+absorption 97.5% (726k/745k) — cache is near-perfect, the pool is the wall.
+- SOLO COLD seed114: 200 OK ttft=130.04 s (vs 101 s quiet baseline; delta =
+  live re-prefill contention, RC2/RC3).
+- battery_v64 (BATTERY_V64_DONE): parser T1/T2/T3 PASS; thinking A-D done;
+  v63/v64/v66 active checks done. XGRAMMAR section = the degeneration
+  record (below).
+- WEDGE DRILL 3x: `SUSTAIN_COMPLETE_NO_WEDGE (3 rounds)`, fence-hits=0 all
+  rounds. Round 1 exit=0 (87 min under load). Round 2 exit=1 — ROOT: probe
+  client socket timeout 900 s on p3-long, TTFT never arrived (queued behind
+  55-deep storm); NOT a wedge (engine alive, fence 0, traffic flowing).
+  Round 3 exit=0. drill_rc=0 recorded by chain.
+- SERIALIZED 24 (v88 acceptance, historically DEAD at 17): leg-1
+  `SURVIVED ok=9 fail=15` under PEAK storm (62.5% requests client-timed-out;
+  engine never wedged — the v88 class stays fixed); leg-2 `ok=21 fail=3`,
+  leg-3 `ok=22 fail=2` as the storm abated. Fail class = tiny 24-token
+  requests exceeding 20 s client ceiling under interleave.
+- burst_harsh a/b/c: 3x `SURVIVED ok=36 fail=0 resets_after=0` even under
+  load; dmesg engine resets 0 new; serve-log tracebacks 0.
+- GENSPEED legs (ran 18:10-18:14, fleet trickle 1-3 running): solo 35.8/
+  51.3/53.0 and async agg 15.87 (acceptance >=100) — LOAD-CONTAMINATED,
+  superseded by the morning quiet-window numbers (73.71 / 124.97) which
+  remain the W1 speed numbers of record. Quiet re-run set noted below.
+- POST-VALIDATE JIT RECHECK = 8 lines on a fresh-boot process: adjudicated
+  per KNOWN_ISSUES #28 (first-use LOADS). Decisive gate: triton cache
+  80 -> 80 through the ENTIRE day (boot, storm, drills, all batteries,
+  probes) = **cache-delta 0, prod JIT gate GREEN**.
+- C7 refusal + fp8 runtime resolution (e4m3fn/e5m2) informational legs OK.
+
+### XGrammar guided-JSON degeneration — ADJUDICATED load-correlated (WS-D)
+Full ladder measured in one day on ONE posture (v1.2.26 swift):
+- QUIET (morning): clean JSON (`Elara Vane`, 342).
+- 7-STREAM load: degenerate digit runs (`temperature_c:
+  222.5289999…` 70+ digits, `age: 3428742383873…`) with finish=length
+  traps, JSON_PARSE_FAIL; walls 100-168 s. battery_v64 storm section: 10
+  attempts → 2 digit-traps + 1 semantically-garbage-but-parseable + 5
+  timeouts + 1 more trap = ZERO clean.
+- 55-67-DEEP storm: 3/3 storm-legs produced NO response inside 300 s
+  (not even first token).
+- LIGHT load (queue 2-4/0, evening): legs 1-2 → 6/6 completed responses
+  `finish=stop` and PARSED (4 fully clean; 2 long-but-terminated ~20-digit
+  floats on temperature_c specifically — the field the schema leaves
+  unconstrained; name/age always clean). 0 digit-traps. (Leg-3 produced no
+  data: outer timeout 600 s killed it as the fleet resurged.)
+VERDICT: degeneration is a function of contention, not of the posture —
+progressive degradation quiet→clean, mid→long floats, storm→digit traps,
+deep-storm→no response. Certification NOT blocked; added as WS-D program
+item (guided-sampling correctness under storm scheduling; ties to RC3
+budget starvation). A true QUIET-lane x3 remains owed before ship-gate
+sign-off (bundle with the quiet re-run set).
+
+### Fairness probe — probe defect found AND fixed + RC2/RC3 evidence
+probe_fair_v63.py crashed in-chain (`AttributeError: 'Event' object has no
+attribute 'err'`): decoder result was attached as attributes on the done
+Event only when the 4096-token decode FINISHED; under load it outlives the
+600 s wait. FIXED (result dict + bounded 5 s wait + still-running reported,
+not crashed; backup probe_fair_v63.py.pre_v127; fix verified FAIR_V63_DONE).
+Fixed probe re-runs under serial24+fleet: 106k fresh prefill (max_tokens 8)
+`code=200 ttft=-1 timed out at 420 s` TWICE — vs 130 s solo-cold 100k. The
+concurrent decode stream ran 0.31 tok/s with 8-18 s inter-token gaps (pre
+0.0/s: TTFT of a 30-token prompt >6 s under load). RC2+RC3 compounding
+live: v63 contended budget splits prefill throughput so a fresh 106k
+prefill starves past 7 minutes under interleave. Clean v66 verdict needs
+the quiet re-run (the v126 green run was quiet-lane).
+
+### Fixes shipped this window (beyond measurement)
+- **A3 watchdog rewired** (watchdog_rewire_v1227.sh): relaunch repointed
+  repro_bootV1226_prod.sh → /root/build/v127_stage/boot_v1227_restore.sh
+  (a lane death would have resurrected the WRONG v126 posture);
+  watchdog_v2_drift_check.sh wired into the 60 s loop (every 10 cycles);
+  verified `V1227_DRIFT_NONE posture=swift` live; backup .pre_v1227.
+- **chain_watcher_v127.sh** deployed (setsid; 120 s progress lines to
+  v127_stage/chain_watch.log, 6 h cap, self-terminates on chain end) —
+  survived-context continuity for the long battery.
+- **litellm WS-F audited** (config only, change staged for its own window —
+  restart would drop user CC traffic): local qwen entries request_timeout
+  420 + global num_retries 1 + z.ai fallback = the RC6 amplifier (a timed-
+  out 100k prompt re-queues once). Per-entry num_retries: 0 change staged.
+- **CC fleet launcher** (cc_fleet_launch.sh): --model and ANTHROPIC_MODEL
+  both reject custom gateway names client-side (unrecognized_model, CLI
+  2.1.278); alias+ANTHROPIC_DEFAULT_{OPUS,SONNET}_MODEL remap resolves but
+  post-resolution allowlist still rejects. User ran their own instances
+  instead (their traffic = the live fleet this window measured). 6 orphaned
+  launcher instances (fell back to default model after the error, were
+  timing out into the storm) killed by PID — user instances untouched.
+
+### Traps re-hit and re-confirmed (all in-session, all fixed)
+grep -c double-print (KNOWN_ISSUES #28) reproduced inside my own
+chain_watcher (grep -c || echo 0 printed 0 twice); pkill/pgrep -f
+self-match through plink twice (killed its own session / skipped its own
+launch — bracket-trick [e] pattern is the standing defense); python block
+buffering through pipes ate TWO probe runs (drill sustain_warmup.out stale
+by design; replay leg-1 lost to timeout+tail — always `python3 -u` when
+piping); $(...) inside plink double quotes expands locally (quoting law
+re-confirmed — host-side script files only).
+
+### W1 verdict + carried items
+POSTURE: engine survival GREEN under the heaviest live storm yet recorded
+on this lane (0 wedges, 0 fence hits, 0 resets, 0 tracebacks, cache-delta
+0, preemptions 2 all day); correctness recovers when load drops; quiet
+speed = banked class. CERTIFIABLE-PENDING the quiet re-run set:
+{fair_v63, serial 24/24, x3 xgrammar, genspeed legs} — one quiet window,
+~30 min, before any ship-gate claim. WS-B telemetry + drift guard LIVE and
+battle-proven (6 waiting_storm tarballs auto-captured). Next windows per
+plan: W2 = C2 gmu 0.85 leg + M0 live scales (rides W2 boot) + D1 mnbt
+16384; WS-F litellm change with user coordination; weeks = M1/M2/M3.
+
+### P34 addendum — cc_fleet_replay LIVE-LOAD BASELINE (W1 close-out)
+Instrument first: run-1 (timeout 1500) died with an EMPTY log — the script
+prints nothing until its final report, and a stream ABORTED on first
+request exception. Fixed in v127_stage/cc_fleet_replay.py (repo copy =
+perf-v127/): per-request flushed progress lines + continue-on-timeout per
+turn + None-ttft guard in the progress print. Run-2 (timeout 3600) still
+hit the window edge (exit 124, report JSON unwritten) but the progress
+lines carry the full baseline — 24 requests, turns 0-3 of 8, alongside
+the live user fleet (queue 6-8 throughout):
+- Turn-0 TTFT (fresh ~20k prefills, 6 streams near-simultaneous):
+  46.2 / 44.9 / 155.4 / 244.4 / 333.7 / 441.7 s — monotonic admission
+  serialization (RC3 in its purest form).
+- Turns 1-3 TTFT (prefix should be ~fully cached, only +2k fresh):
+  130-496 s — NO visible prefix benefit at TTFT scale. With token-level
+  absorption 97.5 %, TTFT under load is dominated by QUEUE WAIT behind
+  other prefills, not by this request's own compute — the cleanest
+  single number for WS-D head-of-line work.
+- Generation: 163-179 tokens/turn over 545-1080 s decode windows =
+  0.25-0.34 tok/s PER STREAM (reproduces the morning's 0.31 tok/s RC2/RC3
+  finding with per-request data); ~170 tok/turn uniform truncation at
+  max_tokens=800 remains unexplained (finish_reason not captured — note
+  for the quiet-window rerun; does not affect TTFT/TPOT validity).
+- VERDICT vs plan bar (p99<20 s, max<45 s): LIVE-LOAD FAIL by an order
+  of magnitude — this is the "before" baseline for WS-C/WS-D, exactly
+  what the program targets. Gate-eligible replay runs quiet, post-fix,
+  8 streams x 50k per the acceptance definition.
+Engine through both runs: 0 wedges, 0 resets, preemptions stayed 2,
+cache-delta 0, drift_lines 0.
+
+Evidence artifacts (telemetry directive): machine-readable baseline =
+`/root/build/v127_stage/cc_replay_W1_baseline.json` (host) with repo copy
+`vllm/patches/prod/perf-v127/cc_replay_W1_baseline.json` — reconstructed
+verbatim from the flushed per-turn lines (status PARTIAL, 21/24 rows:
+t2 missing s4, t3 missing s3/s5). Aggregates: TTFT n=21, mean 309.9 s,
+p50 325.0 s, max 496.4 s; per-turn means t0 211.1 / t1 304.7 / t2 401.4
+(n=5) / t3 351.7 (n=4) s; decode 0.25-0.34 tok/s per stream.
+
+## P35 — W2-A: C2 gmu 0.85 leg (KEEP) + user directive NO-STOP
+2026-09-30 20:35-20:52. Prepped: watchdog stop+disable for the window
+(systemctl stop alone does NOT survive reboot — it re-enabled and started
+at boot; caught at 20:35 before it could race a default-knob relaunch).
+Host reboot 20:31 (standing hygiene). Boot W2A_GMU: swift posture,
+gmu 0.85, mnbt 8192 (single-variable), health 200 at 20:39 (fast boot —
+52 GB weights page-cached from pre-reboot). EVIDENCE: GPU KV cache
+497,499 -> 589,345 tokens = +18.45 % (boot log vs bootV1227_W1.log);
+max concurrency @262k 1.90x -> 2.25x. Battery (w2_leg_battery.sh, live
+fleet load queue 5-6): sanity direct 200/stop/'OK'; litellm /v1/messages
+stop=max_tokens empty text = documented small-max_tokens-inside-thinking
+pattern (benign); SERIALIZED 24/24 SURVIVED (v88 acceptance); solo
+genspeed 25.1/9.3/38.7 + async 93.36 agg (load-contaminated, quiet
+re-runs owed standing); xgrammar 3/5 parsed — t2-run1 CLEAN at 3.0 s +
+alt 2/2 clean, t2-run2/3 degenerate digit-runs under load = same
+load-function signature as W1 (WS-D, not a knob regression); envelope at
+poll: waiting capacity=0 deferred=0; serve log Traceback/ERROR count 0.
+VERDICT: KEEP gmu 0.85 — capacity +18.45 % with zero stability cost.
+Traps: boot script expected patch_scaled_space_v127.py at stage root but
+it lived in scaledspace/ (staged a copy — V1227_SCALEDSPACE leg would
+have aborted); t2_xgrammar_probe.py takes no 'alt' arg (my battery's
+second invocation tracebacked — probe runs both t2 x3 + alt x2 in one
+call); plink sessions holding on `&` launches (setsid+log redirect is
+correct, the wrapper plink hang is cosmetic).
+**USER DIRECTIVE 20:52 (binding): DO NOT STOP the running vLLM instance
+— no reboots, no lane boots until lifted. W2-B (D1 mnbt 16384) and the
+M0-live collection boot are DEFERRED to a sanctioned stop window.
+Proceeding without stopping the lane: (1) deep stall analysis from WS-B
+telemetry, (2) WS-F litellm proxy fix (separate container — not the vLLM
+instance), (3) M2 weeks-scale scaled-space fp8 SSM kernel project start
+in builder containers (CPU compile; tiny GPU probes only).**
+
+## P36 — M2 scaled-space e4m3 spec kernel: authored, integrated, v132 build
+2026-09-30 21:00 – 2026-10-01 (continuing). Lane untouched throughout
+(health 200 verified at every check; all builds CPU-only in esimd-inc).
+WS-F F1 CLOSED first: wsf_litellm_local_retry0.py pinned num_retries: 0
+on the 5 local litellm entries (RC6a amplifier — an aborting client can
+no longer double-queue a 100k prefill), config-edit-only path, no
+recreate of the unless-stopped proxy.
+
+M2 IMPLEMENTATION (repo perf-v127/scaledspace/ + build tree):
+- `gdn_conv_fused_seq_spec_scaled.h` (21,969 B): sibling of the
+  production spec kernel (523-line reference re-read in full). e4m3-only
+  concrete types (no StateT template); `m2_scaled_load_64/_store_64`
+  wrap the P29A c10-parity e4m3 primitives with per-(hv,k) scale/inv;
+  scales preloaded ONCE per WG before the t-loop (sc_lo/sc_hi =
+  block_load 2x64 of the [HV,K] row; inv computed in-register
+  simd<float,64>(1.0f)/sc — same IEEE op as the harness → bitwise
+  comparability); P29A fp32 register chain unchanged (kFp8Chain always
+  true here); P29B-FIX snapshot stays a raw BYTE gather, snapshot rows
+  decode with inv_scale in-kernel; host fn TORCH_CHECKs H=8, HV=16|24,
+  K=V=128.
+- Wrapper `esimd_gdn_conv_fused_seq_spec_scaled` (pybind schema =
+  production spec + `Tensor ssm_scales` [HV,K] fp32 contiguous after
+  `scale`): metadata-only checks — value checks (finite/>0) live at M0
+  calibration, `.item()` on the forward path would sync the device
+  (READOUT LAW, recorded in a code comment).
+- STORAGE CONVENTION (M1==M2): stored = e4m3(h*scale[hv,k]); gather
+  h = load(byte)*inv. Pools byte-compatible between M1 bridge and M2
+  kernel. M0 CLAMP-POLICY DELTA discovered + recorded: current
+  calibrate_offline.py clamps scale=min(1.0,…) (M1-era overflow guard)
+  → never scales UP small features → cannot fix P23F; M2 policy drops
+  the clamp (dead-feature runmax floor stays). Kernel accepts any
+  positive finite scales; policy edit lands at M3 bake. Harness
+  derive_scales implements the M2 policy.
+- `m2_install.py` idempotent installer — TWO REAL FAILURES FIXED:
+  (1) binding block anchored via `text.rfind("}")` → landed AFTER
+  PyMODINIT, out of TORCH_LIBRARY_FRAGMENT scope → icpx "use of
+  undeclared identifier 'm'" ×2 (torch_extension_lgrf.cc:74,84);
+  fix = anchor on the last in-fragment m.impl
+  (`&esimd_gdn_conv_fused_seq_spec_dbg);`) + misplaced-block repair.
+  (2) skip-guards keyed on label text that never appears in file text →
+  duplicates on repair rerun; fix = exact-content insert_once/patch
+  guards (collapse duplicates, keep first). Tree verified: 1 include
+  (esimd_kernel_lgrf.sycl:17), 1 wrapper (:367), 1 kops decl, 1 binding
+  in-fragment (:61–72, PyMODINIT :81); production symbols byte-untouched.
+- `build_esimd_v132.sh` (v130 pattern): log tail -300 + explicit
+  `grep -m4 -B2 -A8 "error:"` block (first run's tail -60 hid the icpx
+  error behind the python traceback — lesson); symbol proof (scaled ≥2,
+  prod present); stage /root/build/v132_so/; KERNELS_MAX_JOBS=52;
+  "swap into any lane is a SEPARATE manual step" (no-stop compliant).
+- `m2_scaled_harness.py` gates: A identity-at-unit-scale (scaled(1)
+  BITWISE == production op: out/z/pool bytes), B boundary idempotence
+  (decode*inv re-encode == same byte; fp32 boundary flips <1e-5 rate +
+  one-grid-step adjacency — strict bitwise was unattainable by
+  construction), C end-to-end superiority (stratified per-feature runmax
+  1e-3..30 = P23F regime; scaled err vs fp16 truth ≤ raw e4m3, mean AND
+  max), D storage superiority (FRESH encodes — C runs mutate pools).
+  Self-review fixed pre-run: scaled runs must start from BRIDGE-ENCODED
+  pools e4m3(h·s) not raw e4m3(h) (storage-convention violation →
+  garbage-scale outputs); D originally compared identical runs.
+- `M2_DESIGN.md` rev with the M0 clamp delta + measurement-over-belief
+  success criteria (if scaled-space cannot beat the fp16 pool on
+  quality, project records the measurement and stops).
+
+v132 BUILD: first launch FAILED (binding scope, above). Relaunched
+2026-09-30 21:14:53: install rc=0, marker counts clean, env ready
+(torch 2.11.0+xpu, icpx 2025.3.3), compiled CLEAN in ~3.5 min (error
+block empty) — but the script printed M2_V132_BUILD_DONE over an EMPTY
+stage dir: the cp ran the CONTAINER path (/src/esimd/…) on the HOST →
+silent fail under `set -uo pipefail` (no -e). **Gate-script law
+re-hit: verify the ARTIFACT, never the marker.** Staged manually from
+the host path `$TREE/build/lib.linux-x86_64-cpython-312/
+custom_esimd_kernels_vllm/custom_esimd_kernels_lgrf.cpython-312-
+x86_64-linux-gnu.so` → `/root/build/v132_so/custom_esimd_kernels_lgrf.so`
+(112,607,648 B) sha **efb53befef78e33fc48a7471ad253d4c6b173d7897c5083
+49707c657b0c9d137** (byte-identical to the in-container build).
+Symbols: nm -D under hidden visibility exports only the pybind
+wrappers — `_Z36esimd_gdn_conv_fused_seq_scaled…` T (scaled),
+`_Z34esimd_gdn_conv_fused_seq_spec…` T (production, additive-untouched),
+PyInit 1. build_esimd_v132.sh FIXED in repo+host (host-path staging +
+`[ -s ]` artifact gate; symbol-proof comments corrected — the old
+`\b` patterns matched 0 because mangled names continue with word
+chars).
+
+HARNESS RUNS (throwaway GPU container; lane live the whole time —
+health 200): the base omix image has NO /opt/venv (the torch venv is
+esimd-inc's WRITABLE layer) → `docker commit esimd-inc m2runner:v132`
+then run committed image with `--device /dev/dri` (xpu available, 2
+devices). Two harness defects fixed before verdicts (mine, not the
+kernel's): (1) stray `ssm_state_indices` kwarg — production schema is
+20 args; (2) GATE-B analysis mixed XPU pool with CPU scales → moved
+host-side; (3) stratified `mag` shape [HV,1,1,K] right-align-broadcast
+HV onto NSS (12 vs 16) → **the stratified leg CRASHED in run 1-2 = it
+never ran**; correct shape [1,HV,1,K]. Run 3 = **M2_HARNESS_PASS, all
+7 gates**:
+- A identity-at-unit-scale: BITWISE (outputs, z_out, pool bytes) —
+  the transplant is exact.
+- B boundary idempotence: mism=0 BOTH regimes (decode·inv re-encode ==
+  same byte everywhere — convention round-trip perfect).
+- C end-to-end STRICT strat: mean 0.00588 vs raw 0.00600 ✓, max 0.1758
+  vs 0.1797 ✓ (output error vs fp16-pool truth).
+- D storage STRICT strat: mean 0.020134 vs 0.020308 ✓, **max 1.5730 vs
+  1.9688 = 20 % better** — the P23F small-feature flush tail, fixed.
+- Unif legs = parity band 1.05 (same relative grid both formats; strict
+  ≤ there is a seed coin-flip — mean diff observed 1.9 % C / 0.06 % D,
+  max BETTER on both; band rationale documented in the harness).
+- Speed spot 37.5 vs 47.7 ms/launch = **CONTAMINATED, NO VERDICT** —
+  the throwaway container queues behind the live lane on the same GPU
+  (no-stop directive by design); quiet-window bench owed at M3 pre-ship
+  (SHIP-MEASUREMENT LAW).
+
+M2 STATUS: kernel proven correct + superior on the P23F regime at the
+op level. NOT on any lane (additive op; swap = separate manual step,
+sanctioned window only). Next in program: M1 validation leg + M0 live
+scales + M3 bake (all need windows); speed adjudication + superiority
+matrix vs banked fp16 pool +30.2 % agg4x256 bar at M3 pre-ship.
+m2runner:v132 image retained for future probes.
+
+
+## P37 — INCIDENT: 22:13 GPU wedge (lane dark 6 h 36 m) + WS-D D4/D2 measurement
+2026-10-01 04:33-05:10 UTC. Continuation turn found the lane DEAD; full
+adjudication, recovery, and the two in-window WS-D measurements.
+
+**Incident timeline (all UTC, evidence /root/build/serve_live.log tail +
+telemetry/recorder.log):**
+- 22:13:33 — EngineCore `TimeoutError: RPC call to execute_model timed out`
+  → EngineDeadError → APIServer shutdown cascade; workers told to stop.
+- 22:14:12 — Worker_TP1: "XPU shutdown drain did not finish in 15 s (device
+  wedged?); abandoning it. The host may need a reboot before the next
+  vLLM start."
+- 22:18:34 — Worker_TP0 step watchdog: execute_model on rank 0 ran 601 s
+  (timeout 600 s, VLLM_WORKER_STEP_TIMEOUT_S), "device likely wedged (hung
+  kernel / driver stall)… the xe driver may be poisoned: stop all GPU
+  processes and reboot the host before restarting vLLM" → worker killed.
+  Class = the v88/wedge lineage (pre-dates gmu legs). Wedge landed +1 h 38 m
+  into the gmu-0.85 W2-A posture, under post-replay live fleet storms.
+- 22:13→04:33 — LANE DARK ~6 h 20 m + detection gap. WS-B telemetry WORKED:
+  recorder logged scrape errors #1→#2280 (Connection refused) the whole
+  time and metrics_20260930.jsonl stopped at 22:13 exactly. The gap was
+  ACTOR-side: lane-watchdog stopped+disabled per the no-stop window (P35),
+  so nothing converted the signal into a restore. Lesson: disabling the
+  watchdog for a "no-stop" window inverts its purpose — the window's
+  premise (lane alive) must itself be guarded.
+**Recovery (engine-mandated path):** verified no GPU procs held /dev/dri →
+host reboot 04:42 → xpu-smi: both B70 devices State normal →
+`boot_v1227_restore.sh INC01` with `V1227_POSTURE=swift V1227_GMU=0.85`
+(designated KEEP posture; first launch rc-failed on missing MODE tag —
+script takes `<MODE>`, watchdog passes `WD_<ts>`). Result:
+HEALTH_OK ~190 s (warm page cache), **GPU KV cache 589,345 tokens**
+(gmu 0.85 exact), max concurrency @262k 2.25×, posture verified on live
+cmdline, BOOT_V1227_RESTORED posture=swift 04:49:13. Telemetry resumed on
+metrics_20261001.jsonl (fresh counters), recorder+scope re-armed by boot
+script, serve-live capture tailer re-attached.
+**Watchdog RE-ARMED** (`systemctl enable --now lane-watchdog` → active):
+the no-stop window ended de facto at 22:13; directive intent (lane alive)
+is now guarded by Layer-4 incl. drift check.
+**C2 annotation (gmu 0.85 KEEP):** verdict stands but now carries ONE wedge
+event at +1 h 38 m. Not proven causal (wedge class pre-dates gmu legs; W1
+saw 0 wedges at 0.8 but wedgefix-v60 exists because 0.8 postures wedged
+too). RECURRENCE TRIGGER recorded: a second wedge on the 0.85 posture ⇒
+demote the leg to 0.8 by measurement (no belief, either direction).
+
+**D4 — GDN 4096-token granularity recompute share (measurement gate):**
+run over the full metrics_20260930.jsonl (3,186 intervals, 13:03→22:13,
+11,721 requests). Absorption 85.4 % (cached 40.0 M / computed 6.84 M tok);
+computed/request 583.4 vs new-suffix floor 439.3 (gen 139.3 + 300 static)
+→ recompute excess 144.1 tok/req = **24.7 % of computed ≥ the 15 % bar**.
+Storm vs quiet: computed/request 2,138.6 vs 400.6 (5.3×) — the excess
+concentrates exactly in waiting periods. THEORY CROSS-CHECK: fleet mean
+prompt ≈ 4.0 k tok (not 20-50 k) — the 2,048/turn GDN-snap model describes
+the big-session MINORITY, not the mean request. VERDICT: BAR EXCEEDED, but
+attribution between GDN-snap recompute and eviction re-prefills is
+unresolvable from aggregate counters — next step is a cheap per-request
+split leg (prompt_len, hit, computed, mod-4096 regression) BEFORE any
+weeks-scale kernel commitment. Artifact:
+`/root/build/v127_stage/d4_d2_measurement_20261001.json` (repo copy
+`perf-v127/`, builder `d4_d2_measurement.py`).
+
+**D2 measurement half — v66 firing + waiting traces:**
+- v66 IS firing at starve_s=2.0: 81 `V66_FAIRFIX_ACTIVE` lines in
+  serve_live.log (e.g. 19:08/19:38/20:03 pre-W2A, 20:40/21:10/21:40
+  post-W2A pid=515; waiting=1-2 at fire time, bypass 750→850→1→50→100).
+- Waiting>0 in 51.2 % of intervals, ALL capacity-class (max waiting 67 =
+  max capacity-wait 67; deferred 0 throughout) — C1 (SSM-pool cap)
+  corroborated at fleet scale. Max running 12. KV p50 0.478 / max 0.998.
+- TTFT distribution (11,721 req, cumulative): ≤1 s 16.5 %, ≤5 s 48.2 %,
+  ≤20 s 72.0 %, ≤40 s 78.7 %, ≤160 s 89.4 %, ≤640 s 99.93 % — median ≈5 s,
+  **21 % of requests >40 s, 10.6 % >160 s** = the storm tail WS-D attacks.
+  (Bucket counters are cumulative; script normalizes by the +Inf delta.)
+- Preemptions through the window: 2 (matches W1 replay observation).
+
+## P38 — USER DIRECTIVE: C2 gmu 0.85 NOT-EXECUTE + revert to 0.8 + W1 quiet set CLOSED (certified)
+2026-10-01 05:04-05:30 UTC. User directive: mark the C2 gmu 0.85 leg
+NOT-EXECUTE — wedge-crash attribution (the 22:13 v88-class wedge landed on
+the 0.85 posture at +1 h 38 m). Plan flipped in all three places (status
+ledger, WS-C table, W2+ window schedule); gmu 0.88 leg MOOT (same
+attribution, higher pressure); historical measurement retained for the
+record (+18.45 % KV while it ran). C3 (scaled-space halving) remains the
+capacity path.
+
+**Revert:** `boot_v1227_restore.sh REV08` (V1227_POSTURE=swift, default
+gmu 0.8) — HEALTH_OK ~160 s, **KV 497,499 tok, concurrency @262k 1.90×**,
+posture verified, BOOT_V1227_RESTORED 05:07:05, health 200. Watchdog
+ACTIVE and its restore path defaults to 0.8 — every future auto-restore
+honors the directive by construction.
+
+**W1 quiet re-run set (the owed certification set) — ALL GREEN on the
+reverted posture, fleet fully quiet (running=0 waiting=0):**
+- ADMISSION (fair_v63/v66 gate, probe staged into container — the
+  quiet-legs script's docker-exec path needed the file docker-cp'd):
+  **verdict=PASS**, TTFTs 6.89/7.92/8.67 s, 3 decode sessions × 4000 tok
+  complete.
+- SOLO genspeed 1×1024 ×3 + battery ×3: 72.81/73.40/73.65/73.71/73.72 —
+  **dead-on the 73.71 quiet bank**.
+- ASYNC genspeed 4×1024: **173.71 tok/s aggregate = new quiet record**
+  (bank 124.97; the first 82.04 spot was ramp noise — 11.4 s wall incl.
+  warmup vs 4.9 s on the record run).
+- SERIALIZED 24 ×3: **72/72, health 200 throughout** (v88 wedge
+  acceptance class).
+- SANITY direct :8000 = 200/'OK'; litellm :4000 /v1/messages spot returns
+  empty text at max_tokens=64 — thinking-model artifact at tiny budgets,
+  the full CC battery (phase G of the bake round) is the operative gate.
+- XGrammar-2: SUPPORTED — zero FSM/backend errors, all HTTP 200.
+  **Quiet-lane degeneration measured: 4/11 t2 runs** (number-field
+  length-collapse: grammar-legal unbounded digit emission at the probe's
+  DEFAULT temperature 1.0, finish=length at max_tokens 2048). REFINES the
+  W1 "load function" attribution: a load-independent stochastic component
+  is confirmed at default sampling temp. WS-D item; does not block
+  certification (support + crash-free is the standing requirement), but
+  the rate is now on the record for the WS-D fix leg.
+
+**VERDICT: W1 CERTIFICATION COMPLETE — llm-scaler-exp:v1.2.26 swift-fp8
+posture @ gmu 0.8, spec MTP×4 + XGrammar-2 0.2.7, is the certified
+production posture.** Evidence: lce1/quiet_legs_W1.log,
+lce1/w2battery_REV08Q.txt, lce1/quiet_extra_REV08Q.log.
+
+## P39 — D1 mnbt 16384 leg: MEASURED, REJECTED (rollback to 8192)
+2026-10-01 05:31-05:50 UTC. Compact same-geometry A/B (cc_fleet_replay
+4 streams × 50 000 ctx × 2 turns, max_tokens 256, stagger 5 s, quiet
+fleet, gmu 0.8 posture; both legs errs=0):
+
+| metric | mnbt 8192 (control) | mnbt 16384 | verdict |
+|---|---|---|---|
+| TTFT p50 | 103.26 s | 119.26 s | +15.5 % WORSE |
+| TTFT p90/p99/max | 215.48 s | 215.43 s | equal |
+| TPOT p50 | 142.3 ms | 265.2 ms | +86 % WORSE |
+| worst inter-token gap | 4 717 ms | 12 959 ms | 2.75× WORSE |
+| aggregate | 2.07 tok/s | 1.93 tok/s | −6.8 % |
+| prefill cache hit | 47.99 % | 48.17 % | equal |
+| KV cache size | 497 499 tok | 424 788 tok | −14.6 % |
+
+**Mechanism:** mnbt = the maximum time one prefill chunk can stall
+concurrent decode. A 16 384-token chunk at ~1.25 k tok/s prefill blocks
+decode ~13 s (measured worst-gap 12 959 ms) vs ~4.7 s at 8192 — TPOT
+p50 nearly doubles for the CC fleet's overlapped prefill/decode phases.
+The doubled activation/workspace also costs 72 711 KV tokens (−14.6 %
+capacity, concurrency 1.90×→1.62× @262k). Per-request: t0 cold-50k
+TTFTs all slower (69.9/119.3/175.4/215.4 vs 52.0/103.3/156.5/215.5);
+t1 cached re-prefills modestly faster (123.4/85.8/10.6/6.6 vs
+152.5/98.5/53.4/6.5) — nowhere near worth the decode regression.
+
+**VERDICT: REJECTED by the no-degradation law — mnbt stays 8192.**
+W2-B closed by measurement. The replay's printed CC_REPLAY_FAIL on both
+legs is the full-fleet absolute gate (p99<20 s) applied to this
+deliberately-extreme 4×50k probe — the leg gate is the A/B delta, both
+legs identical geometry. Knob landed verified on live cmdline
+(`--max-num-batched-tokens 16384`, ps on engine pid 517). Evidence:
+lce1/d1_ctrl_8192.log, lce1/d1_mnbt_16384.log,
+v127_stage/cc_replay_D1CTRL.json, cc_replay_D1MNBT.json,
+boot_d1mnbt.log (HEALTH_OK ~160 s, BOOT_V1227_RESTORED 05:34:32).
+
+## P40 — D2 v63 contended-budget 4096 leg: MEASURED, REJECTED (baked 1024 stays)
+2026-10-01 05:44-06:03 UTC. Identical compact A/B (4×50 000 ctx ×2 turns,
+max_tokens 256, stagger 5 s, gmu 0.8, mnbt 8192 both legs; v63 injected
+via docker -e, verified in engine /proc environ `V63_CONTENDED_BUDGET=4096`;
+control = baked floor 1024, D1CTRL leg):
+
+| metric | v63 1024 (control) | v63 4096 | verdict |
+|---|---|---|---|
+| TTFT p50 | 103.26 s | 109.12 s | +5.7 % worse |
+| TTFT p99/max | 215.48 s | 220.60 s | +2.4 % ≈equal |
+| TPOT p50 | 142.3 ms | 171.1 ms | +20.2 % WORSE |
+| worst inter-token gap | 4 717 ms | 4 966 ms | +5 % ≈equal |
+| aggregate | 2.07 tok/s | 2.02 tok/s | −2.4 % |
+| prefill computed/cached | 300 712 / 277 504 | 300 712 / 277 504 | byte-identical |
+
+**Mechanism:** the contended budget packs more decode work per scheduled
+step; at this fleet's batch sizes the 1024 floor was never the binding
+constraint, so 4096 only lengthens each step (TPOT +20 %) — echoes the
+v89 T1 finding (512 → no gain) from the other side: 1024 is the optimum,
+the v1222 baked floor guard (`if 0 < V63 < 1024: = 1024`) plus this leg
+bracket it from both directions.
+
+**VERDICT: REJECTED by the no-degradation law — v63 stays baked 1024.**
+Evidence: lce1/d2_v63_4096.log, v127_stage/cc_replay_D2V63.json,
+boot_d2v63.log (HEALTH_OK ~150 s, KV 497 499 restored = mnbt-8192
+rollback confirmed by capacity, BOOT_V1227_RESTORED 05:46:08).
+
+## P41 — D2 v66 starve 5.0 leg: MEASURED, REJECTED (baked 2.0 stays) — D-knob program CLOSED
+2026-10-01 05:53-06:20 UTC. Identical compact A/B (4×50 000 ctx ×2 turns,
+gmu 0.8 / mnbt 8192 / v63 baked 1024 both legs; v66 injected via new
+V1227_V66_STARVE boot passthrough → docker -e
+VLLM_V66_PREFILL_STARVE_S=5.0, verified in EngineCore /proc environ;
+control = baked 2.0 = D1CTRL):
+
+| metric | v66 2.0 (control) | v66 5.0 | verdict |
+|---|---|---|---|
+| TTFT p50 | 103.26 s | 110.15 s | +6.7 % worse |
+| TTFT p99/max | 215.48 s | 224.71 s | +4.3 % worse |
+| TPOT p50 | 142.3 ms | 158.2 ms | +11.2 % worse |
+| worst inter-token gap | 4 717 ms | 4 783 ms | +1.4 % ≈equal |
+| aggregate | 2.07 tok/s | 2.04 tok/s | −1.4 % |
+
+**Mechanism:** raising the fair-fix starve threshold delays prefill
+admission for capacity-starved requests by 3 s per fire — pure added
+TTFT latency, no throughput compensation at this fleet geometry.
+
+**D-KNOB PROGRAM CLOSED (P39+P40+P41): every challenger measured and
+rejected — mnbt 16384, v63 4096, v66 5.0. The certified posture (mnbt
+8192 / v63 baked 1024 / v66 2.0 / gmu 0.8) is the measured optimum from
+both directions.** The bake round carries NO knob deltas; v1.2.27
+candidates are capability deltas only (dormant telemetry/scaled-space
+patches pending their validation legs). Evidence: lce1/d2_v66_50.log,
+v127_stage/cc_replay_D2V66.json, boot_d2v66.log (HEALTH_OK, KV 497 499,
+BOOT_V1227_RESTORED 05:58:37).
+
+## P42 — M0-live scale collection: COLLECTED + CALIBRATED (production scales banked; M1 leg armed)
+2026-10-01 06:20-06:40 UTC. Phase E of the fix-plan round. The M0-live
+runmax collector (m0_live_collect_v127.py, applied via
+V1227_M0LIVE=1) ran on the fp16 pool under the compact replay (4×50 000
+ctx ×2 turns) + a second traffic pass; harvest + calibration bank the
+PRODUCTION per-feature scales the M1 bridge and M2 kernel consume.
+
+**Collector anchor bug (fixed same round):** first attempt anchored the
+pool note on the fp8-only gather line inside the v126 dual-bridge block —
+it NEVER FIRES on the certified fp16 lane (the whole bridge block is
+behind `if _fp8_ssm:`). Anchor moved to dtype-neutral function entry
+(`ssm_pool = self.kv_cache[1]`, verified count==1); M0LIVE2 reboot
+engaged immediately: 16 pools per TP worker, both ranks.
+
+**Topology + harvest (live, both ranks merged):**
+- F = 393 216 features per pool = 24 heads × 16 384 K — matches the M2
+  kernel `ssm_scales [HV,K]` contract exactly.
+- runmax quantiles: p1 = 10.41, p50 = 45.56, p90 = 308.25, p99 = 1 216,
+  p100 = 6 924 (~3 orders of dynamic range across features — the reason
+  per-FEATURE scales, not a global scalar).
+- **7.63 % of live features (29 986) exceed the raw e4m3 ceiling 448** —
+  live confirmation of the P29 format-impossibility share that
+  scaled-space removes by construction.
+- Cross-rank ratio (TP2, disjoint head sets, one shared scales file):
+  p50 = 1.60, p90 = 4.70, max = 63.45.
+
+**Shared-vs-rank-keyed decision (made, documented): SHARED merged file.**
+Merging elementwise is safe by construction (scale ≤ optimal per
+feature — under-uses the grid, never overflows). The precision cost is
+bounded by the ratio and is SMALLER than it looks: e4m3 is floating
+point, so under-scaling by k× costs NOTHING in relative error (constant
+2^-4 half-step per binade) — only bottom-of-range denormal resolution at
+the 63× tail. Rank-keyed scales remain the documented M3 upgrade if any
+quality gate ever complains.
+
+**Calibration (no-clamp-up, M2_DESIGN §2 policy):** stored max 439/448
+(GUARD=0.98), clipped features 0, worst per-element storage error bound
+~432.75 state-units (= e4m3 half-step × runmax, i.e. ~2^-4 relative —
+the fp8 floor, not a design defect). Output staged:
+v127_stage/v127_scales_e4m3.pt (4.7 MB, F=393 216).
+
+**Pre-flight bridge hardening (caught before ever running live):** the
+no-clamp-up scales for small-runmax features reach 0.98·448/6.2 ≈ 4e5 ≫
+fp16 max 65 504. `_V127_SC` (scatter side) is now fp32 — safe because
+the product feeds only the `.to(fp8_e4m3)` cast, never a kernel input.
+`_V127_INV` (gather side, feeds the SYCL kernels) stays fp16:
+inv = runmax/439 ≤ ~11 and only enters the fp16 denormal tail below
+runmax ~2.6e-5 — negligible.
+
+**Boot-script trap caught pre-flight:** the SCALEDSPACE=1 leg staged
+patch + scales and sed'd the pool dtype to fp8_e4m3 but NEVER armed the
+`/root/.v127_scaledspace` marker — it would have booted a RAW fp8 pool
+with a dormant patch = the P23F/P23D wrong-answer mode (8.75-41.7 %)
+masquerading as an M1 leg. Marker touch added (armed before serve start;
+the patch refuses mid-capture arming by design).
+
+Evidence: lce1/m0live_replay.log, lce1/m0live2_replay.log,
+lce1/m0live2_traffic.log, lce1/w2battery_M0LIVE2.txt,
+lce1/m0live_calibrate.log, lce1/v127_m0live_apply.log, boot_m0live.log,
+boot_m0live2.log, v127_stage/m0live_merged_stats.pt (per-rank tensors
+preserved), v127_stage/v127_scales_e4m3.pt.
+
+## P43 — M1 scaled-space validation: MEASURED, REJECTED (quality) + the RECURRENCE-COMPOUNDING LAW — fp8-SSM-storage program CLOSED
+2026-10-01 06:39-07:10 UTC. Phase F. Leg: boot_v1227_restore.sh M1LEG with
+V1227_SCALEDSPACE=1 (v1.2.26 + fixed bridge patch + live-calibrated
+no-clamp-up scales + pool flipped fp8_e4m3). Boot clean: HEALTH_OK ~160 s,
+both TP workers printed `v127 SCALEDSPACE engaged: fmt=fp8_e4m3
+scales=393216 pool=(1040, 24, 128, 128)` (scales loaded during EAGER
+prefill, before graph capture — the mid-capture guard never fired), KV
+514 399 tokens = +16 900 (+3.4 %) vs the fp16 pool's 497 499 — the
+capacity prize of fp8 SSM storage, exactly in the v126-estimated band.
+
+**Two pre-flight script defects fixed this phase (neither affected the
+running leg):** (1) patch self-check asserted `_v127_load_scales` >= 3 —
+actual content has exactly 2 (call site + def); the file was written and
+py_compile'd BEFORE the assert, so the leg ran correctly — assert
+corrected to >= 2. (2) The boot script's `| tee` pipeline swallowed the
+patch exit status — added an explicit V127_SCALEDSPACE_OK/_ALREADY gate
+(exit 12). Also carried from P42: the missing `/root/.v127_scaledspace`
+marker touch (without it the leg would have been a RAW fp8 pool =
+P23F/P23D mode).
+
+**M1 battery results (p23f_probe mode A + forensics):**
+- MATH: 0/80 concurrent wrong, 0/80 serial wrong, 0 flips —
+  REPRESENTABILITY IS FIXED (the P29 over-ceiling share no longer
+  corrupts; v126 raw-fp8 measured 8.75-41.7 % concurrent-wrong on the
+  same class of check).
+- TOOLS: 30/30 SALAD — but of a NEW kind: finish=length, name=None,
+  thinking-style text — the budget artifact hypothesis was DISPROVEN by
+  the discriminator: T1/T2 with thinking OFF (math-leg kwargs) emitted
+  `<tool_call>\n<function=run!!!!!...` — correct syntax for ~25 chars,
+  then collapse into '!' runs.
+- FORENSICS (m1_forensics.py, full captures):
+  F2 count-1..60 = `1\n2\n3\n!!!!...` — collapse at decode step ~6;
+  F1 T1-thinkOff-300 = correct 25-char prefix then all-'!';
+  F3 T1-thinkOn-2048 = 2048 tokens generated, content AND reasoning both
+  empty at the API, name=None — degenerate sink.
+
+**CONTROL (identical posture, identical probe, pool fp16):** boot CTRL
+07:00 (KV 497 499 exact-certified): F1 = finish=tool_calls
+name=run_command at 45 tokens; F2 = perfect 1..60 finish=stop at 171
+tokens; F3 = finish=tool_calls at 75 tokens. The probe's thinkOff
+variant is a valid instrument and 300 tokens is ample budget — the M1
+collapse is REAL state corruption.
+
+**ROOT CAUSE — the RECURRENCE-COMPOUNDING LAW:** e4m3 carries 3 mantissa
+bits (+1 implicit) → round-to-nearest storage error ~2^-4 = 6.25 % per
+write-read roundtrip. The GDN state is RECURRENT — every decode step
+roundtrips the whole state through the pool, so relative error
+accumulates ~N*eps: at N≈6 steps ≈ 35 %, logits degrade → decode
+collapses into a degenerate token ('!'). Short-decode tasks (math
+answers in ≤5 tokens) finish before compounding bites; anything longer
+(tool syntax ~45 tokens, counting 60 lines) collapses. Scaling cannot
+fix it — per-feature scales repair the CEILING (P29: 7.63 % over-448
+features, now math-clean) but floating-point relative error is
+scale-invariant. Required storage precision for quality-surviving
+N-step decodes: eps*N ≲ 0.4 → at N=1000+, eps ≲ 4e-4 → ≥11 mantissa
+bits → **fp16 is the minimum viable recurrent-state storage** (matches
+the certified posture's measured-clean behavior under the live CC
+fleet). Contrast: fp8 KV cache survives because KV is NOT recurrent —
+attention reads never feed back through the stored values, so per-entry
+error stays bounded instead of compounding.
+
+**PROGRAM CONSEQUENCE:** M2 (native scaled-space kernel: same e4m3
+storage, in-register dequant) inherits the same floor → CLOSED.
+M3 (was conditional on superiority) → CLOSED. The banked +30.2 %
+agg4x256 speed prize of fp8 SSM storage is unreachable at acceptable
+quality with an 8-bit-float recurrent pool on this architecture.
+The scaled-space patch stays in-repo as a documented-rejected artifact
+and is EXCLUDED from the v1.2.27 bake (dormant-but-known-broken-when-
+armed code has negative value). The M0-live collector (pure telemetry,
+validated P42) IS the v1.2.27 capability delta.
+
+Evidence: boot_m1leg.log (engaged lines both ranks, KV 514 399),
+boot_ctrl_fp16.log (KV 497 499), lce1/m1_p23f_A.log (MATH 0/80+0/80,
+TOOL 30/30 salad), lce1/m1_tool_discriminator.py output in transcript +
+lce1/m1_forensics.log vs lce1/ctrl_forensics.log (side-by-side F1/F2/F3).
+
+## P44 — Phase G full testing suite on the certified v1.2.26 lane: ALL GREEN (07:08-08:31 + CC 08:31)
+
+Posture under test: llm-scaler-exp:v1.2.26 (production), fp16 SSM pool +
+fp8_e4m3 KV, gmu 0.8, all knobs baked defaults, async + barrier 0, spec
+MTP x4, XGrammar-2 0.2.7, parser qwen3_coder. Driver
+validate_v1226_run.sh (launched 07:08, setsid-detached; evidence lands in
+the internal _v1226_*.txt files, NOT the tee'd log — standing quirk; the
+stale-file trap was caught: sustain/p23fB first read as "done" were
+YESTERDAY's ship-time leftovers, distinguished by mtime).
+
+- SANITY + ADMISSION: PASS (admission c0 ttft 13.30s, c2 8.47s; V123
+  posture async-engaged, barrier "False False 0", RPC 60000; V125 code
+  deltas opsall=1 c7>=1 fixline=1; v124 runtime fp8 resolution OK;
+  C7-on-lane refuse_rc=1 with the v126 message, unset-import clean).
+- SOLO COLD seed114 34k: code=200, ttft 96.29s (parity with lineage).
+- WEDGE DRILLS 3x14-phase: SUSTAIN_COMPLETE_NO_WEDGE, fence-hits 0.
+- FAIRNESS V66/V63 probe under 106k prefill: big 200, decode 961 tok
+  clean, gaps during steady 0.06s (max 3.63 at window edge), post 0.
+- SERIAL24 x3: 24/24 + 24/24 + leg3 24/24 (ok=24 fail=0 each).
+- BURST_HARSH a/b: 36/36 each, resets_after=0; dmesg new engine resets 0.
+- PARSER battery (engine-direct, qwen3_coder): T1 flat-tool PASS
+  (run_command + args), T2 nested-tool PASS (list n=1), T3 plain PASS.
+- GENSPEED: solo 1x1024 72.48/73.55/73.55 tok/s (sync-parity floor 70 ✓);
+  async 4x1024 aggregate 181.80 tok/s (gate >=100; banked posture number
+  149.80 came from the longer-window ship probe — this battery's r0 window
+  is shorter; both far above gate).
+- P23F QUALITY A/B: [A fresh] MATH 0/80 wrong, serial 0/80, flips 0, TOOL
+  30/30 clean (73s); [B post-battery prefix] MATH 0/24, TOOL 30/30 clean
+  (47s) — no degradation through the whole battery.
+- JIT/CACHE: recheck lines 8 (= first-use loads, monitor semantics per
+  KNOWN_ISSUES #28), cache 80 vs raw 79 -> delta 1 (bound 2; the strict
+  delta-0 law applies to committed production images via the lane gates,
+  this is the battery's own bound on a live lane with novel probe shapes).
+- SERVE LOG: 0 tracebacks after boot.
+- CC BATTERY through litellm :4000 (cc_battery_v1225.sh, after the speed
+  gates — sequential law): litellm 200; t1/t2/t3 all http=200; thinking
+  leg returns a thinking block; CC_BATTERY_V1225: ALL GREEN.
+
+Verdict: the v1.2.26 production posture reproduces its full certified
+battery clean — Phase G closed. Phase H (v1.2.27 bake: capability deltas
+ONLY = dormant m0-live collector; scaled-space excluded per P43) cleared
+to proceed. Evidence: /root/build/_v1226_sanity.txt, _v1226_validate.txt,
+_v1226_sustain.txt, _v1226_p23fA.txt, _v1226_p23fB.txt,
+lce1/g_v1226validate.log (=== VALIDATE_V1225_RUN ALL GATES PASS
+08:08:20 === + V1225_VALIDATION_COMPLETE), cc_battery transcript in
+session log.
+
+## P45 — Phase H: v1.2.27 BAKE + PROMOTION VALIDATION + SHIP (2026-10-01)
+
+Task: bake llm-scaler-exp:v1.2.27 with the round's capability deltas ONLY
+(dormant M0-live collector per P42; scaled-space EXCLUDED by the P43
+recurrence-compounding law), full promotion validation, ship. All
+execution direct (no subagents, standing directive).
+
+### H1 — bake (stage5_bake_v1227.sh, generated by mk_stage5_bake_v1227.py)
+- Fresh lsv-bake from llm-scaler-exp:v1.2.26-raw; ONLY delta applied:
+  m0_live_collect_v127.py (DORMANT — no /root/.v127_m0live marker, no
+  scales/dumps in image). All inherited lineage asserted: dualbridge+C7
+  markers, prod .so sha 1d9dcf4e..., wheel d20260925, v1218..v1226
+  pedigree + jit stamps, baked serve config (gmu0.8 bs64 e4m3 pc-ON
+  spec-ON mnbt8192 async-ON mamba-fp16 no-template).
+- New bake gates: m0live presence (marker=2), scaled-space code/marker/
+  scales/dumps ABSENCE, no bak_v127 files, bake_m0live_dormant=0 under
+  warm traffic. Boot diff = exactly 3 expected deltas.
+- RESULT: v1.2.27-raw = 810b98f26d7f (24.8GB), 112 GATE-OK / 0 GATE-FAIL
+  (08:47:09). Repro boot script repro_bootV1227.sh (marker gate
+  .llm_scaler_exp_v1227_baked + M0LIVE-COLLECTOR grep) generated+staged.
+
+### H2 — promotion validation on fresh boot (validate_v1227_run.sh)
+- Fresh boot from v1.2.27-raw (post host-reboot hygiene), HEALTH_OK
+  ~170s, baked config verified.
+- NEW v127 gates green: m0live collector marker=2 dormant=1
+  scaledspace_absent=0.
+- Full battery: sanity+admission PASS (ttft 13.30/8.47s), solo cold
+  96.29s, drills 3/3 SUSTAIN_COMPLETE_NO_WEDGE fence-hits 0, serial24 x3
+  24/24, bursts 36/36 resets 0, parser T1/T2/T3 PASS, genspeed solo
+  78.77/79.90/79.79 (floor 70), async 4x1024 150.38 agg (gate >=100),
+  P23F A fresh 0/80 wrong + 0 flips + 30/30 tool-clean (74s), B
+  post-battery 0/24 + 30/30 (47s), cache delta 1 (bound 2), tracebacks 0.
+- RESULT: === VALIDATE_V1225_RUN ALL GATES PASS 09:55:53 === +
+  V1225_VALIDATION_COMPLETE x2 (caps literal = lineage rename carryover;
+  the ship precondition greps it by design).
+
+### H3 — ship attempt 1: GATES-SCRIPT GENERATOR BUG (root-caused + fixed)
+- ship_v1227.sh ran clean through preconditions, SHIPWARM relaunch, warm
+  rounds (new_jit=0, cache 79), lane-commit (v1.2.27 = c92b8701f7f9) —
+  then ABORTED at gates: "GATE-FAIL v126_no_p29h_markers expected=0
+  got=0".
+- ROOT CAUSE: mk_gates_v1227_lane.py's step-4 insertion anchor matched a
+  line PREFIX (ended at ...print s+0}'" without the line's closing `)"`),
+  so the inserted v127 block SPLIT the v126 command mid-line and stranded
+  the orphan `)"` on the v127_no_bak_files line. Bash parsed a mega
+  command substitution that swallowed the whole v127 block; ck() received
+  "0" + swallowed newlines as its actual-value argument -> string compare
+  failed on INVISIBLE bytes (log shows identical expected/got).
+  Ship-side evidence was tail -80 only — the GATE-FAIL sat above the
+  window (grep the full lce1/v1227_gates_lane.log, not the _run.out).
+  All 7 v127 gates themselves ran GREEN; committed image untouched
+  (host-side script bug only).
+- FIX: fix_gates_v1227.py restored the v126 line to its certified full
+  form + removed the orphan paren; repo generator anchor hotfixed to
+  match through EOL. Verified: direct gates run against the committed
+  image -> === V1227 SHIP GATES: ALL PASS 10:14:33 ===.
+- LESSON (generator discipline): a replace-anchor must match through the
+  END OF LINE, never a mid-line prefix — a prefix match silently
+  re-parenthesizes the script; and ck()-style failures with
+  expected==got displayed mean invisible bytes (multi-line swallowed
+  substitution), always inspect the full log not the tail window.
+
+### H4 — ship attempt 2: ALL GREEN
+- Full chain re-run (certified sequence, fixed gates): SHIPWARM relaunch,
+  warm rounds new_jit=0 cache 79, lane-commit with dormant-refusal gates
+  (no ARMED m0live / no scaled-space marker — refuse to commit),
+  llm-scaler-exp:v1.2.27 = a7a950148fef (24.8GB), === V1227 SHIP GATES:
+  ALL PASS 10:23:39 ===, fresh prod-boot verification incl. NEW gate
+  "v127 m0live collector (dormant) PASS", CC battery t1/t2/t3 http=200 +
+  cc_thinking=thinking, watchdog repoint + restart + enable.
+- RESULT: === SHIP_V1227 ALL GREEN 10:35:24 ===. SHIP-MEASUREMENT LAW:
+  prod lgrf .so sha 1d9dcf4e... asserted by the in-chain gates.
+
+### H5 — post-ship watchdog hardening (3 findings, all fixed same hour)
+1. Ship WARN "no fresh armed-line yet" was window timing only:
+   10:41:36 alive armed code=200 cycles=10 — watchdog CONFIRMED ARMED,
+   pause marker removed, service enabled.
+2. The ship's watchdog-repoint sed was a NO-OP: lane_watchdog.sh was
+   rewired (2026-09-30) to boot_v1227_restore.sh, whose V1227_IMAGE
+   default still said v1.2.26 — a wedge would have restored the PREVIOUS
+   image. Fixed: default bumped to llm-scaler-exp:v1.2.27 (file-level
+   edit; invoked fresh per WD cycle, no daemon restart needed). v1.2.27
+   carries BOTH lineage markers (v1226+v1227) so the restore marker
+   checks pass.
+3. watchdog_v2_drift_check.sh cried 7 DRIFT lines on the CERTIFIED lane:
+   its expectations froze at the pre-certification DESIGNATION (external
+   swift mount, --quantization fp8 + --chat-template flags, image pinned
+   v1.2.26) while the W1 certification + bakes FOLDED the posture into
+   the checkpoint (pre-quantized fp8 swift export at /models/target,
+   bind source qwen3.8-27b-fp8; template baked into tokenizer_config.json
+   — ship gates assert the flags' ABSENCE). Guard is WARN-only by design
+   (exit 0 always) so no action risk — but a monitor that cries drift on
+   the certified posture trains DRIFT-blindness, the exact failure mode
+   (2026-09-30 Cause A) it exists to prevent. REBASED onto the certified
+   surface: EXPECT_IMAGE=v1.2.27, ckpt mount/model/served-name checks,
+  runtime --quantization/--chat-template overrides treated as DRIFT
+   themselves, template checked host-side in tokenizer_config.json
+   (V1227_CKPT_DIR overridable), legacy branch retained for rollback
+   windows. Verified: manual run -> V1227_DRIFT_NONE
+   posture=certified-swift-fp8 10:45:18; wired every 10th WD cycle.
+
+### Standing posture after P45
+- PRODUCTION: llm-scaler-exp:v1.2.27 = a7a950148fef (lane lsv-test UP on
+  it; -raw = 810b98f26d7f retained). v1.2.27 = v1.2.26 posture + dormant
+  M0-live collector capability (arm with /root/.v127_m0live) + v1227
+  pedigree. Zero knob deltas; scaled-space absent by gate.
+- Watchdog: armed (100s cadence), restore = boot_v1227_restore.sh ->
+  v1.2.27 + telemetry arming; drift guard certifies the lane.
+- Round state: W1 certified (P34), D-knob program CLOSED (D1/D2
+  rejected), M1 rejected + recurrence-compounding law (P43), M2/M3/WS-E
+  CLOSED with reopen conditions A (int8-scaled pool) + B (fp8 frozen-
+  state spillover) documented in FIX_AND_TEST_PLAN.md, Phase G battery
+  green (P44), Phase H shipped (P45). v1.2.28 CANCELLED.
+- Evidence: lce1/v1227_ship.log, v1227_gates_lane.log,
+  v1227_validate_run.log, boot_v1227_shipwarm/prod.out; artifacts
+  stage5_bake_v1227.sh, gates_v1227_lane.sh (fixed), validate_v1227_run.sh,
+  ship_v1227.sh, repro_bootV1227.sh + mk_* generators, fix_gates_v1227.py,
+  watchdog_v2_drift_check.sh (rebased) — all mirrored in repo
+  vllm/patches/prod/perf-v127/.

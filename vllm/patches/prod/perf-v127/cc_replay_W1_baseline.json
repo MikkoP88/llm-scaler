@@ -1,0 +1,93 @@
+{
+ "tag": "cc_replay_W1_baseline",
+ "captured": "2026-09-30 W1 window (live user fleet, queue 6-8 throughout)",
+ "status": "PARTIAL: run-2 killed by the 3600 s window (exit 124), report JSON unwritten at kill time; this file is reconstructed verbatim from the flushed per-turn progress lines. 21/24 turn-lines (t2 missing s4; t3 missing s3, s5). Run-1 (timeout 1500) died empty-log before the per-request-flush fix.",
+ "target_model": "qwen3.8-27b-fp8",
+ "geometry": {
+  "streams": 6,
+  "turns_planned": 8,
+  "turns_with_data": 4,
+  "requests_completed": 21
+ },
+ "lines": [
+  "s0 t0 ttft=46.2s e2e=591.1s tok=171",
+  "s1 t0 ttft=44.9s e2e=592.8s tok=174",
+  "s2 t0 ttft=155.4s e2e=608.0s tok=166",
+  "s3 t0 ttft=244.4s e2e=678.1s tok=165",
+  "s4 t0 ttft=333.7s e2e=766.8s tok=165",
+  "s5 t0 ttft=441.7s e2e=877.4s tok=165",
+  "s0 t1 ttft=130.0s e2e=622.2s tok=169",
+  "s1 t1 ttft=216.6s e2e=626.9s tok=170",
+  "s2 t1 ttft=310.1s e2e=656.6s tok=164",
+  "s3 t1 ttft=329.9s e2e=723.8s tok=166",
+  "s4 t1 ttft=346.5s e2e=753.3s tok=165",
+  "s5 t1 ttft=495.1s e2e=1088.0s tok=170",
+  "s0 t2 ttft=303.1s e2e=845.3s tok=167",
+  "s2 t2 ttft=496.4s e2e=1015.2s tok=165",
+  "s1 t2 ttft=404.7s e2e=1116.8s tok=179",
+  "s3 t2 ttft=492.4s e2e=1017.3s tok=165",
+  "s5 t2 ttft=310.2s e2e=868.4s tok=163",
+  "s0 t3 ttft=364.4s e2e=947.5s tok=166",
+  "s4 t3 ttft=325.0s e2e=886.3s tok=165",
+  "s2 t3 ttft=311.7s e2e=841.4s tok=165",
+  "s1 t3 ttft=405.5s e2e=972.1s tok=171"
+ ],
+ "ttft_s": {
+  "turn0": [
+   46.2,
+   44.9,
+   155.4,
+   244.4,
+   333.7,
+   441.7
+  ],
+  "turn1": [
+   130.0,
+   216.6,
+   310.1,
+   329.9,
+   346.5,
+   495.1
+  ],
+  "turn2": [
+   303.1,
+   496.4,
+   404.7,
+   492.4,
+   310.2
+  ],
+  "turn3": [
+   364.4,
+   325.0,
+   311.7,
+   405.5
+  ]
+ },
+ "aggregates_ttft_s": {
+  "overall_n": 21,
+  "overall_mean": 309.9,
+  "overall_p50": 325.0,
+  "overall_max": 496.4,
+  "turn_means": {
+   "t0": 211.1,
+   "t1": 304.7,
+   "t2": 401.4,
+   "t3": 351.6
+  },
+  "turn0_monotonic_admission": "46.2 -> 441.7 s (RC3 admission serialization in its purest form)",
+  "turns1_3": "130-496 s with ~97.5% token-level prefix absorption = TTFT dominated by QUEUE WAIT behind other prefills, not own compute (cleanest single number for WS-D head-of-line work)"
+ },
+ "decode": {
+  "tokens_per_turn_range": [
+   163,
+   179
+  ],
+  "per_stream_tok_s": "0.251-0.473 (reproduces the morning 0.31 tok/s RC2/RC3 finding with per-request data)",
+  "uniform_truncation_note": "~170 tok/turn uniform truncation at max_tokens=800 unexplained (finish_reason not captured) - quiet-window rerun item; does not affect TTFT/TPOT validity"
+ },
+ "verdict": {
+  "vs_plan_bar": "LIVE-LOAD FAIL by an order of magnitude (p50 325 s vs bar p99<20 s, max<45 s) - this IS the 'before' baseline the program targets",
+  "gate_eligibility": "NOT gate-eligible: live-load (user fleet active). Gate replay runs quiet, post-fix, 8 streams x 50k per the acceptance definition",
+  "engine_through_both_runs": "0 wedges, 0 resets, preemptions stayed 2, triton cache-delta 0, drift lines 0"
+ }
+}

@@ -1,0 +1,75 @@
+{
+ "tag": "d4_d2_measurement",
+ "generated_from": "/root/build/telemetry/metrics_*.jsonl",
+ "window": {
+  "first_ts": "2026-09-30T13:03:12",
+  "last_ts": "2026-10-01T04:53:58",
+  "intervals": 3215,
+  "cadence_s": 10
+ },
+ "d4_gdn_granularity": {
+  "absorption_pct": 85.41,
+  "computed_total": 6838363.0,
+  "cached_total": 40022016.0,
+  "requests_total": 11721.0,
+  "computed_per_request": 583.4,
+  "cached_per_request": 3414.6,
+  "generated_per_request": 139.3,
+  "new_suffix_floor_per_request": 439.3,
+  "recompute_excess_per_request": 144.1,
+  "recompute_share_of_computed_pct_excess_bound": 24.7,
+  "recompute_share_of_computed_pct_gdn_theory_2048": 351.0,
+  "computed_per_request_storm_vs_quiet": {
+   "storm": 2138.6,
+   "quiet": 400.6,
+   "storm_intervals": 1632,
+   "quiet_intervals": 1583
+  },
+  "escalation_bar_pct": 15.0,
+  "verdict": "BAR EXCEEDED (excess-over-new bound alone >= 15%) \u2014 escalate, but FIRST a per-request split leg (prompt_len, hit, computed, mod-4096 regression) to attribute excess between GDN-snap recompute and eviction re-prefills before committing weeks-scale kernel effort",
+  "confounds": [
+   "eviction re-prefills inflate computed (not GDN-specific)",
+   "aggregate counters cannot split GDN-snap recompute from eviction misses; per-request instrumentation needed for an exact split"
+  ]
+ },
+ "d2_waiting_traces": {
+  "intervals_with_waiting_pct": 50.8,
+  "intervals_capacity_wait": 1632,
+  "max_waiting": 67.0,
+  "max_waiting_capacity": 67.0,
+  "max_running": 12.0,
+  "kv_usage_p50": 0.476,
+  "kv_usage_max": 0.998,
+  "preemptions_total_window": 2.0,
+  "ttft_new_arrivals_pct_by_bucket": {
+   "0.001": 0.0,
+   "0.005": 0.0,
+   "0.01": 0.0,
+   "0.02": 0.0,
+   "0.04": 0.0,
+   "0.06": 0.0,
+   "0.08": 0.0,
+   "0.1": 0.0,
+   "0.25": 8.51,
+   "0.5": 12.1,
+   "0.75": 14.41,
+   "1.0": 16.5,
+   "2.5": 35.47,
+   "5.0": 48.17,
+   "7.5": 55.41,
+   "10.0": 60.87,
+   "20.0": 71.99,
+   "40.0": 78.72,
+   "80.0": 83.87,
+   "160.0": 89.4,
+   "640.0": 99.93,
+   "2560.0": 100.0,
+   "+Inf": 100.0
+  },
+  "note": "v66 firing not in recorder schema \u2014 serve-log V66 grep is the firing-frequency evidence (run separately)"
+ },
+ "wedge_onset": {
+  "last_telemetry_ts": "2026-10-01T04:53:58",
+  "serve_log_death": "2026-09-30T22:13:33 EngineDeadError (execute_model RPC timeout -> device wedge class)"
+ }
+}
