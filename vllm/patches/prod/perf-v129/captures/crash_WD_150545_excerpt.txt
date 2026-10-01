@@ -1,0 +1,50 @@
+# perf-v129 P51b — DEVICE_LOST crash under controlled KV oversubscription
+# Captured by the parallel Q22/crashfix workstream (their artifacts; this
+# file is the perf-v129 excerpt). Host 10.20.3.65, 2026-10-01.
+
+## Timeline
+- 13:56:00  wsc_pressure_v129.py launched (24 convs: 7 SHARED ~30k
+            identical-head, 7 PRIV ~35k unique, 10 SMALL ~3.5k; 6 turns;
+            full client-side history re-send; temp 0.6, max_tokens 300;
+            working set ~1.03-1.1x the 476,451-token KV pool)
+- ~14:45    6 turn-5 requests hit the client 1200 s urlopen timeout
+- ~15:00    12 turn-6 requests returned HTTP 500 (identical wall ~943 s)
+- 15:03:47  EngineCore fatal (serve_full_Q22.log):
+              (Worker_TP0 pid=709) ERROR 10-01 15:03:47
+                [multiproc_executor.py:1026] RuntimeError: level_zero
+                backend failed with error: 20 (UR_RESULT_ERROR_DEVICE_LOST)
+              (EngineCore pid=510) ERROR 10-01 15:03:47 [core.py:1192]
+                EngineCore encountered a fatal error.
+              (APIServer pid=237) EngineDeadError -> 12x 500s
+- 15:00-15:05  Q22 capture: fr_715.log (5.7 MB), serve_full_Q22.log
+                (774 KB), devcoredump_card1_Q22.bin (512 KB)
+- 15:05:45  Q22_CAPTURE_AND_TEARDOWN_DONE; watchdog relaunch WD_150545
+- ~15:20    lane healthy again (health 200)
+
+## Consequences for perf-v129
+- In-container /root/v128_perreq.jsonl (engine-side per-request
+  telemetry) was destroyed by the teardown -> P52 split has no
+  engine-side data for this wave; re-run required (P51c) with
+  crash-proof in-run harvesting.
+- Driver-side jsonl survived: captures/wsc_pressure_v129.jsonl
+  (120 ok / 24 failed rows).
+
+## Repro recipe (for the crashfix workstream)
+Driver: /root/build/v129_stage/wsc_pressure_v129.py (repo:
+vllm/patches/prod/perf-v129/wsc_pressure_v129.py)
+Condition: 24-way concurrent prefill churn at ~1.1x KV oversubscription
+Onset: DEVICE_LOST at T+67 min (turn 5-6 of 6)
+Evidence: /root/build/lce1/WD_crash_150545/{serve_full_Q22.log,
+fr_715.log, devcoredump_card1_Q22.bin}
+
+## Context
+Same class recurred TODAY without any pressure driver:
+WD_crash_030955 (03:09), WD_crash_033400 (03:34) — fleet regime also
+onsets it. Prior-day captures: wedge_pkg/WD_crash_195827,
+wedge_pkg/WD_crash_204535 (Sep 30 evening).
+
+## perf-v129 implication (elevates WS-C)
+Admission control / capacity is not only a waste lever (P48: 90.1% of
+the 18.8% recompute excess is eviction-class) — sustained
+oversubscription is a STABILITY onset at a reachable threshold
+(~1.1x working set, 24-way, ~1 h).

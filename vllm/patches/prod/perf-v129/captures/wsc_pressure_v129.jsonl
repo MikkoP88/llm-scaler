@@ -1,0 +1,140 @@
+# wsc pressure start 2026-10-01 13:56:49 convs=24 turns=6 pool_tokens=476451 ws~684k
+{"id": "s03", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 29575, "completion_tokens": 176, "wall": 49.0, "ts": "13:57:38", "cohort": "SHARED"}
+{"id": "s04", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 29509, "completion_tokens": 216, "wall": 66.7, "ts": "13:57:55", "cohort": "SHARED"}
+{"id": "s05", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 29493, "completion_tokens": 254, "wall": 80.8, "ts": "13:58:10", "cohort": "SHARED"}
+{"id": "p04", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 35201, "completion_tokens": 74, "wall": 96.7, "ts": "13:58:25", "cohort": "PRIV"}
+{"id": "p00", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 35012, "completion_tokens": 135, "wall": 123.1, "ts": "13:58:52", "cohort": "PRIV"}
+{"id": "m09", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 2849, "completion_tokens": 107, "wall": 168.6, "ts": "13:59:37", "cohort": "SMALL"}
+{"id": "p06", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 35172, "completion_tokens": 250, "wall": 176.7, "ts": "13:59:45", "cohort": "PRIV"}
+{"id": "p05", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 35071, "completion_tokens": 289, "wall": 221.6, "ts": "14:00:30", "cohort": "PRIV"}
+{"id": "m02", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 2903, "completion_tokens": 55, "wall": 223.0, "ts": "14:00:32", "cohort": "SMALL"}
+{"id": "p02", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 35148, "completion_tokens": 143, "wall": 228.8, "ts": "14:00:37", "cohort": "PRIV"}
+{"id": "m08", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 2849, "completion_tokens": 135, "wall": 229.2, "ts": "14:00:38", "cohort": "SMALL"}
+{"id": "m05", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 2856, "completion_tokens": 145, "wall": 233.9, "ts": "14:00:43", "cohort": "SMALL"}
+{"id": "s00", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 29523, "completion_tokens": 70, "wall": 248.3, "ts": "14:00:57", "cohort": "SHARED"}
+{"id": "s01", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 29500, "completion_tokens": 85, "wall": 273.0, "ts": "14:01:22", "cohort": "SHARED"}
+{"id": "s02", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 29606, "completion_tokens": 112, "wall": 295.1, "ts": "14:01:44", "cohort": "SHARED"}
+{"id": "s06", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 29495, "completion_tokens": 188, "wall": 308.4, "ts": "14:01:57", "cohort": "SHARED"}
+{"id": "p01", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 35222, "completion_tokens": 96, "wall": 332.9, "ts": "14:02:22", "cohort": "PRIV"}
+{"id": "m00", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 2870, "completion_tokens": 83, "wall": 351.6, "ts": "14:02:40", "cohort": "SMALL"}
+{"id": "m01", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 2846, "completion_tokens": 105, "wall": 352.3, "ts": "14:02:41", "cohort": "SMALL"}
+{"id": "m07", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 2842, "completion_tokens": 140, "wall": 353.7, "ts": "14:02:42", "cohort": "SMALL"}
+{"id": "p03", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 35142, "completion_tokens": 154, "wall": 354.2, "ts": "14:02:43", "cohort": "PRIV"}
+{"id": "m04", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 2815, "completion_tokens": 262, "wall": 356.8, "ts": "14:02:46", "cohort": "SMALL"}
+{"id": "m03", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 2839, "completion_tokens": 300, "wall": 358.2, "ts": "14:02:47", "cohort": "SMALL"}
+{"id": "m06", "turn": 1, "status": "ok", "finish": "stop", "prompt_tokens": 2817, "completion_tokens": 289, "wall": 358.9, "ts": "14:02:48", "cohort": "SMALL"}
+{"id": "s03", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 29704, "completion_tokens": 22, "wall": 43.5, "ts": "14:03:31", "cohort": "SHARED"}
+{"id": "m06", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 2957, "completion_tokens": 30, "wall": 43.9, "ts": "14:03:32", "cohort": "SMALL"}
+{"id": "m01", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 2982, "completion_tokens": 29, "wall": 51.9, "ts": "14:03:40", "cohort": "SMALL"}
+{"id": "p01", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 35358, "completion_tokens": 32, "wall": 56.3, "ts": "14:03:44", "cohort": "PRIV"}
+{"id": "s05", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 29631, "completion_tokens": 69, "wall": 66.6, "ts": "14:03:54", "cohort": "SHARED"}
+{"id": "m09", "turn": 2, "status": "ok", "finish": "length", "prompt_tokens": 2998, "completion_tokens": 300, "wall": 72.3, "ts": "14:04:00", "cohort": "SMALL"}
+{"id": "s02", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 29750, "completion_tokens": 89, "wall": 82.7, "ts": "14:04:10", "cohort": "SHARED"}
+{"id": "p06", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 35312, "completion_tokens": 27, "wall": 111.5, "ts": "14:04:39", "cohort": "PRIV"}
+{"id": "m05", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 2994, "completion_tokens": 76, "wall": 111.9, "ts": "14:04:40", "cohort": "SMALL"}
+{"id": "m00", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 2999, "completion_tokens": 95, "wall": 112.4, "ts": "14:04:40", "cohort": "SMALL"}
+{"id": "m03", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 2968, "completion_tokens": 96, "wall": 117.5, "ts": "14:04:45", "cohort": "SMALL"}
+{"id": "m02", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 3047, "completion_tokens": 110, "wall": 117.7, "ts": "14:04:45", "cohort": "SMALL"}
+{"id": "p00", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 35141, "completion_tokens": 22, "wall": 157.3, "ts": "14:05:25", "cohort": "PRIV"}
+{"id": "p04", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 35350, "completion_tokens": 25, "wall": 183.0, "ts": "14:05:51", "cohort": "PRIV"}
+{"id": "p03", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 35271, "completion_tokens": 33, "wall": 204.0, "ts": "14:06:12", "cohort": "PRIV"}
+{"id": "p02", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 35292, "completion_tokens": 110, "wall": 225.0, "ts": "14:06:33", "cohort": "PRIV"}
+{"id": "p05", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 35209, "completion_tokens": 37, "wall": 254.4, "ts": "14:07:02", "cohort": "PRIV"}
+{"id": "s01", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 29636, "completion_tokens": 102, "wall": 286.7, "ts": "14:07:34", "cohort": "SHARED"}
+{"id": "m08", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 2987, "completion_tokens": 26, "wall": 311.3, "ts": "14:07:59", "cohort": "SMALL"}
+{"id": "m07", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 2988, "completion_tokens": 63, "wall": 331.6, "ts": "14:08:19", "cohort": "SMALL"}
+{"id": "s00", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 29652, "completion_tokens": 41, "wall": 344.7, "ts": "14:08:32", "cohort": "SHARED"}
+{"id": "s04", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 29658, "completion_tokens": 25, "wall": 360.1, "ts": "14:08:48", "cohort": "SHARED"}
+{"id": "m04", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 2964, "completion_tokens": 22, "wall": 360.1, "ts": "14:08:48", "cohort": "SMALL"}
+{"id": "s06", "turn": 2, "status": "ok", "finish": "stop", "prompt_tokens": 29635, "completion_tokens": 28, "wall": 384.8, "ts": "14:09:13", "cohort": "SHARED"}
+{"id": "p04", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 35480, "completion_tokens": 25, "wall": 29.8, "ts": "14:09:42", "cohort": "PRIV"}
+{"id": "s03", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 29832, "completion_tokens": 27, "wall": 54.4, "ts": "14:10:07", "cohort": "SHARED"}
+{"id": "s05", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 29782, "completion_tokens": 22, "wall": 64.9, "ts": "14:10:17", "cohort": "SHARED"}
+{"id": "s06", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 29777, "completion_tokens": 43, "wall": 104.1, "ts": "14:10:57", "cohort": "SHARED"}
+{"id": "p01", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 35495, "completion_tokens": 46, "wall": 104.4, "ts": "14:10:57", "cohort": "PRIV"}
+{"id": "s02", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 29893, "completion_tokens": 61, "wall": 155.5, "ts": "14:11:48", "cohort": "SHARED"}
+{"id": "m05", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 3145, "completion_tokens": 24, "wall": 167.3, "ts": "14:12:00", "cohort": "SMALL"}
+{"id": "p03", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 35399, "completion_tokens": 26, "wall": 167.6, "ts": "14:12:00", "cohort": "PRIV"}
+{"id": "p00", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 35278, "completion_tokens": 21, "wall": 220.9, "ts": "14:12:53", "cohort": "PRIV"}
+{"id": "m00", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 3136, "completion_tokens": 23, "wall": 259.3, "ts": "14:13:32", "cohort": "SMALL"}
+{"id": "m04", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 3094, "completion_tokens": 26, "wall": 260.2, "ts": "14:13:33", "cohort": "SMALL"}
+{"id": "s04", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 29788, "completion_tokens": 49, "wall": 277.2, "ts": "14:13:50", "cohort": "SHARED"}
+{"id": "m01", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 3119, "completion_tokens": 131, "wall": 277.4, "ts": "14:13:50", "cohort": "SMALL"}
+{"id": "p05", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 35360, "completion_tokens": 24, "wall": 322.2, "ts": "14:14:35", "cohort": "PRIV"}
+{"id": "m09", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 3137, "completion_tokens": 23, "wall": 323.3, "ts": "14:14:36", "cohort": "SMALL"}
+{"id": "m08", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 3117, "completion_tokens": 32, "wall": 381.9, "ts": "14:15:34", "cohort": "SMALL"}
+{"id": "s01", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 29773, "completion_tokens": 22, "wall": 400.4, "ts": "14:15:53", "cohort": "SHARED"}
+{"id": "m06", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 3099, "completion_tokens": 22, "wall": 446.2, "ts": "14:16:39", "cohort": "SMALL"}
+{"id": "p02", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 35435, "completion_tokens": 32, "wall": 485.9, "ts": "14:17:18", "cohort": "PRIV"}
+{"id": "m07", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 3129, "completion_tokens": 22, "wall": 526.6, "ts": "14:17:59", "cohort": "SMALL"}
+{"id": "s00", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 29789, "completion_tokens": 20, "wall": 526.6, "ts": "14:17:59", "cohort": "SHARED"}
+{"id": "m03", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 3096, "completion_tokens": 35, "wall": 565.4, "ts": "14:18:38", "cohort": "SMALL"}
+{"id": "m02", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 3190, "completion_tokens": 45, "wall": 566.0, "ts": "14:18:39", "cohort": "SMALL"}
+{"id": "p06", "turn": 3, "status": "ok", "finish": "stop", "prompt_tokens": 35454, "completion_tokens": 41, "wall": 566.5, "ts": "14:18:39", "cohort": "PRIV"}
+{"id": "m05", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 3282, "completion_tokens": 42, "wall": 40.7, "ts": "14:19:20", "cohort": "SMALL"}
+{"id": "p05", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 35497, "completion_tokens": 78, "wall": 50.9, "ts": "14:19:30", "cohort": "PRIV"}
+{"id": "p06", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 35591, "completion_tokens": 50, "wall": 51.0, "ts": "14:19:30", "cohort": "PRIV"}
+{"id": "s06", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 29914, "completion_tokens": 31, "wall": 149.3, "ts": "14:21:08", "cohort": "SHARED"}
+{"id": "p00", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 35416, "completion_tokens": 41, "wall": 161.3, "ts": "14:21:20", "cohort": "PRIV"}
+{"id": "p03", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 35539, "completion_tokens": 27, "wall": 274.5, "ts": "14:23:14", "cohort": "PRIV"}
+{"id": "m00", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 3274, "completion_tokens": 24, "wall": 275.3, "ts": "14:23:14", "cohort": "SMALL"}
+{"id": "m06", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 3236, "completion_tokens": 24, "wall": 275.5, "ts": "14:23:15", "cohort": "SMALL"}
+{"id": "m03", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 3236, "completion_tokens": 26, "wall": 276.1, "ts": "14:23:15", "cohort": "SMALL"}
+{"id": "s05", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 29919, "completion_tokens": 35, "wall": 310.4, "ts": "14:23:50", "cohort": "SHARED"}
+{"id": "m09", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 3293, "completion_tokens": 44, "wall": 344.0, "ts": "14:24:23", "cohort": "SMALL"}
+{"id": "s00", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 29927, "completion_tokens": 100, "wall": 345.1, "ts": "14:24:24", "cohort": "SHARED"}
+{"id": "m02", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 3323, "completion_tokens": 26, "wall": 395.8, "ts": "14:25:15", "cohort": "SMALL"}
+{"id": "p01", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 35628, "completion_tokens": 57, "wall": 424.3, "ts": "14:25:43", "cohort": "PRIV"}
+{"id": "p04", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 35614, "completion_tokens": 82, "wall": 466.4, "ts": "14:26:25", "cohort": "PRIV"}
+{"id": "m01", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 3252, "completion_tokens": 43, "wall": 535.4, "ts": "14:27:34", "cohort": "SMALL"}
+{"id": "m07", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 3277, "completion_tokens": 30, "wall": 688.0, "ts": "14:30:07", "cohort": "SMALL"}
+{"id": "m04", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 3228, "completion_tokens": 73, "wall": 699.3, "ts": "14:30:18", "cohort": "SMALL"}
+{"id": "s01", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 29906, "completion_tokens": 45, "wall": 748.3, "ts": "14:31:07", "cohort": "SHARED"}
+{"id": "s03", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 29972, "completion_tokens": 44, "wall": 764.7, "ts": "14:31:24", "cohort": "SHARED"}
+{"id": "s02", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 30026, "completion_tokens": 61, "wall": 781.0, "ts": "14:31:40", "cohort": "SHARED"}
+{"id": "p02", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 35568, "completion_tokens": 24, "wall": 814.9, "ts": "14:32:14", "cohort": "PRIV"}
+{"id": "s04", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 29922, "completion_tokens": 81, "wall": 830.8, "ts": "14:32:30", "cohort": "SHARED"}
+{"id": "m08", "turn": 4, "status": "ok", "finish": "stop", "prompt_tokens": 3258, "completion_tokens": 46, "wall": 832.6, "ts": "14:32:32", "cohort": "SMALL"}
+{"id": "m04", "turn": 5, "status": "ok", "finish": "stop", "prompt_tokens": 3362, "completion_tokens": 26, "wall": 32.3, "ts": "14:33:04", "cohort": "SMALL"}
+{"id": "p05", "turn": 5, "status": "ok", "finish": "stop", "prompt_tokens": 35639, "completion_tokens": 25, "wall": 78.9, "ts": "14:33:51", "cohort": "PRIV"}
+{"id": "p03", "turn": 5, "status": "ok", "finish": "stop", "prompt_tokens": 35678, "completion_tokens": 24, "wall": 212.2, "ts": "14:36:04", "cohort": "PRIV"}
+{"id": "m07", "turn": 5, "status": "ok", "finish": "stop", "prompt_tokens": 3428, "completion_tokens": 22, "wall": 264.9, "ts": "14:36:57", "cohort": "SMALL"}
+{"id": "m06", "turn": 5, "status": "ok", "finish": "stop", "prompt_tokens": 3372, "completion_tokens": 24, "wall": 292.9, "ts": "14:37:25", "cohort": "SMALL"}
+{"id": "m03", "turn": 5, "status": "ok", "finish": "stop", "prompt_tokens": 3375, "completion_tokens": 28, "wall": 324.0, "ts": "14:37:56", "cohort": "SMALL"}
+{"id": "m05", "turn": 5, "status": "ok", "finish": "stop", "prompt_tokens": 3424, "completion_tokens": 29, "wall": 340.5, "ts": "14:38:12", "cohort": "SMALL"}
+{"id": "p01", "turn": 5, "status": "ok", "finish": "stop", "prompt_tokens": 35769, "completion_tokens": 41, "wall": 407.0, "ts": "14:39:19", "cohort": "PRIV"}
+{"id": "s06", "turn": 5, "status": "ok", "finish": "stop", "prompt_tokens": 30050, "completion_tokens": 38, "wall": 475.3, "ts": "14:40:27", "cohort": "SHARED"}
+{"id": "p00", "turn": 5, "status": "ok", "finish": "stop", "prompt_tokens": 35555, "completion_tokens": 31, "wall": 521.3, "ts": "14:41:13", "cohort": "PRIV"}
+{"id": "p02", "turn": 5, "status": "ok", "finish": "stop", "prompt_tokens": 35708, "completion_tokens": 27, "wall": 566.3, "ts": "14:41:58", "cohort": "PRIV"}
+{"id": "m00", "turn": 5, "status": "ok", "finish": "stop", "prompt_tokens": 3413, "completion_tokens": 21, "wall": 706.9, "ts": "14:44:19", "cohort": "SMALL"}
+{"id": "s02", "turn": 5, "status": "ok", "finish": "stop", "prompt_tokens": 30166, "completion_tokens": 32, "wall": 803.9, "ts": "14:45:56", "cohort": "SHARED"}
+{"id": "m02", "turn": 5, "status": "ok", "finish": "stop", "prompt_tokens": 3463, "completion_tokens": 33, "wall": 821.6, "ts": "14:46:13", "cohort": "SMALL"}
+{"id": "p06", "turn": 5, "status": "ok", "finish": "stop", "prompt_tokens": 35727, "completion_tokens": 54, "wall": 905.9, "ts": "14:47:38", "cohort": "PRIV"}
+{"id": "s05", "turn": 5, "status": "ok", "finish": "stop", "prompt_tokens": 30061, "completion_tokens": 26, "wall": 1008.5, "ts": "14:49:20", "cohort": "SHARED"}
+{"id": "s01", "turn": 5, "status": "ok", "finish": "stop", "prompt_tokens": 30047, "completion_tokens": 44, "wall": 1043.8, "ts": "14:49:55", "cohort": "SHARED"}
+{"id": "s00", "turn": 5, "status": "ok", "finish": "stop", "prompt_tokens": 30066, "completion_tokens": 102, "wall": 1131.7, "ts": "14:51:23", "cohort": "SHARED"}
+{"id": "s04", "turn": 5, "status": "EXC", "exc": "TimeoutError: timed out", "wall": 1200.0, "cohort": "SHARED"}
+{"id": "m08", "turn": 5, "status": "EXC", "exc": "TimeoutError: timed out", "wall": 1200.1, "cohort": "SMALL"}
+{"id": "m09", "turn": 5, "status": "EXC", "exc": "TimeoutError: timed out", "wall": 1200.1, "cohort": "SMALL"}
+{"id": "p04", "turn": 5, "status": "EXC", "exc": "TimeoutError: timed out", "wall": 1200.1, "cohort": "PRIV"}
+{"id": "s03", "turn": 5, "status": "EXC", "exc": "TimeoutError: timed out", "wall": 1200.1, "cohort": "SHARED"}
+{"id": "m01", "turn": 5, "status": "EXC", "exc": "TimeoutError: timed out", "wall": 1200.1, "cohort": "SMALL"}
+{"id": "m05", "turn": 6, "status": "ok", "finish": "stop", "prompt_tokens": 3565, "completion_tokens": 23, "wall": 405.9, "ts": "14:54:50", "cohort": "SMALL"}
+{"id": "m00", "turn": 6, "status": "ok", "finish": "stop", "prompt_tokens": 3555, "completion_tokens": 20, "wall": 416.0, "ts": "14:55:00", "cohort": "SMALL"}
+{"id": "s02", "turn": 6, "status": "ok", "finish": "stop", "prompt_tokens": 30299, "completion_tokens": 26, "wall": 445.0, "ts": "14:55:29", "cohort": "SHARED"}
+{"id": "m03", "turn": 6, "status": "ok", "finish": "stop", "prompt_tokens": 3527, "completion_tokens": 35, "wall": 553.6, "ts": "14:57:18", "cohort": "SMALL"}
+{"id": "p02", "turn": 6, "status": "ok", "finish": "stop", "prompt_tokens": 35841, "completion_tokens": 31, "wall": 699.3, "ts": "14:59:43", "cohort": "PRIV"}
+{"id": "m04", "turn": 6, "status": "ok", "finish": "stop", "prompt_tokens": 3513, "completion_tokens": 52, "wall": 751.5, "ts": "15:00:35", "cohort": "SMALL"}
+{"id": "p01", "turn": 6, "status": "HTTP500", "wall": 943.4, "cohort": "PRIV"}
+{"id": "p03", "turn": 6, "status": "HTTP500", "wall": 943.4, "cohort": "PRIV"}
+{"id": "p05", "turn": 6, "status": "HTTP500", "wall": 943.4, "cohort": "PRIV"}
+{"id": "s06", "turn": 6, "status": "HTTP500", "wall": 943.4, "cohort": "SHARED"}
+{"id": "p06", "turn": 6, "status": "HTTP500", "wall": 943.4, "cohort": "PRIV"}
+{"id": "s01", "turn": 6, "status": "HTTP500", "wall": 831.9, "cohort": "SHARED"}
+{"id": "m06", "turn": 6, "status": "HTTP500", "wall": 943.4, "cohort": "SMALL"}
+{"id": "m07", "turn": 6, "status": "HTTP500", "wall": 943.4, "cohort": "SMALL"}
+{"id": "p00", "turn": 6, "status": "HTTP500", "wall": 943.4, "cohort": "PRIV"}
+{"id": "s05", "turn": 6, "status": "HTTP500", "wall": 867.2, "cohort": "SHARED"}
+{"id": "m02", "turn": 6, "status": "HTTP500", "wall": 943.4, "cohort": "SMALL"}
+{"id": "s00", "turn": 6, "status": "HTTP500", "wall": 744.0, "cohort": "SHARED"}
+# wsc pressure end 2026-10-01 15:03:47 turns=138 wall=4019s
