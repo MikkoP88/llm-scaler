@@ -221,3 +221,23 @@ chain (P46) + folded checkpoint defaults (P49).
 - WS-C eviction track now has a quantified target from P48 (90.1% of
   the 18.8-24.7% excess is partial-prefix-miss; perreq knob available
   for the measurement legs).
+
+### Ship-on-delta policy (when Phase-2 lands an image)
+
+An image is baked only when a Phase-2 track produces runtime content
+(the trigger), and the dormant riders fold into that SAME bake:
+
+- **Triggers** (any one justifies the next image, v1.2.28+):
+  REOPEN-A success (int8 scaled-state kernel + code), a WS-C policy
+  change needing baked engine defaults, or an engine-side xgrammar
+  conversion fix.
+- **Riders** (fold in only when a trigger bake already runs; riders
+  never justify a bake on their own): the dormant perreq telemetry
+  patch (P48 instrument — consolidates boot-side source surface into
+  the image, still marker-gated dormant).
+- **Never image-side** (by classification, not omission): genconfig
+  fold (checkpoint mount), recipe v2 (client docs), XGCOMPACT
+  (boot-knob; engine already supports the flag).
+- If no trigger fires (REOPEN-A fails the regime gate, WS-C resolves
+  config-side), no image is baked — by design.
+
