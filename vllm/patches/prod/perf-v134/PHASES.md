@@ -14,8 +14,9 @@ before the next test leg.
 Standing laws carried: SHIP-MEASUREMENT LAW (.so sha 1d9dcf4e
 before banking ship numbers); READOUT LAW; RIDER LAW (watchdog
 re-create wipes in-container patches); ORPHANED-ENGINE RESTART LAW
-(full-tree pkill + emptiness verify); GATE LAW; no degradation;
-async ON; live PHASES update per phase; ship-on-delta.
+(full-tree pkill + emptiness verify); GATE LAW; no degradation
+(hardened 2026-10-02: degradation forbidden, ONLY improvements
+allowed); async ON; live PHASES update per phase; ship-on-delta.
 
 ## The evidence base (banked before this round)
 
@@ -152,7 +153,141 @@ Outcome: crash-rate estimate + (on crash) the LRC-head evidence
 P73 needs. If a clean N=3 passes, escalate depth (6-turn storm /
 +2 convs → num_computed ≥ 30k) toward the onset envelope.
 
-Status: pending — capture-upgrade first, then leg 1.
+Status: IN FLIGHT 2026-10-02 —
+- Capture upgrade DEPLOYED pre-reboot: q34_crash_capture.sh (q22
+  + fr tails + debugfs clients/internal_clients + xe param
+  snapshot + all-engine Timedout-job lines + journal -15min
+  window); watchdog repointed (line 70); syntax-checked on host.
+  Full devcoredump section confirmed UNOBTAINABLE (driver-capped
+  ~500 KB at source — no xe module param raises it; cp already
+  reads to EOF). P73's LRC path replaced by: force_execlist A/B
+  (xe param exists on host), microbench replay, q34 clients lists.
+- Host rebooted 08:04 per directive; watchdog restored lane
+  (re-create 08:16:46); posture asserted: image v1.2.27, .so sha
+  1d9dcf4e7a1c8db6, 0 patch markers, 1 startup line, health 200.
+- DECISION: legs run on the BYTE-PRISTINE lane (no perreq patcher
+  — RIDER skip): the repro surface must match production posture;
+  prometheus jsonl + q34 dump_input cover the crash evidence
+  (perreq adds only per-request totals; HARVEST_ROWS=0 expected).
+- LEG 1 launched 08:26 UTC: wsc_pressure_v134_leg1.py (v129b
+  moderated standard storm: 18 convs x 4 turns = 72 reqs, temp
+  0.6, max_tokens 300, full history re-send; the same shape that
+  crashed v132 leg A T+8min and A1 T+4.6min, clean in A2).
+  Prior exposures at this shape: 2 crash / 1 clean.
+- LEG 1 CLEAN: `PRESSUREB_DONE ok=72/72 wall=1312s HARVEST_ROWS=0`
+  (harvest 0 = expected, pristine lane). 13 dmesg polls over the
+  run: ZERO Engine resets during the leg. Exposure tally: 2 crash /
+  2 clean.
+- SURVIVED-RESET DATUM (new class member, benign form): 08:49:52 —
+  lone `ccs reset, logical_mask 0x1, guc_id=52` on card1 at T+~70s
+  AFTER leg-1 completion (engine idle, tree alive). NO devcoredump
+  created (sysfs checked — none), NO bcs timeout, NO GT reset, no
+  escalation of any kind through the following boots. LAW: the
+  "LR job cleanup" ccs reset has a benign Lone form; death REQUIRES
+  the kernel-submitted bcs job (guc_id=0, `in no process`) timing
+  out behind the wedged context within ~6 s (as in A1's 06:32:29 →
+  06:32:35 sequence). The reset alone is survivable; the bcs
+  timeout behind it is the killer. Evidence limits: the 08:16
+  container re-create gave a fresh /tmp (leg-1 tree wrote fr rings
+  into pid slots never listed again) and the 08:52 boot truncated
+  serve_full.log — dmesg is the sole record of this event.
+- LEG 2 launched 08:57 UTC (same shape, full-tree restart between
+  legs per ORPHANED-ENGINE LAW). Leg-2 live fr rings observed at
+  ring cap (fr_686/fr_692, 2039520 B each). Baseline for reset
+  monitoring: 1 (the 08:49:52 line) — watch NEW lines only.
+- LEG 2 CLEAN: `PRESSUREB_DONE ok=72/72 wall=1095s HARVEST_ROWS=0`,
+  zero new resets (baseline 1 held through 6 polls), health 200
+  throughout. Both prior crash onsets (T+4.6/T+8 min) passed clean.
+  Exposure tally: 2 crash / 3 clean.
+- LEG 3 launched ~09:24 UTC after full-tree restart (pkill -9 -f
+  [v]llm; leftover resource_tracker 486 killed by pid; new tree
+  pid 1825 + own tracker 2097; health 200 at T+~3.5 min).
+- LEG 3 CLEAN: `PRESSUREB_DONE ok=72/72 wall=865s HARVEST_ROWS=0`,
+  zero new resets. MATRIX CLOSED — N=3 back-to-back standard
+  storms, all clean:
+
+  | Leg | ok | wall | new resets |
+  |---|---|---|---|
+  | 1 | 72/72 | 1312 s | 0 |
+  | 2 | 72/72 | 1095 s | 0 |
+  | 3 | 72/72 | 865 s | 0 |
+
+**P72 SYNTHESIS (rate matrix + survived-reset law):**
+1. Per-leg crash rate at the standard shape THIS round: 0/3;
+   lifetime at this shape 2 crash / 5 clean — INTERMITTENT, not
+   deterministic. The v132/A1 crashes are the tail of a low-rate
+   chronic class, not a per-leg certainty.
+2. The 08:49:52 SURVIVED reset sharpens the mechanism: the ccs
+   "LR job cleanup" reset fired on an ENGINE-IDLE context
+   (T+~70 s after a clean ok=72/72 completion) with zero
+   escalation. Model: the root event is an unretired ccs LR job
+   (kernel from the storm that never retired — H1 — OR guc context
+   bookkeeping — H2); the reset itself is survivable when nothing
+   is queued behind; DEATH requires a kernel-submitted bcs job
+   landing in the ~6 s window behind the wedged context
+   (A1: 06:32:29 ccs → 06:32:35 bcs). Crash = reset ×
+   P(busy bcs behind). Fr evidence for this event was lost (fresh
+   /tmp from the 08:16 re-create + serve-log truncation), so H1
+   vs H2 stays open for P73's force_execlist A/B + microbench.
+3. Depth escalation (6-turn / +2 convs → num_computed ≥ 30k) is
+   NOT run pre-bake: the lane now executes the P75 cleanup+bake
+   directive; the escalation shape folds into the post-bake
+   verification matrix (one depth-escalated leg among the ≥3,
+   serving both the P74 stability gate and this escalation).
+
+Status: **CLOSED 2026-10-02** — N=3 clean matrix + survived-reset
+law banked; capture upgrade (q34) armed for any future crash.
+
+## P75 — surface cleanup + v1.2.28 bake (user directive 2026-10-02)
+
+Directive (verbatim intent): clean ALL older-patch leftover loggings
+on every surface; the production image keeps ONLY the fork's
+default-style logging — no patch-version-prefixed (v*) artifacts,
+no experimental file loggers; then BAKE a new production image.
+
+Inventory (classify KEEP-default vs STRIP-patch-leftover):
+1. **IMAGE/build surface (bake input):**
+   - STRIP: f15b/fr AR-trace instrument (riding since crashfix-v55;
+     writes fr_*.log rings + f15b_dump_*), v128 perreq jsonl patch +
+     /root/.v127_m0live dormant M0 collector, image-baked stale
+     /tmp/fr_* files, any v*-prefixed log writers. Sequencing: the
+     fr instrument rides THROUGH P72 completion (it is the
+     death-point instrument for the open crash class), then removed
+     from the build surface before the bake.
+   - KEEP: default vLLM logging + standard /metrics; ALL functional
+     posture — fp8 checkpoint + baked template, MTPx4 + XGrammar-2,
+     async scheduling, barriers 0, genconfig folds, litellm bridge.
+     Function survives; only experimental logging goes.
+2. **Host /root/build:** stale wsc_*.out / v*-prefixed outputs from
+   closed rounds; KEEP captures (lce1/* = evidence), watchdog,
+   restore chain, q34 (its fr steps no-op gracefully post-strip).
+   Ops-script NAMES (boot_v1227_restore.sh, V1227_IMAGE lineage)
+   are infrastructure, not logging — lineage pointer updates to
+   v1.2.28 at bake, naming stays.
+3. **Repo tree:** untracked .tmp-* litter, `nul`, stray outputs
+   (git clean dry-run list first, .tmp-* only); KEEP all
+   patches/*/ history (audit trail — cleanup targets artifacts,
+   not records).
+4. **BAKE:** rebuild only what the strip touches (wheel rebuild
+   with KERNELS_MAX_JOBS=52 iff .so changes) → llm-scaler-exp:
+   v1.2.28 → restore-chain rebase to the new image + md5 re-cert →
+   posture certification (MTPx4 + XGrammar-2 + async + barriers 0 +
+   health 200 + 0 patch markers + NEW .so sha banked into
+   SHIP-MEASUREMENT LAW) → storm matrix ≥3 clean legs on v1.2.28,
+   doubling as the P74 stability gate on the cleaned surface.
+5. Constraint — ZERO-DEGRADATION LAW (user directive 2026-10-02,
+   hardened): "any performance degradation is not allowed, only
+   improvements are allowed." Measurable gate: v1.2.28 storm legs
+   vs the v1.2.27 baseline banked THIS round (72/72 ×3, walls
+   1312/1095/865 s; single-run noise ±~6%) — every leg ok=72/72,
+   wall within-or-better than the baseline band, totals
+   (computed tokens) not worse. Removing the per-AR evmark hook
+   (1 Event record + import lookup + ring append per all_reduce)
+   is expected to measure as a STRICT improvement; any consistent
+   regression = NO BAKE. Functional posture (MTPx4, XGrammar-2,
+   async, barriers 0, fp8, fences, Fix L/M) carries unchanged.
+
+Status: PLANNED — executes after the P72 matrix closes.
 
 ## P73 — root-cause discrimination (H1 deep-context kernel vs H2 guc/LR)
 
