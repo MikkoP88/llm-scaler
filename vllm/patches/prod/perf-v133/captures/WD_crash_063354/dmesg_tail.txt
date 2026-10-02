@@ -1,0 +1,10 @@
+[Fri Oct  2 06:04:32 2026] mpt3sas_cm0: sending message unit reset !!
+[Fri Oct  2 06:04:32 2026] mpt3sas_cm0: message unit reset: SUCCESS
+[Fri Oct  2 06:32:29 2026] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=ccs, logical_mask: 0x1, guc_id=62
+[Fri Oct  2 06:32:29 2026] xe 0000:b1:00.0: [drm] Xe device coredump has been created
+[Fri Oct  2 06:32:29 2026] xe 0000:b1:00.0: [drm] Check your /sys/class/drm/card1/device/devcoredump/data
+[Fri Oct  2 06:32:35 2026] xe 0000:b1:00.0: [drm] Tile0: GT0: Engine reset: engine_class=bcs, logical_mask: 0x2, guc_id=0
+[Fri Oct  2 06:32:35 2026] xe 0000:b1:00.0: [drm] Tile0: GT0: trying reset from guc_exec_queue_timedout_job [xe]
+[Fri Oct  2 06:32:35 2026] xe 0000:b1:00.0: [drm] Tile0: GT0: reset queued
+[Fri Oct  2 06:32:35 2026] xe 0000:b1:00.0: [drm] Tile0: GT0: reset started
+[Fri Oct  2 06:32:35 2026] xe 0000:b1:00.0: [drm] Tile0: GT0: reset done

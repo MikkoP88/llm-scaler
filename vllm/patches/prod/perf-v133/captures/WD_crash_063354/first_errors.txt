@@ -1,0 +1,10 @@
+767:(Worker_TP0 pid=1724) ERROR 10-02 06:32:35 [multiproc_executor.py:1026]   File "/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 890, in sample_tokens
+768:(Worker_TP0 pid=1724) ERROR 10-02 06:32:35 [multiproc_executor.py:1026]     return self.model_runner.sample_tokens(grammar_output)
+773:(Worker_TP0 pid=1724) ERROR 10-02 06:32:35 [multiproc_executor.py:1026]   File "/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 5147, in sample_tokens
+790:(Worker_TP0 pid=1724) ERROR 10-02 06:32:35 [multiproc_executor.py:1026]   File "/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_worker.py", line 890, in sample_tokens
+791:(Worker_TP0 pid=1724) ERROR 10-02 06:32:35 [multiproc_executor.py:1026]     return self.model_runner.sample_tokens(grammar_output)
+796:(Worker_TP0 pid=1724) ERROR 10-02 06:32:35 [multiproc_executor.py:1026]   File "/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py", line 5147, in sample_tokens
+810:(EngineCore pid=1525) ERROR 10-02 06:32:35 [core.py:1192] EngineCore encountered a fatal error.
+820:(EngineCore pid=1525) ERROR 10-02 06:32:35 [core.py:1192]     model_output = self.model_executor.sample_tokens(grammar_output)
+822:(EngineCore pid=1525) ERROR 10-02 06:32:35 [core.py:1192]   File "/opt/venv/lib/python3.12/site-packages/vllm/v1/executor/multiproc_executor.py", line 321, in sample_tokens
+851:(APIServer pid=1224) ERROR 10-02 06:32:35 [async_llm.py:743] vllm.v1.engine.exceptions.EngineDeadError: EngineCore encountered an issue. See stack trace (above) for the root cause.

@@ -222,14 +222,40 @@ policy: one re-run per crashed leg; if a CONTROL leg crashes the
 same way, the round PAUSES and hands the lane to the crashfix
 workstream (measurement base unstable).
 
-Status: IN FLIGHT 2026-10-02 — host rebooted 06:0x (fresh-host
-directive); sequence after watchdog restore: (1) assert pristine
-(0 markers, .so sha 1d9dcf4e), (2) RIDER re-apply
-/root/build/v128_stage/patch_perreq_v128.py in-container, (3) apply
-/root/build/patch_v133_rotreuse.py in-container, (4) arm
-VLLM_V133_ROTREUSE=1 via serve_user.sh sed + SIGKILL restart,
-(5) verify boot (V133_ROT_ARMED line, async 'enabled', health 200),
-(6) storm leg A treatment; controls = banked v131/v130 numbers.
+Status: CLOSED 2026-10-02 — leg A2 ran CLEAN to completion after the
+A1 void (host reboot per crash directive, patches re-applied
+byte-exact: markers=5 md5 82375df2, perreq markers=2, knob armed,
+FIXED full-tree restart `pkill -9 -f [v]llm` + emptiness verify +
+detached relaunch; boot 07:03:58, ARMED x3 EngineCore pid 1531,
+health 200, serve_full.log scope line 240+).
+
+**LEG A2 RESULTS (treatment, VLLM_V133_ROTREUSE=1):**
+- PRESSUREB_DONE ok=72/72 wall=1070s HARVEST_ROWS=72; all finish=stop;
+  client completion_tokens 5168, prompt 1,399,779 — parity exact.
+- Engine-side (v128 perreq): TOTAL computed 1,234,915 / generated
+  5,168 / cached 164,864; ttft p50 126.8s p90 259.4s.
+- GATE VERDICT: computed vs v131 control 1,168,355 = **+5.7% —
+  GATE FAIL** (gate: materially DOWN). wall 1070s inside the v130
+  spread (995/1023/1318), above the v131 control point 876s.
+- STABILITY: clean through BOTH prior crash windows (A1 T+4.6min,
+  v132 T+8min); 0 HTTP 500, 0 ERROR lines, no DEVICE_LOST — the
+  cleanest treatment leg of the round.
+
+**ROTATION-MASS LAW (the round's measured discovery):** no manager
+ever crossed reused=256 (no second V133_ROT checkpoint line all
+storm; final mass <= 768 blocks/storm, each manager <= 255). The
+P67 ceiling estimate (~2.4k steady mamba allocs -> 40-45% of ~1505
+mapping deaths) was WRONG by ~3 orders: the per-1024-crossing
+rotation is a rounding error against the recompute mass (1.2M
+computed tokens driven by chunked-prefill page churn — v130's
+between-turn CYCLIC LRU THRASH, not rotation pops). The +5.7%
+computed delta is single-run noise on an immaterial lever (n=1 vs
+n=1; v130 wall spread alone is +/-15%).
+- Mechanism proof retained: park->consume worked from the first
+  event (reused=1 parks=1 within one alloc step of first park,
+  freeq ~462 stable), zero exceptions from any v133 site, guards
+  quiet (stock_guard=1 early, then silence) — the design was sound;
+  the mass was not there.
 
 **LEG A1 = VOID (confounded, not lever-caused).** ok=0/72 wall=277s:
 all 18 turn-1 requests HTTP500 at T+276s; watchdog captured
@@ -260,4 +286,20 @@ Win (total computed down materially, parity, quiet-inert knob-off):
 bake v1.2.28 with reuse default-ON (ship-on-delta trigger). Lose:
 close by measurement, no bake, v1.2.27 stands.
 
-Status: pending P69.
+Status: CLOSED 2026-10-02 — **LOSE / REJECTED BY MEASUREMENT, no
+bake; v1.2.27 stands.** Leg A2 gate fail (+5.7% computed, single-run
+noise on an immaterial lever) + ROTATION-MASS LAW (<=768 reusable
+blocks/storm vs 1.2M computed-token mass). No ship trigger fired.
+Lane restored pristine: patcher --restore (md5 eae6cd07 exact),
+perreq marker removed (patch dormant), knob line stripped from
+serve_user.sh, full-tree restart + sha assert. Hand forward to the
+crashfix workstream: WD_crash_063354 (card1 ccs reset under the A1
+orphaned-two-engine confound — distinct from v132's card2 single-
+tree T+8min onset; both devcoredumps banked) + the A1 lesson
+(narrow `pkill -f vllm.entrypoints` orphans EngineCore/Workers —
+restart recipe is now the full-tree kill + emptiness verify).
+Surgical-churn program status after v131/v132/v133: pop-time
+reorder DEAD (law), free-side segregation DEAD (law), alloc-side
+reuse FUNCTIONAL-but-immaterial (mass law) — the remaining live
+levers are structural (two-free-list queue redesign) or the v130
+size-aware eviction / capacity direction; none are surgical.
