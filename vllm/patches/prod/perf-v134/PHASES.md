@@ -287,7 +287,158 @@ Inventory (classify KEEP-default vs STRIP-patch-leftover):
    regression = NO BAKE. Functional posture (MTPx4, XGrammar-2,
    async, barriers 0, fp8, fences, Fix L/M) carries unchanged.
 
-Status: PLANNED — executes after the P72 matrix closes.
+Status: **CLOSED 2026-10-02** — v1.2.28 (`15168e205816`) STANDING.
+Surface stripped + baked, chain rebased (md5 `941fc03b0d1e25b328febf87fc0bbca5`),
+RESTORE-CHAIN RIDER killed and proven in production fire (crash-cycle
+containers instrument-free), standard-shape parity 1089/1029/1042 vs
+v1.2.27 band 865–1312 (parity-or-better, ZERO-DEGRADATION LAW met).
+Depth leg crashed on-class 2/2 (intermittent death class, predates the
+strip — sandwich-proven); its full devcoredump is BANKED for P73.
+
+Execution log (2026-10-02):
+- **STRIP certified 2×** — `p75_strip_logging.py` (16 anchor pairs,
+  two-phase verify-first): run on the live lane container AND on a
+  fresh bake container from v1.2.27; both `P75_STRIP_OK` (py_compile +
+  keep-asserts + forbidden-grep on all touched files).
+- **RESTORE-CHAIN RIDER LAW (new):** the instrument is baked INTO
+  image v1.2.27 itself (apply logs: `marker present, skipping` +
+  `module installed` on every fresh container) AND the restore chain
+  re-applies `patch_f15b.py`/`patch_v58_p1.py` per boot. The first
+  in-container strip was reverted at 09:48 when the watchdog's full
+  restore `docker rm -f`'d the stripped container mid-restart (apply
+  logs + Created timestamp prove the path; no in-place re-applier
+  exists). Durable fix = bake + chain rebase, both done below.
+- **v1.2.28 BAKED** = `15168e205816` (24.8 GB, 2026-10-02 10:07Z):
+  bake container from v1.2.27 + strip + surface cleanup — /root
+  pruned 65→4 entries (57 f15b_*.log dump/pyspy/dmesg/xpusmi,
+  serve_full* / fp8mq logs, dbg_sampler_v60f.py, t2_*/repro_v88/
+  v51_utils/dt_warmup scripts, 12 staged patch_*.py copies,
+  gdn_cap_input.pt debug capture, v88out/, /tmp v60g_*/x*.txt junk);
+  KEPT: kernel whl, dflash2 staging, all `.llm_scaler_exp_v12*_baked`
+  lineage markers, serve_user.sh. **.so sha UNCHANGED**
+  (`1d9dcf4e…` verified on image) — python-only bake, no wheel
+  rebuild, KERNELS_MAX_JOBS=52 not needed. Known-inert: image Env
+  carries `VLLM_F15B=1`/`VLLM_F15B_STALL_S=45` from the commit
+  lineage — zero readers exist (module deleted, forbidden-grep
+  proof); chain no longer passes them.
+- **CHAIN REBASED** (`boot_v1227_restore.sh`, both copies identical,
+  **md5 `941fc03b0d1e25b328febf87fc0bbca5`** — retires
+  `e2f0b00d…`; no script enforces the md5, certification-record
+  only): `V1227_IMAGE` default → v1.2.28; patcher steps removed =
+  patch_f15b.py, patch_v58_p1.py (instrument) + patch_v55_3.py
+  (FAILs noisily on the absent `_f15b.py`; its pipe-masking `| tee`
+  hid the rc — fences are baked, the chain keeps the bare
+  `grep -c "llm-scaler v55.3"` assert); `-e VLLM_F15B=1 -e
+  VLLM_F15B_STALL_S=45` env tokens dropped from docker run.
+- **ARSTAGE PATCHER v2.1** (`patch_arstage.py`, host + this repo):
+  the chain reinstalled `_arstage.py` WITH the census f15b feed
+  every boot (only `_f15b` residue tree-wide after the first chain
+  test). Feed + `_MARK_EVERY` removed from the embedded module at
+  source; census counters/`_summary`/`stats_lines` retained
+  (decision census = functional, not logging). Reinstalled →
+  `NO_F15B_RESIDUE` tree-wide, compiles, Fix L marker intact.
+- **LEG-4 PARITY PASS (pre-commit, stripped live lane):**
+  `ok=72/72 wall=1089s HARVEST_ROWS=0`, zero `/tmp/fr_*.log`
+  mid-storm — band 865–1312 (median 1095): parity-or-better,
+  ZERO-DEGRADATION LAW met.
+- **CHAIN END-TO-END TEST PASS (TEST75):** fresh container from
+  v1.2.28 through the rebased chain — all functional patchers skip
+  clean (v60/v62b/v63/v64/sed ALREADY-APPLIED), serve boots, HEALTH
+  200 at ~150s, posture ckpt verified on live cmdline, KV
+  476,451 tok / concurrency 1.82×.
+- Remaining: legs 5/6 standard + leg 7 depth (N_TURNS 6 →
+  num_computed ≥ 30k, P72-escalation fold-in) on the watchdog-managed
+  v1.2.28 lane; repo commit + push; memory update.
+
+Matrix run 1 (10:35–10:59) + crash #3 + recovery:
+- **leg5 PASS**: `ok=72/72 wall=1029s` — best-band wall (median 1095,
+  band 865–1312). v1.2.28 ≥ v1.2.27 confirmed on the standard shape.
+- **leg6 = crash #3 of the intermittent class** (NOT a strip
+  regression — leg5 ran the identical shape clean minutes earlier):
+  wedge mid-storm → 68 request fails → `ok=4/72 wall=364s`; dmesg
+  10:58:52 `ccs Engine reset guc_id=52` card b1 (same LR-cleanup
+  signature, same guc_id as crash #1/#2; a second reset guc_id=62 on
+  da at 11:00:20 rode the teardown). Lifetime: 3 crash / 6 clean.
+  No Q34 capture fired (no capture dir); dmesg = evidence of record
+  — fr rings no longer exist BY DESIGN (the P75 evidence tradeoff).
+- **leg7_depth VOID**: launched 10:58:52 into the dead engine,
+  `ok=0/108 wall=1s` — rerun required post-recovery.
+- **Watchdog auto-recovery through the REBASED chain: perfect.**
+  WD fired 11:00:22 → fresh container from `15168e205816` (v1.2.28)
+  → chain ran WITHOUT the instrument patchers (f15b apply log
+  untouched at 09:48) → `BOOT_V1227_RESTORED posture=ckpt 11:02:47`,
+  health 200, KV 476,451 / 1.82× parity, and the recovered container
+  is **instrument-free** (fr=0, F15B_GONE, NO_RESIDUE) — the exact
+  property v1.2.27 lacked (RESTORE-CHAIN RIDER dead, proven in
+  production fire).
+- **Host rebooted 11:05** per the standing post-crash directive;
+  legs 6′ and 7′ rerun after watchdog recovery.
+
+Matrix run 2 (11:22–12:16, post-reboot, matrix2 runner):
+- **leg6′ PASS**: `ok=72/72 wall=1042s` (11:22:45→11:40:07) — in-band
+  (865–1312, median 1095). Crash #3 is now SANDWICHED by clean
+  passes on the identical shape (leg5 1029 / leg6′ 1042) —
+  intermittent class, definitively not a surface regression.
+- **leg7_depth = crash #4, ON-CLASS (depth shape)** — the known
+  dying shape per P71 (num_computed ≥ 22k = depth, not occupancy):
+  12:09:57 card da (card2) `ccs Engine reset guc_id=32` MID-STORM
+  **with devcoredump created**; engine LIMPED ~6.5 min (health still
+  200 at 12:11:02) while 47 requests failed → `ok=61/108 wall=2060s`
+  (done 12:14:28); 12:16:29 full death cascade — b1 `ccs guc_id=22` +
+  `bcs guc_id=26`, da `bcs guc_id=36` (both cards, bcs timing out
+  behind the wedged context) → health 000 → WD fired `boot_WD_121631`,
+  container recreated from v1.2.28 (instrument-free, chain correct).
+  **Law refinement (SURVIVED-RESET):** P72's survivable reset was at
+  engine-IDLE; a mid-storm ccs LR reset = PRE-DEATH (limp window then
+  cascade), not survivable.
+- **DEVDUMP-DISPLACEMENT LAW:** the 12:16:29 cascade's later resets
+  CLOBBERED the 12:09:57 devcoredump (card2 data file 0 bytes, mtime
+  12:16) — a mid-storm dump survives only the ~6-min limp window;
+  Q34 auto-capture did NOT fire (2nd consecutive miss, #3 and #4) →
+  P73 must make capture instantaneous (udev rule on devcoredump
+  create, not post-hoc polling). Evidence of record: dmesg timeline
+  saved `lce1/WD_crash_120957_dmesg.txt` + matrix2 log + driver
+  terminal line.
+- Lifetime: **4 crash / 7 clean.** Standard-shape parity on v1.2.28:
+  1089 / 1029 / 1042 (leg4/5/6′) vs v1.2.27 N=3 1312/1095/865 —
+  parity-or-better, ZERO-DEGRADATION LAW met on the gated shape.
+- **Host rebooted 12:19** per the standing post-crash directive;
+  leg7_depth rerun after watchdog recovery.
+
+Matrix run 3 (12:39–13:25) + crash #5 + FIRST FULL DEVCOREDUMP:
+- **leg7_depth rerun: `ok=105/108 wall=2740s`** — 97% complete, death
+  struck at the storm tail: 13:24:00 card da (card2) `ccs Engine reset
+  guc_id=32` (same class/signature as crash #4), engine died without a
+  second-reset cascade this time; 3 tail requests lost; WD fired
+  `boot_WD_132634`. Depth shape is now a 2/2 reliable trigger for the
+  death class (#4 at 61/108 mid-storm, #5 at 105/108 tail).
+- **WATCHER VOID + SYSFS-DEVDUMP-SIZE-0 LAW:** devdump_watch.sh polled
+  correctly but never fired — the sysfs devcoredump `data` node
+  ALWAYS stats 0 bytes (bin_attr size unknown); readability exists
+  only ON READ (`cat data | wc -c` = 512,555 while `stat -c%s` = 0).
+  Every `[ -s ]`/stat-size-gated capture (incl. the Q34 non-fires on
+  #3/#4) is structurally blind on this driver. Crash #4's dump was
+  likely readable in its limp window and lost to dismissal-by-cascade,
+  not displacement alone.
+- **MANUAL HARVEST BANKED:** `lce1/WD_crash_132400_card2.devcoredump`
+  (512,555 B, md5 `9eaf8fa7c3bebf9af7ca240f40e93be9`) + dmesg
+  `WD_crash_132400_dmesg.txt`. Header: `Reason: LR job cleanup,
+  guc_id=32`, kernel 6.17.0-1010-intel, `Process: python3 [8290]`,
+  PCI 0xe223. Sections present: GuC Log, GuC CT, Contexts, Job,
+  HW Engines, VM state.
+- **Forensic core (P73 input, from the dump):** context `ccs32`
+  carries an UNFINISHED job (`Job: seqno=2509, fence=0, finished=0`;
+  context Seqno 2508 → current job never completed); engine ccs0
+  `RING_INSTDONE 0xffdefffe` (units not retired; SAMPLER_INSTDONE all
+  done, ROW_INSTDONE 0x0); **`ACTHD/RING_BBADDR 0x0000d5569db23a04`**
+  = the hung batch's active-head host VA — nameable against VM state
+  page tables + a same-moment `/proc/<pid>/maps` (watcher v2 adds
+  this); `RING_HEAD 0x03202fd4` >> `RING_TAIL 0x3028` (deep queued
+  workload behind the wedge).
+- Lifetime: **5 crash / 7 clean.** Watcher v2 (read-probe harvest +
+  dismiss + pid maps snapshot, 100 KB completeness threshold) staged
+  for the P73 era.
+- **Host rebooted 13:31** per the standing post-crash directive.
 
 ## P73 — root-cause discrimination (H1 deep-context kernel vs H2 guc/LR)
 
@@ -307,7 +458,17 @@ Evidence paths, in order:
    minimal repro for upstream handoff either way.
 Deliverable: named culprit (kernel + shape, or driver condition).
 
-Status: pending P72.
+Status: **READY 2026-10-02** (P75 handoff) — path 1 UNLOCKED: the
+first readable full devcoredump of the mid-storm death class is banked
+(`lce1/WD_crash_132400_card2.devcoredump`, 512,555 B, md5
+`9eaf8fa7c3bebf9af7ca240f40e93be9`): unfinished ccs32 job seqno=2509,
+ACTHD/RING_BBADDR `0x0000d5569db23a04`, full GuC log/CT/VM state.
+Opening moves: (a) map ACTHD through the dump's VM state page tables
+to the owning allocation; (b) decode the ccs32 HWCTX image (LRC head
+12168); (c) GuC-log tail around seqno 2508→2509; (d) deploy watcher v2
+(read-probe + `/proc/<pid>/maps` snapshot) so the NEXT crash pairs the
+hung VA with the live process map; (e) if the kernel is ours
+(custom_esimd_kernels_lgrf .so) → P74a, else upstream → P74c.
 
 ## P74 — mitigation + verdict
 

@@ -46,6 +46,12 @@ default 262144; 0 = disabled). Cudagraph-safe: never allocates/grows
 while a stream capture is active (unseen size under capture falls
 back to the direct path and counts it).
 
+P75 (2026-10-02): module v2.1 — the f15b ring feed is REMOVED from
+_count (the f15b instrument was retired with the v1.2.28 bake;
+fifteen-hundred-call periodic marks no longer have a sink). Census
+counters, _summary() and stats_lines() are retained: they are the
+decision census, not logging. _MARK_EVERY went with the feed.
+
 Apply in-container BEFORE serve start (order vs patch_f15b.py is
 irrelevant — disjoint anchors):
     python3 patch_arstage.py            # apply
@@ -63,10 +69,11 @@ SP = pathlib.Path(
 )
 
 ARSTAGE_MODULE = '''
-# llm-scaler arstage v2: persistent staging + decision census (crashfix-v58 L).
+# llm-scaler arstage v2.1: persistent staging + decision census (crashfix-v58 L).
 # See patch_arstage.py header. v2: per-class staged/direct counters keyed
 # (numel, dtype, contig, stream), non-contig copy-staged, via-allgather
-# guard, periodic f15b ring marks, census in the f15b dump.
+# guard. v2.1 (P75): f15b ring feed retired with the instrument — census
+# counters and stats_lines() remain.
 import os
 import threading
 
@@ -81,7 +88,6 @@ _STATS: dict = {}
 _DIRECT_LAST: list = []
 _LOGGED = False
 _CALLS = 0
-_MARK_EVERY = 512
 
 
 def _capturing() -> bool:
@@ -119,14 +125,6 @@ def _count(key, staged: bool, reason: str = "") -> None:
             v[1] += 1
             v[2] = reason
         _CALLS += 1
-        do_mark = (_CALLS % _MARK_EVERY) == 0
-        summ = _summary() if do_mark else ""
-    if do_mark:
-        try:
-            from vllm import _f15b as _f
-            _f.mark("arstage", summ)
-        except Exception:
-            pass
 
 
 def stats_lines() -> str:
@@ -292,7 +290,7 @@ def main():
     print("[arstage] preflight: anchor unique OK")
 
     mod.write_text(ARSTAGE_MODULE)
-    print("[arstage] module vllm/_arstage.py installed (v2 census)")
+    print("[arstage] module vllm/_arstage.py installed (v2.1)")
     patch_file(xc, xc_patches, "xpu_comm")
     print("ARSTAGE_APPLY_OK")
 
