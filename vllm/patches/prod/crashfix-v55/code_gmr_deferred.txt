@@ -1,0 +1,232 @@
+    ) -> tuple[
+        dict[int, torch.Tensor] | None,
+        dict[str, torch.Tensor] | list[dict[str, torch.Tensor]] | None,
+    ]:
+        """
+        Build slot mappings in both formats needed by the system.
+
+        Args:
+            num_tokens_padded: Total number of tokens (padded)
+            num_reqs_padded: Total number of requests (padded)
+            num_tokens_unpadded: Actual number of tokens (unpadded)
+            ubatch_slices: Optional ubatch slicing info for DBO
+
+        Returns:
+            A tuple of:
+            - slot_mappings_by_gid: dict[int, torch.Tensor] for attention metadata
+            - slot_mappings_by_layer: dict[str, torch.Tensor] or list for ForwardContext
+        """
+        if not (
+            hasattr(self, "kv_cache_config")
+            and self.kv_cache_config is not None
+            and len(self.kv_cache_config.kv_cache_groups) > 0
+        ):
+            return None, None
+
+        def _get_slot_mapping(kv_cache_gid: int):
+            assert num_reqs_padded is not None and num_tokens_padded is not None
+            kv_cache_spec = self.kv_cache_config.kv_cache_groups[
+                kv_cache_gid
+            ].kv_cache_spec
+            if isinstance(kv_cache_spec, EncoderOnlyAttentionSpec):
+                slot_mapping = torch.zeros(
+                    (num_tokens_padded,),
+                    dtype=torch.int64,
+                    device=self.device,
+                )
+            else:
+                blk_table = self.input_batch.block_table[kv_cache_gid]
+                slot_mapping = blk_table.slot_mapping.gpu[:num_tokens_padded]
+
+            # Fill unused with -1. Needed for reshape_and_cache in full cuda
+            # graph mode. `blk_table_tensor` -1 to match mamba PAD_SLOT_ID
+            slot_mapping[num_tokens_unpadded:num_tokens_padded].fill_(-1)
+
+            return slot_mapping
+
+        slot_mappings_by_gid = {
+            gid: _get_slot_mapping(gid)
+            for gid, _ in enumerate(self.kv_cache_config.kv_cache_groups)
+        }
+
+        slot_mappings_by_layer: dict[str, torch.Tensor] = {}
+        for gid, kv_cache_group in enumerate(self.kv_cache_config.kv_cache_groups):
+            slot_mapping = slot_mappings_by_gid[gid]
+            for layer_name in kv_cache_group.layer_names:
+                slot_mappings_by_layer[layer_name] = slot_mapping
+
+        if ubatch_slices is not None:
+            result: list[dict[str, torch.Tensor]] = []
+            for ubatch in ubatch_slices:
+                sliced_mappings: dict[str, torch.Tensor] = {}
+                for layer_name, slot_mapping in slot_mappings_by_layer.items():
+                    sliced_mappings[layer_name] = slot_mapping[ubatch.token_slice]
+                result.append(sliced_mappings)
+            return slot_mappings_by_gid, result
+
+        return slot_mappings_by_gid, slot_mappings_by_layer
+
+    def _is_all_reqs_chunked_prefill(self) -> bool:
+        """Check if all scheduled requests are marked to discard sampled tokens.
+
+        This is true when `discard_request_mask` is set for every scheduled
+        request (e.g., for chunked prefill requests that are not the last
+        prefill chunk)."""
+        num_reqs = self.input_batch.num_reqs
+        return bool(self.discard_request_mask.np[:num_reqs].all())
+
+    @torch.inference_mode()
+    def execute_model(
+        self,
+        scheduler_output: "SchedulerOutput",
+        intermediate_tensors: IntermediateTensors | None = None,
+    ) -> ModelRunnerOutput | AsyncModelRunnerOutput | IntermediateTensors | None:
+        if self.execute_model_state is not None:
+            raise RuntimeError(
+                "State error: sample_tokens() must be called "
+                "after execute_model() returns None."
+            )
+
+        if self.routed_experts_initialized:
+            capturer = get_global_experts_capturer()
+            if capturer is not None:
+                capturer.finalize_pending_copy()
+
+        # If ngram_gpu is used, we need to copy the scheduler_output to avoid
+        # the modification has influence on the scheduler_output in engine core process.
+        # The replace is much faster than deepcopy.
+        if (
+            self.speculative_config is not None
+            and self.speculative_config.use_ngram_gpu()
+        ):
+            num_scheduled_tokens_copy = scheduler_output.num_scheduled_tokens.copy()
+            spec_decode_tokens_copy = (
+                scheduler_output.scheduled_spec_decode_tokens.copy()
+            )
+            scheduler_output = replace(
+                scheduler_output,
+                num_scheduled_tokens=num_scheduled_tokens_copy,
+                scheduled_spec_decode_tokens=spec_decode_tokens_copy,
+            )
+
+        if has_kv_transfer_group():
+            kv_connector_metadata = scheduler_output.kv_connector_metadata
+            assert kv_connector_metadata is not None
+            get_kv_transfer_group().handle_preemptions(kv_connector_metadata)
+
+        num_scheduled_tokens = scheduler_output.total_num_scheduled_tokens
+        with (
+            record_function_or_nullcontext("gpu_model_runner: preprocess"),
+            self.synchronize_input_prep(),
+        ):
+            # Update persistent batch states.
+            _v32_pp = getattr(self, "_v32_pending_pp", None)
+            if _v32_pp is not None:
+                self._v32_pending_pp = None
+                # counts landed asynchronously during the previous step;
+                # one full engine round-trip of host work has elapsed.
+                _v55_wait_event(
+                    self.num_accepted_tokens_event,
+                    "num_accepted_tokens_event (deferred postprocess)")
+                mamba_utils.run_deferred_postprocess(self, _v32_pp)
+            deferred_state_corrections_fn = self._update_states(scheduler_output)
+
+            if has_ec_transfer() and not get_ec_transfer().is_consumer:
+                with self.maybe_get_ec_connector_output(
+                    scheduler_output,
+                    encoder_cache=self.encoder_cache,
+                ) as ec_connector_output:
+                    self._execute_mm_encoder(scheduler_output)
+                    return make_empty_encoder_model_runner_output(scheduler_output)
+
+            if not num_scheduled_tokens:
+                if (
+                    self.parallel_config.distributed_executor_backend
+                    == "external_launcher"
+                    and self.parallel_config.data_parallel_size > 1
+                ):
+                    # this is a corner case when both external launcher
+                    # and DP are enabled, num_scheduled_tokens could be
+                    # 0, and has_unfinished_requests in the outer loop
+                    # returns True. before returning early here we call
+                    # dummy run to ensure coordinate_batch_across_dp
+                    # is called into to avoid out of sync issues.
+                    self._dummy_run(1)
+                if not has_kv_transfer_group():
+                    # Return empty ModelRunnerOutput if no work to do.
+                    return EMPTY_MODEL_RUNNER_OUTPUT
+                return self.kv_connector_no_forward(scheduler_output, self.vllm_config)
+
+            if self.cache_config.kv_sharing_fast_prefill:
+                assert not self.num_prompt_logprobs, (
+                    "--kv-sharing-fast-prefill produces incorrect "
+                    "logprobs for prompt tokens, tokens, please disable "
+                    "it when the requests need prompt logprobs"
+                )
+
+            num_reqs = self.input_batch.num_reqs
+            req_ids = self.input_batch.req_ids
+            tokens = [scheduler_output.num_scheduled_tokens[i] for i in req_ids]
+            num_scheduled_tokens_np = np.array(tokens, dtype=np.int32)
+            max_num_scheduled_tokens = int(num_scheduled_tokens_np.max())
+            num_tokens_unpadded = scheduler_output.total_num_scheduled_tokens
+
+            logits_indices, spec_decode_metadata = self._prepare_inputs(
+                scheduler_output,
+                num_scheduled_tokens_np,
+            )
+
+            cascade_attn_prefix_lens = None
+            # Disable cascade attention when using microbatching (DBO)
+            if self.cascade_attn_enabled and not self.parallel_config.use_ubatching:
+                # Pre-compute cascade attention prefix lengths
+                cascade_attn_prefix_lens = self._compute_cascade_attn_prefix_lens(
+                    num_scheduled_tokens_np,
+                    self.input_batch.num_computed_tokens_cpu[:num_reqs],
+                    scheduler_output.num_common_prefix_blocks,
+                )
+
+            (
+                cudagraph_mode,
+                batch_desc,
+# llm-scaler v55 (crashfix-v55): bounded wait for async events. An event
+# that is never recorded must kill the engine within seconds, with the
+# culprit named — not wedge the RPC thread until the step watchdog
+# (crash-2, 2026-09-10 15:44:30: last completed op on BOTH ranks was a
+# clean `propose end`, num_accepted_tokens_event never signaled,
+# sample_tokens RPC timed out, 600 s watchdog kill; dmesg clean = no
+# device fault, host-side deadlock on a dead event).
+def _v55_wait_event(evt, what: str) -> None:
+    try:
+        _tmo = float(os.environ.get("VLLM_V55_EVENT_TIMEOUT_S", "120"))
+    except ValueError:
+        _tmo = 120.0
+    if not evt.query():
+        # v55.2 progressive cadence: the flat 50ms poll quantized every
+        # hot-path wait (regression: ~+40ms/step, genspeed -37%). Normal
+        # async completion lands in <20ms — poll at 0.5ms there; back off
+        # only once the wait is suspicious. Bound unchanged (crash-2).
+        _dl = time.monotonic() + _tmo
+        _t0 = time.monotonic()
+        while not evt.query():
+            _now = time.monotonic()
+            if _now > _dl:
+                raise RuntimeError(
+                    f"llm-scaler v55 ASYNC-EVENT-STALL: {what} not "
+                    f"signaled within {_tmo:.0f}s — async producer dead "
+                    f"(crash-2 wedge class); failing fast instead of "
+                    f"wedging the RPC thread until the step watchdog")
+            _el = _now - _t0
+            if _el < 0.02:
+                time.sleep(0.0005)
+            elif _el < 0.2:
+                time.sleep(0.005)
+            elif _el < 2.0:
+                time.sleep(0.05)
+            else:
+                time.sleep(0.25)
+    evt.synchronize()
+import torch
+import torch.distributed
+import torch.nn as nn
+from tqdm import tqdm

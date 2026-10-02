@@ -1,0 +1,126 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+
+import functools
+import gc
+import itertools
+import threading
+import time
+from collections import defaultdict
+from collections.abc import Callable, Iterable, Iterator, Sequence
+from contextlib import contextmanager
+import os
+from copy import copy, deepcopy
+from dataclasses import dataclass, replace
+from functools import reduce
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, cast
+
+import numpy as np
+
+# llm-scaler v55 (crashfix-v55): bounded wait for async events. An event
+# that is never recorded must kill the engine within seconds, with the
+# culprit named — not wedge the RPC thread until the step watchdog
+# (crash-2, 2026-09-10 15:44:30: last completed op on BOTH ranks was a
+# clean `propose end`, num_accepted_tokens_event never signaled,
+# sample_tokens RPC timed out, 600 s watchdog kill; dmesg clean = no
+# device fault, host-side deadlock on a dead event).
+def _v55_wait_event(evt, what: str) -> None:
+    # llm-scaler f15b: wait-state visibility (dump names the wait)
+    from vllm import _f15b as _f15b_mod
+    _f15b_mod.enter_wait(what)
+    try:
+        return _v55_wait_event_inner(evt, what)
+    finally:
+        _f15b_mod.exit_wait()
+
+
+def _v55_wait_event_inner(evt, what: str) -> None:
+    try:
+        _tmo = float(os.environ.get("VLLM_V55_EVENT_TIMEOUT_S", "120"))
+    except ValueError:
+        _tmo = 120.0
+    if not evt.query():
+        # v55.2 progressive cadence: the flat 50ms poll quantized every
+        # hot-path wait (regression: ~+40ms/step, genspeed -37%). Normal
+        # async completion lands in <20ms — poll at 0.5ms there; back off
+        # only once the wait is suspicious. Bound unchanged (crash-2).
+        _dl = time.monotonic() + _tmo
+        _t0 = time.monotonic()
+        while not evt.query():
+            _now = time.monotonic()
+            if _now > _dl:
+                raise RuntimeError(
+                    f"llm-scaler v55 ASYNC-EVENT-STALL: {what} not "
+                    f"signaled within {_tmo:.0f}s — async producer dead "
+                    f"(crash-2 wedge class); failing fast instead of "
+                    f"wedging the RPC thread until the step watchdog")
+            _el = _now - _t0
+            if _el < 0.02:
+                time.sleep(0.0005)
+            elif _el < 0.2:
+                time.sleep(0.005)
+            elif _el < 2.0:
+                time.sleep(0.05)
+            else:
+                time.sleep(0.25)
+    evt.synchronize()
+import torch
+import torch.distributed
+import torch.nn as nn
+from tqdm import tqdm
+
+import vllm.envs as envs
+from vllm.compilation.counter import compilation_counter
+from vllm.compilation.cuda_graph import CUDAGraphStat, CUDAGraphWrapper
+from vllm.compilation.monitor import set_cudagraph_capturing_enabled
+from vllm.config import (
+    CompilationMode,
+    CUDAGraphMode,
+    VllmConfig,
+    get_layers_from_vllm_config,
+    set_current_vllm_config,
+    update_config,
+)
+from vllm.config.cache import CacheConfig
+from vllm.distributed.ec_transfer import get_ec_transfer, has_ec_transfer
+from vllm.distributed.eplb.eplb_state import EplbState
+from vllm.distributed.kv_transfer import get_kv_transfer_group, has_kv_transfer_group
+from vllm.distributed.kv_transfer.kv_connector.utils import copy_kv_blocks
+from vllm.distributed.parallel_state import (
+    get_dcp_group,
+            "gpu_model_runner: AsyncGPUModelRunnerOutput"
+        ):
+            async_output = AsyncGPUModelRunnerOutput(
+                model_runner_output=output,
+                sampled_token_ids=sampler_output.sampled_token_ids,
+                logprobs_tensors=sampler_output.logprobs_tensors,
+                invalid_req_indices=invalid_req_indices,
+                async_output_copy_stream=self._get_or_create_async_output_copy_stream(),
+                vocab_size=self.input_batch.vocab_size,
+            )
+            # llm-scaler v52o (amends v52e): attach step-accurate refs for
+            # the empty-row attribution dump in get_output() (refs only,
+            # per-step object). v52o: self.rejection_sampler EXISTS ONLY in
+            # spec mode — stock never assigns it for nospec — and this
+            # producer runs in EVERY mode (sample_tokens async branch), so
+            # the bare attribute access killed both workers on the first
+            # nospec request (t3n loopdiff nost3n leg, gpu_model_runner.py
+            # sample_tokens AttributeError). Guard via getattr on self;
+            # spec-mode tuple values are byte-identical, nospec now yields
+            # (None, logits, None, None, None) which the v52e consumer's
+            # try/except already tolerates.
+            _v52e_rs = getattr(self, "rejection_sampler", None)
+            async_output._v52e_refs = (
+                spec_decode_metadata,
+                logits,
+                getattr(_v52e_rs, "_v52e_bonus", None),
+                getattr(_v52e_rs, "_v52e_targ", None),
+                getattr(self, "_v52e_temp", None),
+            )
+            # llm-scaler v52f (crash-4 R1 onset probe): snapshot the worker
+            # counters that drive (a) the optimistic input gather and (b)
+            # preprocess_mamba's boundary carry bias, plus a ref to the
+            # input batch for the token window. Counters are COPIES (they
+            # mutate in place); the input_batch ref is safe (one-step
+            # object lifetime, runner-owned).
+            try:

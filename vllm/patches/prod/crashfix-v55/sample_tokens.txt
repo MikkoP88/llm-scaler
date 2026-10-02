@@ -1,0 +1,151 @@
+    def sample_tokens(
+        self, grammar_output: "GrammarOutput | None"
+    ) -> ModelRunnerOutput | AsyncModelRunnerOutput | IntermediateTensors:
+        if self.execute_model_state is None:
+            kv_connector_output = self.kv_connector_output
+            self.kv_connector_output = None
+            # receive sampled token ids from the last PP rank.
+            if self.use_async_scheduling and not get_pp_group().is_last_rank:
+                self._pp_receive_prev_sampled_token_ids_to_input_batch()
+            if not kv_connector_output:
+                return None  # type: ignore[return-value]
+
+            # In case of PP with kv transfer, we need to pass through the
+            # kv_connector_output
+            if kv_connector_output.is_empty():
+                return EMPTY_MODEL_RUNNER_OUTPUT
+
+            output = copy(EMPTY_MODEL_RUNNER_OUTPUT)
+            output.kv_connector_output = kv_connector_output
+            return output
+
+        # Unpack ephemeral state.
+        (
+            scheduler_output,
+            logits,
+            spec_decode_metadata,
+            spec_decode_common_attn_metadata,
+            hidden_states,
+            sample_hidden_states,
+            aux_hidden_states,
+            ec_connector_output,
+            cudagraph_stats,
+            slot_mappings,
+        ) = self.execute_model_state
+        # Clear ephemeral state.
+        self.execute_model_state = None
+
+        # Apply structured output bitmasks if present.
+        if grammar_output is not None:
+            apply_grammar_bitmask(
+                scheduler_output, grammar_output, self.input_batch, logits
+            )
+
+        with record_function_or_nullcontext("gpu_model_runner: sample"):
+            sampler_output = self._sample(logits, spec_decode_metadata)
+
+        self._update_states_after_model_execute(
+            sampler_output.sampled_token_ids, scheduler_output
+        )
+        if self.use_async_scheduling:
+            pp = get_pp_group()
+            # For torchrun external_launcher PP mode with broadcast_pp_output=True,
+            # PP outputs have been broadcasted to all ranks at logits computation.
+            # Therefore, here is no need to send sampled token ids again in this case.
+            if not self.broadcast_pp_output and pp.world_size > 1 and pp.is_last_rank:
+                self._pp_broadcast_prev_sampled_token_ids(
+                    sampler_output.sampled_token_ids
+                )
+
+        self._draft_token_ids = None
+        self._draft_token_req_ids = None
+        self.valid_sampled_token_count_gpu = None
+        self.input_batch.prev_sampled_token_ids = None
+
+        def propose_draft_token_ids(sampled_token_ids):
+            assert spec_decode_common_attn_metadata is not None
+            with record_function_or_nullcontext("gpu_model_runner: draft"):
+                self._draft_token_ids = self.propose_draft_token_ids(
+                    scheduler_output,
+                    sampled_token_ids,
+                    self.input_batch.sampling_metadata,
+                    hidden_states,
+                    sample_hidden_states,
+                    aux_hidden_states,
+                    spec_decode_metadata,
+                    spec_decode_common_attn_metadata,
+                    slot_mappings,
+                )
+                self._copy_draft_token_ids_to_cpu(scheduler_output)
+
+        spec_config = self.speculative_config
+        propose_drafts_after_bookkeeping = False
+        if spec_config is not None:
+            # Decide whether to run the drafter or zero out draft tokens.
+            input_fits_in_drafter = spec_decode_common_attn_metadata is not None and (
+                spec_decode_common_attn_metadata.max_seq_len + self.num_spec_tokens
+                <= self.effective_drafter_max_model_len
+            )
+            use_gpu_toks = (
+                spec_config.use_eagle()
+                or spec_config.uses_draft_model()
+                or spec_config.uses_extract_hidden_states()
+            ) and not spec_config.disable_padded_drafter_batch
+            if use_gpu_toks:
+                # EAGLE/DraftModel speculative decoding can use the GPU sampled tokens
+                # as inputs, and does not need to wait for bookkeeping to finish.
+                assert isinstance(
+                    self.drafter,
+                    EagleProposer
+                    | DFlashProposer
+                    | DraftModelProposer
+                    | ExtractHiddenStatesProposer
+                    | Gemma4Proposer,
+                )
+                # llm-scaler v52n (crash-4 escalation-B root fix, t3n
+                # lane): the RAW rejection-sampler row of a NaN-zombie
+                # request carries the OOB bonus sentinel (argmax over
+                # all-NaN target logits -> == vocab_size, observed
+                # 248320) in slot 0; feeding it raw to the drafter
+                # (propose below or prepare_next_token_ids_padded)
+                # drives an out-of-range index into the drafter
+                # embedding gather -> IndexKernelUtils.h:63 assert ->
+                # worker death -> EngineDeadError (t3m_engine.log:
+                # onset step == fatal step, PRE-COPY computed=4096
+                # sched=8 at 23:42:22, worker died 23:42:31). Healthy
+                # rows never contain >= vocab ids, and -1 rejection
+                # tails are normal padded-kernel transport, so clamp
+                # ONLY >=vocab entries on a per-step CLONE (two tiny
+                # elementwise kernels, no device sync, no measurable
+                # cost). The ORIGINAL tensor is untouched: state
+                # updates, the async output copy and
+                # RejectionSampler.parse_output still see the
+                # sentinel, so the emission still resolves EMPTY and
+                # the scheduler-side v52m strike-out aborts the
+                # request client-visibly while the engine stays up.
+                _v52n_vocab = self.model_config.get_vocab_size()
+                sampled_token_ids = sampler_output.sampled_token_ids
+                _v52n_row = sampled_token_ids.clone()
+                _v52n_row.masked_fill_(_v52n_row >= _v52n_vocab, 0)
+                sampled_token_ids = _v52n_row
+                if input_fits_in_drafter:
+                    propose_draft_token_ids(sampled_token_ids)
+                elif self.valid_sampled_token_count_event is not None:
+                    assert spec_decode_common_attn_metadata is not None
+                    next_token_ids, valid_sampled_tokens_count = (
+                        self.drafter.prepare_next_token_ids_padded(
+                            sampled_token_ids,
+                            self.requests,
+                            self.input_batch,
+                            self.discard_request_mask.gpu,
+                        )
+                    )
+                    self._copy_valid_sampled_token_count(
+                        next_token_ids, valid_sampled_tokens_count
+                    )
+            elif (
+                spec_config.use_ngram_gpu()
+                and not spec_config.disable_padded_drafter_batch
+            ):
+                assert isinstance(self.drafter, NgramProposerGPU)
+                sampled_token_ids = sampler_output.sampled_token_ids

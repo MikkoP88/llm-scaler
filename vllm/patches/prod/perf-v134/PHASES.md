@@ -488,4 +488,184 @@ fix. If the culprit is outside this repo's surface (upstream
 xe/kernel/firmware), document + hand off with the repro recipe and
 this round closes no-bake.
 
-Status: pending.
+Status: **BUNDLED into CRASHFIX-76 below** (user directive
+2026-10-02: bundle all next phases to a single plan, implement,
+validate, bake a new prod image).
+
+---
+
+# CRASHFIX-76 — single-track program (P73 + P74 + validation + bake)
+
+Target: **llm-scaler-exp:v1.2.29**. One plan, four stages, executed
+in order; no stage skips its gate. Standing laws active throughout:
+ZERO-DEGRADATION (only improvements), reboot-after-crash,
+SHIP-MEASUREMENT (.so sha re-cert if any .so changes), READOUT,
+barriers 0 / `--async-scheduling`, spec MTP×4 + XGrammar-2 crash-free,
+no subagents.
+
+## Stage A — root-cause from the banked dump (offline, zero lane risk)
+- A1 **format discovery**: section inventory of
+  `lce1/WD_crash_132400_card2.devcoredump` (p73_analyze.py on host).
+- A2 **ACTHD map**: walk VM-state page tables for VA
+  `0x0000d5569db23a04` → owning allocation / module.
+- A3 **context + GuC**: decode ccs32 HWCTX (LRC head 12168, the
+  pending command stream) + GuC-log tail at seqno 2508→2509.
+- A4 **live cross-ref** (only if A2/A3 cannot name the module):
+  one depth storm under watcher v2 + periodic GPU-VA map sampling
+  so the crash pairs VA↔allocation live.
+- A5 **VERDICT**: kernel ours (custom_esimd_kernels_lgrf) vs
+  upstream kernel vs driver/fw state (guc 70.72.1 vs 70.49.4).
+
+## Stage B — fix per verdict (branches may stack)
+- B1 (= P74a): ESIMD kernel source fix + rebuild
+  (KERNELS_MAX_JOBS=52) + new .so sha + wheel/container refresh.
+- B2 (= P74b): scheduler shape mitigation — hard guard ONLY at
+  num_computed ≥ threshold (inert on standard shape); GATE LAW:
+  standard-shape totals parity-or-better, depth shape strictly
+  better (0/2 clean → clean).
+- B3 (= P74c, always written): driver/firmware handoff doc with
+  repro recipe (upstream surface).
+- B1+B2 may BOTH land (kernel fix + belt-and-braces guard) if
+  that maximizes class-kill probability without degradation.
+
+## Stage C — validation matrix (fresh host; reboot after any crash)
+- C1 standard shape ×3: ok=72/72 each, wall within-or-better than
+  v1.2.28 band (1089/1029/1042 s) — ZERO-DEGRADATION gate.
+- C2 depth shape ×3 (N_TURNS=6, ≥30k computed): 2/2 death trigger
+  must go 3/3 clean — this is the class-kill gate.
+- C3 spec + XGrammar-2 regression asserts on the final posture.
+- Any crash → reboot + rerun the voided leg; lifetime ledger kept.
+
+## Stage D — bake + ship
+- D1 bake v1.2.29 via container commit (python-only if no .so
+  change; full re-cert with new sha if B1 landed).
+- D2 restore-chain rebase (V1227_IMAGE→v1.2.29, chain md5
+  recorded, both copies identical) + watchdog drift-guard update.
+- D3 close-out: PHASES + memory + commit + push; lane pristine,
+  watcher rearmed.
+
+Status: **Stage A CLOSED 2026-10-02 — VERDICT: the crash class is NOT
+our kernels.** A1: dump format = text sections (header → GuC Log →
+GuC CT → Contexts → Job → HW Engines → VM state); **VM-STATE-ERROR-19
+LAW** (`[0].error: -19`, VM destroyed at capture → dump-internal
+page-table walk dead; VA naming must come from config A/B or live
+maps). A2: `[HWSP]/[HWCTX]` blobs are ASCII85 — decoded
+(`crash132400_{hwsp,hwctx}.bin`); HWSP holds job-level seqnos only
+(0x200=2508 retired / 0x208=2509 in-flight + Job Timestamp) —
+**GUC-MODE HWSP = NO kernel-level telemetry**; HWCTX = LRC LRI-restore
+stream, no module names. A3: GuC-log binary decode deferred (A4 made
+it non-blocking). A4 **B1 EXECUTED**: booted
+`boot_v1227_bleg.sh` = chain-verbatim (md5 941fc03b) + all 15
+`DISABLE_ESIMD_*` knobs (certified 1:1 upstream fallback;
+`bleg knobs=15` asserted, health 150 s, KV 480,278) → depth storm →
+**SAME-CLASS CRASH at turn 5** (14:43:52 card1 `ccs guc_id=22` LR
+reset, EngineDeadError same second, ok=84/102, wedge batch 668.8 s).
+Watcher v2 fired ≤2 s: `LIVE_crash_144353_card1.devcoredump` +
+**first-ever live pid pairing** (`VLLM::Worker_TP0` maps+cmdline
+banked). Signature invariants across #5 vs B1: **ACTHD==RING_BBADDR
+both times** (hang at batch START — first dispatch never retires),
+Timeout infinite both, Reason "LR job cleanup" every event ever;
+cross-card (b1/da), cross-guc_id (22/32/52/112), cross-kernel-set.
+**FW TIMELINE LAW**: `bmg_guc_70.bin.zst.bak-7044` on host proves a
+manual 70.44→70.72.1 swap on Sep 24 08:06 — but P71's banked resets
+date ≤Sep 15 → **class predates the fw swap; both fw versions
+exhibit it** (pure fw-mismatch theory dead). A5 verdict: upstream
+compute path at deep context (stock kernel non-retirement /
+long-running-job handling), NOT custom ESIMD, NOT fw version alone.
+P74a DEAD by measurement. P74b pivots to the spec-path question:
+**B2 = nospec depth leg** (decision point — clean nospec ⇒ trigger
+lives in the MTP-verify deep forward ⇒ repo-side adaptive
+spec-depth guard becomes the bakeable P74b fix; crash ⇒ pure deep
+forward, no repo lever, P74c close). Host rebooted 14:52 per
+directive.
+
+**B2 LEG 1: CLEAN — 108/108, wall 431 s, rc=0** (15:16:26→15:23:37).
+Boot `boot_v1227_nospec.sh` (chain-verbatim md5 49f059c7; ONLY delta =
+`sed -i "/--speculative-config/d"` on the generated serve script +
+asserts: flag absent from live cmdline, `DISABLE_ESIMD_*` count 0);
+health 110 s, KV **554,304** (vs 480,278 spec — drafter KV freed),
+sanity `NOSPEC_OK` clean. All 6 turns × 18 convs ok, max prompt 35,899
+(the ≥30k death shape), per-req walls 12–36 s, zero resets, zero
+harvests. vs spec-ON at the identical shape: **3/3 death** (#4 61/108
+@2060 s, #5 105/108 @2740 s, B1 84/102 @~27 min) — and the nospec storm
+is 4.8–6.4× faster overall than the dying spec legs' walls (spec legs
+spent most of their wall in pre-death limp). Watcher v3 (fingerprint
+dedupe) armed.
+
+**B2 CLOSED 2026-10-02 — 2/2 CLEAN NOSPEC vs 3/3 DEATH SPEC at the
+identical shape** (leg 2: 108/108, wall 337 s, 15:29:08→15:34:45, rc=0,
+zero resets/harvests). DECISION POINT RESOLVED: the trigger lives in the
+**MTP speculative path at deep context** — P74a (kernels) dead, P74b is
+live. Separation analysis on banked legs KILLED two naive discriminator
+models: standard-shape legs ALSO reach 35.7 k per-request depth AND 10
+concurrent-deep (vs depth-storm 11) while clean 6/6 — per-request depth
+and concurrent-deep-count do NOT separate the shapes. The class is
+**exposure-time hazard** (deep-spec-decode seconds: standard ≈48 deep
+requests vs depth ≈108 → 3/3 death). In-flight spec degradation paths
+are convicted fatal in this fork (v52j/t3g/t3i: 0/1-row widths, mixed
+0-draft batches, plain-decode routing via the GMR batch-wide static
+`num_spec_tokens` gate) — the only proven-clean levers are the v52g
+per-request width clamp (≥2 rows) and engine-level nospec. **B2b =
+standard-shape (72 reqs, N_TURNS=4) storm on the NOSPEC engine**
+(launched 15:40): wall vs parity band 1089/1029/1042 s decides the bake
+direction — in-band ⇒ nospec-default posture = zero-degradation
+crash-free v1.2.29 bake candidate (spec stays SUPPORTED, opt-in);
+slower ⇒ spec required on standard ⇒ width-clamp gamble or P74c close
+no-bake.
+
+**B2b LANDED 2026-10-02 15:42 — NOSPEC WINS EVERYWHERE: standard-shape
+storm (72 reqs, N_TURNS=4, parity client verbatim) on the nospec engine
+= 72/72 ok, wall 388 s** vs spec parity band 1089/1029/1042 s (P72 N=3:
+1312/1095/865) — **2.2× faster than the FASTEST spec leg, no band
+overlap even at N=1**. MTP×4 draft/verify overhead is a NET NEGATIVE on
+this workload/hardware (deep-prompt shapes: decode is a small fraction
+of the step; the drafter burns compute every step) AND it is the crash
+trigger. P74b RESOLVED as **nospec-default posture bake (v1.2.29)**:
+python-only surface delta = strip `--speculative-config` from the
+in-image serve script; spec stays SUPPORTED opt-in (chain knob), exact
+decoding semantics unchanged (nospec IS the reference — spec is the
+approximation). Strictly-better-everywhere: standard +2.2×, depth
+crash→clean, C2/C3 gates to certify post-bake. C1 pre-bake N=3
+nospec-standard band banking (v134_b2std3.sh, ~20 min) launched
+15:47.
+
+**C1 CLOSED 2026-10-02 16:03 — N=3 NOSPEC-STANDARD BAND =
+330/372/277 s** (warm-up B2STD leg 388 s; 4/4 runs 72/72 ok, zero
+resets/harvests) vs spec parity 1089/1029/1042 s (P72 N=3:
+1312/1095/865). **~3× throughput, zero band overlap** —
+ZERO-DEGRADATION satisfied as pure improvement. Stage D artifacts
+pre-staged: `boot_v1229_restore.sh` (rebased chain: V1227_IMAGE
+default v1.2.29, V1227_SPEC knob 0=nospec-certified/1=opt-in-MTP with
+live-cmdline asserts both ways, md5 882b613a) +
+`stage_d_bake_v1229.sh` (provenance gate v1.2.28 + marker, single
+delta strip with PRE=1/POST=0 spec-line asserts, certified-flags
+intact gate, .so sha 1d9dcf4e law, commit + surface re-verify via
+`docker run --rm`). C2 depth ×3 class-kill gate launched 16:04.
+
+**C2 CLOSED 2026-10-02 16:24 — 3/3 CLEAN AT THE DEATH SHAPE**
+(108/108 ×3, walls 382/459/339 s, zero resets, zero harvests; nospec
+now **5/5 clean** at the shape where spec died 3/3 — B2 ×2 + C2 ×3).
+**CLASS-KILL GATE PASSED.**
+
+**Stage C3 + D CLOSED 2026-10-02 16:38 — v1.2.29 BAKED AND LIVE.**
+Bake `stage_d_bake_v1229.sh dbake`: provenance v1.2.28 + marker OK,
+spec-line PRE=1 → strip → POST=0, certified flags intact (kv fp8_e4m3
+/ prefix-caching / async / qwen3_coder / reasoning qwen3), **.so sha
+1d9dcf4e UNCHANGED** (python-only law), `docker commit` →
+**llm-scaler-exp:v1.2.29 = cd365d112d4c** (24.8 GB), in-image surface
+re-verified (spec count 0, async present). Chain REBASED
+`boot_v1229_restore.sh` (md5 882b613a) installed to BOTH watchdog
+copies (/root/build/ + /root/build/v127_stage/, identical md5): image
+default v1.2.29, V1227_SPEC knob (0 = nospec certified, asserts flag
+absent from generated script AND live cmdline; 1 = opt-in MTP×4 via
+XGCOMPACT-style insert + live assert). Stock boot: health 120 s, KV
+554,304, posture verified. **C3a: XGrammar-2 GUIDANCE_ACTIVE on stock
+(sentinel 4/4; bounded-pattern escapes = documented upstream `?`-trap,
+unchanged surface). C3b: V1227_SPEC=1 leg — KV 476,451 (drafter pool),
+spec assert green, `SPEC_OK` generation clean, XGrammar sentinel 2/2
+under spec.** Stock v1.2.29 re-booted (16:35:49, health 120 s),
+watchdog resumed, final lane: health 200, image v1.2.29, spec absent,
+.so 1d9dcf4e, knobs 0. devdump_watch v3 killed at round close.
+**CRASHFIX-76 CLOSED: crash trigger root-caused (MTP deep-forward
+hazard), killed in default posture (5/5 vs 3/3 death), v1.2.29 shipped
+with ~3× standard-shape throughput improvement, spec supported opt-in.**

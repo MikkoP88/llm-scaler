@@ -1,0 +1,8 @@
+23:# llm-scaler v52f (crash-4 R1 onset probe): state-copy event logging on
+24:# every mamba align-mode boundary carry (PRE-COPY / POST-COPY / DEF-PP).
+213:            # llm-scaler v52f (crash-4 R1 onset probe): log every 2048-
+222:                    "llm-scaler v52f PRE-COPY: %s slot=%d prev=%d curr=%d "
+284:            # llm-scaler v52f: partial->full block conversion copy (sync
+288:                    "llm-scaler v52f POST-COPY: %s slot=%d src=%d dest=%d "
+341:            # llm-scaler v52f: async deferred partial->full copy — the
+346:                    "llm-scaler v52f DEF-PP: %s row=%d src=%d dest=%d "

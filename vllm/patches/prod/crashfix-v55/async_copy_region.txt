@@ -1,0 +1,91 @@
+    check_ubatch_thresholds,
+    maybe_create_ubatch_slices,
+    split_attn_metadata,
+)
+from vllm.v1.worker.utils import is_residual_scattered_for_sp
+from vllm.v1.worker.workspace import lock_workspace
+
+from .utils import (
+    AttentionGroup,
+    KVBlockZeroer,
+    add_kv_sharing_layers_to_kv_cache_groups,
+    bind_kv_cache,
+    prepare_kernel_block_sizes,
+    sanity_check_mm_encoder_outputs,
+)
+
+if TYPE_CHECKING:
+    from vllm.v1.core.sched.output import GrammarOutput, SchedulerOutput
+    from vllm.v1.spec_decode.ngram_proposer import NgramProposer
+    from vllm.v1.worker.encoder_cudagraph import EncoderCudaGraphManager
+
+logger = init_logger(__name__)
+
+AttnMetadataDict: TypeAlias = dict[str, AttentionMetadata]
+# list when ubatching is enabled
+PerLayerAttnMetadata: TypeAlias = list[AttnMetadataDict] | AttnMetadataDict
+
+
+# Wrapper for ModelRunnerOutput to support overlapped execution.
+class AsyncGPUModelRunnerOutput(AsyncModelRunnerOutput):
+    # llm-scaler v52d: class-level episode dedup for the EMPTY-ROW probe
+    # in get_output (a new wrapper instance is created every step, so
+    # instance state would never persist).
+    _v52d_seen: set = set()
+
+    def __init__(
+        self,
+        model_runner_output: ModelRunnerOutput,
+        sampled_token_ids: torch.Tensor,
+        logprobs_tensors: LogprobsTensors | None,
+        invalid_req_indices: list[int],
+        async_output_copy_stream: torch.cuda.Stream,
+        vocab_size: int,
+    ):
+        self._model_runner_output = model_runner_output
+        self._invalid_req_indices = invalid_req_indices
+
+        # Event on the copy stream so we can synchronize the non-blocking copy.
+        self.async_copy_ready_event = torch.Event()
+
+        # Keep a reference to the device tensor to avoid it being
+        # deallocated until we finish copying it to the host.
+        self._sampled_token_ids = sampled_token_ids
+        self.vocab_size = vocab_size
+        self._logprobs_tensors = logprobs_tensors
+
+        # Initiate the copy on a separate stream, but do not synchronize it.
+        default_stream = torch.cuda.current_stream()
+        with torch.cuda.stream(async_output_copy_stream):
+            async_output_copy_stream.wait_stream(default_stream)
+            self.sampled_token_ids_cpu = self._sampled_token_ids.to(
+                "cpu", non_blocking=True
+            )
+            self._logprobs_tensors_cpu = (
+                self._logprobs_tensors.to_cpu_nonblocking()
+                if self._logprobs_tensors
+                else None
+            )
+            self.async_copy_ready_event.record()
+
+    def get_output(self) -> ModelRunnerOutput:
+        """Copy the device tensors to the host and return a ModelRunnerOutput.
+
+        This function blocks until the copy is finished.
+        """
+        max_gen_len = self.sampled_token_ids_cpu.shape[-1]
+        _v55_wait_event(
+            self.async_copy_ready_event,
+            "async_output_copy event")
+
+        # Release the device tensors once the copy has completed.
+        del self._logprobs_tensors
+        del self._sampled_token_ids
+        if max_gen_len == 1:
+            valid_sampled_token_ids = self.sampled_token_ids_cpu.tolist()
+            for i in self._invalid_req_indices:
+                valid_sampled_token_ids[i].clear()
+            logprobs_lists = None
+            if self._logprobs_tensors_cpu is not None:
+                logprobs_lists = self._logprobs_tensors_cpu.tolists()
+        else:

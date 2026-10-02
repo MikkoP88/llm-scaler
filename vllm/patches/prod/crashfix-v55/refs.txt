@@ -1,0 +1,17 @@
+/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py:24:# clean `propose end`, num_accepted_tokens_event never signaled,
+/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py:1067:        self.num_accepted_tokens_event: torch.Event | None = None
+/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py:1070:            self.num_accepted_tokens_event = torch.Event()
+/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py:1714:            assert self.num_accepted_tokens_event is not None
+/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py:1715:            self.num_accepted_tokens_event.record()
+/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py:1720:            self._v32_pending_pp = [
+/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py:1734:            assert self.num_accepted_tokens_event is not None
+/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py:1735:            self.num_accepted_tokens_event.record()
+/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py:2374:        if self.num_accepted_tokens_event is not None:
+/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py:2376:                self.num_accepted_tokens_event,
+/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py:2377:                "num_accepted_tokens_event (_update_states)")
+/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py:4352:            _v32_pp = getattr(self, "_v32_pending_pp", None)
+/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py:4354:                self._v32_pending_pp = None
+/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py:4358:                    self.num_accepted_tokens_event,
+/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py:4359:                    "num_accepted_tokens_event (deferred postprocess)")
+sample_tokens at line 4670
+run_deferred_postprocess at line 312
