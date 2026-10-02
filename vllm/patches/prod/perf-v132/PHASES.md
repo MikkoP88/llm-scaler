@@ -149,7 +149,64 @@ materially down; wall in spread; ok/N parity 72/72; no 500s /
 timeouts / DEVICE_LOST; HEAD_RETAINED floor 5120 (the head must
 stay immortal — a head loss is an automatic fail per v131).
 
-Status: PENDING.
+Status: CLOSED 2026-10-02 (~05:40) — leg A REJECTED BY
+MEASUREMENT (ring starves: zero parks through the full storm);
+leg B moot (starvation is cap-independent — 0 parks at any cap).
+
+**Boot/arming record:** host rebooted 04:52 (standing hygiene);
+watchdog auto-restored the lane on its designed path (TRIGGER
+05:06:45 after the 420s grace + 600s rate-limit; container
+re-created from the image — in-container patches erased as
+expected). Health 200 at 05:11. Fresh container pristine (v132
+markers 0), prod .so sha asserted (1d9dcf4e...). Patcher applied
+in-container (V132_RING_OK markers=4, compile OK), knob armed
+VLLM_V132_RING=128 via serve_user.sh line 1, SIGKILL restart.
+New boot: V132_RING_ARMED cap=128 at serve_full.log L442
+(block_pool.py:54, EngineCore pid=1518) — the env reaches
+EngineCore (marker-file law: scheduler side inherits env). Async
+posture verified (APIServer "Asynchronous scheduling is enabled"
+05:12:13; the EngineCore/Worker "disabled" lines are the
+worker-default cosmetic present in every certified boot). Health
+200 05:16. Solo spot-check OK ("OK.", stop). Storm launched
+05:19 (driver wsc_pressure_v132a.py, sed of the v131p59 driver).
+
+**Leg A outcome:** hard GPU crash mid-turn-4 — dmesg 05:27:01
+`xe 0000:da:00.0 Tile0: GT0: Engine reset: engine_class=ccs` +
+Xe devcoredump (card2); TP1 worker torch exception 05:27:02 →
+EngineCore RPC execute_model timeout 05:31:39 → EngineDeadError,
+4× HTTP 500 logged, 8 turn-4 casualties → driver cap
+`PRESSUREB_DONE ok=64/72 wall=876s HARVEST_ROWS=0`. Crash class =
+the v129 crashfix-workstream GPU-reset onset (here at storm
+turn-4 capacity pressure, T+8min — a NEW, earlier onset datum;
+full capture archived by the watchdog at lce1/WD_crash_053251:
+devcoredump_card2_Q22.bin, dmesg_tail, first_errors, fr_*.logs).
+NOT ring-caused: the ring held ZERO blocks the entire run —
+every executed path was the stock else-branch (S2/S3/S4), the
+scheduler ran clean all storm (zero scheduler-side errors; all
+158 error lines are the worker/device cascade).
+
+**The decisive measurement — RING STARVES:** the entire
+boot-scoped trace (v132_traceA_full.txt, ARMED line → crash,
+1454 lines) contains exactly ONE V132 line: the ARMED line
+itself. Zero parks, zero serves, through turns 1-3 complete +
+turn-4 partial (65 finishes, ~8 min of continuous mamba/spec
+churn). This is decisive by construction: the armed drain runs
+before every queue pop, so the first park anywhere would have
+produced `V132_RING parked=... served=1` within one alloc step.
+Zero lines ⟺ the park condition (`block_hash is None and not
+is_null`) matched ZERO free events in the whole storm.
+
+**Compounding discovery (telemetry rider wipe):** the watchdog
+re-create also erased the v128 metrics_recorder perreq patch —
+HARVEST_ROWS=0, engine-side computed/cached numbers unavailable
+this leg (total_computed gate unmeasurable — moot, starvation
+already decides). RIDER LAW addition: after any watchdog
+re-create, re-apply the perreq telemetry patcher before any gate
+leg that needs engine-side numbers.
+
+**Gate disposition:** all gates fail/void by starvation — the
+lever itself is dead; no re-run can change 0 parks (the park
+condition does not depend on cap, load shape, or turn).
 
 ## P66 — verdict + ship decision
 
@@ -157,4 +214,45 @@ Win (total computed down materially, parity, quiet-inert): bake
 v1.2.28 with the ring default-ON (ship-on-delta trigger). Lose:
 close by measurement, no bake, v1.2.27 stands.
 
-Status: PENDING.
+Status: CLOSED 2026-10-02 — **LOSE. No bake; v1.2.27 stands.**
+
+**RING-STARVATION LAW (the round's payload):** in the steady
+hybrid storm there are NO hash-free non-null free events — the
+mamba rolling/spec churn frees are hash-bearing (snapshot-hashed
+at aligned boundaries) or null-danced, so they NEVER enter the
+free queue at all (nor any ring). The free-queue conveyor's
+supply is exclusively the request-end wholesale hash-bearing
+chain frees (v131 WHOLESALE CHAIN DEATH); the guillotine is the
+ALLOC side — the continuous new=5-6 queue pops. Free-side
+segregation by hash-presence at free time therefore has nothing
+to segregate: dead by construction, measured 0 parks through a
+full storm at cap=128.
+
+P63's "rolling state blocks are hash-free until snapshotted at
+aligned boundaries" clause is resolved by measurement: in steady
+spec-align decode, snapshot-hasing dominates — by free time the
+blocks are hash-bearing (or is_null from the spec null-dance).
+
+**Handed forward (surviving designs):**
+1. ALLOC-SIDE rotation reuse (v131's candidate #1, now the only
+   live one): MambaManager-scope BLOCK-REUSE — make the per-step
+   rotation alloc (steady new=1, first new=1+spec=5) bypass
+   get_new_blocks and reuse its own just-released blocks. Never
+   consults block_hash, never pops the queue → alloc-event count
+   (the CHURN-DESTRUCTION LAW driver) drops by the per-step
+   rotation mass (~650k pops/storm measured in v131).
+2. Two-free-list segregation (FreeKVCacheBlockQueue redesign) —
+   still listed, still out of surgical scope.
+3. CRASHFIX input: GPU ccs-engine reset onset now ALSO observed
+   at storm turn-4 capacity pressure (~T+8 min), not only in
+   24-way soak — capture at lce1/WD_crash_053251.
+
+**Riders list (re-apply after any watchdog re-create):** the
+v128 perreq metrics_recorder patcher (engine-side computed/
+cached numbers for gate legs).
+
+**Round hygiene:** lane restored to pristine v1.2.27 by the
+watchdog itself (fresh container, 0 v132 markers, VLLM_V132_RING
+env absent, .so sha 1d9dcf4e re-asserted, health 200, watchdog
+active). Captures pulled: v132_traceA_full.txt, first_errors.txt,
+dmesg_tail.txt, wsc_pressure_v132a.{py,jsonl}, wsc_v132a.out.

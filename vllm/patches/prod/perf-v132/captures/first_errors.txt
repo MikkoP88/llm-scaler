@@ -1,0 +1,2 @@
+1830:(EngineCore pid=1518) ERROR 10-02 05:31:39 [core.py:1192] EngineCore encountered a fatal error.
+1883:(APIServer pid=1210) ERROR 10-02 05:31:39 [async_llm.py:743] vllm.v1.engine.exceptions.EngineDeadError: EngineCore encountered an issue. See stack trace (above) for the root cause.
