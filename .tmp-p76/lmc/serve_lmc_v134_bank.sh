@@ -5,9 +5,9 @@ cd /llm-scaler/vllm
 
 # --- LMCache local configuration (env API) ---
 # CPU tier for both engines (attn fp8 KV + mamba bytes), LRU eviction.
-# 2 ranks x 60GiB CPU pool within host free RAM (~253GiB when idle).
+# 2 ranks x 100GiB CPU pool within host 376GiB (sized 2026-10-10: ~76GiB headroom after ~100GiB non-pool; max safe 110).
 export LMCACHE_USE_EXPERIMENTAL_API=True
-export LMCACHE_MAX_LOCAL_CPU_SIZE=60
+export LMCACHE_MAX_LOCAL_CPU_SIZE=100
 export LMCACHE_LOCAL_CPU=True
 export LMCACHE_EVICT_POLICY=lr_u
 export LMCACHE_CHUNK_SIZE=1024

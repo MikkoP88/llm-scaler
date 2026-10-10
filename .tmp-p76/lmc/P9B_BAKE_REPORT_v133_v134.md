@@ -87,6 +87,17 @@ report. INFO restores lmcache-native volume (lookup/store/evict lines) to the
 serve log; the v1.2.34 demotions of OUR instrumentation stay debug.
 The WARNING numbers in §3/§4 above remain the bake-time record.
 
+## Post-bake standing-shape change 2 (2026-10-10 17:42 UTC, user directive)
+
+`LMCACHE_MAX_LOCAL_CPU_SIZE` 60→100 (per rank; ×2 ranks = 200 GiB CPU tier).
+Sized on live measurement: host 376 GiB total, non-pool lane footprint
+~100 GiB (2×~45 GiB workers + API/EngineCore + OS/litellm) → 100/rank leaves
+~76 GiB headroom; max safe = 110/rank. Bench corpus (~560 chunks ≈ 31 GiB/rank
+at the measured ~0.055 GB/1024-tok rate) already fit in 60 — the raise pays
+off only on a larger live accumulating corpus (lr_u cycles later). Propagated:
+serve master + container copy + serve_ctl_v133.sh + /root/build banks
+(md5 6b455e8d for the master), repo bank, this report; clean TERM restart.
+
 ## Artifacts banked
 
 Host /root/build/: adapter_v140.py, adapter_v141.py, ce_unpin_fix.py,
