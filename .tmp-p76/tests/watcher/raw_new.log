@@ -1,0 +1,1066 @@
+(APIServer pid=2427) INFO:     10.20.3.18:54025 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54033 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:39102 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(Worker_TP0 pid=2898) INFO 10-02 22:38:57 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=3098.5 | tforward h=185.6 d=224.1 | tlogits h=0.7 d=2.3 | propose h=23.6 d=20.2 | dmeta h=0.4 d=0.0 | dforward h=5.9 d=6.6 | greedy h=2.6 d=2.2 | dforward_loop h=10.7 d=1.0
+(Worker_TP1 pid=2904) INFO 10-02 22:38:57 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=3064.4 | tforward h=185.1 d=224.1 | tlogits h=0.8 d=2.3 | propose h=24.3 d=20.5 | dmeta h=0.4 d=0.0 | dforward h=6.1 d=6.6 | greedy h=2.7 d=2.2 | dforward_loop h=11.2 d=1.0
+(APIServer pid=2427) INFO 10-02 22:39:03 [loggers.py:273] Engine 000: Avg prompt throughput: 49.6 tokens/s, Avg generation throughput: 41.5 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 2.6%, Prefix cache hit rate: 41.3%
+(APIServer pid=2427) INFO 10-02 22:39:03 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.30, Accepted throughput: 0.54 tokens/s, Drafted throughput: 1.26 tokens/s, Accepted: 234 tokens, Drafted: 540 tokens, Per-position acceptance rate: 0.700, 0.422, 0.178, Avg Draft acceptance rate: 43.3%
+(APIServer pid=2427) INFO:     10.20.3.18:49742 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP0 pid=2898) INFO 10-02 22:39:06 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=0 prev=0 curr=1 bias=0 (acc_cpu=1) computed=1023 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:39:06 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=0 prev=0 curr=1 bias=0 (acc_cpu=1) computed=1023 sched=2 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:39:06 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=0 src=1 dest=0 bias=0 running=1024 newc=1024 aligned=1024 acc=1 (snapshot computed=1023 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:39:06 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=0 src=1 dest=0 bias=0 running=1024 newc=1024 aligned=1024 acc=1 (snapshot computed=1023 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:39:08 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=55.2 | tforward h=2.2 d=31.9 | tlogits h=0.9 d=2.3 | propose h=18.7 d=9.8 | dmeta h=0.4 d=0.0 | dforward h=5.4 d=1.1 | greedy h=2.6 d=2.2 | dforward_loop h=6.6 d=0.8
+(Worker_TP0 pid=2898) INFO 10-02 22:39:08 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=55.2 | tforward h=3.0 d=32.2 | tlogits h=0.6 d=2.3 | propose h=17.8 d=9.7 | dmeta h=0.4 d=0.0 | dforward h=4.7 d=1.1 | greedy h=2.5 d=2.2 | dforward_loop h=6.7 d=0.8
+(APIServer pid=2427) INFO:     10.100.8.6:37256 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(EngineCore pid=2699) INFO 10-02 22:39:12 [scheduler.py:599] V63_TTFTFIX_ACTIVE contended_budget=1024 running=2
+(APIServer pid=2427) INFO 10-02 22:39:13 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 34.1 tokens/s, Running: 2 reqs, Waiting: 0 reqs, GPU KV cache usage: 6.6%, Prefix cache hit rate: 22.1%
+(APIServer pid=2427) INFO 10-02 22:39:13 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.24, Accepted throughput: 18.90 tokens/s, Drafted throughput: 45.20 tokens/s, Accepted: 189 tokens, Drafted: 452 tokens, Per-position acceptance rate: 0.625, 0.408, 0.211, Avg Draft acceptance rate: 41.8%
+(Worker_TP0 pid=2898) INFO 10-02 22:39:16 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=1 src=6 dest=6 bias=0 running=7168 newc=7168 aligned=7168 acc=1 (snapshot computed=0 sched=7168 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:39:16 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=1 src=6 dest=6 bias=0 running=7168 newc=7168 aligned=7168 acc=1 (snapshot computed=0 sched=7168 draft=0)
+(EngineCore pid=2699) INFO 10-02 22:39:16 [scheduler.py:624] V64_INTERLEAVE_ACTIVE k=2 decode_budget=512
+(APIServer pid=2427) INFO:     10.100.8.6:37270 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(EngineCore pid=2699) WARNING 10-02 22:39:19 [scheduler.py:1670] llm-scaler v60c POISONED-ROW: chatcmpl-987dfc2d46dc0866-8a24ba64 scheduled (508 tokens this step, row_len=0, row_head=[]) strike 1 (num_output_tokens=0, num_computed_tokens=518) — NaN-zombie sentinel signature on the sync path
+(EngineCore pid=2699) WARNING 10-02 22:39:19 [scheduler.py:1713] llm-scaler v60c STRIKE-OUT (poisoned-row): chatcmpl-987dfc2d46dc0866-8a24ba64 — 1 consecutive poisoned/empty sampled rows while scheduled (crash-4 NaN-zombie terminal state, sync path) — FINISHED_ABORTED delivered client-visibly, engine stays up (num_output_tokens=0, num_computed_tokens=518)
+(EngineCore pid=2699) WARNING 10-02 22:39:20 [scheduler.py:1670] llm-scaler v60c POISONED-ROW: chatcmpl-b6e4fc5d6206a5ef-81c727ec scheduled (508 tokens this step, row_len=0, row_head=[]) strike 1 (num_output_tokens=0, num_computed_tokens=749) — NaN-zombie sentinel signature on the sync path
+(EngineCore pid=2699) WARNING 10-02 22:39:20 [scheduler.py:1713] llm-scaler v60c STRIKE-OUT (poisoned-row): chatcmpl-b6e4fc5d6206a5ef-81c727ec — 1 consecutive poisoned/empty sampled rows while scheduled (crash-4 NaN-zombie terminal state, sync path) — FINISHED_ABORTED delivered client-visibly, engine stays up (num_output_tokens=0, num_computed_tokens=749)
+(APIServer pid=2427) INFO:     10.100.8.6:37270 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO 10-02 22:39:23 [loggers.py:273] Engine 000: Avg prompt throughput: 82.2 tokens/s, Avg generation throughput: 35.3 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 9.3%, Prefix cache hit rate: 21.9%
+(APIServer pid=2427) INFO 10-02 22:39:23 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.38, Accepted throughput: 20.40 tokens/s, Drafted throughput: 44.39 tokens/s, Accepted: 204 tokens, Drafted: 444 tokens, Per-position acceptance rate: 0.689, 0.426, 0.264, Avg Draft acceptance rate: 45.9%
+(APIServer pid=2427) INFO:     10.20.3.18:49753 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:39:24 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=83.5 | tforward h=26.9 d=58.2 | tlogits h=0.9 d=2.3 | propose h=19.4 d=10.7 | dmeta h=0.4 d=0.0 | dforward h=5.7 d=1.8 | greedy h=2.5 d=2.2 | dforward_loop h=6.9 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:39:24 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=83.5 | tforward h=27.7 d=58.5 | tlogits h=0.9 d=2.3 | propose h=17.9 d=10.6 | dmeta h=0.4 d=0.0 | dforward h=4.9 d=1.8 | greedy h=2.5 d=2.2 | dforward_loop h=6.8 d=0.9
+(Worker_TP0 pid=2898) WARNING 10-02 22:39:25 [jit_monitor.py:103] Triton kernel JIT compilation during inference: kernel_unified_attention. This causes a latency spike; consider extending warmup to cover this shape/config.
+(Worker_TP0 pid=2898) WARNING 10-02 22:39:25 [jit_monitor.py:103] Triton kernel JIT compilation during inference: reduce_segments. This causes a latency spike; consider extending warmup to cover this shape/config.
+(Worker_TP0 pid=2898) INFO 10-02 22:39:25 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1038aa6771d73d7-94918f7e slot=1 prev=0 curr=1 bias=0 (acc_cpu=1) computed=1023 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:39:25 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1038aa6771d73d7-94918f7e slot=1 prev=0 curr=1 bias=0 (acc_cpu=1) computed=1023 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:39:25 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1038aa6771d73d7-94918f7e row=1 src=1 dest=0 bias=0 running=1024 newc=1024 aligned=1024 acc=1 (snapshot computed=1023 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:39:25 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1038aa6771d73d7-94918f7e row=1 src=1 dest=0 bias=0 running=1024 newc=1024 aligned=1024 acc=1 (snapshot computed=1023 sched=2 draft=1)
+(APIServer pid=2427) INFO:     10.100.8.6:37270 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:50320 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(Worker_TP0 pid=2898) WARNING 10-02 22:39:30 [jit_monitor.py:103] Triton kernel JIT compilation during inference: _topk_topp_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(APIServer pid=2427) INFO 10-02 22:39:33 [loggers.py:273] Engine 000: Avg prompt throughput: 121.3 tokens/s, Avg generation throughput: 80.7 tokens/s, Running: 4 reqs, Waiting: 0 reqs, GPU KV cache usage: 11.9%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:39:33 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.41, Accepted throughput: 47.10 tokens/s, Drafted throughput: 100.09 tokens/s, Accepted: 471 tokens, Drafted: 1001 tokens, Per-position acceptance rate: 0.666, 0.439, 0.301, Avg Draft acceptance rate: 47.1%
+(APIServer pid=2427) INFO:     10.100.8.6:37270 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:39:38 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=66.1 | tforward h=5.6 d=40.1 | tlogits h=1.2 d=2.5 | propose h=21.0 d=10.4 | dmeta h=0.5 d=0.0 | dforward h=6.2 d=1.5 | greedy h=2.6 d=2.2 | dforward_loop h=7.8 d=1.0
+(Worker_TP0 pid=2898) INFO 10-02 22:39:38 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=66.1 | tforward h=7.4 d=40.6 | tlogits h=1.6 d=2.5 | propose h=17.6 d=10.4 | dmeta h=0.4 d=0.0 | dforward h=4.6 d=1.5 | greedy h=2.4 d=2.2 | dforward_loop h=7.1 d=1.0
+(Worker_TP0 pid=2898) INFO 10-02 22:39:39 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=6 curr=7 bias=0 (acc_cpu=1) computed=7168 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:39:39 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=6 curr=7 bias=0 (acc_cpu=1) computed=7168 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:39:40 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=7 dest=7 bias=0 running=8192 newc=8192 aligned=8192 acc=1 (snapshot computed=7168 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:39:40 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=7 dest=7 bias=0 running=8192 newc=8192 aligned=8192 acc=1 (snapshot computed=7168 sched=1024 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:39:40 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=7 curr=8 bias=0 (acc_cpu=1) computed=8192 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:39:40 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=7 curr=8 bias=0 (acc_cpu=1) computed=8192 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:39:41 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=8 dest=8 bias=0 running=9216 newc=9216 aligned=9216 acc=1 (snapshot computed=8192 sched=1024 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:39:41 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=8 dest=8 bias=0 running=9216 newc=9216 aligned=9216 acc=1 (snapshot computed=8192 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:39:41 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=8 curr=9 bias=0 (acc_cpu=1) computed=9216 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:39:41 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=8 curr=9 bias=0 (acc_cpu=1) computed=9216 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:39:42 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=9 dest=9 bias=0 running=10240 newc=10240 aligned=10240 acc=1 (snapshot computed=9216 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:39:42 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=9 dest=9 bias=0 running=10240 newc=10240 aligned=10240 acc=1 (snapshot computed=9216 sched=1024 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:39:42 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=0 prev=1 curr=2 bias=0 (acc_cpu=1) computed=2047 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:39:42 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=0 prev=1 curr=2 bias=0 (acc_cpu=1) computed=2047 sched=2 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:39:42 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=0 src=2 dest=1 bias=0 running=2048 newc=2048 aligned=2048 acc=1 (snapshot computed=2047 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:39:42 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=0 src=2 dest=1 bias=0 running=2048 newc=2048 aligned=2048 acc=1 (snapshot computed=2047 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:39:42 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=9 curr=10 bias=0 (acc_cpu=1) computed=10240 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:39:42 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=9 curr=10 bias=0 (acc_cpu=1) computed=10240 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:39:42 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=10 dest=10 bias=0 running=11264 newc=11264 aligned=11264 acc=1 (snapshot computed=10240 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:39:42 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=10 dest=10 bias=0 running=11264 newc=11264 aligned=11264 acc=1 (snapshot computed=10240 sched=1024 draft=0)
+(APIServer pid=2427) INFO 10-02 22:39:43 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 64.6 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 11.1%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:39:43 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.40, Accepted throughput: 37.70 tokens/s, Drafted throughput: 80.50 tokens/s, Accepted: 377 tokens, Drafted: 805 tokens, Per-position acceptance rate: 0.685, 0.452, 0.259, Avg Draft acceptance rate: 46.8%
+(APIServer pid=2427) INFO:     10.20.3.18:49765 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:39:46 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=1 prev=0 curr=1 bias=0 (acc_cpu=1) computed=1023 sched=2 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:39:46 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=1 prev=0 curr=1 bias=0 (acc_cpu=1) computed=1023 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:39:46 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=1 src=1 dest=0 bias=0 running=1024 newc=1024 aligned=1024 acc=1 (snapshot computed=1023 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:39:46 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=1 src=1 dest=0 bias=0 running=1024 newc=1024 aligned=1024 acc=1 (snapshot computed=1023 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:39:52 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=73.8 | tforward h=16.1 d=47.9 | tlogits h=1.1 d=2.4 | propose h=20.2 d=10.6 | dmeta h=0.4 d=0.0 | dforward h=5.8 d=1.6 | greedy h=2.6 d=2.2 | dforward_loop h=7.7 d=1.0
+(Worker_TP0 pid=2898) INFO 10-02 22:39:52 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=73.8 | tforward h=17.6 d=48.3 | tlogits h=1.6 d=2.4 | propose h=17.5 d=10.5 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=1.5 | greedy h=2.4 d=2.2 | dforward_loop h=7.2 d=1.0
+(APIServer pid=2427) INFO 10-02 22:39:53 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 67.7 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 11.3%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:39:53 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.09, Accepted throughput: 35.29 tokens/s, Drafted throughput: 96.59 tokens/s, Accepted: 353 tokens, Drafted: 966 tokens, Per-position acceptance rate: 0.611, 0.324, 0.154, Avg Draft acceptance rate: 36.5%
+(APIServer pid=2427) INFO 10-02 22:40:03 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 76.8 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 11.3%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:40:03 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.36, Accepted throughput: 44.19 tokens/s, Drafted throughput: 97.79 tokens/s, Accepted: 442 tokens, Drafted: 978 tokens, Per-position acceptance rate: 0.681, 0.411, 0.264, Avg Draft acceptance rate: 45.2%
+(APIServer pid=2427) INFO:     10.20.3.18:49772 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:40:05 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=61.3 | tforward h=0.9 d=35.5 | tlogits h=1.3 d=2.4 | propose h=20.8 d=10.0 | dmeta h=0.5 d=0.0 | dforward h=6.0 d=1.2 | greedy h=2.6 d=2.2 | dforward_loop h=7.8 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:40:05 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=61.3 | tforward h=3.0 d=36.1 | tlogits h=1.9 d=2.4 | propose h=17.1 d=9.9 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=1.2 | greedy h=2.3 d=2.2 | dforward_loop h=7.0 d=0.9
+(Worker_TP1 pid=2904) INFO 10-02 22:40:12 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=10 curr=11 bias=0 (acc_cpu=1) computed=11264 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:40:12 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=10 curr=11 bias=0 (acc_cpu=1) computed=11264 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:40:13 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=11 dest=11 bias=0 running=12288 newc=12288 aligned=12288 acc=1 (snapshot computed=11264 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:40:13 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=11 dest=11 bias=0 running=12288 newc=12288 aligned=12288 acc=1 (snapshot computed=11264 sched=1024 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:40:13 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=11 curr=12 bias=0 (acc_cpu=1) computed=12288 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:40:13 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=11 curr=12 bias=0 (acc_cpu=1) computed=12288 sched=1024 blocksz=1024
+(APIServer pid=2427) INFO 10-02 22:40:13 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 55.4 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 11.9%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:40:13 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 1.96, Accepted throughput: 27.20 tokens/s, Drafted throughput: 83.89 tokens/s, Accepted: 272 tokens, Drafted: 839 tokens, Per-position acceptance rate: 0.564, 0.266, 0.135, Avg Draft acceptance rate: 32.4%
+(Worker_TP0 pid=2898) INFO 10-02 22:40:14 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=12 dest=12 bias=0 running=13312 newc=13312 aligned=13312 acc=1 (snapshot computed=12288 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:40:14 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=12 dest=12 bias=0 running=13312 newc=13312 aligned=13312 acc=1 (snapshot computed=12288 sched=1024 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:40:14 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=0 prev=2 curr=3 bias=0 (acc_cpu=1) computed=3071 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:40:14 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=0 prev=2 curr=3 bias=0 (acc_cpu=1) computed=3071 sched=2 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:40:14 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=0 src=3 dest=2 bias=0 running=3072 newc=3072 aligned=3072 acc=1 (snapshot computed=3071 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:40:14 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=0 src=3 dest=2 bias=0 running=3072 newc=3072 aligned=3072 acc=1 (snapshot computed=3071 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:40:14 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=12 curr=13 bias=0 (acc_cpu=1) computed=13312 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:40:14 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=12 curr=13 bias=0 (acc_cpu=1) computed=13312 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:40:14 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=13 dest=13 bias=0 running=14336 newc=14336 aligned=14336 acc=1 (snapshot computed=13312 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:40:14 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=13 dest=13 bias=0 running=14336 newc=14336 aligned=14336 acc=1 (snapshot computed=13312 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:40:19 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=1 prev=1 curr=2 bias=0 (acc_cpu=1) computed=2047 sched=2 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:40:19 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=1 prev=1 curr=2 bias=0 (acc_cpu=1) computed=2047 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:40:19 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=1 src=2 dest=1 bias=0 running=2048 newc=2048 aligned=2048 acc=1 (snapshot computed=2047 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:40:19 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=1 src=2 dest=1 bias=0 running=2048 newc=2048 aligned=2048 acc=1 (snapshot computed=2047 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:40:19 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=74.5 | tforward h=14.8 d=47.9 | tlogits h=1.2 d=2.4 | propose h=20.5 d=10.9 | dmeta h=0.5 d=0.0 | dforward h=5.8 d=1.6 | greedy h=2.6 d=2.2 | dforward_loop h=7.8 d=1.0
+(Worker_TP0 pid=2898) INFO 10-02 22:40:19 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=74.5 | tforward h=16.4 d=48.4 | tlogits h=1.9 d=2.4 | propose h=17.5 d=10.8 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=1.6 | greedy h=2.4 d=2.2 | dforward_loop h=7.2 d=1.0
+(APIServer pid=2427) INFO 10-02 22:40:23 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 67.1 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 12.3%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:40:23 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.38, Accepted throughput: 38.89 tokens/s, Drafted throughput: 83.88 tokens/s, Accepted: 389 tokens, Drafted: 839 tokens, Per-position acceptance rate: 0.713, 0.422, 0.245, Avg Draft acceptance rate: 46.4%
+(APIServer pid=2427) INFO:     10.20.3.18:49779 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:40:31 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=57.7 | tforward h=1.1 d=33.3 | tlogits h=1.1 d=2.4 | propose h=19.9 d=9.7 | dmeta h=0.4 d=0.0 | dforward h=5.5 d=1.0 | greedy h=2.6 d=2.2 | dforward_loop h=7.6 d=0.8
+(Worker_TP0 pid=2898) INFO 10-02 22:40:31 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=57.7 | tforward h=2.6 d=33.7 | tlogits h=1.5 d=2.4 | propose h=17.2 d=9.6 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=1.0 | greedy h=2.3 d=2.2 | dforward_loop h=7.0 d=0.8
+(APIServer pid=2427) INFO 10-02 22:40:33 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 84.6 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 12.3%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:40:33 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.45, Accepted throughput: 50.00 tokens/s, Drafted throughput: 103.79 tokens/s, Accepted: 500 tokens, Drafted: 1038 tokens, Per-position acceptance rate: 0.691, 0.442, 0.312, Avg Draft acceptance rate: 48.2%
+(Worker_TP1 pid=2904) INFO 10-02 22:40:40 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=0 src=3 dest=3 bias=1 running=4095 newc=4096 aligned=4096 acc=2 (snapshot computed=4094 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:40:40 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=0 src=3 dest=3 bias=1 running=4095 newc=4096 aligned=4096 acc=2 (snapshot computed=4094 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:40:40 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=1 prev=3 curr=4 bias=0 (acc_cpu=1) computed=4096 sched=4 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:40:40 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=1 prev=3 curr=4 bias=0 (acc_cpu=1) computed=4096 sched=4 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:40:42 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=1 prev=2 curr=3 bias=0 (acc_cpu=1) computed=3071 sched=2 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:40:42 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=1 prev=2 curr=3 bias=0 (acc_cpu=1) computed=3071 sched=2 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:40:42 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=1 src=3 dest=2 bias=0 running=3072 newc=3072 aligned=3072 acc=1 (snapshot computed=3071 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:40:42 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=1 src=3 dest=2 bias=0 running=3072 newc=3072 aligned=3072 acc=1 (snapshot computed=3071 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:40:43 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.0 | tforward h=2.9 d=34.9 | tlogits h=1.1 d=2.4 | propose h=19.9 d=10.1 | dmeta h=0.4 d=0.0 | dforward h=5.5 d=1.1 | greedy h=2.5 d=2.2 | dforward_loop h=7.7 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:40:43 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.0 | tforward h=4.5 d=35.3 | tlogits h=1.8 d=2.4 | propose h=17.3 d=10.0 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=1.2 | greedy h=2.3 d=2.2 | dforward_loop h=7.1 d=0.9
+(APIServer pid=2427) INFO 10-02 22:40:43 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 81.1 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 12.7%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:40:43 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.48, Accepted throughput: 48.39 tokens/s, Drafted throughput: 97.58 tokens/s, Accepted: 484 tokens, Drafted: 976 tokens, Per-position acceptance rate: 0.713, 0.483, 0.284, Avg Draft acceptance rate: 49.6%
+(APIServer pid=2427) INFO:     10.20.3.18:49798 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO 10-02 22:40:53 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 78.1 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 12.7%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:40:53 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.28, Accepted throughput: 43.89 tokens/s, Drafted throughput: 102.58 tokens/s, Accepted: 439 tokens, Drafted: 1026 tokens, Per-position acceptance rate: 0.655, 0.389, 0.240, Avg Draft acceptance rate: 42.8%
+(Worker_TP1 pid=2904) INFO 10-02 22:40:55 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=58.8 | tforward h=1.1 d=33.8 | tlogits h=1.2 d=2.4 | propose h=19.9 d=9.8 | dmeta h=0.4 d=0.0 | dforward h=5.6 d=1.2 | greedy h=2.6 d=2.2 | dforward_loop h=7.7 d=0.8
+(Worker_TP0 pid=2898) INFO 10-02 22:40:55 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=58.7 | tforward h=2.8 d=34.3 | tlogits h=1.6 d=2.4 | propose h=17.1 d=9.8 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=1.2 | greedy h=2.3 d=2.2 | dforward_loop h=7.0 d=0.8
+(APIServer pid=2427) INFO 10-02 22:41:03 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 74.1 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 12.7%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:41:03 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.18, Accepted throughput: 40.09 tokens/s, Drafted throughput: 101.98 tokens/s, Accepted: 401 tokens, Drafted: 1020 tokens, Per-position acceptance rate: 0.653, 0.365, 0.162, Avg Draft acceptance rate: 39.3%
+(APIServer pid=2427) INFO:     10.20.3.18:49808 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:41:07 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=59.0 | tforward h=1.2 d=34.0 | tlogits h=1.2 d=2.4 | propose h=19.6 d=9.8 | dmeta h=0.4 d=0.0 | dforward h=5.5 d=1.2 | greedy h=2.5 d=2.2 | dforward_loop h=7.6 d=0.8
+(Worker_TP0 pid=2898) INFO 10-02 22:41:07 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=59.0 | tforward h=2.8 d=34.4 | tlogits h=1.6 d=2.4 | propose h=17.2 d=9.8 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=1.2 | greedy h=2.3 d=2.2 | dforward_loop h=7.0 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:41:08 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=1 prev=4 curr=5 bias=0 (acc_cpu=1) computed=5119 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:41:08 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=1 prev=4 curr=5 bias=0 (acc_cpu=1) computed=5119 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:41:08 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=1 src=5 dest=4 bias=0 running=5120 newc=5120 aligned=5120 acc=1 (snapshot computed=5119 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:41:08 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=1 src=5 dest=4 bias=0 running=5120 newc=5120 aligned=5120 acc=1 (snapshot computed=5119 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:41:10 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=1 prev=3 curr=4 bias=0 (acc_cpu=1) computed=4095 sched=2 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:41:10 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=1 prev=3 curr=4 bias=0 (acc_cpu=1) computed=4095 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:41:10 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=1 src=4 dest=3 bias=0 running=4096 newc=4096 aligned=4096 acc=1 (snapshot computed=4095 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:41:10 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=1 src=4 dest=3 bias=0 running=4096 newc=4096 aligned=4096 acc=1 (snapshot computed=4095 sched=2 draft=1)
+(APIServer pid=2427) INFO 10-02 22:41:13 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 66.9 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 13.1%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:41:13 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.14, Accepted throughput: 35.69 tokens/s, Drafted throughput: 92.68 tokens/s, Accepted: 357 tokens, Drafted: 927 tokens, Per-position acceptance rate: 0.590, 0.353, 0.202, Avg Draft acceptance rate: 38.5%
+(Worker_TP0 pid=2898) INFO 10-02 22:41:19 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=62.0 | tforward h=6.1 d=37.0 | tlogits h=1.8 d=2.4 | propose h=17.1 d=10.4 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=1.3 | greedy h=2.3 d=2.2 | dforward_loop h=7.0 d=1.0
+(Worker_TP1 pid=2904) INFO 10-02 22:41:19 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=62.0 | tforward h=4.8 d=36.6 | tlogits h=1.1 d=2.4 | propose h=19.7 d=10.4 | dmeta h=0.4 d=0.0 | dforward h=5.5 d=1.3 | greedy h=2.5 d=2.2 | dforward_loop h=7.6 d=1.0
+(APIServer pid=2427) INFO 10-02 22:41:23 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 101.2 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 13.1%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:41:23 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.98, Accepted throughput: 67.19 tokens/s, Drafted throughput: 101.98 tokens/s, Accepted: 672 tokens, Drafted: 1020 tokens, Per-position acceptance rate: 0.815, 0.656, 0.506, Avg Draft acceptance rate: 65.9%
+(APIServer pid=2427) INFO:     10.20.3.18:53768 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:41:27 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=0 src=5 dest=5 bias=1 running=6143 newc=6144 aligned=6144 acc=2 (snapshot computed=6142 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:41:27 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=0 src=5 dest=5 bias=1 running=6143 newc=6144 aligned=6144 acc=2 (snapshot computed=6142 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:41:27 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=1 prev=5 curr=6 bias=0 (acc_cpu=1) computed=6144 sched=4 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:41:27 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=1 prev=5 curr=6 bias=0 (acc_cpu=1) computed=6144 sched=4 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:41:31 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=59.5 | tforward h=1.7 d=34.6 | tlogits h=1.1 d=2.4 | propose h=19.7 d=10.0 | dmeta h=0.4 d=0.0 | dforward h=5.5 d=1.2 | greedy h=2.6 d=2.2 | dforward_loop h=7.6 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:41:31 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=59.5 | tforward h=3.1 d=35.0 | tlogits h=1.6 d=2.4 | propose h=17.2 d=10.0 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=1.2 | greedy h=2.3 d=2.2 | dforward_loop h=7.1 d=0.9
+(APIServer pid=2427) INFO 10-02 22:41:33 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 96.2 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 13.3%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:41:33 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.89, Accepted throughput: 62.90 tokens/s, Drafted throughput: 99.70 tokens/s, Accepted: 629 tokens, Drafted: 997 tokens, Per-position acceptance rate: 0.778, 0.628, 0.483, Avg Draft acceptance rate: 63.1%
+(Worker_TP0 pid=2898) INFO 10-02 22:41:37 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=1 prev=4 curr=5 bias=0 (acc_cpu=1) computed=5119 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:41:37 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=1 prev=4 curr=5 bias=0 (acc_cpu=1) computed=5119 sched=2 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:41:38 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=1 src=5 dest=4 bias=0 running=5120 newc=5120 aligned=5120 acc=1 (snapshot computed=5119 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:41:38 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=1 src=5 dest=4 bias=0 running=5120 newc=5120 aligned=5120 acc=1 (snapshot computed=5119 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:41:43 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=61.5 | tforward h=3.5 d=36.2 | tlogits h=1.2 d=2.4 | propose h=19.5 d=10.2 | dmeta h=0.4 d=0.0 | dforward h=5.4 d=1.3 | greedy h=2.5 d=2.2 | dforward_loop h=7.5 d=1.0
+(Worker_TP0 pid=2898) INFO 10-02 22:41:43 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=61.5 | tforward h=5.0 d=36.6 | tlogits h=1.8 d=2.4 | propose h=17.1 d=10.2 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=1.3 | greedy h=2.3 d=2.2 | dforward_loop h=7.0 d=1.0
+(APIServer pid=2427) INFO 10-02 22:41:43 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 89.9 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 13.5%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:41:43 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.82, Accepted throughput: 57.99 tokens/s, Drafted throughput: 95.08 tokens/s, Accepted: 580 tokens, Drafted: 951 tokens, Per-position acceptance rate: 0.740, 0.592, 0.486, Avg Draft acceptance rate: 61.0%
+(APIServer pid=2427) INFO:     10.20.3.18:53777 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:41:45 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=1 prev=6 curr=7 bias=0 (acc_cpu=1) computed=7167 sched=2 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:41:45 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=1 prev=6 curr=7 bias=0 (acc_cpu=1) computed=7167 sched=2 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:41:45 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=1 src=7 dest=6 bias=0 running=7168 newc=7168 aligned=7168 acc=1 (snapshot computed=7167 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:41:45 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=1 src=7 dest=6 bias=0 running=7168 newc=7168 aligned=7168 acc=1 (snapshot computed=7167 sched=2 draft=1)
+(APIServer pid=2427) INFO 10-02 22:41:53 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 87.8 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 13.7%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:41:53 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.64, Accepted throughput: 54.59 tokens/s, Drafted throughput: 99.38 tokens/s, Accepted: 546 tokens, Drafted: 994 tokens, Per-position acceptance rate: 0.696, 0.536, 0.413, Avg Draft acceptance rate: 54.9%
+(Worker_TP1 pid=2904) INFO 10-02 22:41:55 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=59.9 | tforward h=1.8 d=35.0 | tlogits h=1.1 d=2.4 | propose h=19.2 d=10.0 | dmeta h=0.4 d=0.0 | dforward h=5.3 d=1.2 | greedy h=2.5 d=2.2 | dforward_loop h=7.5 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:41:55 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=59.9 | tforward h=3.0 d=35.3 | tlogits h=1.5 d=2.4 | propose h=17.3 d=10.0 | dmeta h=0.4 d=0.0 | dforward h=4.5 d=1.2 | greedy h=2.3 d=2.2 | dforward_loop h=7.1 d=0.9
+(Worker_TP1 pid=2904) INFO 10-02 22:42:02 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=1 src=7 dest=7 bias=3 running=8189 newc=8192 aligned=8192 acc=4 (snapshot computed=8188 sched=4 draft=3)
+(Worker_TP0 pid=2898) INFO 10-02 22:42:02 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=1 src=7 dest=7 bias=3 running=8189 newc=8192 aligned=8192 acc=4 (snapshot computed=8188 sched=4 draft=3)
+(Worker_TP0 pid=2898) INFO 10-02 22:42:02 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=13 curr=14 bias=0 (acc_cpu=1) computed=14336 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:42:02 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=13 curr=14 bias=0 (acc_cpu=1) computed=14336 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:42:03 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=14 dest=14 bias=0 running=15360 newc=15360 aligned=15360 acc=1 (snapshot computed=14336 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:42:03 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=14 dest=14 bias=0 running=15360 newc=15360 aligned=15360 acc=1 (snapshot computed=14336 sched=1024 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:42:03 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=0 prev=7 curr=8 bias=0 (acc_cpu=1) computed=8192 sched=4 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:42:03 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=0 prev=7 curr=8 bias=0 (acc_cpu=1) computed=8192 sched=4 blocksz=1024
+(APIServer pid=2427) INFO 10-02 22:42:03 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 90.3 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 14.1%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:42:03 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.88, Accepted throughput: 58.88 tokens/s, Drafted throughput: 94.18 tokens/s, Accepted: 589 tokens, Drafted: 942 tokens, Per-position acceptance rate: 0.783, 0.608, 0.484, Avg Draft acceptance rate: 62.5%
+(APIServer pid=2427) INFO:     10.20.3.18:53783 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:42:08 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=62.9 | tforward h=4.1 d=37.9 | tlogits h=1.1 d=2.4 | propose h=19.2 d=10.0 | dmeta h=0.4 d=0.0 | dforward h=5.3 d=1.3 | greedy h=2.5 d=2.2 | dforward_loop h=7.4 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:42:08 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=62.9 | tforward h=5.4 d=38.2 | tlogits h=1.6 d=2.4 | propose h=17.4 d=10.0 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=1.3 | greedy h=2.4 d=2.2 | dforward_loop h=7.1 d=0.9
+(Worker_TP1 pid=2904) INFO 10-02 22:42:09 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=1 src=5 dest=5 bias=1 running=6143 newc=6144 aligned=6144 acc=2 (snapshot computed=6142 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:42:09 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=1 src=5 dest=5 bias=1 running=6143 newc=6144 aligned=6144 acc=2 (snapshot computed=6142 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:42:09 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=1 prev=5 curr=6 bias=0 (acc_cpu=1) computed=6144 sched=4 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:42:09 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=1 prev=5 curr=6 bias=0 (acc_cpu=1) computed=6144 sched=4 blocksz=1024
+(APIServer pid=2427) INFO 10-02 22:42:13 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 93.8 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 14.3%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:42:13 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.85, Accepted throughput: 60.89 tokens/s, Drafted throughput: 98.48 tokens/s, Accepted: 609 tokens, Drafted: 985 tokens, Per-position acceptance rate: 0.775, 0.587, 0.489, Avg Draft acceptance rate: 61.8%
+(Worker_TP1 pid=2904) INFO 10-02 22:42:20 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.5 | tforward h=1.7 d=35.6 | tlogits h=1.1 d=2.4 | propose h=19.2 d=10.0 | dmeta h=0.4 d=0.0 | dforward h=5.2 d=1.3 | greedy h=2.5 d=2.2 | dforward_loop h=7.5 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:42:20 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.4 | tforward h=3.1 d=36.0 | tlogits h=1.6 d=2.4 | propose h=17.2 d=9.9 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=1.2 | greedy h=2.3 d=2.2 | dforward_loop h=7.0 d=0.9
+(Worker_TP1 pid=2904) INFO 10-02 22:42:20 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=1 prev=8 curr=9 bias=0 (acc_cpu=1) computed=9215 sched=2 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:42:20 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=1 prev=8 curr=9 bias=0 (acc_cpu=1) computed=9215 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:42:21 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=1 src=9 dest=8 bias=0 running=9216 newc=9216 aligned=9216 acc=1 (snapshot computed=9215 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:42:21 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=1 src=9 dest=8 bias=0 running=9216 newc=9216 aligned=9216 acc=1 (snapshot computed=9215 sched=2 draft=1)
+(APIServer pid=2427) INFO 10-02 22:42:23 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 91.7 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 14.5%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:42:23 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.81, Accepted throughput: 59.09 tokens/s, Drafted throughput: 97.58 tokens/s, Accepted: 591 tokens, Drafted: 976 tokens, Per-position acceptance rate: 0.755, 0.571, 0.488, Avg Draft acceptance rate: 60.6%
+(APIServer pid=2427) INFO:     10.20.3.18:53790 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:42:32 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.8 | tforward h=1.7 d=35.6 | tlogits h=1.2 d=2.4 | propose h=19.0 d=10.0 | dmeta h=0.4 d=0.0 | dforward h=5.2 d=1.3 | greedy h=2.5 d=2.2 | dforward_loop h=7.4 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:42:32 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.8 | tforward h=3.3 d=36.0 | tlogits h=1.6 d=2.4 | propose h=17.4 d=10.0 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=1.3 | greedy h=2.4 d=2.2 | dforward_loop h=7.1 d=0.9
+(APIServer pid=2427) INFO 10-02 22:42:33 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 91.6 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 14.5%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:42:33 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.76, Accepted throughput: 58.38 tokens/s, Drafted throughput: 99.57 tokens/s, Accepted: 584 tokens, Drafted: 996 tokens, Per-position acceptance rate: 0.741, 0.569, 0.449, Avg Draft acceptance rate: 58.6%
+(Worker_TP0 pid=2898) INFO 10-02 22:42:37 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=1 prev=6 curr=7 bias=0 (acc_cpu=1) computed=7167 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:42:37 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=1 prev=6 curr=7 bias=0 (acc_cpu=1) computed=7167 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:42:37 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=1 src=7 dest=6 bias=0 running=7168 newc=7168 aligned=7168 acc=1 (snapshot computed=7167 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:42:37 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=1 src=7 dest=6 bias=0 running=7168 newc=7168 aligned=7168 acc=1 (snapshot computed=7167 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:42:41 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=1 prev=9 curr=10 bias=0 (acc_cpu=1) computed=10239 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:42:41 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=1 prev=9 curr=10 bias=0 (acc_cpu=1) computed=10239 sched=2 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:42:41 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=1 src=10 dest=9 bias=0 running=10240 newc=10240 aligned=10240 acc=1 (snapshot computed=10239 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:42:41 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=1 src=10 dest=9 bias=0 running=10240 newc=10240 aligned=10240 acc=1 (snapshot computed=10239 sched=2 draft=1)
+(APIServer pid=2427) INFO 10-02 22:42:43 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 82.3 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 14.9%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:42:43 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.72, Accepted throughput: 51.99 tokens/s, Drafted throughput: 89.79 tokens/s, Accepted: 520 tokens, Drafted: 898 tokens, Per-position acceptance rate: 0.762, 0.545, 0.409, Avg Draft acceptance rate: 57.9%
+(APIServer pid=2427) INFO:     10.20.3.18:53797 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:42:45 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=64.0 | tforward h=5.3 d=38.4 | tlogits h=1.1 d=2.4 | propose h=19.2 d=10.6 | dmeta h=0.4 d=0.0 | dforward h=5.1 d=1.4 | greedy h=2.5 d=2.2 | dforward_loop h=7.5 d=1.0
+(Worker_TP0 pid=2898) INFO 10-02 22:42:45 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=64.1 | tforward h=6.5 d=38.8 | tlogits h=1.7 d=2.4 | propose h=17.3 d=10.6 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=1.4 | greedy h=2.3 d=2.2 | dforward_loop h=7.1 d=1.1
+(APIServer pid=2427) INFO 10-02 22:42:53 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 89.7 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 14.9%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:42:53 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.72, Accepted throughput: 56.69 tokens/s, Drafted throughput: 98.98 tokens/s, Accepted: 567 tokens, Drafted: 990 tokens, Per-position acceptance rate: 0.770, 0.530, 0.418, Avg Draft acceptance rate: 57.3%
+(Worker_TP1 pid=2904) INFO 10-02 22:42:57 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.7 | tforward h=1.2 d=35.8 | tlogits h=1.2 d=2.4 | propose h=18.7 d=10.0 | dmeta h=0.4 d=0.0 | dforward h=5.1 d=1.3 | greedy h=2.4 d=2.2 | dforward_loop h=7.3 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:42:57 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.6 | tforward h=2.3 d=36.2 | tlogits h=1.6 d=2.4 | propose h=17.1 d=9.9 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=1.3 | greedy h=2.3 d=2.2 | dforward_loop h=7.0 d=0.9
+(APIServer pid=2427) INFO:     10.20.3.65:54502 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:54468 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:54494 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:54478 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     127.0.0.1:51800 - "GET /v1/models HTTP/1.1" 200 OK
+(Worker_TP0 pid=2898) INFO 10-02 22:42:59 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=1 src=10 dest=10 bias=1 running=11263 newc=11264 aligned=11264 acc=2 (snapshot computed=11262 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:42:59 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=1 src=10 dest=10 bias=1 running=11263 newc=11264 aligned=11264 acc=2 (snapshot computed=11262 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:43:00 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=1 prev=10 curr=11 bias=0 (acc_cpu=1) computed=11264 sched=4 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:43:00 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=1 prev=10 curr=11 bias=0 (acc_cpu=1) computed=11264 sched=4 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:43:03 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=7 dest=7 bias=2 running=8190 newc=8192 aligned=8192 acc=3 (snapshot computed=8189 sched=3 draft=2)
+(Worker_TP1 pid=2904) INFO 10-02 22:43:03 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=7 dest=7 bias=2 running=8190 newc=8192 aligned=8192 acc=3 (snapshot computed=8189 sched=3 draft=2)
+(APIServer pid=2427) INFO 10-02 22:43:03 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 94.7 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 15.3%, Prefix cache hit rate: 21.7%
+(Worker_TP1 pid=2904) INFO 10-02 22:43:03 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=1 prev=7 curr=8 bias=0 (acc_cpu=1) computed=8192 sched=4 blocksz=1024
+(APIServer pid=2427) INFO 10-02 22:43:03 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 3.05, Accepted throughput: 63.58 tokens/s, Drafted throughput: 92.58 tokens/s, Accepted: 636 tokens, Drafted: 926 tokens, Per-position acceptance rate: 0.839, 0.662, 0.543, Avg Draft acceptance rate: 68.7%
+(Worker_TP0 pid=2898) INFO 10-02 22:43:03 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=1 prev=7 curr=8 bias=0 (acc_cpu=1) computed=8192 sched=4 blocksz=1024
+(APIServer pid=2427) INFO:     10.20.3.18:53805 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:43:09 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=63.0 | tforward h=3.9 d=37.6 | tlogits h=1.1 d=2.4 | propose h=18.5 d=10.3 | dmeta h=0.4 d=0.0 | dforward h=4.9 d=1.4 | greedy h=2.4 d=2.2 | dforward_loop h=7.4 d=1.0
+(Worker_TP0 pid=2898) INFO 10-02 22:43:10 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=63.0 | tforward h=4.3 d=37.9 | tlogits h=1.5 d=2.4 | propose h=18.7 d=10.3 | dmeta h=0.4 d=0.0 | dforward h=4.8 d=1.3 | greedy h=2.5 d=2.2 | dforward_loop h=7.7 d=1.0
+(APIServer pid=2427) INFO 10-02 22:43:13 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 96.7 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 15.3%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:43:13 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.92, Accepted throughput: 63.58 tokens/s, Drafted throughput: 99.27 tokens/s, Accepted: 636 tokens, Drafted: 993 tokens, Per-position acceptance rate: 0.810, 0.631, 0.480, Avg Draft acceptance rate: 64.0%
+(Worker_TP1 pid=2904) INFO 10-02 22:43:20 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=14 curr=15 bias=0 (acc_cpu=1) computed=15360 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:43:20 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=14 curr=15 bias=0 (acc_cpu=1) computed=15360 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:43:21 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=15 dest=15 bias=0 running=16384 newc=16384 aligned=16384 acc=1 (snapshot computed=15360 sched=1024 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:43:21 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=15 dest=15 bias=0 running=16384 newc=16384 aligned=16384 acc=1 (snapshot computed=15360 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:43:21 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=0 prev=11 curr=12 bias=0 (acc_cpu=1) computed=12287 sched=2 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:43:21 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=0 prev=11 curr=12 bias=0 (acc_cpu=1) computed=12287 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:43:21 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=0 src=12 dest=11 bias=0 running=12288 newc=12288 aligned=12288 acc=1 (snapshot computed=12287 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:43:21 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=0 src=12 dest=11 bias=0 running=12288 newc=12288 aligned=12288 acc=1 (snapshot computed=12287 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:43:21 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=15 curr=16 bias=0 (acc_cpu=1) computed=16384 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:43:21 [mamba_utils.py:204] llm-scaler v52k COPY-TIMER: events=64 p50=0.536ms p99=6.884ms max=6.884ms bytes=2600.2MB eff=62331.1GB/s entries_last=96
+(Worker_TP0 pid=2898) INFO 10-02 22:43:21 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=15 curr=16 bias=0 (acc_cpu=1) computed=16384 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:43:21 [mamba_utils.py:204] llm-scaler v52k COPY-TIMER: events=64 p50=0.529ms p99=6.584ms max=6.584ms bytes=2600.2MB eff=66628.9GB/s entries_last=96
+(Worker_TP0 pid=2898) INFO 10-02 22:43:22 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=16 dest=16 bias=0 running=17408 newc=17408 aligned=17408 acc=1 (snapshot computed=16384 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:43:22 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=16 dest=16 bias=0 running=17408 newc=17408 aligned=17408 acc=1 (snapshot computed=16384 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:43:23 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=67.8 | tforward h=8.6 d=43.0 | tlogits h=1.3 d=2.4 | propose h=18.3 d=10.4 | dmeta h=0.4 d=0.0 | dforward h=4.9 d=1.5 | greedy h=2.4 d=2.2 | dforward_loop h=7.2 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:43:23 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=67.9 | tforward h=9.0 d=43.2 | tlogits h=1.3 d=2.4 | propose h=20.1 d=10.3 | dmeta h=0.4 d=0.0 | dforward h=5.2 d=1.5 | greedy h=2.6 d=2.2 | dforward_loop h=8.3 d=0.9
+(APIServer pid=2427) INFO 10-02 22:43:23 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 75.6 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 15.9%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:43:23 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.72, Accepted throughput: 47.78 tokens/s, Drafted throughput: 83.07 tokens/s, Accepted: 478 tokens, Drafted: 831 tokens, Per-position acceptance rate: 0.755, 0.543, 0.421, Avg Draft acceptance rate: 57.5%
+(APIServer pid=2427) INFO:     10.20.3.18:53813 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:43:29 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=1 src=8 dest=8 bias=2 running=9214 newc=9216 aligned=9216 acc=3 (snapshot computed=9213 sched=3 draft=2)
+(Worker_TP0 pid=2898) INFO 10-02 22:43:29 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=1 src=8 dest=8 bias=2 running=9214 newc=9216 aligned=9216 acc=3 (snapshot computed=9213 sched=3 draft=2)
+(Worker_TP0 pid=2898) INFO 10-02 22:43:30 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=1 prev=8 curr=9 bias=0 (acc_cpu=1) computed=9216 sched=4 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:43:30 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=1 prev=8 curr=9 bias=0 (acc_cpu=1) computed=9216 sched=4 blocksz=1024
+(APIServer pid=2427) INFO 10-02 22:43:33 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 90.5 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 16.1%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:43:33 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.80, Accepted throughput: 58.18 tokens/s, Drafted throughput: 96.77 tokens/s, Accepted: 582 tokens, Drafted: 968 tokens, Per-position acceptance rate: 0.780, 0.594, 0.427, Avg Draft acceptance rate: 60.1%
+(Worker_TP1 pid=2904) INFO 10-02 22:43:35 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=61.7 | tforward h=2.0 d=37.0 | tlogits h=1.2 d=2.4 | propose h=18.2 d=10.1 | dmeta h=0.4 d=0.0 | dforward h=4.8 d=1.3 | greedy h=2.4 d=2.2 | dforward_loop h=7.3 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:43:35 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=61.7 | tforward h=2.2 d=37.3 | tlogits h=1.4 d=2.4 | propose h=19.6 d=10.1 | dmeta h=0.4 d=0.0 | dforward h=5.0 d=1.3 | greedy h=2.6 d=2.2 | dforward_loop h=8.1 d=0.9
+(Worker_TP1 pid=2904) INFO 10-02 22:43:41 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=1 prev=12 curr=13 bias=0 (acc_cpu=1) computed=13311 sched=2 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:43:41 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-982b957e2c04139e-a550e9ef slot=1 prev=12 curr=13 bias=0 (acc_cpu=1) computed=13311 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:43:41 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=1 src=13 dest=12 bias=0 running=13312 newc=13312 aligned=13312 acc=1 (snapshot computed=13311 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:43:41 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-982b957e2c04139e-a550e9ef row=1 src=13 dest=12 bias=0 running=13312 newc=13312 aligned=13312 acc=1 (snapshot computed=13311 sched=2 draft=1)
+(APIServer pid=2427) INFO 10-02 22:43:43 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 87.3 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 16.3%, Prefix cache hit rate: 21.7%
+(APIServer pid=2427) INFO 10-02 22:43:43 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.75, Accepted throughput: 55.49 tokens/s, Drafted throughput: 95.09 tokens/s, Accepted: 555 tokens, Drafted: 951 tokens, Per-position acceptance rate: 0.748, 0.557, 0.440, Avg Draft acceptance rate: 58.4%
+(APIServer pid=2427) INFO:     10.20.3.18:63090 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:43:48 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=62.0 | tforward h=2.3 d=37.5 | tlogits h=1.1 d=2.4 | propose h=18.6 d=10.3 | dmeta h=0.4 d=0.0 | dforward h=4.8 d=1.4 | greedy h=2.5 d=2.2 | dforward_loop h=7.4 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:43:48 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=62.0 | tforward h=3.0 d=37.8 | tlogits h=1.5 d=2.4 | propose h=17.2 d=10.2 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=1.4 | greedy h=2.3 d=2.2 | dforward_loop h=7.0 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:43:49 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=16 curr=17 bias=0 (acc_cpu=1) computed=17408 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:43:49 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=16 curr=17 bias=0 (acc_cpu=1) computed=17408 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:43:50 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=17 dest=17 bias=0 running=18432 newc=18432 aligned=18432 acc=1 (snapshot computed=17408 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:43:50 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=17 dest=17 bias=0 running=18432 newc=18432 aligned=18432 acc=1 (snapshot computed=17408 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:43:50 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=17 curr=18 bias=0 (acc_cpu=1) computed=18432 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:43:50 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=17 curr=18 bias=0 (acc_cpu=1) computed=18432 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:43:51 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=18 dest=18 bias=0 running=19456 newc=19456 aligned=19456 acc=1 (snapshot computed=18432 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:43:51 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=18 dest=18 bias=0 running=19456 newc=19456 aligned=19456 acc=1 (snapshot computed=18432 sched=1024 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:43:51 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=18 curr=19 bias=0 (acc_cpu=1) computed=19456 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:43:51 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=18 curr=19 bias=0 (acc_cpu=1) computed=19456 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:43:51 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=19 dest=19 bias=0 running=20480 newc=20480 aligned=20480 acc=1 (snapshot computed=19456 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:43:51 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=19 dest=19 bias=0 running=20480 newc=20480 aligned=20480 acc=1 (snapshot computed=19456 sched=1024 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:43:52 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=19 curr=20 bias=0 (acc_cpu=1) computed=20480 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:43:52 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=19 curr=20 bias=0 (acc_cpu=1) computed=20480 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:43:52 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=20 dest=20 bias=0 running=21504 newc=21504 aligned=21504 acc=1 (snapshot computed=20480 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:43:52 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=20 dest=20 bias=0 running=21504 newc=21504 aligned=21504 acc=1 (snapshot computed=20480 sched=1024 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:43:52 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=20 curr=21 bias=0 (acc_cpu=1) computed=21504 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:43:52 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=20 curr=21 bias=0 (acc_cpu=1) computed=21504 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:43:53 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=21 dest=21 bias=0 running=22528 newc=22528 aligned=22528 acc=1 (snapshot computed=21504 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:43:53 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=21 dest=21 bias=0 running=22528 newc=22528 aligned=22528 acc=1 (snapshot computed=21504 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:43:53 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=21 curr=22 bias=0 (acc_cpu=1) computed=22528 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:43:53 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=21 curr=22 bias=0 (acc_cpu=1) computed=22528 sched=1024 blocksz=1024
+(APIServer pid=2427) INFO 10-02 22:43:53 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 40.8 tokens/s, Running: 2 reqs, Waiting: 1 reqs, GPU KV cache usage: 12.3%, Prefix cache hit rate: 20.0%
+(APIServer pid=2427) INFO 10-02 22:43:53 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.02, Accepted throughput: 20.70 tokens/s, Drafted throughput: 60.59 tokens/s, Accepted: 207 tokens, Drafted: 606 tokens, Per-position acceptance rate: 0.604, 0.292, 0.129, Avg Draft acceptance rate: 34.2%
+(Worker_TP0 pid=2898) INFO 10-02 22:43:54 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=22 dest=22 bias=0 running=23552 newc=23552 aligned=23552 acc=1 (snapshot computed=22528 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:43:54 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=22 dest=22 bias=0 running=23552 newc=23552 aligned=23552 acc=1 (snapshot computed=22528 sched=1024 draft=0)
+(EngineCore pid=2699) INFO 10-02 22:43:54 [scheduler.py:103] V66_FAIRFIX_ACTIVE bypass=1 waiting=1 starve_s=2.0
+(Worker_TP0 pid=2898) INFO 10-02 22:43:54 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=22 curr=30 bias=0 (acc_cpu=1) computed=23552 sched=8192 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:43:54 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=22 curr=30 bias=0 (acc_cpu=1) computed=23552 sched=8192 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:43:59 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=30 dest=30 bias=0 running=31744 newc=31744 aligned=31744 acc=1 (snapshot computed=23552 sched=8192 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:43:59 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=30 dest=30 bias=0 running=31744 newc=31744 aligned=31744 acc=1 (snapshot computed=23552 sched=8192 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:43:59 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=30 curr=31 bias=0 (acc_cpu=1) computed=31744 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:43:59 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=30 curr=31 bias=0 (acc_cpu=1) computed=31744 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:44:00 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=31 dest=31 bias=0 running=32768 newc=32768 aligned=32768 acc=1 (snapshot computed=31744 sched=1024 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:44:00 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=31 dest=31 bias=0 running=32768 newc=32768 aligned=32768 acc=1 (snapshot computed=31744 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:44:00 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=31 curr=39 bias=0 (acc_cpu=1) computed=32768 sched=8192 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:44:00 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=31 curr=39 bias=0 (acc_cpu=1) computed=32768 sched=8192 blocksz=1024
+(APIServer pid=2427) INFO 10-02 22:44:03 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.1 tokens/s, Running: 2 reqs, Waiting: 1 reqs, GPU KV cache usage: 15.7%, Prefix cache hit rate: 19.3%
+(APIServer pid=2427) INFO 10-02 22:44:03 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 1.00, Accepted throughput: 0.00 tokens/s, Drafted throughput: 0.30 tokens/s, Accepted: 0 tokens, Drafted: 3 tokens, Per-position acceptance rate: 0.000, 0.000, 0.000, Avg Draft acceptance rate: 0.0%
+(APIServer pid=2427) INFO:     10.100.8.6:34672 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:34654 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:34662 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:34670 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63101 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP0 pid=2898) INFO 10-02 22:44:05 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=39 dest=39 bias=0 running=40960 newc=40960 aligned=40960 acc=1 (snapshot computed=32768 sched=8192 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:44:05 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=39 dest=39 bias=0 running=40960 newc=40960 aligned=40960 acc=1 (snapshot computed=32768 sched=8192 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:44:05 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=39 curr=47 bias=0 (acc_cpu=1) computed=40960 sched=8192 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:44:05 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=39 curr=47 bias=0 (acc_cpu=1) computed=40960 sched=8192 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:44:11 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=47 dest=47 bias=0 running=49152 newc=49152 aligned=49152 acc=1 (snapshot computed=40960 sched=8192 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:44:11 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=47 dest=47 bias=0 running=49152 newc=49152 aligned=49152 acc=1 (snapshot computed=40960 sched=8192 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:44:11 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=47 curr=48 bias=0 (acc_cpu=1) computed=49152 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:44:11 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=47 curr=48 bias=0 (acc_cpu=1) computed=49152 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:44:12 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=48 dest=48 bias=0 running=50176 newc=50176 aligned=50176 acc=1 (snapshot computed=49152 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:44:12 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=48 dest=48 bias=0 running=50176 newc=50176 aligned=50176 acc=1 (snapshot computed=49152 sched=1024 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:44:12 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=48 curr=56 bias=0 (acc_cpu=1) computed=50176 sched=8192 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:44:12 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=48 curr=56 bias=0 (acc_cpu=1) computed=50176 sched=8192 blocksz=1024
+(APIServer pid=2427) INFO 10-02 22:44:13 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.1 tokens/s, Running: 2 reqs, Waiting: 1 reqs, GPU KV cache usage: 19.1%, Prefix cache hit rate: 18.6%
+(APIServer pid=2427) INFO 10-02 22:44:13 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 1.00, Accepted throughput: 0.00 tokens/s, Drafted throughput: 0.30 tokens/s, Accepted: 0 tokens, Drafted: 3 tokens, Per-position acceptance rate: 0.000, 0.000, 0.000, Avg Draft acceptance rate: 0.0%
+(Worker_TP1 pid=2904) INFO 10-02 22:44:19 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=56 dest=56 bias=0 running=58368 newc=58368 aligned=58368 acc=1 (snapshot computed=50176 sched=8192 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:44:19 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=56 dest=56 bias=0 running=58368 newc=58368 aligned=58368 acc=1 (snapshot computed=50176 sched=8192 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:44:19 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=56 curr=64 bias=0 (acc_cpu=1) computed=58368 sched=8192 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:44:19 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=56 curr=64 bias=0 (acc_cpu=1) computed=58368 sched=8192 blocksz=1024
+(APIServer pid=2427) INFO 10-02 22:44:23 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.1 tokens/s, Running: 2 reqs, Waiting: 1 reqs, GPU KV cache usage: 20.7%, Prefix cache hit rate: 18.0%
+(APIServer pid=2427) INFO 10-02 22:44:23 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 1.00, Accepted throughput: 0.00 tokens/s, Drafted throughput: 0.30 tokens/s, Accepted: 0 tokens, Drafted: 3 tokens, Per-position acceptance rate: 0.000, 0.000, 0.000, Avg Draft acceptance rate: 0.0%
+(APIServer pid=2427) INFO:     10.20.3.18:63110 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:44:26 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=64 dest=64 bias=0 running=66560 newc=66560 aligned=66560 acc=1 (snapshot computed=58368 sched=8192 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:44:26 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=64 dest=64 bias=0 running=66560 newc=66560 aligned=66560 acc=1 (snapshot computed=58368 sched=8192 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:44:26 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=64 curr=65 bias=0 (acc_cpu=1) computed=66560 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:44:26 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=64 curr=65 bias=0 (acc_cpu=1) computed=66560 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:44:27 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=65 dest=65 bias=0 running=67584 newc=67584 aligned=67584 acc=1 (snapshot computed=66560 sched=1024 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:44:27 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=65 dest=65 bias=0 running=67584 newc=67584 aligned=67584 acc=1 (snapshot computed=66560 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:44:27 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=65 curr=73 bias=0 (acc_cpu=1) computed=67584 sched=8192 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:44:27 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=65 curr=73 bias=0 (acc_cpu=1) computed=67584 sched=8192 blocksz=1024
+(APIServer pid=2427) INFO 10-02 22:44:33 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 2 reqs, Waiting: 1 reqs, GPU KV cache usage: 22.5%, Prefix cache hit rate: 18.0%
+(Worker_TP0 pid=2898) INFO 10-02 22:44:34 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=73 dest=73 bias=0 running=75776 newc=75776 aligned=75776 acc=1 (snapshot computed=67584 sched=8192 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:44:34 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=73 dest=73 bias=0 running=75776 newc=75776 aligned=75776 acc=1 (snapshot computed=67584 sched=8192 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:44:34 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=73 curr=81 bias=0 (acc_cpu=1) computed=75776 sched=8192 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:44:34 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=73 curr=81 bias=0 (acc_cpu=1) computed=75776 sched=8192 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:44:42 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=81 dest=81 bias=0 running=83968 newc=83968 aligned=83968 acc=1 (snapshot computed=75776 sched=8192 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:44:42 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=81 dest=81 bias=0 running=83968 newc=83968 aligned=83968 acc=1 (snapshot computed=75776 sched=8192 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:44:42 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=81 curr=82 bias=0 (acc_cpu=1) computed=83968 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:44:42 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=81 curr=82 bias=0 (acc_cpu=1) computed=83968 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:44:43 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=82 dest=82 bias=0 running=84992 newc=84992 aligned=84992 acc=1 (snapshot computed=83968 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:44:43 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=82 dest=82 bias=0 running=84992 newc=84992 aligned=84992 acc=1 (snapshot computed=83968 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:44:43 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=82 curr=90 bias=0 (acc_cpu=1) computed=84992 sched=8192 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:44:43 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=82 curr=90 bias=0 (acc_cpu=1) computed=84992 sched=8192 blocksz=1024
+(APIServer pid=2427) INFO 10-02 22:44:43 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.1 tokens/s, Running: 2 reqs, Waiting: 1 reqs, GPU KV cache usage: 26.0%, Prefix cache hit rate: 17.4%
+(APIServer pid=2427) INFO 10-02 22:44:43 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 1.00, Accepted throughput: 0.00 tokens/s, Drafted throughput: 0.15 tokens/s, Accepted: 0 tokens, Drafted: 3 tokens, Per-position acceptance rate: 0.000, 0.000, 0.000, Avg Draft acceptance rate: 0.0%
+(APIServer pid=2427) INFO:     10.20.3.18:63123 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP0 pid=2898) INFO 10-02 22:44:51 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=90 dest=90 bias=0 running=93184 newc=93184 aligned=93184 acc=1 (snapshot computed=84992 sched=8192 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:44:51 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=90 dest=90 bias=0 running=93184 newc=93184 aligned=93184 acc=1 (snapshot computed=84992 sched=8192 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:44:51 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=1 prev=90 curr=95 bias=0 (acc_cpu=1) computed=93184 sched=5120 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:44:51 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=1 prev=90 curr=95 bias=0 (acc_cpu=1) computed=93184 sched=5120 blocksz=1024
+(APIServer pid=2427) INFO 10-02 22:44:53 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.1 tokens/s, Running: 3 reqs, Waiting: 0 reqs, GPU KV cache usage: 29.8%, Prefix cache hit rate: 16.3%
+(APIServer pid=2427) INFO 10-02 22:44:53 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 1.00, Accepted throughput: 0.00 tokens/s, Drafted throughput: 0.30 tokens/s, Accepted: 0 tokens, Drafted: 3 tokens, Per-position acceptance rate: 0.000, 0.000, 0.000, Avg Draft acceptance rate: 0.0%
+(Worker_TP0 pid=2898) INFO 10-02 22:44:57 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=1 src=95 dest=95 bias=0 running=98304 newc=98304 aligned=98304 acc=1 (snapshot computed=93184 sched=5120 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:44:57 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-8f35b68128daa028-a439c048 row=2 src=1 dest=1 bias=0 running=2048 newc=2048 aligned=2048 acc=1 (snapshot computed=0 sched=2048 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:44:57 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=1 src=95 dest=95 bias=0 running=98304 newc=98304 aligned=98304 acc=1 (snapshot computed=93184 sched=5120 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:44:57 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-8f35b68128daa028-a439c048 row=2 src=1 dest=1 bias=0 running=2048 newc=2048 aligned=2048 acc=1 (snapshot computed=0 sched=2048 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:44:57 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=95 curr=96 bias=0 (acc_cpu=1) computed=98304 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:44:57 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=0 prev=95 curr=96 bias=0 (acc_cpu=1) computed=98304 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:44:59 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=96 dest=96 bias=0 running=99328 newc=99328 aligned=99328 acc=1 (snapshot computed=98304 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:44:59 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bf38bb749bad03d5-acd07ad4 row=0 src=96 dest=96 bias=0 running=99328 newc=99328 aligned=99328 acc=1 (snapshot computed=98304 sched=1024 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:44:59 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=1 prev=96 curr=97 bias=0 (acc_cpu=1) computed=99328 sched=46 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:44:59 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bf38bb749bad03d5-acd07ad4 slot=1 prev=96 curr=97 bias=0 (acc_cpu=1) computed=99328 sched=46 blocksz=1024
+(EngineCore pid=2699) WARNING 10-02 22:44:59 [scheduler.py:1670] llm-scaler v60c POISONED-ROW: chatcmpl-bf38bb749bad03d5-acd07ad4 scheduled (1024 tokens this step, row_len=0, row_head=[]) strike 1 (num_output_tokens=0, num_computed_tokens=99374) — NaN-zombie sentinel signature on the sync path
+(EngineCore pid=2699) WARNING 10-02 22:44:59 [scheduler.py:1713] llm-scaler v60c STRIKE-OUT (poisoned-row): chatcmpl-bf38bb749bad03d5-acd07ad4 — 1 consecutive poisoned/empty sampled rows while scheduled (crash-4 NaN-zombie terminal state, sync path) — FINISHED_ABORTED delivered client-visibly, engine stays up (num_output_tokens=0, num_computed_tokens=99374)
+(APIServer pid=2427) INFO 10-02 22:45:03 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 14.2 tokens/s, Running: 2 reqs, Waiting: 0 reqs, GPU KV cache usage: 7.2%, Prefix cache hit rate: 16.3%
+(APIServer pid=2427) INFO 10-02 22:45:03 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 1.89, Accepted throughput: 6.70 tokens/s, Drafted throughput: 22.49 tokens/s, Accepted: 67 tokens, Drafted: 225 tokens, Per-position acceptance rate: 0.467, 0.280, 0.147, Avg Draft acceptance rate: 29.8%
+(APIServer pid=2427) INFO:     10.20.3.18:63140 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:45:07 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=397.6 | tforward h=317.8 d=359.4 | tlogits h=0.9 d=2.3 | propose h=17.9 d=22.7 | dmeta h=0.4 d=0.0 | dforward h=5.1 d=13.3 | greedy h=2.5 d=2.2 | dforward_loop h=6.5 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:45:07 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=397.6 | tforward h=318.9 d=359.8 | tlogits h=0.7 d=2.3 | propose h=16.2 d=22.7 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=13.3 | greedy h=2.3 d=2.2 | dforward_loop h=6.1 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:45:09 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=9 dest=9 bias=1 running=10239 newc=10240 aligned=10240 acc=2 (snapshot computed=10238 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:45:09 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=9 dest=9 bias=1 running=10239 newc=10240 aligned=10240 acc=2 (snapshot computed=10238 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:45:09 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=9 curr=10 bias=0 (acc_cpu=1) computed=10240 sched=4 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:45:09 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=9 curr=10 bias=0 (acc_cpu=1) computed=10240 sched=4 blocksz=1024
+(APIServer pid=2427) INFO:     10.100.8.6:53806 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(Worker_TP0 pid=2898) INFO 10-02 22:45:11 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1dd5f1bd736ee46-8c10794d slot=1 prev=95 curr=96 bias=0 (acc_cpu=1) computed=98304 sched=508 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:45:11 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1dd5f1bd736ee46-8c10794d slot=1 prev=95 curr=96 bias=0 (acc_cpu=1) computed=98304 sched=508 blocksz=1024
+(EngineCore pid=2699) WARNING 10-02 22:45:11 [scheduler.py:1670] llm-scaler v60c POISONED-ROW: chatcmpl-a1dd5f1bd736ee46-8c10794d scheduled (508 tokens this step, row_len=0, row_head=[]) strike 1 (num_output_tokens=0, num_computed_tokens=99393) — NaN-zombie sentinel signature on the sync path
+(EngineCore pid=2699) WARNING 10-02 22:45:11 [scheduler.py:1713] llm-scaler v60c STRIKE-OUT (poisoned-row): chatcmpl-a1dd5f1bd736ee46-8c10794d — 1 consecutive poisoned/empty sampled rows while scheduled (crash-4 NaN-zombie terminal state, sync path) — FINISHED_ABORTED delivered client-visibly, engine stays up (num_output_tokens=0, num_computed_tokens=99393)
+(Worker_TP0 pid=2898) INFO 10-02 22:45:11 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1dd5f1bd736ee46-8c10794d slot=1 prev=96 curr=97 bias=0 (acc_cpu=1) computed=98812 sched=581 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:45:11 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1dd5f1bd736ee46-8c10794d slot=1 prev=96 curr=97 bias=0 (acc_cpu=1) computed=98812 sched=581 blocksz=1024
+(APIServer pid=2427) INFO 10-02 22:45:13 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 34.0 tokens/s, Running: 2 reqs, Waiting: 0 reqs, GPU KV cache usage: 7.4%, Prefix cache hit rate: 37.4%
+(APIServer pid=2427) INFO 10-02 22:45:13 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.38, Accepted throughput: 19.69 tokens/s, Drafted throughput: 42.39 tokens/s, Accepted: 197 tokens, Drafted: 424 tokens, Per-position acceptance rate: 0.643, 0.441, 0.294, Avg Draft acceptance rate: 46.5%
+(Worker_TP1 pid=2904) INFO 10-02 22:45:21 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=66.6 | tforward h=10.0 d=42.3 | tlogits h=0.9 d=2.3 | propose h=18.5 d=10.6 | dmeta h=0.4 d=0.0 | dforward h=5.6 d=1.8 | greedy h=2.5 d=2.2 | dforward_loop h=6.4 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:45:21 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=66.6 | tforward h=11.3 d=42.7 | tlogits h=0.6 d=2.3 | propose h=16.8 d=10.6 | dmeta h=0.4 d=0.0 | dforward h=4.7 d=1.8 | greedy h=2.4 d=2.2 | dforward_loop h=6.2 d=0.9
+(APIServer pid=2427) INFO 10-02 22:45:23 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 53.1 tokens/s, Running: 2 reqs, Waiting: 0 reqs, GPU KV cache usage: 7.4%, Prefix cache hit rate: 37.4%
+(APIServer pid=2427) INFO 10-02 22:45:23 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 3.03, Accepted throughput: 35.60 tokens/s, Drafted throughput: 52.50 tokens/s, Accepted: 356 tokens, Drafted: 525 tokens, Per-position acceptance rate: 0.823, 0.674, 0.537, Avg Draft acceptance rate: 67.8%
+(APIServer pid=2427) INFO:     10.20.3.18:63156 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:45:32 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=57.1 | tforward h=1.0 d=34.0 | tlogits h=0.9 d=2.3 | propose h=18.3 d=9.8 | dmeta h=0.4 d=0.0 | dforward h=5.3 d=1.3 | greedy h=2.5 d=2.2 | dforward_loop h=6.5 d=0.8
+(Worker_TP0 pid=2898) INFO 10-02 22:45:32 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=57.1 | tforward h=2.3 d=34.4 | tlogits h=0.6 d=2.3 | propose h=16.2 d=9.8 | dmeta h=0.4 d=0.0 | dforward h=4.3 d=1.3 | greedy h=2.3 d=2.2 | dforward_loop h=6.1 d=0.8
+(APIServer pid=2427) INFO 10-02 22:45:33 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 35.2 tokens/s, Running: 2 reqs, Waiting: 0 reqs, GPU KV cache usage: 7.6%, Prefix cache hit rate: 37.4%
+(APIServer pid=2427) INFO 10-02 22:45:33 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.05, Accepted throughput: 18.00 tokens/s, Drafted throughput: 51.40 tokens/s, Accepted: 180 tokens, Drafted: 514 tokens, Per-position acceptance rate: 0.512, 0.320, 0.215, Avg Draft acceptance rate: 35.0%
+(Worker_TP0 pid=2898) INFO 10-02 22:45:33 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-8f35b68128daa028-a439c048 slot=0 prev=1 curr=2 bias=0 (acc_cpu=1) computed=2048 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:45:33 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-8f35b68128daa028-a439c048 slot=0 prev=1 curr=2 bias=0 (acc_cpu=1) computed=2048 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:45:34 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-8f35b68128daa028-a439c048 row=0 src=2 dest=2 bias=0 running=3072 newc=3072 aligned=3072 acc=1 (snapshot computed=2048 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:45:34 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-8f35b68128daa028-a439c048 row=0 src=2 dest=2 bias=0 running=3072 newc=3072 aligned=3072 acc=1 (snapshot computed=2048 sched=1024 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:45:34 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=10 curr=11 bias=0 (acc_cpu=1) computed=11263 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:45:34 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=10 curr=11 bias=0 (acc_cpu=1) computed=11263 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:45:34 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=11 dest=10 bias=0 running=11264 newc=11264 aligned=11264 acc=1 (snapshot computed=11263 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:45:34 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=11 dest=10 bias=0 running=11264 newc=11264 aligned=11264 acc=1 (snapshot computed=11263 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:45:34 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-8f35b68128daa028-a439c048 slot=0 prev=2 curr=3 bias=0 (acc_cpu=1) computed=3072 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:45:34 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-8f35b68128daa028-a439c048 slot=0 prev=2 curr=3 bias=0 (acc_cpu=1) computed=3072 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:45:35 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-8f35b68128daa028-a439c048 row=0 src=3 dest=3 bias=0 running=4096 newc=4096 aligned=4096 acc=1 (snapshot computed=3072 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:45:35 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-8f35b68128daa028-a439c048 row=0 src=3 dest=3 bias=0 running=4096 newc=4096 aligned=4096 acc=1 (snapshot computed=3072 sched=1024 draft=0)
+(APIServer pid=2427) INFO 10-02 22:45:43 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 29.2 tokens/s, Running: 2 reqs, Waiting: 0 reqs, GPU KV cache usage: 8.9%, Prefix cache hit rate: 37.4%
+(APIServer pid=2427) INFO 10-02 22:45:43 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 1.92, Accepted throughput: 14.00 tokens/s, Drafted throughput: 44.99 tokens/s, Accepted: 140 tokens, Drafted: 450 tokens, Per-position acceptance rate: 0.520, 0.263, 0.138, Avg Draft acceptance rate: 31.1%
+(APIServer pid=2427) INFO:     10.20.3.18:63163 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:45:45 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=64.1 | tforward h=8.6 d=40.5 | tlogits h=0.9 d=2.3 | propose h=18.3 d=10.3 | dmeta h=0.4 d=0.0 | dforward h=5.2 d=1.4 | greedy h=2.5 d=2.2 | dforward_loop h=6.6 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:45:45 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=64.2 | tforward h=9.6 d=40.9 | tlogits h=0.6 d=2.3 | propose h=16.3 d=10.3 | dmeta h=0.4 d=0.0 | dforward h=4.3 d=1.5 | greedy h=2.3 d=2.2 | dforward_loop h=6.1 d=0.9
+(APIServer pid=2427) INFO 10-02 22:45:53 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 36.3 tokens/s, Running: 2 reqs, Waiting: 0 reqs, GPU KV cache usage: 8.9%, Prefix cache hit rate: 37.4%
+(APIServer pid=2427) INFO 10-02 22:45:53 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.06, Accepted throughput: 18.69 tokens/s, Drafted throughput: 52.78 tokens/s, Accepted: 187 tokens, Drafted: 528 tokens, Per-position acceptance rate: 0.568, 0.330, 0.165, Avg Draft acceptance rate: 35.4%
+(Worker_TP1 pid=2904) INFO 10-02 22:45:56 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=56.9 | tforward h=1.0 d=34.2 | tlogits h=0.9 d=2.3 | propose h=17.9 d=9.9 | dmeta h=0.4 d=0.0 | dforward h=5.1 d=1.3 | greedy h=2.5 d=2.2 | dforward_loop h=6.4 d=0.8
+(Worker_TP0 pid=2898) INFO 10-02 22:45:56 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=56.9 | tforward h=1.9 d=34.5 | tlogits h=0.6 d=2.3 | propose h=16.1 d=9.8 | dmeta h=0.4 d=0.0 | dforward h=4.3 d=1.3 | greedy h=2.3 d=2.2 | dforward_loop h=6.0 d=0.8
+(Worker_TP0 pid=2898) INFO 10-02 22:46:03 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=11 curr=12 bias=0 (acc_cpu=1) computed=12287 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:46:03 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=11 curr=12 bias=0 (acc_cpu=1) computed=12287 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:46:03 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=12 dest=11 bias=0 running=12288 newc=12288 aligned=12288 acc=1 (snapshot computed=12287 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:46:03 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=12 dest=11 bias=0 running=12288 newc=12288 aligned=12288 acc=1 (snapshot computed=12287 sched=2 draft=1)
+(APIServer pid=2427) INFO 10-02 22:46:03 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 39.6 tokens/s, Running: 2 reqs, Waiting: 0 reqs, GPU KV cache usage: 9.1%, Prefix cache hit rate: 37.4%
+(APIServer pid=2427) INFO 10-02 22:46:03 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.29, Accepted throughput: 22.29 tokens/s, Drafted throughput: 51.68 tokens/s, Accepted: 223 tokens, Drafted: 517 tokens, Per-position acceptance rate: 0.624, 0.405, 0.260, Avg Draft acceptance rate: 43.1%
+(APIServer pid=2427) INFO:     10.20.3.18:63171 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:46:08 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=57.8 | tforward h=1.6 d=34.7 | tlogits h=0.9 d=2.3 | propose h=17.9 d=9.9 | dmeta h=0.4 d=0.0 | dforward h=5.1 d=1.3 | greedy h=2.5 d=2.2 | dforward_loop h=6.4 d=0.8
+(Worker_TP0 pid=2898) INFO 10-02 22:46:08 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=57.8 | tforward h=2.5 d=35.1 | tlogits h=0.6 d=2.3 | propose h=16.1 d=9.9 | dmeta h=0.4 d=0.0 | dforward h=4.3 d=1.3 | greedy h=2.3 d=2.2 | dforward_loop h=6.0 d=0.8
+(APIServer pid=2427) INFO 10-02 22:46:13 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 37.6 tokens/s, Running: 2 reqs, Waiting: 0 reqs, GPU KV cache usage: 9.1%, Prefix cache hit rate: 37.4%
+(APIServer pid=2427) INFO 10-02 22:46:13 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.17, Accepted throughput: 20.30 tokens/s, Drafted throughput: 51.89 tokens/s, Accepted: 203 tokens, Drafted: 519 tokens, Per-position acceptance rate: 0.584, 0.376, 0.214, Avg Draft acceptance rate: 39.1%
+(Worker_TP1 pid=2904) INFO 10-02 22:46:19 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=58.0 | tforward h=1.3 d=34.7 | tlogits h=0.9 d=2.3 | propose h=17.6 d=10.0 | dmeta h=0.4 d=0.0 | dforward h=5.0 d=1.3 | greedy h=2.4 d=2.2 | dforward_loop h=6.4 d=0.8
+(Worker_TP0 pid=2898) INFO 10-02 22:46:19 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=58.0 | tforward h=1.8 d=34.9 | tlogits h=0.6 d=2.3 | propose h=18.1 d=9.9 | dmeta h=0.4 d=0.0 | dforward h=4.9 d=1.3 | greedy h=2.6 d=2.2 | dforward_loop h=6.8 d=0.8
+(APIServer pid=2427) INFO 10-02 22:46:23 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 35.4 tokens/s, Running: 2 reqs, Waiting: 0 reqs, GPU KV cache usage: 9.1%, Prefix cache hit rate: 37.4%
+(APIServer pid=2427) INFO 10-02 22:46:23 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.05, Accepted throughput: 18.09 tokens/s, Drafted throughput: 51.88 tokens/s, Accepted: 181 tokens, Drafted: 519 tokens, Per-position acceptance rate: 0.590, 0.306, 0.150, Avg Draft acceptance rate: 34.9%
+(APIServer pid=2427) INFO:     10.20.3.18:49877 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP0 pid=2898) INFO 10-02 22:46:31 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-8f35b68128daa028-a439c048 slot=0 prev=3 curr=4 bias=0 (acc_cpu=1) computed=4096 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:46:31 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-8f35b68128daa028-a439c048 slot=0 prev=3 curr=4 bias=0 (acc_cpu=1) computed=4096 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:46:32 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.8 | tforward h=3.8 d=37.3 | tlogits h=0.9 d=2.3 | propose h=18.0 d=9.9 | dmeta h=0.4 d=0.0 | dforward h=5.2 d=1.3 | greedy h=2.5 d=2.2 | dforward_loop h=6.4 d=0.8
+(Worker_TP0 pid=2898) INFO 10-02 22:46:32 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.8 | tforward h=4.9 d=37.6 | tlogits h=0.6 d=2.3 | propose h=16.5 d=9.9 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=1.3 | greedy h=2.4 d=2.2 | dforward_loop h=6.2 d=0.8
+(Worker_TP0 pid=2898) INFO 10-02 22:46:32 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-8f35b68128daa028-a439c048 row=0 src=4 dest=4 bias=0 running=5120 newc=5120 aligned=5120 acc=1 (snapshot computed=4096 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:46:32 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-8f35b68128daa028-a439c048 row=0 src=4 dest=4 bias=0 running=5120 newc=5120 aligned=5120 acc=1 (snapshot computed=4096 sched=1024 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:46:32 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-8f35b68128daa028-a439c048 slot=0 prev=4 curr=5 bias=0 (acc_cpu=1) computed=5120 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:46:32 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-8f35b68128daa028-a439c048 slot=0 prev=4 curr=5 bias=0 (acc_cpu=1) computed=5120 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:46:32 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-8f35b68128daa028-a439c048 row=0 src=5 dest=5 bias=0 running=6144 newc=6144 aligned=6144 acc=1 (snapshot computed=5120 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:46:32 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-8f35b68128daa028-a439c048 row=0 src=5 dest=5 bias=0 running=6144 newc=6144 aligned=6144 acc=1 (snapshot computed=5120 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:46:32 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-8f35b68128daa028-a439c048 slot=0 prev=5 curr=6 bias=0 (acc_cpu=1) computed=6144 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:46:32 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-8f35b68128daa028-a439c048 slot=0 prev=5 curr=6 bias=0 (acc_cpu=1) computed=6144 sched=1024 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:46:33 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-8f35b68128daa028-a439c048 row=0 src=6 dest=6 bias=0 running=7168 newc=7168 aligned=7168 acc=1 (snapshot computed=6144 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:46:33 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-8f35b68128daa028-a439c048 row=0 src=6 dest=6 bias=0 running=7168 newc=7168 aligned=7168 acc=1 (snapshot computed=6144 sched=1024 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:46:33 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=12 curr=13 bias=0 (acc_cpu=1) computed=13311 sched=2 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:46:33 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=12 curr=13 bias=0 (acc_cpu=1) computed=13311 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:46:33 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-8f35b68128daa028-a439c048 slot=1 prev=6 curr=7 bias=0 (acc_cpu=1) computed=7168 sched=510 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:46:33 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-8f35b68128daa028-a439c048 slot=1 prev=6 curr=7 bias=0 (acc_cpu=1) computed=7168 sched=510 blocksz=1024
+(APIServer pid=2427) INFO 10-02 22:46:33 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 27.0 tokens/s, Running: 2 reqs, Waiting: 0 reqs, GPU KV cache usage: 10.5%, Prefix cache hit rate: 37.4%
+(APIServer pid=2427) INFO 10-02 22:46:33 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.00, Accepted throughput: 13.50 tokens/s, Drafted throughput: 40.20 tokens/s, Accepted: 135 tokens, Drafted: 402 tokens, Per-position acceptance rate: 0.533, 0.304, 0.163, Avg Draft acceptance rate: 33.6%
+(Worker_TP0 pid=2898) INFO 10-02 22:46:33 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=13 dest=12 bias=0 running=13312 newc=13312 aligned=13312 acc=1 (snapshot computed=13311 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:46:33 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=13 dest=12 bias=0 running=13312 newc=13312 aligned=13312 acc=1 (snapshot computed=13311 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:46:33 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-8f35b68128daa028-a439c048 slot=0 prev=7 curr=8 bias=0 (acc_cpu=1) computed=7678 sched=1024 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:46:33 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-8f35b68128daa028-a439c048 slot=0 prev=7 curr=8 bias=0 (acc_cpu=1) computed=7678 sched=1024 blocksz=1024
+(EngineCore pid=2699) WARNING 10-02 22:46:34 [scheduler.py:1670] llm-scaler v60c POISONED-ROW: chatcmpl-8f35b68128daa028-a439c048 scheduled (1024 tokens this step, row_len=0, row_head=[]) strike 1 (num_output_tokens=0, num_computed_tokens=9106) — NaN-zombie sentinel signature on the sync path
+(EngineCore pid=2699) WARNING 10-02 22:46:34 [scheduler.py:1713] llm-scaler v60c STRIKE-OUT (poisoned-row): chatcmpl-8f35b68128daa028-a439c048 — 1 consecutive poisoned/empty sampled rows while scheduled (crash-4 NaN-zombie terminal state, sync path) — FINISHED_ABORTED delivered client-visibly, engine stays up (num_output_tokens=0, num_computed_tokens=9106)
+(APIServer pid=2427) INFO:     10.100.8.6:39102 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(Worker_TP0 pid=2898) INFO 10-02 22:46:38 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-b01acefcd1962219-a3574978 row=1 src=6 dest=6 bias=0 running=7168 newc=7168 aligned=7168 acc=1 (snapshot computed=0 sched=7168 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:46:38 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-b01acefcd1962219-a3574978 row=1 src=6 dest=6 bias=0 running=7168 newc=7168 aligned=7168 acc=1 (snapshot computed=0 sched=7168 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:46:38 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-b01acefcd1962219-a3574978 slot=1 prev=6 curr=7 bias=0 (acc_cpu=1) computed=7168 sched=1020 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:46:38 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-b01acefcd1962219-a3574978 slot=1 prev=6 curr=7 bias=0 (acc_cpu=1) computed=7168 sched=1020 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:46:39 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-b01acefcd1962219-a3574978 slot=1 prev=7 curr=8 bias=0 (acc_cpu=1) computed=8188 sched=508 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:46:39 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-b01acefcd1962219-a3574978 slot=1 prev=7 curr=8 bias=0 (acc_cpu=1) computed=8188 sched=508 blocksz=1024
+(EngineCore pid=2699) WARNING 10-02 22:46:39 [scheduler.py:1670] llm-scaler v60c POISONED-ROW: chatcmpl-b01acefcd1962219-a3574978 scheduled (508 tokens this step, row_len=0, row_head=[]) strike 1 (num_output_tokens=0, num_computed_tokens=9179) — NaN-zombie sentinel signature on the sync path
+(EngineCore pid=2699) WARNING 10-02 22:46:39 [scheduler.py:1713] llm-scaler v60c STRIKE-OUT (poisoned-row): chatcmpl-b01acefcd1962219-a3574978 — 1 consecutive poisoned/empty sampled rows while scheduled (crash-4 NaN-zombie terminal state, sync path) — FINISHED_ABORTED delivered client-visibly, engine stays up (num_output_tokens=0, num_computed_tokens=9179)
+(APIServer pid=2427) INFO:     10.100.8.6:39102 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO 10-02 22:46:43 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 2.4 tokens/s, Running: 2 reqs, Waiting: 0 reqs, GPU KV cache usage: 9.1%, Prefix cache hit rate: 35.7%
+(APIServer pid=2427) INFO 10-02 22:46:43 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 1.85, Accepted throughput: 1.10 tokens/s, Drafted throughput: 3.70 tokens/s, Accepted: 11 tokens, Drafted: 37 tokens, Per-position acceptance rate: 0.462, 0.308, 0.077, Avg Draft acceptance rate: 29.7%
+(Worker_TP1 pid=2904) INFO 10-02 22:46:44 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bd0eeff3c0791f87-93875239 row=1 src=6 dest=6 bias=0 running=7168 newc=7168 aligned=7168 acc=1 (snapshot computed=0 sched=7168 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:46:44 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-bd0eeff3c0791f87-93875239 row=1 src=6 dest=6 bias=0 running=7168 newc=7168 aligned=7168 acc=1 (snapshot computed=0 sched=7168 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:46:44 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bd0eeff3c0791f87-93875239 slot=1 prev=6 curr=7 bias=0 (acc_cpu=1) computed=7168 sched=508 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:46:44 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bd0eeff3c0791f87-93875239 slot=1 prev=6 curr=7 bias=0 (acc_cpu=1) computed=7168 sched=508 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:46:44 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bd0eeff3c0791f87-93875239 slot=1 prev=7 curr=8 bias=0 (acc_cpu=1) computed=7676 sched=1020 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:46:44 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-bd0eeff3c0791f87-93875239 slot=1 prev=7 curr=8 bias=0 (acc_cpu=1) computed=7676 sched=1020 blocksz=1024
+(APIServer pid=2427) INFO:     10.20.3.18:49888 - "GET /health HTTP/1.1" 200 OK
+(EngineCore pid=2699) WARNING 10-02 22:46:45 [scheduler.py:1670] llm-scaler v60c POISONED-ROW: chatcmpl-bd0eeff3c0791f87-93875239 scheduled (1020 tokens this step, row_len=0, row_head=[]) strike 1 (num_output_tokens=0, num_computed_tokens=9052) — NaN-zombie sentinel signature on the sync path
+(EngineCore pid=2699) WARNING 10-02 22:46:45 [scheduler.py:1713] llm-scaler v60c STRIKE-OUT (poisoned-row): chatcmpl-bd0eeff3c0791f87-93875239 — 1 consecutive poisoned/empty sampled rows while scheduled (crash-4 NaN-zombie terminal state, sync path) — FINISHED_ABORTED delivered client-visibly, engine stays up (num_output_tokens=0, num_computed_tokens=9052)
+(APIServer pid=2427) INFO:     10.100.8.6:39102 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO 10-02 22:46:53 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 30.5 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 5.2%, Prefix cache hit rate: 35.7%
+(APIServer pid=2427) INFO 10-02 22:46:53 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.10, Accepted throughput: 16.00 tokens/s, Drafted throughput: 43.49 tokens/s, Accepted: 160 tokens, Drafted: 435 tokens, Per-position acceptance rate: 0.545, 0.352, 0.207, Avg Draft acceptance rate: 36.8%
+(Worker_TP1 pid=2904) INFO 10-02 22:46:55 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=119.0 | tforward h=60.7 d=93.0 | tlogits h=0.9 d=2.3 | propose h=18.5 d=11.8 | dmeta h=0.4 d=0.0 | dforward h=5.3 d=2.8 | greedy h=2.6 d=2.2 | dforward_loop h=6.7 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:46:55 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=118.9 | tforward h=61.6 d=93.3 | tlogits h=0.6 d=2.3 | propose h=16.7 d=11.8 | dmeta h=0.4 d=0.0 | dforward h=4.5 d=2.8 | greedy h=2.4 d=2.2 | dforward_loop h=6.2 d=0.9
+(APIServer pid=2427) INFO 10-02 22:47:03 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 36.7 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 5.2%, Prefix cache hit rate: 35.7%
+(APIServer pid=2427) INFO 10-02 22:47:03 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.13, Accepted throughput: 19.49 tokens/s, Drafted throughput: 51.58 tokens/s, Accepted: 195 tokens, Drafted: 516 tokens, Per-position acceptance rate: 0.564, 0.355, 0.215, Avg Draft acceptance rate: 37.8%
+(APIServer pid=2427) INFO:     10.20.3.18:49897 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:47:07 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=58.5 | tforward h=1.1 d=34.8 | tlogits h=1.0 d=2.3 | propose h=18.1 d=9.9 | dmeta h=0.4 d=0.0 | dforward h=5.3 d=1.3 | greedy h=2.5 d=2.2 | dforward_loop h=6.4 d=0.8
+(Worker_TP0 pid=2898) INFO 10-02 22:47:07 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=58.5 | tforward h=2.3 d=35.2 | tlogits h=0.6 d=2.3 | propose h=16.1 d=9.9 | dmeta h=0.4 d=0.0 | dforward h=4.3 d=1.3 | greedy h=2.3 d=2.2 | dforward_loop h=6.1 d=0.8
+(Worker_TP1 pid=2904) INFO 10-02 22:47:12 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=13 curr=14 bias=0 (acc_cpu=1) computed=14335 sched=2 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:47:12 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=13 curr=14 bias=0 (acc_cpu=1) computed=14335 sched=2 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:47:13 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=14 dest=13 bias=0 running=14336 newc=14336 aligned=14336 acc=1 (snapshot computed=14335 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:47:13 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=14 dest=13 bias=0 running=14336 newc=14336 aligned=14336 acc=1 (snapshot computed=14335 sched=2 draft=1)
+(APIServer pid=2427) INFO 10-02 22:47:13 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 34.5 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 5.4%, Prefix cache hit rate: 35.7%
+(APIServer pid=2427) INFO 10-02 22:47:13 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.12, Accepted throughput: 18.20 tokens/s, Drafted throughput: 48.19 tokens/s, Accepted: 182 tokens, Drafted: 482 tokens, Per-position acceptance rate: 0.601, 0.313, 0.202, Avg Draft acceptance rate: 37.8%
+(Worker_TP1 pid=2904) INFO 10-02 22:47:19 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.9 | tforward h=3.3 d=36.4 | tlogits h=1.0 d=2.3 | propose h=18.4 d=10.3 | dmeta h=0.4 d=0.0 | dforward h=5.2 d=1.4 | greedy h=2.5 d=2.2 | dforward_loop h=6.6 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:47:19 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.9 | tforward h=4.8 d=36.8 | tlogits h=0.6 d=2.3 | propose h=16.2 d=10.3 | dmeta h=0.4 d=0.0 | dforward h=4.3 d=1.4 | greedy h=2.3 d=2.2 | dforward_loop h=6.1 d=0.9
+(APIServer pid=2427) INFO 10-02 22:47:23 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 29.1 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 5.4%, Prefix cache hit rate: 35.7%
+(APIServer pid=2427) INFO 10-02 22:47:23 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 1.71, Accepted throughput: 12.10 tokens/s, Drafted throughput: 50.98 tokens/s, Accepted: 121 tokens, Drafted: 510 tokens, Per-position acceptance rate: 0.453, 0.182, 0.076, Avg Draft acceptance rate: 23.7%
+(APIServer pid=2427) INFO:     10.20.3.18:53701 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:47:31 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=58.6 | tforward h=1.0 d=35.2 | tlogits h=1.0 d=2.3 | propose h=17.9 d=10.0 | dmeta h=0.4 d=0.0 | dforward h=5.1 d=1.4 | greedy h=2.5 d=2.2 | dforward_loop h=6.4 d=0.8
+(Worker_TP0 pid=2898) INFO 10-02 22:47:31 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=58.6 | tforward h=2.2 d=35.6 | tlogits h=0.6 d=2.3 | propose h=16.3 d=10.0 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=1.4 | greedy h=2.3 d=2.2 | dforward_loop h=6.1 d=0.8
+(APIServer pid=2427) INFO 10-02 22:47:33 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 34.0 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 5.4%, Prefix cache hit rate: 35.7%
+(APIServer pid=2427) INFO 10-02 22:47:33 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.00, Accepted throughput: 17.00 tokens/s, Drafted throughput: 50.99 tokens/s, Accepted: 170 tokens, Drafted: 510 tokens, Per-position acceptance rate: 0.582, 0.306, 0.112, Avg Draft acceptance rate: 33.3%
+(Worker_TP1 pid=2904) INFO 10-02 22:47:43 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=58.8 | tforward h=1.0 d=35.3 | tlogits h=1.0 d=2.3 | propose h=18.0 d=10.0 | dmeta h=0.4 d=0.0 | dforward h=5.2 d=1.3 | greedy h=2.5 d=2.2 | dforward_loop h=6.4 d=0.8
+(Worker_TP0 pid=2898) INFO 10-02 22:47:43 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=58.8 | tforward h=2.3 d=35.7 | tlogits h=0.6 d=2.3 | propose h=16.1 d=9.9 | dmeta h=0.4 d=0.0 | dforward h=4.3 d=1.3 | greedy h=2.3 d=2.2 | dforward_loop h=6.1 d=0.8
+(APIServer pid=2427) INFO 10-02 22:47:43 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 34.2 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 5.4%, Prefix cache hit rate: 35.7%
+(APIServer pid=2427) INFO 10-02 22:47:43 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.01, Accepted throughput: 17.19 tokens/s, Drafted throughput: 50.98 tokens/s, Accepted: 172 tokens, Drafted: 510 tokens, Per-position acceptance rate: 0.588, 0.271, 0.153, Avg Draft acceptance rate: 33.7%
+(Worker_TP1 pid=2904) INFO 10-02 22:47:45 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=14 dest=14 bias=1 running=15359 newc=15360 aligned=15360 acc=2 (snapshot computed=15358 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:47:45 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=14 dest=14 bias=1 running=15359 newc=15360 aligned=15360 acc=2 (snapshot computed=15358 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:47:45 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=14 curr=15 bias=0 (acc_cpu=1) computed=15360 sched=4 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:47:45 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=14 curr=15 bias=0 (acc_cpu=1) computed=15360 sched=4 blocksz=1024
+(APIServer pid=2427) INFO:     10.20.3.18:53708 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO 10-02 22:47:53 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 34.4 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 5.6%, Prefix cache hit rate: 35.7%
+(APIServer pid=2427) INFO 10-02 22:47:53 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.07, Accepted throughput: 17.80 tokens/s, Drafted throughput: 49.19 tokens/s, Accepted: 178 tokens, Drafted: 492 tokens, Per-position acceptance rate: 0.596, 0.307, 0.169, Avg Draft acceptance rate: 36.2%
+(Worker_TP1 pid=2904) INFO 10-02 22:47:55 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.2 | tforward h=2.9 d=36.5 | tlogits h=0.9 d=2.3 | propose h=17.9 d=10.3 | dmeta h=0.4 d=0.0 | dforward h=5.0 d=1.4 | greedy h=2.5 d=2.2 | dforward_loop h=6.5 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:47:55 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.2 | tforward h=3.9 d=36.8 | tlogits h=0.6 d=2.3 | propose h=16.1 d=10.3 | dmeta h=0.4 d=0.0 | dforward h=4.3 d=1.4 | greedy h=2.3 d=2.2 | dforward_loop h=6.1 d=0.9
+(APIServer pid=2427) INFO 10-02 22:48:03 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 33.7 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 5.6%, Prefix cache hit rate: 35.7%
+(APIServer pid=2427) INFO 10-02 22:48:03 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 1.97, Accepted throughput: 16.60 tokens/s, Drafted throughput: 51.29 tokens/s, Accepted: 166 tokens, Drafted: 513 tokens, Per-position acceptance rate: 0.591, 0.246, 0.135, Avg Draft acceptance rate: 32.4%
+(APIServer pid=2427) INFO:     10.20.3.18:53715 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:48:07 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=58.6 | tforward h=1.1 d=35.4 | tlogits h=0.9 d=2.3 | propose h=18.0 d=10.0 | dmeta h=0.4 d=0.0 | dforward h=5.1 d=1.3 | greedy h=2.5 d=2.2 | dforward_loop h=6.5 d=0.8
+(Worker_TP0 pid=2898) INFO 10-02 22:48:07 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=58.6 | tforward h=2.2 d=35.8 | tlogits h=0.6 d=2.3 | propose h=16.2 d=10.0 | dmeta h=0.4 d=0.0 | dforward h=4.3 d=1.3 | greedy h=2.3 d=2.2 | dforward_loop h=6.1 d=0.8
+(APIServer pid=2427) INFO 10-02 22:48:13 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 33.8 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 5.6%, Prefix cache hit rate: 35.7%
+(APIServer pid=2427) INFO 10-02 22:48:13 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 1.99, Accepted throughput: 16.79 tokens/s, Drafted throughput: 50.98 tokens/s, Accepted: 168 tokens, Drafted: 510 tokens, Per-position acceptance rate: 0.582, 0.271, 0.135, Avg Draft acceptance rate: 32.9%
+(Worker_TP0 pid=2898) INFO 10-02 22:48:15 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=15 curr=16 bias=0 (acc_cpu=1) computed=16383 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:48:15 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=15 curr=16 bias=0 (acc_cpu=1) computed=16383 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:48:15 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=16 dest=15 bias=0 running=16384 newc=16384 aligned=16384 acc=1 (snapshot computed=16383 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:48:15 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=16 dest=15 bias=0 running=16384 newc=16384 aligned=16384 acc=1 (snapshot computed=16383 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:48:19 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.7 | tforward h=2.5 d=36.4 | tlogits h=1.0 d=2.3 | propose h=17.9 d=10.3 | dmeta h=0.4 d=0.0 | dforward h=5.1 d=1.4 | greedy h=2.5 d=2.2 | dforward_loop h=6.4 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:48:19 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.7 | tforward h=3.6 d=36.7 | tlogits h=0.6 d=2.3 | propose h=16.2 d=10.3 | dmeta h=0.4 d=0.0 | dforward h=4.3 d=1.4 | greedy h=2.3 d=2.2 | dforward_loop h=6.1 d=0.9
+(APIServer pid=2427) INFO:     10.100.8.6:39168 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(Worker_TP0 pid=2898) INFO 10-02 22:48:21 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-ba49f6950b1011e0-acd67602 slot=1 prev=95 curr=97 bias=0 (acc_cpu=1) computed=98304 sched=1153 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:48:21 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-ba49f6950b1011e0-acd67602 slot=1 prev=95 curr=97 bias=0 (acc_cpu=1) computed=98304 sched=1153 blocksz=1024
+(APIServer pid=2427) INFO 10-02 22:48:23 [loggers.py:273] Engine 000: Avg prompt throughput: 115.3 tokens/s, Avg generation throughput: 28.3 tokens/s, Running: 2 reqs, Waiting: 0 reqs, GPU KV cache usage: 28.0%, Prefix cache hit rate: 48.1%
+(APIServer pid=2427) INFO 10-02 22:48:23 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 1.94, Accepted throughput: 13.70 tokens/s, Drafted throughput: 42.99 tokens/s, Accepted: 137 tokens, Drafted: 430 tokens, Per-position acceptance rate: 0.545, 0.283, 0.117, Avg Draft acceptance rate: 31.9%
+(APIServer pid=2427) INFO:     10.20.3.18:53723 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO 10-02 22:48:33 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 52.5 tokens/s, Running: 2 reqs, Waiting: 0 reqs, GPU KV cache usage: 28.0%, Prefix cache hit rate: 48.1%
+(APIServer pid=2427) INFO 10-02 22:48:33 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.52, Accepted throughput: 31.69 tokens/s, Drafted throughput: 62.38 tokens/s, Accepted: 317 tokens, Drafted: 624 tokens, Per-position acceptance rate: 0.702, 0.505, 0.317, Avg Draft acceptance rate: 50.8%
+(APIServer pid=2427) INFO:     10.20.3.18:61811 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:48:38 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=97.2 | tforward h=7.3 d=66.2 | tlogits h=1.3 d=2.4 | propose h=19.2 d=12.5 | dmeta h=0.4 d=0.0 | dforward h=5.4 d=3.1 | greedy h=2.5 d=2.2 | dforward_loop h=7.3 d=1.2
+(Worker_TP0 pid=2898) INFO 10-02 22:48:38 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=97.2 | tforward h=9.2 d=66.8 | tlogits h=1.7 d=2.4 | propose h=17.1 d=12.5 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=3.1 | greedy h=2.3 d=2.2 | dforward_loop h=6.9 d=1.2
+(APIServer pid=2427) INFO 10-02 22:48:43 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 49.7 tokens/s, Running: 2 reqs, Waiting: 0 reqs, GPU KV cache usage: 28.0%, Prefix cache hit rate: 48.1%
+(APIServer pid=2427) INFO 10-02 22:48:43 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.41, Accepted throughput: 29.09 tokens/s, Drafted throughput: 61.77 tokens/s, Accepted: 291 tokens, Drafted: 618 tokens, Per-position acceptance rate: 0.675, 0.447, 0.291, Avg Draft acceptance rate: 47.1%
+(APIServer pid=2427) INFO:     10.20.3.18:61818 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:48:51 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-ba49f6950b1011e0-acd67602 row=1 src=97 dest=97 bias=2 running=100350 newc=100352 aligned=100352 acc=3 (snapshot computed=100349 sched=3 draft=2)
+(Worker_TP0 pid=2898) INFO 10-02 22:48:51 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-ba49f6950b1011e0-acd67602 row=1 src=97 dest=97 bias=2 running=100350 newc=100352 aligned=100352 acc=3 (snapshot computed=100349 sched=3 draft=2)
+(Worker_TP0 pid=2898) INFO 10-02 22:48:51 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-ba49f6950b1011e0-acd67602 slot=1 prev=97 curr=98 bias=0 (acc_cpu=1) computed=100352 sched=4 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:48:51 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-ba49f6950b1011e0-acd67602 slot=1 prev=97 curr=98 bias=0 (acc_cpu=1) computed=100352 sched=4 blocksz=1024
+(APIServer pid=2427) INFO 10-02 22:48:53 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 55.3 tokens/s, Running: 2 reqs, Waiting: 0 reqs, GPU KV cache usage: 28.2%, Prefix cache hit rate: 48.1%
+(APIServer pid=2427) INFO 10-02 22:48:53 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.70, Accepted throughput: 34.80 tokens/s, Drafted throughput: 61.40 tokens/s, Accepted: 348 tokens, Drafted: 614 tokens, Per-position acceptance rate: 0.732, 0.541, 0.424, Avg Draft acceptance rate: 56.7%
+(APIServer pid=2427) INFO:     10.20.3.18:61821 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:48:58 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=97.0 | tforward h=1.6 d=64.9 | tlogits h=1.3 d=2.4 | propose h=19.5 d=12.8 | dmeta h=0.4 d=0.0 | dforward h=5.5 d=3.1 | greedy h=2.5 d=2.2 | dforward_loop h=7.5 d=1.3
+(Worker_TP0 pid=2898) INFO 10-02 22:48:58 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=97.0 | tforward h=3.6 d=65.4 | tlogits h=1.9 d=2.4 | propose h=17.1 d=12.7 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=3.1 | greedy h=2.3 d=2.2 | dforward_loop h=6.9 d=1.3
+(APIServer pid=2427) INFO:     10.20.3.18:61825 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO 10-02 22:49:03 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 49.2 tokens/s, Running: 2 reqs, Waiting: 0 reqs, GPU KV cache usage: 28.2%, Prefix cache hit rate: 48.1%
+(APIServer pid=2427) INFO 10-02 22:49:03 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.39, Accepted throughput: 28.60 tokens/s, Drafted throughput: 61.80 tokens/s, Accepted: 286 tokens, Drafted: 618 tokens, Per-position acceptance rate: 0.636, 0.432, 0.320, Avg Draft acceptance rate: 46.3%
+(Worker_TP0 pid=2898) INFO 10-02 22:49:04 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=16 dest=16 bias=1 running=17407 newc=17408 aligned=17408 acc=2 (snapshot computed=17406 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:49:04 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=16 dest=16 bias=1 running=17407 newc=17408 aligned=17408 acc=2 (snapshot computed=17406 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:49:04 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=1 prev=16 curr=17 bias=0 (acc_cpu=1) computed=17408 sched=4 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:49:04 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=1 prev=16 curr=17 bias=0 (acc_cpu=1) computed=17408 sched=4 blocksz=1024
+(APIServer pid=2427) INFO:     10.20.3.18:61827 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:49:13 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=77.6 | tforward h=2.2 d=49.9 | tlogits h=1.2 d=2.3 | propose h=18.9 d=11.4 | dmeta h=0.4 d=0.0 | dforward h=5.3 d=2.2 | greedy h=2.5 d=2.2 | dforward_loop h=7.0 d=1.1
+(Worker_TP0 pid=2898) INFO 10-02 22:49:13 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=77.6 | tforward h=3.8 d=50.4 | tlogits h=1.3 d=2.3 | propose h=17.0 d=11.3 | dmeta h=0.4 d=0.0 | dforward h=4.5 d=2.2 | greedy h=2.4 d=2.2 | dforward_loop h=6.6 d=1.1
+(APIServer pid=2427) INFO 10-02 22:49:13 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 62.1 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 6.0%, Prefix cache hit rate: 48.1%
+(APIServer pid=2427) INFO 10-02 22:49:13 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 3.56, Accepted throughput: 44.80 tokens/s, Drafted throughput: 52.20 tokens/s, Accepted: 448 tokens, Drafted: 522 tokens, Per-position acceptance rate: 0.926, 0.874, 0.760, Avg Draft acceptance rate: 85.8%
+(APIServer pid=2427) INFO:     10.20.3.18:61863 - "GET /v1/models HTTP/1.1" 200 OK
+(Worker_TP0 pid=2898) INFO 10-02 22:49:22 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=17 curr=18 bias=0 (acc_cpu=1) computed=18431 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:49:22 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=17 curr=18 bias=0 (acc_cpu=1) computed=18431 sched=2 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:49:22 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=18 dest=17 bias=0 running=18432 newc=18432 aligned=18432 acc=1 (snapshot computed=18431 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:49:22 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=18 dest=17 bias=0 running=18432 newc=18432 aligned=18432 acc=1 (snapshot computed=18431 sched=2 draft=1)
+(APIServer pid=2427) INFO 10-02 22:49:23 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 57.5 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 6.2%, Prefix cache hit rate: 48.1%
+(APIServer pid=2427) INFO 10-02 22:49:23 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 3.48, Accepted throughput: 41.00 tokens/s, Drafted throughput: 49.29 tokens/s, Accepted: 410 tokens, Drafted: 493 tokens, Per-position acceptance rate: 0.909, 0.848, 0.727, Avg Draft acceptance rate: 83.2%
+(APIServer pid=2427) INFO:     10.20.3.18:61876 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:49:25 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=61.0 | tforward h=1.4 d=36.4 | tlogits h=1.0 d=2.3 | propose h=18.1 d=10.1 | dmeta h=0.4 d=0.0 | dforward h=5.1 d=1.4 | greedy h=2.5 d=2.2 | dforward_loop h=6.5 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:49:25 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=61.0 | tforward h=3.2 d=36.9 | tlogits h=0.6 d=2.3 | propose h=16.2 d=10.1 | dmeta h=0.4 d=0.0 | dforward h=4.3 d=1.4 | greedy h=2.3 d=2.2 | dforward_loop h=6.1 d=0.9
+(APIServer pid=2427) INFO 10-02 22:49:33 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 57.1 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 6.2%, Prefix cache hit rate: 48.1%
+(APIServer pid=2427) INFO 10-02 22:49:33 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 3.48, Accepted throughput: 40.70 tokens/s, Drafted throughput: 49.19 tokens/s, Accepted: 407 tokens, Drafted: 492 tokens, Per-position acceptance rate: 0.915, 0.811, 0.756, Avg Draft acceptance rate: 82.7%
+(Worker_TP1 pid=2904) INFO 10-02 22:49:37 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.5 | tforward h=1.2 d=36.6 | tlogits h=1.0 d=2.3 | propose h=18.0 d=10.1 | dmeta h=0.4 d=0.0 | dforward h=5.0 d=1.4 | greedy h=2.5 d=2.2 | dforward_loop h=6.5 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:49:37 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.5 | tforward h=2.2 d=37.0 | tlogits h=0.6 d=2.3 | propose h=16.9 d=10.0 | dmeta h=0.4 d=0.0 | dforward h=4.6 d=1.4 | greedy h=2.4 d=2.2 | dforward_loop h=6.4 d=0.9
+(Worker_TP1 pid=2904) INFO 10-02 22:49:40 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=18 dest=18 bias=3 running=19453 newc=19456 aligned=19456 acc=4 (snapshot computed=19452 sched=4 draft=3)
+(Worker_TP0 pid=2898) INFO 10-02 22:49:40 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=18 dest=18 bias=3 running=19453 newc=19456 aligned=19456 acc=4 (snapshot computed=19452 sched=4 draft=3)
+(Worker_TP0 pid=2898) INFO 10-02 22:49:40 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=18 curr=19 bias=0 (acc_cpu=1) computed=19456 sched=4 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:49:40 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=18 curr=19 bias=0 (acc_cpu=1) computed=19456 sched=4 blocksz=1024
+(APIServer pid=2427) INFO 10-02 22:49:43 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 59.6 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 6.4%, Prefix cache hit rate: 48.1%
+(APIServer pid=2427) INFO 10-02 22:49:43 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 3.59, Accepted throughput: 42.99 tokens/s, Drafted throughput: 49.79 tokens/s, Accepted: 430 tokens, Drafted: 498 tokens, Per-position acceptance rate: 0.940, 0.861, 0.789, Avg Draft acceptance rate: 86.3%
+(APIServer pid=2427) INFO:     10.20.3.18:61896 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:49:49 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.6 | tforward h=1.0 d=36.7 | tlogits h=1.0 d=2.3 | propose h=18.0 d=10.1 | dmeta h=0.4 d=0.0 | dforward h=5.1 d=1.4 | greedy h=2.5 d=2.2 | dforward_loop h=6.4 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:49:49 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.7 | tforward h=2.4 d=37.1 | tlogits h=0.6 d=2.3 | propose h=16.1 d=10.1 | dmeta h=0.4 d=0.0 | dforward h=4.3 d=1.4 | greedy h=2.3 d=2.2 | dforward_loop h=6.1 d=0.9
+(APIServer pid=2427) INFO 10-02 22:49:53 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 60.9 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 6.4%, Prefix cache hit rate: 48.1%
+(APIServer pid=2427) INFO 10-02 22:49:53 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 3.69, Accepted throughput: 44.40 tokens/s, Drafted throughput: 49.49 tokens/s, Accepted: 444 tokens, Drafted: 495 tokens, Per-position acceptance rate: 0.945, 0.903, 0.842, Avg Draft acceptance rate: 89.7%
+(Worker_TP0 pid=2898) INFO 10-02 22:49:57 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=19 curr=20 bias=0 (acc_cpu=1) computed=20479 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:49:57 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=19 curr=20 bias=0 (acc_cpu=1) computed=20479 sched=2 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:49:57 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=20 dest=19 bias=0 running=20480 newc=20480 aligned=20480 acc=1 (snapshot computed=20479 sched=2 draft=1)
+(Worker_TP0 pid=2898) INFO 10-02 22:49:57 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=20 dest=19 bias=0 running=20480 newc=20480 aligned=20480 acc=1 (snapshot computed=20479 sched=2 draft=1)
+(Worker_TP1 pid=2904) INFO 10-02 22:50:02 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=61.2 | tforward h=1.4 d=37.2 | tlogits h=1.0 d=2.3 | propose h=17.9 d=10.2 | dmeta h=0.4 d=0.0 | dforward h=5.0 d=1.5 | greedy h=2.5 d=2.2 | dforward_loop h=6.4 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:50:02 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=61.1 | tforward h=2.6 d=37.7 | tlogits h=0.6 d=2.3 | propose h=16.0 d=10.2 | dmeta h=0.4 d=0.0 | dforward h=4.3 d=1.5 | greedy h=2.3 d=2.2 | dforward_loop h=6.0 d=0.9
+(APIServer pid=2427) INFO 10-02 22:50:03 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 52.5 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 6.6%, Prefix cache hit rate: 48.1%
+(APIServer pid=2427) INFO 10-02 22:50:03 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 3.24, Accepted throughput: 36.30 tokens/s, Drafted throughput: 48.40 tokens/s, Accepted: 363 tokens, Drafted: 484 tokens, Per-position acceptance rate: 0.877, 0.741, 0.623, Avg Draft acceptance rate: 75.0%
+(APIServer pid=2427) INFO:     10.100.8.6:60774 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:60770 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:60792 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:60780 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:60800 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:60804 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:61905 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO 10-02 22:50:13 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 62.3 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 6.6%, Prefix cache hit rate: 48.1%
+(APIServer pid=2427) INFO 10-02 22:50:13 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 3.78, Accepted throughput: 45.80 tokens/s, Drafted throughput: 49.50 tokens/s, Accepted: 458 tokens, Drafted: 495 tokens, Per-position acceptance rate: 0.945, 0.927, 0.903, Avg Draft acceptance rate: 92.5%
+(Worker_TP1 pid=2904) INFO 10-02 22:50:14 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.9 | tforward h=1.0 d=37.3 | tlogits h=1.0 d=2.3 | propose h=17.8 d=10.2 | dmeta h=0.4 d=0.0 | dforward h=4.9 d=1.5 | greedy h=2.5 d=2.2 | dforward_loop h=6.5 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:50:14 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.9 | tforward h=2.1 d=37.7 | tlogits h=0.6 d=2.3 | propose h=16.1 d=10.1 | dmeta h=0.4 d=0.0 | dforward h=4.3 d=1.4 | greedy h=2.3 d=2.2 | dforward_loop h=6.0 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:50:15 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=20 dest=20 bias=3 running=21501 newc=21504 aligned=21504 acc=4 (snapshot computed=21500 sched=4 draft=3)
+(Worker_TP1 pid=2904) INFO 10-02 22:50:15 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=20 dest=20 bias=3 running=21501 newc=21504 aligned=21504 acc=4 (snapshot computed=21500 sched=4 draft=3)
+(Worker_TP1 pid=2904) INFO 10-02 22:50:15 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=20 curr=21 bias=0 (acc_cpu=1) computed=21504 sched=4 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:50:15 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=20 curr=21 bias=0 (acc_cpu=1) computed=21504 sched=4 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:50:15 [mamba_utils.py:204] llm-scaler v52k COPY-TIMER: events=64 p50=0.536ms p99=0.835ms max=0.835ms bytes=2639.0MB eff=76048.3GB/s entries_last=96
+(Worker_TP0 pid=2898) INFO 10-02 22:50:15 [mamba_utils.py:204] llm-scaler v52k COPY-TIMER: events=64 p50=0.530ms p99=0.843ms max=0.843ms bytes=2639.0MB eff=78034.5GB/s entries_last=96
+(APIServer pid=2427) INFO 10-02 22:50:23 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 65.3 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 6.8%, Prefix cache hit rate: 48.1%
+(APIServer pid=2427) INFO 10-02 22:50:23 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 3.98, Accepted throughput: 48.89 tokens/s, Drafted throughput: 49.19 tokens/s, Accepted: 489 tokens, Drafted: 492 tokens, Per-position acceptance rate: 0.994, 0.994, 0.994, Avg Draft acceptance rate: 99.4%
+(APIServer pid=2427) INFO:     10.20.3.18:61918 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:50:26 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=61.0 | tforward h=1.1 d=37.4 | tlogits h=0.9 d=2.3 | propose h=17.5 d=10.2 | dmeta h=0.4 d=0.0 | dforward h=4.8 d=1.5 | greedy h=2.5 d=2.2 | dforward_loop h=6.4 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:50:26 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=60.9 | tforward h=1.8 d=37.7 | tlogits h=0.6 d=2.3 | propose h=16.2 d=10.1 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=1.5 | greedy h=2.3 d=2.2 | dforward_loop h=6.0 d=0.9
+(Worker_TP1 pid=2904) INFO 10-02 22:50:33 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=21 dest=21 bias=2 running=22526 newc=22528 aligned=22528 acc=3 (snapshot computed=22525 sched=3 draft=2)
+(Worker_TP0 pid=2898) INFO 10-02 22:50:33 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a1ede159fc708870-8f7c75d8 row=0 src=21 dest=21 bias=2 running=22526 newc=22528 aligned=22528 acc=3 (snapshot computed=22525 sched=3 draft=2)
+(Worker_TP0 pid=2898) INFO 10-02 22:50:33 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=21 curr=22 bias=0 (acc_cpu=1) computed=22528 sched=4 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:50:33 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a1ede159fc708870-8f7c75d8 slot=0 prev=21 curr=22 bias=0 (acc_cpu=1) computed=22528 sched=4 blocksz=1024
+(APIServer pid=2427) INFO 10-02 22:50:33 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 49.0 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 7.0%, Prefix cache hit rate: 48.1%
+(APIServer pid=2427) INFO 10-02 22:50:33 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 3.02, Accepted throughput: 32.80 tokens/s, Drafted throughput: 48.50 tokens/s, Accepted: 328 tokens, Drafted: 485 tokens, Per-position acceptance rate: 0.759, 0.660, 0.605, Avg Draft acceptance rate: 67.6%
+(Worker_TP1 pid=2904) INFO 10-02 22:50:38 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=61.9 | tforward h=1.4 d=38.0 | tlogits h=1.0 d=2.3 | propose h=17.6 d=10.3 | dmeta h=0.4 d=0.0 | dforward h=5.0 d=1.5 | greedy h=2.5 d=2.2 | dforward_loop h=6.3 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:50:38 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=61.9 | tforward h=2.6 d=38.4 | tlogits h=0.6 d=2.3 | propose h=15.9 d=10.3 | dmeta h=0.4 d=0.0 | dforward h=4.3 d=1.5 | greedy h=2.3 d=2.2 | dforward_loop h=6.0 d=0.9
+(APIServer pid=2427) INFO 10-02 22:50:43 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 39.0 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 7.0%, Prefix cache hit rate: 48.1%
+(APIServer pid=2427) INFO 10-02 22:50:43 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.41, Accepted throughput: 22.80 tokens/s, Drafted throughput: 48.59 tokens/s, Accepted: 228 tokens, Drafted: 486 tokens, Per-position acceptance rate: 0.636, 0.414, 0.358, Avg Draft acceptance rate: 46.9%
+(APIServer pid=2427) INFO:     10.20.3.18:61926 - "GET /health HTTP/1.1" 200 OK
+(Worker_TP1 pid=2904) INFO 10-02 22:50:51 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=61.9 | tforward h=0.9 d=38.0 | tlogits h=1.0 d=2.3 | propose h=18.0 d=10.3 | dmeta h=0.4 d=0.0 | dforward h=5.1 d=1.5 | greedy h=2.6 d=2.2 | dforward_loop h=6.5 d=0.9
+(Worker_TP0 pid=2898) INFO 10-02 22:50:51 [spec_timing.py:128] SPECTIMING steps=200 | step_wall_ms=61.9 | tforward h=2.3 d=38.5 | tlogits h=0.6 d=2.3 | propose h=16.0 d=10.2 | dmeta h=0.4 d=0.0 | dforward h=4.3 d=1.5 | greedy h=2.3 d=2.2 | dforward_loop h=6.0 d=0.9
+(APIServer pid=2427) INFO 10-02 22:50:53 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 53.8 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 7.0%, Prefix cache hit rate: 48.1%
+(APIServer pid=2427) INFO 10-02 22:50:53 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 3.34, Accepted throughput: 37.69 tokens/s, Drafted throughput: 48.29 tokens/s, Accepted: 377 tokens, Drafted: 483 tokens, Per-position acceptance rate: 0.882, 0.745, 0.714, Avg Draft acceptance rate: 78.1%
+(Worker_TP0 pid=2898) INFO 10-02 22:50:57 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a2211e71a9b632de-86aa0a09 row=0 src=4 dest=4 bias=0 running=5120 newc=5120 aligned=5120 acc=1 (snapshot computed=0 sched=5120 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:50:57 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a2211e71a9b632de-86aa0a09 row=0 src=4 dest=4 bias=0 running=5120 newc=5120 aligned=5120 acc=1 (snapshot computed=0 sched=5120 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:50:57 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a2211e71a9b632de-86aa0a09 slot=0 prev=4 curr=6 bias=0 (acc_cpu=1) computed=5120 sched=1816 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:50:57 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a2211e71a9b632de-86aa0a09 slot=0 prev=4 curr=6 bias=0 (acc_cpu=1) computed=5120 sched=1816 blocksz=1024
+(EngineCore pid=2699) WARNING 10-02 22:50:57 [scheduler.py:1670] llm-scaler v60c POISONED-ROW: chatcmpl-a2211e71a9b632de-86aa0a09 scheduled (5120 tokens this step, row_len=0, row_head=[]) strike 1 (num_output_tokens=0, num_computed_tokens=6936) — NaN-zombie sentinel signature on the sync path
+(EngineCore pid=2699) WARNING 10-02 22:50:57 [scheduler.py:1713] llm-scaler v60c STRIKE-OUT (poisoned-row): chatcmpl-a2211e71a9b632de-86aa0a09 — 1 consecutive poisoned/empty sampled rows while scheduled (crash-4 NaN-zombie terminal state, sync path) — FINISHED_ABORTED delivered client-visibly, engine stays up (num_output_tokens=0, num_computed_tokens=6936)
+(APIServer pid=2427) INFO:     10.100.8.6:52596 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(Worker_TP0 pid=2898) INFO 10-02 22:51:00 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a2a2dffe46684c2c-82a752f2 row=1 src=4 dest=4 bias=0 running=5120 newc=5120 aligned=5120 acc=1 (snapshot computed=0 sched=5120 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:51:00 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-a2a2dffe46684c2c-82a752f2 row=1 src=4 dest=4 bias=0 running=5120 newc=5120 aligned=5120 acc=1 (snapshot computed=0 sched=5120 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:51:00 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a2a2dffe46684c2c-82a752f2 slot=1 prev=4 curr=5 bias=0 (acc_cpu=1) computed=5120 sched=508 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:51:00 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a2a2dffe46684c2c-82a752f2 slot=1 prev=4 curr=5 bias=0 (acc_cpu=1) computed=5120 sched=508 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:51:01 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a2a2dffe46684c2c-82a752f2 slot=1 prev=5 curr=6 bias=0 (acc_cpu=1) computed=5628 sched=1020 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:51:01 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-a2a2dffe46684c2c-82a752f2 slot=1 prev=5 curr=6 bias=0 (acc_cpu=1) computed=5628 sched=1020 blocksz=1024
+(EngineCore pid=2699) WARNING 10-02 22:51:01 [scheduler.py:1670] llm-scaler v60c POISONED-ROW: chatcmpl-a2a2dffe46684c2c-82a752f2 scheduled (1020 tokens this step, row_len=0, row_head=[]) strike 1 (num_output_tokens=0, num_computed_tokens=7009) — NaN-zombie sentinel signature on the sync path
+(EngineCore pid=2699) WARNING 10-02 22:51:01 [scheduler.py:1713] llm-scaler v60c STRIKE-OUT (poisoned-row): chatcmpl-a2a2dffe46684c2c-82a752f2 — 1 consecutive poisoned/empty sampled rows while scheduled (crash-4 NaN-zombie terminal state, sync path) — FINISHED_ABORTED delivered client-visibly, engine stays up (num_output_tokens=0, num_computed_tokens=7009)
+(APIServer pid=2427) INFO:     10.100.8.6:52596 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:61931 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO 10-02 22:51:03 [loggers.py:273] Engine 000: Avg prompt throughput: 11.6 tokens/s, Avg generation throughput: 9.1 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 2.6%, Prefix cache hit rate: 46.8%
+(APIServer pid=2427) INFO 10-02 22:51:03 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 2.70, Accepted throughput: 5.60 tokens/s, Drafted throughput: 9.90 tokens/s, Accepted: 56 tokens, Drafted: 99 tokens, Per-position acceptance rate: 0.727, 0.576, 0.394, Avg Draft acceptance rate: 56.6%
+(APIServer pid=2427) INFO:     10.20.3.18:61934 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:61935 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:61938 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:61936 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:61940 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(Worker_TP0 pid=2898) INFO 10-02 22:51:09 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-9d658431384f3453-ac748568 row=1 src=4 dest=4 bias=0 running=5120 newc=5120 aligned=5120 acc=1 (snapshot computed=0 sched=5120 draft=0)
+(Worker_TP1 pid=2904) INFO 10-02 22:51:09 [mamba_utils.py:406] llm-scaler v52f DEF-PP: chatcmpl-9d658431384f3453-ac748568 row=1 src=4 dest=4 bias=0 running=5120 newc=5120 aligned=5120 acc=1 (snapshot computed=0 sched=5120 draft=0)
+(Worker_TP0 pid=2898) INFO 10-02 22:51:09 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-9d658431384f3453-ac748568 slot=1 prev=4 curr=5 bias=0 (acc_cpu=1) computed=5120 sched=1020 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:51:09 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-9d658431384f3453-ac748568 slot=1 prev=4 curr=5 bias=0 (acc_cpu=1) computed=5120 sched=1020 blocksz=1024
+(Worker_TP1 pid=2904) INFO 10-02 22:51:09 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-9d658431384f3453-ac748568 slot=1 prev=5 curr=6 bias=0 (acc_cpu=1) computed=6140 sched=508 blocksz=1024
+(Worker_TP0 pid=2898) INFO 10-02 22:51:09 [mamba_utils.py:282] llm-scaler v52f PRE-COPY: chatcmpl-9d658431384f3453-ac748568 slot=1 prev=5 curr=6 bias=0 (acc_cpu=1) computed=6140 sched=508 blocksz=1024
+(EngineCore pid=2699) WARNING 10-02 22:51:10 [scheduler.py:1670] llm-scaler v60c POISONED-ROW: chatcmpl-9d658431384f3453-ac748568 scheduled (508 tokens this step, row_len=0, row_head=[]) strike 1 (num_output_tokens=0, num_computed_tokens=6882) — NaN-zombie sentinel signature on the sync path
+(EngineCore pid=2699) WARNING 10-02 22:51:10 [scheduler.py:1713] llm-scaler v60c STRIKE-OUT (poisoned-row): chatcmpl-9d658431384f3453-ac748568 — 1 consecutive poisoned/empty sampled rows while scheduled (crash-4 NaN-zombie terminal state, sync path) — FINISHED_ABORTED delivered client-visibly, engine stays up (num_output_tokens=0, num_computed_tokens=6882)
+(APIServer pid=2427) INFO:     10.100.8.6:52596 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:61944 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54209 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54210 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54211 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO 10-02 22:51:13 [loggers.py:273] Engine 000: Avg prompt throughput: 48.0 tokens/s, Avg generation throughput: 22.5 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 2.6%, Prefix cache hit rate: 46.1%
+(APIServer pid=2427) INFO 10-02 22:51:13 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 3.17, Accepted throughput: 15.60 tokens/s, Drafted throughput: 21.60 tokens/s, Accepted: 156 tokens, Drafted: 216 tokens, Per-position acceptance rate: 0.847, 0.750, 0.569, Avg Draft acceptance rate: 72.2%
+(APIServer pid=2427) INFO:     10.20.3.18:54212 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO 10-02 22:51:23 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 2.6 tokens/s, Running: 0 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.0%, Prefix cache hit rate: 46.1%
+(APIServer pid=2427) INFO 10-02 22:51:23 [metrics.py:116] SpecDecoding metrics: Mean acceptance length: 3.62, Accepted throughput: 2.10 tokens/s, Drafted throughput: 2.40 tokens/s, Accepted: 21 tokens, Drafted: 24 tokens, Per-position acceptance rate: 1.000, 0.875, 0.750, Avg Draft acceptance rate: 87.5%
+(APIServer pid=2427) INFO:     10.20.3.18:54219 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO 10-02 22:51:33 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.0%, Prefix cache hit rate: 46.1%
+(APIServer pid=2427) INFO:     10.20.3.18:54237 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54250 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54257 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54265 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:55752 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:55766 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:55774 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:55758 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     127.0.0.1:40316 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54179 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54187 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51527 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:45742 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:45734 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:45750 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:45756 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51537 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51558 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51566 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51574 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:46488 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:46502 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:46514 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:46526 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:46498 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:46532 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:61317 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:56964 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:56971 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:50637 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:50649 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:50659 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:50665 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:50670 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:50677 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:50683 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:59849 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:59863 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:59878 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:59882 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:59889 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:59895 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:59900 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:56810 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:49314 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:49324 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:49335 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:49341 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:49346 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:55768 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:55742 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:55756 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:55748 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     127.0.0.1:48616 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:49353 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:49371 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54139 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:56386 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:56362 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:56364 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:56378 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54148 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54162 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54169 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:58748 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:58736 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:58754 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:58766 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:58794 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:58780 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54176 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54182 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54203 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:56035 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:49801 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63521 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63531 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63537 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63552 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63561 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:59873 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:58421 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:58432 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:57072 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:57080 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:57088 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:57095 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:57099 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:57108 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:58786 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:58791 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:58798 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:58816 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:58820 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:47502 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:47510 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:47506 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:47504 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     127.0.0.1:51436 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:58830 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:53724 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62406 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:56072 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:56076 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:56078 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:56088 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62418 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62427 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62432 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:38602 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:38614 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:38624 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:38638 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:38618 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:38628 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62443 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62449 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62453 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62462 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:52902 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:52917 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:52929 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:52941 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:52945 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:52952 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:52960 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62877 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62889 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62895 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62899 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62151 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62157 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62161 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62171 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63839 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63846 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63858 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63871 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63176 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:48888 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:48872 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:48882 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:48876 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     127.0.0.1:38270 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63187 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:60534 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:53909 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:51042 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:51046 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:51068 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:51062 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:53921 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:53928 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:53970 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:37834 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:37824 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:37816 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:37804 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:37854 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:37844 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:53979 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:53986 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54001 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54012 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51586 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51590 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51600 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51608 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51613 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51620 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51626 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:55719 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:55731 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:55738 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:55745 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:55753 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:55770 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:55778 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:61565 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51238 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51243 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51250 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51257 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51263 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:57760 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:57800 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:57788 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:57776 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     127.0.0.1:42440 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51272 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51279 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:52176 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:44722 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:44736 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:44738 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:44742 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:52184 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:52190 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:52207 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:48986 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:48966 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:48958 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:48972 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:49000 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:48992 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:52219 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:52232 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:52236 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:52243 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:65119 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:65132 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:65144 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:65150 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:65159 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:57088 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:57094 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:57682 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:64117 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:64136 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:64140 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:64148 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:64162 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:64166 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:64174 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51380 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51387 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51394 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51400 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51405 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:36864 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:36836 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:36862 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:36850 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     127.0.0.1:50286 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51413 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51420 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54408 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:52978 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:52948 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:52962 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:52994 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54421 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54557 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54562 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:47926 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:47942 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:47920 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:47940 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:47966 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:47954 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54571 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54579 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54584 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:54590 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:65497 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:65502 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63886 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63894 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63899 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63904 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63923 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:60337 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:60346 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:60367 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:60374 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:60379 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:60389 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:60396 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:60403 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:60412 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:60419 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:60431 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:60439 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:60455 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:38520 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:38552 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:38538 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:38524 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     127.0.0.1:49550 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:60462 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:60478 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:59093 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:40906 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:40896 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:40910 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:40918 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:59097 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:59105 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:59110 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:34066 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:34076 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:34084 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:34110 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:34112 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:34096 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:59116 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:60950 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:60961 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:60966 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51027 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51040 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51047 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51066 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51072 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51079 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:51092 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:58288 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:57811 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:57819 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:57866 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:57872 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:57879 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:57884 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:53704 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62484 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62501 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62518 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62534 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62539 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:53172 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:53156 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:53164 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.65:53162 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     127.0.0.1:36104 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62547 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:62559 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63409 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:60998 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:32782 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:32802 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:32792 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63417 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63427 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63447 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:44714 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:44746 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:44742 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:44750 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:44728 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:44744 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63454 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63462 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:63467 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:53909 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:49908 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:49913 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:49925 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:49946 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:49951 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:49956 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:60173 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:65277 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:65284 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:65292 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:65298 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:59548 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:59562 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:59588 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:59582 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:59560 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.100.8.6:59570 - "GET /v1/models HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:65308 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:65315 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:65332 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:65344 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:52408 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:52415 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=2427) INFO:     10.20.3.18:52422 - "GET /health HTTP/1.1" 200 OK

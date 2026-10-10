@@ -1,0 +1,1 @@
+{"model": "qwen3.8-27b-fp8-fable", "max_tokens": 64, "messages": [{"role": "user", "content": "Reply with exactly: OK"}]}

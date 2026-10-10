@@ -1,0 +1,7 @@
+[claude-code:unrecognized_model] {"model":"glm-5.3","query_source":"sdk"}
+Parser validated — Pass 1 metrics locked: propose_d median 10.2ms, greedy_d **2.2ms in all 40/40 lines** (dead-flat baseline signature — collectives demonstrably still present). Waiting for the Pass-2 window now; wake-up scheduled for 02:29 local (23:29 UTC ≈ +61 min lane time).
+
+**Status so far:**
+- **Lane**: healthy (10/10 sanity 200s, coherent outputs, max wall 5.1s)
+- **Critical finding**: the run under test is **not running R1b** — the three R1b-flagged boots (21:58/22:09/22:21 UTC) all died at engine init: the replicated MTP head costs ~4.97 GiB/rank, dropping KV cache to 3.31 GiB < the 4.97 GiB required for max_model_len 262144. The serving lane (booted 22:28) has no `VLLM_XPU_MTP_TP1` in its process env and measures at baseline posture
+- **Anomaly**: 372 v52f PRE-COPY/DEF-PP stall-fingerprint lines in the current run (22:30:19 → ongoing); DEVICE_LOST crashes at 20:32 belong to the earlier era

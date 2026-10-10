@@ -1,0 +1,15 @@
+# SPECTIMING samples from the LIVE engine (boot 4, NON-R1b fallback) under foreign load
+# Source lines 14428-14440 of /root/serve_full.log, harvested 2026-10-02 ~22:42 UTC.
+# Purpose: posture cross-check. CONTEXT expectations with R1b active:
+#   propose device-time ~12ms -> ~5-6ms ; greedy device ~2.2ms -> ~0.5ms
+# Observed on live engine: propose d=9.8-10.4ms, greedy d=2.2ms
+#   => greedy d exactly matches the PRE-R1b value; live engine is NOT running R1b.
+
+14428: (Worker_TP0 pid=2898) 22:41:07 SPECTIMING steps=200 | step_wall_ms=59.0 | tforward h=2.8 d=34.4 | tlogits h=1.6 d=2.4 | propose h=17.2 d=9.8 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=1.2 | greedy h=2.3 d=2.2 | dforward_loop h=7.0 d=0.9
+14439: (Worker_TP0 pid=2898) 22:41:19 SPECTIMING steps=200 | step_wall_ms=62.0 | tforward h=6.1 d=37.0 | tlogits h=1.8 d=2.4 | propose h=17.1 d=10.4 | dmeta h=0.4 d=0.0 | dforward h=4.4 d=1.3 | greedy h=2.3 d=2.2 | dforward_loop h=7.0 d=1.0
+14440: (Worker_TP1 pid=2904) 22:41:19 SPECTIMING steps=200 | step_wall_ms=62.0 | tforward h=4.8 d=36.6 | tlogits h=1.1 d=2.4 | propose h=19.7 d=10.4 | dmeta h=0.4 d=0.0 | dforward h=5.5 d=1.3 | greedy h=2.5 d=2.2 | dforward_loop h=7.6 d=1.0
+
+# Companion SpecDecoding metrics from the same engine (foreign load, 22:41-22:48 UTC):
+#   Mean acceptance length 1.94-2.85, per-position acceptance 0.775/0.587/0.489 down to
+#   0.545/0.283/0.117, avg draft acceptance 31.9-61.8%, Running: 2-3 reqs, KV usage 14-28%.
+# No SPECTIMING lines exist for any R1b boot (boots 1-3 died before serving).

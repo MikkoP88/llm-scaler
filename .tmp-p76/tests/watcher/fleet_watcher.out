@@ -1,0 +1,2 @@
+[claude-code:unrecognized_model] {"model":"glm-5.3","query_source":"sdk"}
+Ticks advancing normally (tick 21). Watcher is stable and self-sufficient — going idle now. Next activity: cron check-ins every 15 min or the completion notification at ~03:12, after which I'll write `WATCH_LOG.md`.

@@ -1,0 +1,94 @@
+# v78 R1b bring-up failure timeline — lane lsv-test, host 10.20.3.65
+# Source: docker exec lsv-test grep/tail of /root/serve_full.log (READ-ONLY harvests)
+# All timestamps UTC (container logs in UTC; conductor host is UTC+3).
+# Harvested 2026-10-02 22:37-22:49 UTC by test conductor (load program never launched).
+
+Container: lsv-test, image llm-scaler-exp:v1.2.29, State.StartedAt 2026-10-02T21:58:17Z
+Engine args (all boots): model=/models/target, TP=2, dtype fp16, max_model_len=262144,
+  kv_cache_dtype=fp8_e4m3, gpu_memory_utilization=0.8, block_size=64,
+  speculative_config={method=mtp, num_speculative_tokens=3}, async_scheduling=True,
+  prefix_caching=True, max_num_batched_tokens=8192, max_num_seqs=64
+
+--------------------------------------------------------------------------------
+BOOT 1 — 22:00:06 UTC, APIServer pid=49, workers 521/527 — R1b ACTIVE — DEAD
+--------------------------------------------------------------------------------
+11463: (Worker_TP1 pid=527) 22:00:06 llm_base_proposer.py:1293 llm-scaler v78 R1b: MTP head loading REPLICATED (TP1, no drafter oneCCL collectives)
+11464: (Worker_TP0 pid=521) 22:00:06 llm_base_proposer.py:1293 llm-scaler v78 R1b: MTP head loading REPLICATED (TP1, no drafter oneCCL collectives)
+11473/11476: 22:00:12 v78 R1b: keeping MTP head's own replicated embed_tokens (shared target embed would retain the per-pass oneCCL all-reduce)
+11474/11477: 22:00:12 v78 R1b: keeping MTP head's own replicated lm_head (shared target lm_head would retain the greedy-path all-gather)
+
+Death 22:00:28 (worker profile_run -> drafter.dummy_run -> MTP head forward):
+  File "vllm/v1/worker/gpu_model_runner.py", line 6546, in _dummy_run
+    self.drafter.dummy_run(
+  File "vllm/v1/spec_decode/llm_base_proposer.py", line 1735, in dummy_run
+    self.model(**kwargs)
+  File "vllm/model_executor/models/qwen3_5_mtp.py", line 466 / line 187, in forward
+    hidden_states, residual = self.layers[current_step_idx](
+  File "vllm/model_executor/models/qwen3_next.py", line 1510, in forward
+    self.self_attn(
+  File "vllm/model_executor/models/qwen3_next.py", line 867, in forward
+    q_gate, k, v = qkv.split(
+  RuntimeError: split_with_sizes expects split_sizes to sum exactly to 14336
+    (input tensor's size at dimension -1), but got split_sizes=[6144, 512, 512]
+  => replicated (full-width) drafter qkv weight meets TP2-sharded split sizes.
+
+11873: (APIServer pid=49) RuntimeError: Engine core initialization failed.
+
+--------------------------------------------------------------------------------
+BOOT 2 — 22:09:38 UTC, APIServer pid=824, EngineCore 1105, workers 1304/1310 — R1b ACTIVE — DEAD
+--------------------------------------------------------------------------------
+11884: (APIServer pid=824) WARNING [envs.py:1970] Unknown vLLM environment variable detected: VLLM_XPU_MTP_TP1
+11989/12358: 22:10:33-34 llm_base_proposer.py:1313 llm-scaler v78 R1b: MTP head loading REPLICATED (TP1, no drafter oneCCL collectives)
+12425/12784: 22:10:34 llm_base_proposer.py:105 v78 R1b: TP1 spoof active over 39 importer bindings
+12426/12785: 22:10:34 qwen3_5_mtp.py:531 llm-scaler v22: XPU eager MTP head enabled (VLLM_XPU_MTP_EAGER_HEAD)
+12789-12796: 22:10:39-40 v78 R1b: keeping replicated embed_tokens / lm_head
+
+Death 22:10:56 (KV spec unification):
+12835: (EngineCore pid=1105) ERROR [core.py:1190] File "vllm/v1/core/kv_cache_utils.py", line 1041, in unify_kv_cache_spec_page_size
+12836:            assert new_spec.page_size_bytes == max_page_size
+12838:            AssertionError
+12841: (EngineCore pid=1105) ERROR [multiproc_executor.py:283] Worker proc VllmWorker-0 died unexpectedly, shutting down executor.
+12938: (APIServer pid=824) RuntimeError: Engine core initialization failed.
+
+--------------------------------------------------------------------------------
+BOOT 3 — 22:21:47 UTC, APIServer pid=1669, EngineCore 1942, workers 2141/2147 — R1b ACTIVE — DEAD
+--------------------------------------------------------------------------------
+12949: (APIServer pid=1669) WARNING [envs.py:1970] Unknown vLLM environment variable detected: VLLM_XPU_MTP_TP1
+13054/13373: 22:22:42-43 llm_base_proposer.py:1314 llm-scaler v78 R1b: MTP head loading REPLICATED (TP1, no drafter oneCCL collectives)
+13542/13849: 22:22:43 llm_base_proposer.py:106 v78 R1b: TP1 spoof active over 39 importer bindings
+13854/13866: 22:22:48-49 llm_base_proposer.py:1405 v78 R1b: draft KV block = engine block / 2 on 1 drafter spec sites (replicated head page == unified engine page)
+13860-13873: 22:22:49 v78 R1b: keeping replicated embed_tokens / lm_head
+13875/13880: 22:22:49-50 interface.py:624 llm-scaler v78 R1b: mamba page sizing includes the replicated MTP head state (847872 B -> 1695744 B)
+
+Death 22:23:06 (hard KV capacity shortfall):
+13918-13922: (EngineCore pid=1942) ERROR [core.py:1190] File "vllm/v1/core/kv_cache_utils.py", line 2034, in get_kv_cache_configs
+          _check_enough_kv_cache_memory(
+          raise ValueError(
+          ValueError: To serve at least one request with the models's max seq len (262144),
+          (4.97 GiB KV cache is needed, which is larger than the available KV cache memory
+          (3.31 GiB). Based on the available memory, the estimated maximum model length
+          is 163840. Try increasing `gpu_memory_utilization` or decreasing `max_model_len`.
+13925: Worker proc VllmWorker-1 died unexpectedly, shutting down executor.
+14017: (APIServer pid=1669) RuntimeError: Engine core initialization failed.
+  => replicated MTP head + mamba page doubling (847,872 -> 1,695,744 B) consumes the
+     ~1.6 GiB that the 262144-len KV allocation needed.
+
+--------------------------------------------------------------------------------
+BOOT 4 — 22:28:08 UTC, APIServer pid=2427, EngineCore 2699, workers 2898/2904 — R1b OFF (FALLBACK) — LIVE
+--------------------------------------------------------------------------------
+14027: 22:28:08 non-default args (same as boots 1-3, incl. max_model_len 262144, spec mtp x3)
+  NO 'VLLM_XPU_MTP_TP1' unknown-env warning  => env var dropped for this boot
+  NO 'R1b' marker lines anywhere after 13880
+14137/14142: 22:29:03 qwen3_5_mtp.py:531 llm-scaler v22: XPU eager MTP head enabled (VLLM_XPU_MTP_EAGER_HEAD)
+14149/14152: 22:29:06 llm_base_proposer.py:1558 Detected MTP model. Sharing target model embedding weights with the draft model.
+14150/14153: 22:29:06 llm_base_proposer.py:1641 Detected MTP model. Sharing target model lm_head weights with the draft model.
+  => the exact per-pass oneCCL all-reduce / greedy-path all-gather sharing that v78 R1b exists to remove.
+14210-14212: Started server process [2427] / Application startup complete.
+Serving since ~22:29 UTC; health 200.
+
+--------------------------------------------------------------------------------
+PRIOR-ROUND HISTORY (before this container; earlier round, retained in same log file)
+--------------------------------------------------------------------------------
+7835/7858: (Worker_TP0 pid=530) ERROR 10-02 20:32:05 RuntimeError: level_zero backend failed with error: 20 (UR_RESULT_ERROR_DEVICE_LOST)
+7894/8244: (EngineCore pid=331) RuntimeError: Worker failed ... DEVICE_LOST
+Historic totals in file: 5308 'v52f' lines; 7 DEVICE_LOST/EngineCore-died lines (all 20:32 UTC round).

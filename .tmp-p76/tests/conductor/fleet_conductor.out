@@ -1,0 +1,36 @@
+[claude-code:unrecognized_model] {"model":"glm-5.3","query_source":"sdk"}
+Could not parse message into JSON: {"type": "content_block_delta", "index": 0, "delta": {"type": "thinkinevent: content_block_delta
+{"type": "content_block_delta", "index": 0, "delta": {"tyg_delta", "thinking": ","}}
+From chunk: [ "event: content_block_delta", "data: {\"type\": \"content_block_delta\", \"index\": 0, \"delta\": {\"type\": \"thinkinevent: content_block_delta",
+  "data: {\"type\": \"content_block_delta\", \"index\": 0, \"delta\": {\"tyg_delta\", \"thinking\": \",\"}}"
+]
+Could not parse message into JSON: {"tevent: content_block_delta
+{"type": "content_block_delta", "index": 0, "delta": {"type": "thinkype": "content_block_delta", "index": 0, "delta": {"type": "thinking_delta", "thinking": "c"}}
+From chunk: [ "event: content_block_delta", "data: {\"tevent: content_block_delta", "data: {\"type\": \"content_block_delta\", \"index\": 0, \"delta\": {\"type\": \"thinkype\": \"content_block_delta\", \"index\": 0, \"delta\": {\"type\": \"thinking_delta\", \"thinking\": \"c\"}}" ]
+Mission complete. **VERDICT: BOOT_FAILED** — full report at `C:\Projects\llm-scaler\.tmp-p76\tests\conductor\REPORT.md`.
+
+## What I found
+
+The lane answers `/health` 200, but **the engine behind it is not running v78 R1b**. R1b was attempted 3 times tonight and died at startup every time; a 4th boot **without** `VLLM_XPU_MTP_TP1` is what serves now.
+
+| Boot (UTC) | R1b | Death | Root cause |
+|---|---|---|---|
+| 1 · 22:00:06 | ✅ | 22:00:28 | `split_with_sizes: 14336 vs [6144,512,512]` — replicated full-width drafter qkv meets TP2-sharded split sizes |
+| 2 · 22:09:38 | ✅ (spoof ×39 bindings) | 22:10:56 | `kv_cache_utils.py:1041 assert page_size_bytes == max_page_size` |
+| 3 · 22:21:47 | ✅ (mamba page 847,872→1,695,744 B) | 22:23:06 | **KV OOM**: 4.97 GiB needed vs 3.31 GiB available at `max_model_len=262144`; engine estimates R1b fits at **≤163840** |
+| 4 · 22:28:08 | ❌ fallback | — serving | "Sharing target model embed/lm_head with the draft" — the exact oneCCL path R1b removes |
+
+Posture proof on the live engine: SPECTIMING `greedy d=2.2 ms` constant (R1b target ≈0.5, pre-R1b = 2.2 exactly), propose d≈10 ms. R1b markers exist only in the three dead boots; binding count **39** recorded.
+
+## Why I didn't run the legs
+
+1. Wrong posture — the legs would validate the non-R1b fallback, not R1b.
+2. Contaminated lane — **10.100.8.6** (the A5000 reference host) is actively driving chat completions incl. ~98k-token deep requests, and 10.20.3.18 health-polls every 30 s. During my 12-min pre-flight the foreign load alone produced **3 client-visible v60c POISONED-ROW/STRIKE-OUT NaN-zombie aborts** (22:46:34/39/45, ~9.1k computed, 0 output) — engine stayed up.
+
+Zero load generated (`requests.jsonl` = 0 lines); all evidence read-only. Artifacts: `REPORT.md`, `evidence_boot_timeline.log`, `evidence_last100.log` (mandated last-100 verbatim, also Appendix B), `evidence_spectiming_baseline.txt`, `evidence_foreign_load.txt`.
+
+## Recommendation to the coordinator
+
+- Bugs 1–2 were already hot-iterated past by the deployer; the terminal blocker is **capacity, not code**: redeploy R1b with `max_model_len ≤ 163840` (deep legs only need ≥30k) or higher `gpu_memory_utilization`.
+- **Stop the 10.100.8.6 load against this lane before re-running** — any timing/validation result under concurrent foreign deep traffic is uninterpretable.
+- Re-arm the conductor after a boot that survives past `Application startup complete` with both marker lines + `greedy d≈0.5 ms` confirmed. Saved to project memory (`lsv-test-v78-r1b-bringup-failed`).
