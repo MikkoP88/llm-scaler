@@ -76,6 +76,17 @@ LMCACHE_SAVE_DECODE_CACHE=True, LMCACHE_LOG_LEVEL=WARNING, PYTHONHASHSEED=0,
 gmu 0.8, 60GiB×2 CPU tier lr_u. Serve script /root/serve_lmc_v133.sh
 (synced container-side; banked /root/build/serve_lmc_v134_bank.sh).
 
+## Post-bake standing-shape change (2026-10-10 17:17 UTC, user directive)
+
+`LMCACHE_LOG_LEVEL` flipped WARNING→INFO on the running instance (clean TERM
+restart, no -9 needed) and propagated everywhere the posture is named:
+serve master `/root/serve_lmc_v133.sh` + `/root/build/serve_lmc_v133.sh` +
+`/root/build/serve_lmc_v134_bank.sh` (all md5 005e8895), boot-chain assert
+line 273 in BOTH copies (new chain md5 d95201c5, bash -n clean), and this
+report. INFO restores lmcache-native volume (lookup/store/evict lines) to the
+serve log; the v1.2.34 demotions of OUR instrumentation stay debug.
+The WARNING numbers in §3/§4 above remain the bake-time record.
+
 ## Artifacts banked
 
 Host /root/build/: adapter_v140.py, adapter_v141.py, ce_unpin_fix.py,

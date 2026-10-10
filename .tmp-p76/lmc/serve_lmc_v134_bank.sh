@@ -13,7 +13,7 @@ export LMCACHE_EVICT_POLICY=lr_u
 export LMCACHE_CHUNK_SIZE=1024
 export LMCACHE_SAVE_DECODE_CACHE=True
 export LMCACHE_MIN_RETRIEVE_TOKENS=1024
-export LMCACHE_LOG_LEVEL=WARNING
+export LMCACHE_LOG_LEVEL=INFO
 # SYCL USM pinned host alloc segfaults above ~16-32GiB per process on this
 # stack (probed 2026-10-08); run the CPU pools pageable.
 export LMCACHE_DISABLE_PINNED_MEMORY=1

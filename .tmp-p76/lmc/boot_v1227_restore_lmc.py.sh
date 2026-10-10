@@ -270,7 +270,7 @@ docker exec lsv-test grep -q -- "--kv-cache-dtype fp8_e4m3" /root/serve_lmc_v122
   && docker exec lsv-test grep -q -- "--quantization fp8" /root/serve_lmc_v1227.sh \
   && docker exec lsv-test grep -q -- "LMCacheConnectorV1" /root/serve_lmc_v1227.sh \
   && docker exec lsv-test grep -q -- "LMCACHE_SAVE_DECODE_CACHE=True" /root/serve_lmc_v1227.sh \
-  && docker exec lsv-test grep -q -- "LMCACHE_LOG_LEVEL=WARNING" /root/serve_lmc_v1227.sh \
+  && docker exec lsv-test grep -q -- "LMCACHE_LOG_LEVEL=INFO" /root/serve_lmc_v1227.sh \
   && docker exec lsv-test grep -q -- "PYTHONHASHSEED=0" /root/serve_lmc_v1227.sh \
   || { echo "BOOT_$MODE LMC_SERVE_CONFIG_WRONG"; exit 10; }
 docker exec lsv-test sh -c 'chmod +x /root/serve_lmc_v1227.sh && : > /root/serve_full.log'
