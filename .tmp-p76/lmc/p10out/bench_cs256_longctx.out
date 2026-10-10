@@ -1,0 +1,37 @@
+=== BENCH_LONGCTX start 19:33:23
+[small~600tok] t1 ttft=1.236s wall=1.32s prompt=600 cached=-1
+[small~600tok] t2 ttft=0.858s wall=0.95s prompt=609 cached=-1 (rehit depth -1/609)
+[small~600tok] engine prompt_tokens_total delta: t1=600 (excess 0)  t2=609 (excess 0)
+[mid~8ktok] t1 ttft=14.290s wall=14.38s prompt=7950 cached=-1
+[mid~8ktok] t2 ttft=0.967s wall=1.04s prompt=7959 cached=-1 (rehit depth -1/7959)
+[mid~8ktok] engine prompt_tokens_total delta: t1=7950 (excess 0)  t2=7959 (excess 0)
+[mid~16ktok] t1 ttft=225.785s wall=225.86s prompt=16237 cached=-1
+[mid~16ktok] t2 ttft=0.977s wall=1.05s prompt=16246 cached=-1 (rehit depth -1/16246)
+[mid~16ktok] engine prompt_tokens_total delta: t1=119446 (excess 103209)  t2=16246 (excess 0)
+Traceback (most recent call last):
+  File "/root/build/bench_longctx.py", line 121, in <module>
+    axis(name, did, approx)
+  File "/root/build/bench_longctx.py", line 91, in axis
+    r1 = turn(base)
+         ^^^^^^^^^^
+  File "/root/build/bench_longctx.py", line 66, in turn
+    for raw in r:
+  File "/usr/lib/python3.12/http/client.py", line 706, in readline
+    return super().readline(limit)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/http/client.py", line 698, in peek
+    return self._peek_chunked(n)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/http/client.py", line 736, in _peek_chunked
+    chunk_left = self._get_chunk_left()
+                 ^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/http/client.py", line 584, in _get_chunk_left
+    chunk_left = self._read_next_chunk_size()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/http/client.py", line 544, in _read_next_chunk_size
+    line = self.fp.readline(_MAXLINE + 1)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/socket.py", line 707, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+TimeoutError: timed out

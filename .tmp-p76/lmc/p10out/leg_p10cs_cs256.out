@@ -1,0 +1,127 @@
+=== LEG_P10CS START tag=cs256 mode=256 19:03:29
+EDIT_OK {'LMCACHE_CHUNK_SIZE': 13, 'LMCACHE_MIN_RETRIEVE_TOKENS': 15}
+HEALTH_OK tick=25 19:07:47
+--- env-at-start verification (serving pid environ):
+LMCACHE_CHUNK_SIZE=256
+LMCACHE_DISABLE_PINNED_MEMORY=1
+LMCACHE_EVICT_POLICY=lr_u
+LMCACHE_LOCAL_CPU=True
+LMCACHE_LOG_LEVEL=INFO
+LMCACHE_MAX_LOCAL_CPU_SIZE=100
+LMCACHE_MIN_RETRIEVE_TOKENS=256
+LMCACHE_SAVE_DECODE_CACHE=True
+LMCACHE_USE_EXPERIMENTAL_API=True
+PYTHONHASHSEED=0
+--- prefix pass1 (warm-up) start 19:07:47
+P1_EXIT=0 19:25:43
+--- prefix pass2 (record 1) start 19:25:43
+P2_EXIT=0 19:29:36
+--- prefix pass3 (record 2) start 19:29:36
+P3_EXIT=0 19:33:23
+--- longctx reprompt probe start 19:33:23
+LC_EXIT=1 19:47:29
+--- run7n x2 start 19:47:29
+R1_EXIT=0 19:49:10
+R2_EXIT=0 19:49:10
+--- bank serve log:
+666e0f494c5f7687f4366cf8feeef4d7  /root/build/telem_bench_cs256_serve.log
+--- mechanism counts:
+COUNT[Retrieved]=1416
+COUNT[Stored]=2466
+COUNT[POISONED]=137
+COUNT[Pin timeout]=4
+COUNT[LMCNANDETECT]=0
+0
+COUNT[Traceback]=4
+COUNT[Double unpin]=4350
+--- store chunk-size sample (256-chunk must be ~0.014gb not 0.038gb):
+(Worker_TP0 pid=46167) [32;20m[2026-10-10 19:44:10,416] LMCache INFO:[0m [req_id=unspecified] Stored 1024 out of total 1024 tokens. size: 0.0166 GB, cost 13.5497 ms, throughput: 1.2252 GB/s; offload_time: 13.4791 ms, put_time: 0.0413 ms [3m(cache_engine.py:581:lmcache.v1.cache_engine)[0m
+(Worker_TP0 pid=46167) [32;20m[2026-10-10 19:44:10,428] LMCache INFO:[0m [req_id=unspecified] Stored 1024 out of total 1024 tokens. size: 0.0384 GB, cost 11.7900 ms, throughput: 3.2536 GB/s; offload_time: 11.7358 ms, put_time: 0.0297 ms [3m(cache_engine.py:581:lmcache.v1.cache_engine)[0m
+(Worker_TP1 pid=46168) [32;20m[2026-10-10 19:44:10,455] LMCache INFO:[0m [req_id=unspecified] Stored 1024 out of total 1024 tokens. size: 0.0384 GB, cost 38.5775 ms, throughput: 0.9944 GB/s; offload_time: 38.4968 ms, put_time: 0.0345 ms [3m(cache_engine.py:581:lmcache.v1.cache_engine)[0m
+--- prefix p2/p3 reports:
+=== bench_prefix (docs ~5k tok, orig=16 churn=112) ===
+cold: n=16 wall=22.0s ttft_med=1.20s ttft_mean=1.23s ttft_min=0.75s ttft_max=1.99s ptok_med=5202 cached_med=-1 cached_n=0/16 ttft_sum=19.7s
+warm: n=16 wall=21.8s ttft_med=1.22s ttft_mean=1.21s ttft_min=0.74s ttft_max=1.79s ptok_med=5202 cached_med=-1 cached_n=0/16 ttft_sum=19.3s
+churn: n=112 wall=168.2s ttft_med=1.27s ttft_mean=1.35s ttft_min=1.19s ttft_max=7.23s ptok_med=5697 cached_med=-1 cached_n=0/112 ttft_sum=150.7s
+rehit: n=16 wall=20.3s ttft_med=1.12s ttft_mean=1.12s ttft_min=0.71s ttft_max=1.49s ptok_med=5202 cached_med=-1 cached_n=0/16 ttft_sum=17.9s
+BENCH_PREFIX_DONE
+=== bench_prefix (docs ~5k tok, orig=16 churn=112) ===
+cold: n=16 wall=21.0s ttft_med=1.12s ttft_mean=1.17s ttft_min=0.71s ttft_max=1.83s ptok_med=5202 cached_med=-1 cached_n=0/16 ttft_sum=18.7s
+warm: n=16 wall=21.3s ttft_med=1.18s ttft_mean=1.18s ttft_min=0.71s ttft_max=1.86s ptok_med=5202 cached_med=-1 cached_n=0/16 ttft_sum=18.9s
+churn: n=112 wall=165.0s ttft_med=1.26s ttft_mean=1.32s ttft_min=1.10s ttft_max=7.09s ptok_med=5697 cached_med=-1 cached_n=0/112 ttft_sum=148.1s
+rehit: n=16 wall=20.2s ttft_med=1.13s ttft_mean=1.11s ttft_min=0.71s ttft_max=1.50s ptok_med=5202 cached_med=-1 cached_n=0/16 ttft_sum=17.7s
+BENCH_PREFIX_DONE
+--- longctx report:
+=== BENCH_LONGCTX start 19:33:23
+[small~600tok] t1 ttft=1.236s wall=1.32s prompt=600 cached=-1
+[small~600tok] t2 ttft=0.858s wall=0.95s prompt=609 cached=-1 (rehit depth -1/609)
+[small~600tok] engine prompt_tokens_total delta: t1=600 (excess 0)  t2=609 (excess 0)
+[mid~8ktok] t1 ttft=14.290s wall=14.38s prompt=7950 cached=-1
+[mid~8ktok] t2 ttft=0.967s wall=1.04s prompt=7959 cached=-1 (rehit depth -1/7959)
+[mid~8ktok] engine prompt_tokens_total delta: t1=7950 (excess 0)  t2=7959 (excess 0)
+[mid~16ktok] t1 ttft=225.785s wall=225.86s prompt=16237 cached=-1
+[mid~16ktok] t2 ttft=0.977s wall=1.05s prompt=16246 cached=-1 (rehit depth -1/16246)
+[mid~16ktok] engine prompt_tokens_total delta: t1=119446 (excess 103209)  t2=16246 (excess 0)
+Traceback (most recent call last):
+  File "/root/build/bench_longctx.py", line 121, in <module>
+    axis(name, did, approx)
+  File "/root/build/bench_longctx.py", line 91, in axis
+    r1 = turn(base)
+         ^^^^^^^^^^
+  File "/root/build/bench_longctx.py", line 66, in turn
+    for raw in r:
+  File "/usr/lib/python3.12/http/client.py", line 706, in readline
+    return super().readline(limit)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/http/client.py", line 698, in peek
+    return self._peek_chunked(n)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/http/client.py", line 736, in _peek_chunked
+    chunk_left = self._get_chunk_left()
+                 ^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/http/client.py", line 584, in _get_chunk_left
+    chunk_left = self._read_next_chunk_size()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/http/client.py", line 544, in _read_next_chunk_size
+    line = self.fp.readline(_MAXLINE + 1)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/socket.py", line 707, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+TimeoutError: timed out
+--- run7n reports:
+=== bench_run7n (cert16s4 methodology replica) ===
+call_FAIL HTTPError: HTTP Error 500: Internal Server Error
+call_FAIL HTTPError: HTTP Error 500: Internal Server Error
+call_FAIL HTTPError: HTTP Error 500: Internal Server Error
+call_FAIL HTTPError: HTTP Error 500: Internal Server Error
+agg4x256#1 wall=101.45s aggregate=0.00 tok/s ok_streams=0/4 [0tok/-1.0s 0tok/-1.0s 0tok/-1.0s 0tok/-1.0s]
+call_FAIL HTTPError: HTTP Error 500: Internal Server Error
+call_FAIL HTTPError: HTTP Error 500: Internal Server Error
+call_FAIL HTTPError: HTTP Error 500: Internal Server Error
+call_FAIL HTTPError: HTTP Error 500: Internal Server Error
+agg4x256#2 wall=0.02s aggregate=0.00 tok/s ok_streams=0/4 [0tok/-1.0s 0tok/-1.0s 0tok/-1.0s 0tok/-1.0s]
+call_FAIL URLError: <urlopen error [Errno 111] Connection refused>
+solo200 n=0 dt=0.00s tps=0.00
+call_FAIL URLError: <urlopen error [Errno 111] Connection refused>
+solo200 n=0 dt=0.00s tps=0.00
+BENCH_RUN7N_DONE
+=== bench_run7n (cert16s4 methodology replica) ===
+call_FAIL URLError: <urlopen error [Errno 111] Connection refused>
+call_FAIL URLError: <urlopen error [Errno 111] Connection refused>
+call_FAIL URLError: <urlopen error [Errno 111] Connection refused>
+call_FAIL URLError: <urlopen error [Errno 111] Connection refused>
+agg4x256#1 wall=0.19s aggregate=0.00 tok/s ok_streams=0/4 [0tok/-1.0s 0tok/-1.0s 0tok/-1.0s 0tok/-1.0s]
+call_FAIL URLError: <urlopen error [Errno 111] Connection refused>
+call_FAIL URLError: <urlopen error [Errno 111] Connection refused>
+call_FAIL URLError: <urlopen error [Errno 111] Connection refused>
+call_FAIL URLError: <urlopen error [Errno 111] Connection refused>
+agg4x256#2 wall=0.00s aggregate=0.00 tok/s ok_streams=0/4 [0tok/-1.0s 0tok/-1.0s 0tok/-1.0s 0tok/-1.0s]
+call_FAIL URLError: <urlopen error [Errno 111] Connection refused>
+solo200 n=0 dt=0.00s tps=0.00
+call_FAIL URLError: <urlopen error [Errno 111] Connection refused>
+solo200 n=0 dt=0.00s tps=0.00
+BENCH_RUN7N_DONE
+--- engine alive:
+HEALTH=000
+=== LEG_P10CS DONE tag=cs256 19:49:11

@@ -3,6 +3,13 @@
 # user-designated posture (2026-09-30 directive) after the stall incident
 # (STALL_ROOT_CAUSE.md) + knob legs for the CC-regime tuning round (Layer 2).
 #
+# REBASED 2026-10-10 (P9b, LMCACHE ERA): default image v1.2.34, serve from
+# /root/build/serve_lmc_v133.sh (flags baked in — SPEC/TMPL/XGCOMPACT
+# injects + the serve_user.sh generation RETIRED), mamba_utils logger rider
+# RETIRED (upstream-logging law), ckpt-posture asserts updated (quantization
+# + LMCacheConnectorV1 REQUIRED). Filename preserved — the watchdog invokes
+# /root/build/v127_stage/boot_v1227_restore.sh (line 76).
+#
 # DESIGNATED CERTIFIED POSTURE (user directive 2026-09-30):
 #   model         /models/swift-qwen3.8-27b  (52 GB bf16 swift checkpoint)
 #   quantization  --quantization fp8         (on-the-fly dynamic fp8)
@@ -17,7 +24,7 @@
 # What the 08:56 manual launch got WRONG is kept as law here: it ran OUTSIDE
 # the boot chain (no patchers verified, no marker discipline) and BLIND
 # (stdout to a dead pts — zero engine telemetry). This script fixes both:
-# full certified chain + serve from a sed-generated /root/serve_user_v1227.sh
+# full certified chain + serve from a knob-sedded /root/serve_lmc_v1227.sh
 # with output >> /root/serve_full.log, then post-boot assertions that the
 # designated posture is actually what is running.
 #
@@ -35,7 +42,20 @@
 # Knob legs (env; defaults = certified values): V1227_MNBT (8192),
 # V1227_GMU (0.8), V1227_MAXSEQS (64), V1227_V63_BUDGET (unset = baked floor
 # 1024), V1227_V66_STARVE (unset = baked 2.0 — VLLM_V66_PREFILL_STARVE_S
-# passthrough for the D2 sweep leg), V1227_IMAGE (v1.2.27 since ship 10:35),
+# passthrough for the D2 sweep leg), V1227_IMAGE (v1.2.31 since P84 ship),
+# V1227_ASYNC (1 since P84 2026-10-07: async scheduling CERTIFIED for
+#   production — VLLM_XPU_ALLOW_ASYNC=1 + VLLM_V60_ZOMBIE_STRIKES=3.
+#   Wide-wave abort law: the v60c poisoned-row guard strikes on transient
+#   async-overlap empty rows at the final-prefill-chunk->decode transition
+#   (strike-1 default killed 14-18/18 wide waves client-visibly); strikes
+#   are consecutive so 3 absorbs the 1-2 step lag while the NaN-zombie
+#   defense stays armed. Evidence: storms 3/3 ok=108/108 @1211/1216/1236s,
+#   zero strike-outs; decode 27-28 tok/s/req con-4 deep vs 13.7-16.1 sync;
+#   28.1 solo. 0 = exact pre-P84 rollback, both envs dropped),
+# V1227_TMPL (1 since 2026-10-07 user order: --chat-template
+#   /root/chat_template_qwen38_high.jinja on the serve cmdline for ALL
+#   postures — template docker-cp'd from the stage dir each boot; 0 =
+#   rollback to the ckpt-baked tokenizer template, no runtime flag),
 # V1227_PERREQ (0; 1 applies+arms the v128 D4 per-request split
 # telemetry patch — see patch_perreq_v128.py),
 # V1227_XGCOMPACT (0; 1 appends --structured-outputs-config
@@ -53,25 +73,40 @@
 #
 # WINDOW SCRIPT: stops/replaces the lsv-test container. Run ONLY in the
 # maintenance window (standing directive: never stop the lane mid-fleet).
-# usage: boot_v1227_restore.sh <MODE>
+# usage: boot_v1229_restore.sh <MODE>
 set -eu
-MODE="${1:?usage: boot_v1227_restore.sh <MODE>}"
+MODE="${1:?usage: boot_v1229_restore.sh <MODE>}"
 V1227_POSTURE="${V1227_POSTURE:-ckpt}"
-V1227_IMAGE="${V1227_IMAGE:-llm-scaler-exp:v1.2.27}"
+# v1.2.29 (CRASHFIX-76): default posture NOSPEC — the in-image serve
+# script ships without --speculative-config (B2 law: MTP deep-forward is
+# the guc ccs crash trigger; nospec 2/2 clean at the death shape and
+# 2.2x faster than the fastest spec leg on the standard shape). Spec
+# stays SUPPORTED opt-in:
+V1227_SPEC="${V1227_SPEC:-1}"
+V1227_IMAGE="${V1227_IMAGE:-llm-scaler-exp:v1.2.35}"
+V1227_ASYNC="${V1227_ASYNC:-1}"
+V1227_TMPL="${V1227_TMPL:-1}"
 V1227_MNBT="${V1227_MNBT:-8192}"
 V1227_GMU="${V1227_GMU:-0.8}"
 V1227_MAXSEQS="${V1227_MAXSEQS:-64}"
 T0=$SECONDS
 
-echo "BOOT_$MODE v127-recert posture=$V1227_POSTURE image=$V1227_IMAGE mnbt=$V1227_MNBT gmu=$V1227_GMU seqs=$V1227_MAXSEQS v63=${V1227_V63_BUDGET:-baked} v66s=${V1227_V66_STARVE:-baked} ss=${V1227_SCALEDSPACE:-0} m0live=${V1227_M0LIVE:-0} xgc=${V1227_XGCOMPACT:-0} perreq=${V1227_PERREQ:-0} $(date +%H:%M:%S)"
+echo "BOOT_$MODE v135-lmc posture=$V1227_POSTURE image=$V1227_IMAGE spec=$V1227_SPEC async=$V1227_ASYNC tmpl=$V1227_TMPL mnbt=$V1227_MNBT gmu=$V1227_GMU seqs=$V1227_MAXSEQS v63=${V1227_V63_BUDGET:-baked} v66s=${V1227_V66_STARVE:-baked} ss=${V1227_SCALEDSPACE:-0} m0live=${V1227_M0LIVE:-0} xgc=${V1227_XGCOMPACT:-0} perreq=${V1227_PERREQ:-0} $(date +%H:%M:%S)"
 
 if [ "$V1227_POSTURE" = "swift" ]; then
   MODEL_MOUNT="-v /models/swift-qwen3.8-27b:/models/swift:ro"
-  test -f /root/build/v127_stage/chat_template_qwen38_high.jinja \
-    || { echo "BOOT_$MODE TEMPLATE MISSING (stage chat_template_qwen38_high.jinja to /root/build/v127_stage/)"; exit 6; }
 else
   MODEL_MOUNT="-v /models/qwen3.8-27b-fp8:/models/target:ro"
 fi
+# template stage file required for the swift posture AND the TMPL knob
+# (2026-10-07: --chat-template is standing on every posture)
+if [ "$V1227_POSTURE" = "swift" ] || [ "${V1227_TMPL:-1}" = "1" ]; then
+  test -f /root/build/v127_stage/chat_template_qwen38_high.jinja \
+    || { echo "BOOT_$MODE TEMPLATE MISSING (stage chat_template_qwen38_high.jinja to /root/build/v127_stage/)"; exit 6; }
+fi
+# LMC-era serve source of truth must exist BEFORE the container is removed
+test -f /root/serve_lmc_v133.sh \
+  || { echo "BOOT_$MODE LMC_SERVE_MISSING (/root/serve_lmc_v133.sh)"; exit 24; }
 
 docker rm -f lsv-test >/dev/null 2>&1 || true
 
@@ -83,6 +118,13 @@ fi
 V66ENV=""
 if [ -n "${V1227_V66_STARVE:-}" ]; then
   V66ENV="-e VLLM_V66_PREFILL_STARVE_S=${V1227_V66_STARVE}"
+fi
+
+# P84 async posture (both envs coupled — strikes=3 was certified WITH async
+# and strikes alone would weaken the sync NaN-zombie guard):
+ASYNCENV=""
+if [ "${V1227_ASYNC:-1}" = "1" ]; then
+  ASYNCENV="-e VLLM_XPU_ALLOW_ASYNC=1 -e VLLM_V60_ZOMBIE_STRIKES=3"
 fi
 
 docker run -td --privileged --name lsv-test \
@@ -109,10 +151,11 @@ docker run -td --privileged --name lsv-test \
     -e VLLM_XPU_ALLOW_E5M2_FP8_CKPT=1 \
     -e VLLM_V55_EVENT_TIMEOUT_S=600 \
     -e VLLM_V55_DECODE_TIMEOUT_S=30 -e VLLM_XPU_SPEC_DRAFT_BARRIER=0 -e VLLM_XPU_SPEC_DRAFT_BARRIER_MIN_CTX=0 -e VLLM_RPC_TIMEOUT=60000 \
-    -e VLLM_F15B=1 -e VLLM_F15B_STALL_S=45 -e VLLM_XPU_ALLREDUCE_VIA_ALLGATHER=1 \
+    -e VLLM_XPU_ALLREDUCE_VIA_ALLGATHER=1 \
     -e VLLM_GUIDED_DECODING_BACKEND=xgrammar \
     $V63ENV \
     $V66ENV \
+    $ASYNCENV \
     $MODEL_MOUNT \
     -v /models/drafter-fp8-v5:/models/drafter:ro \
     -v /models/dflash2:/models/dflash2:ro \
@@ -120,11 +163,10 @@ docker run -td --privileged --name lsv-test \
     --entrypoint /bin/bash \
     "$V1227_IMAGE"
 
-if [ "$V1227_POSTURE" = "swift" ]; then
-  # template ships with the stage dir, NOT with the image (verified: absent
-  # from v1.2.26) — the 08:56 launch had it only inside its own container
-  docker cp /root/build/v127_stage/chat_template_qwen38_high.jinja lsv-test:/root/chat_template_qwen38_high.jinja
-fi
+# template ships with the stage dir, NOT with the image (verified: absent
+# from v1.2.26) — cp on EVERY boot: swift posture flags it, and the
+# 2026-10-07 TMPL knob flags it on the ckpt posture too
+docker cp /root/build/v127_stage/chat_template_qwen38_high.jinja lsv-test:/root/chat_template_qwen38_high.jinja
 
 nohup bash /root/build/mem_growth_logger.sh /root/build/lce1/bootV1212_memgrowth.log > /dev/null 2>&1 < /dev/null &
 
@@ -141,16 +183,10 @@ fi
 echo "BOOT_$MODE telemetry armed (recorder 10s JSONL + stall_scope watch)"
 
 # --- certified boot patcher chain (verbatim v1226 sequence) ---
-docker cp /root/build/patch_f15b.py lsv-test:/root/patch_f15b.py
-docker exec lsv-test /opt/venv/bin/python3 /root/patch_f15b.py | tee /root/build/lce1/f15b_apply_bootV1227.log
-docker cp /root/build/patch_v55_3.py lsv-test:/root/patch_v55_3.py
-docker exec lsv-test /opt/venv/bin/python3 /root/patch_v55_3.py | tee /root/build/lce1/v55_3_apply_bootV1227.log
 docker exec lsv-test grep -c "llm-scaler v55.3" /opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py
 docker cp /root/build/patch_arstage.py lsv-test:/root/patch_arstage.py
 docker exec lsv-test /opt/venv/bin/python3 /root/patch_arstage.py | tee /root/build/lce1/arstage_apply_bootV1227.log
 docker exec lsv-test grep -c "llm-scaler arstage" /opt/venv/lib/python3.12/site-packages/vllm/distributed/device_communicators/xpu_communicator.py
-docker cp /root/build/patch_v58_p1.py lsv-test:/root/patch_v58_p1.py
-docker exec lsv-test /opt/venv/bin/python3 /root/patch_v58_p1.py | tee /root/build/lce1/v58p1_apply_bootV1227.log
 docker cp /root/build/patch_stall_v59.py lsv-test:/root/patch_stall_v59.py
 docker exec lsv-test /opt/venv/bin/python3 /root/patch_stall_v59.py | tee /root/build/lce1/stall59_apply_bootV1227.log
 docker cp /root/build/patch_wedge_v60.py lsv-test:/root/patch_wedge_v60.py
@@ -165,7 +201,10 @@ docker cp /root/build/patch_sched_v64_bake.py lsv-test:/root/patch_sched_v64_bak
 docker exec lsv-test /opt/venv/bin/python3 /root/patch_sched_v64_bake.py --apply | tee /root/build/lce1/v64_apply_bootV1227.log
 docker exec lsv-test grep -c "llm-scaler v64 TTFTFIX-2" /opt/venv/lib/python3.12/site-packages/vllm/v1/core/sched/scheduler.py
 docker exec lsv-test pip install -q py-spy 2>/dev/null || true
-docker exec lsv-test sed -i "s@logger\.debug(@logger.info(@" /opt/venv/lib/python3.12/site-packages/vllm/v1/worker/mamba_utils.py
+# RETIRED 2026-10-10 (v1.2.34 upstream-logging law): the old rider promoted
+# mamba_utils logger.debug->logger.info on every boot; v1.2.34 ships the
+# normalized logging surface (per-request instrumentation = debug, faults =
+# error/warning) and the rider would undo it on every restore.
 
 # --- optional M1 scaled-space validation leg (dormant patch unless armed) ---
 if [ "${V1227_SCALEDSPACE:-0}" = "1" ]; then
@@ -206,37 +245,39 @@ docker exec lsv-test test -f /root/.llm_scaler_exp_v1226_baked || { echo "BOOT_$
 DBN=$(docker exec lsv-test sh -c 'grep -c "llm-scaler v126 DUAL BRIDGE" /opt/venv/lib/python3.12/site-packages/vllm/_xpu_ops.py' | tr -d "[:space:]")
 [ "$DBN" -ge 1 ] 2>/dev/null || { echo "BOOT V1226 DUALBRIDGE MISSING got=$DBN"; exit 9; }
 
-# --- generate the v1227 serve copy: knob legs + posture flags ---
-docker exec lsv-test sh -c "sed -e 's/--max-num-batched-tokens 8192/--max-num-batched-tokens $V1227_MNBT/' -e 's/--gpu-memory-utilization 0.8/--gpu-memory-utilization $V1227_GMU/' -e 's/--max-num-seqs 64/--max-num-seqs $V1227_MAXSEQS/' /root/serve_user.sh > /root/serve_user_v1227.sh"
-if [ "$V1227_POSTURE" = "swift" ]; then
-  docker exec lsv-test sed -i "s|--model /models/target|--model /models/swift --served-model-name qwen3.8-27b-fp8 --quantization fp8 --chat-template /root/chat_template_qwen38_high.jinja|" /root/serve_user_v1227.sh
-fi
-if [ "${V1227_SCALEDSPACE:-0}" = "1" ]; then
-  docker exec lsv-test sed -i "s/--mamba-ssm-cache-dtype float16/--mamba-ssm-cache-dtype fp8_e4m3/" /root/serve_user_v1227.sh
-fi
+# --- v1.2.34 LMCACHE ERA serve surface (P9b ship 2026-10-10): the standing
+#     script is /root/serve_lmc_v133.sh — LMCacheConnectorV1 kv_both ratio 2,
+#     mamba float16, kv fp8_e4m3, MTPx4, async, --quantization fp8, chat
+#     template, LMCACHE_SAVE_DECODE_CACHE=True (A/B winner), LOG_LEVEL=INFO,
+#     PYTHONHASHSEED=0 (lookup-hash law — MUST stay). Source of truth = host
+#     /root/serve_lmc_v133.sh (the leg_p9sd.sh edit target; the /root/build
+#     copy is a stale pre-True bank), docker-cp'd every boot (template law).
+#     RETIRED with this rebase: serve_user.sh generation, swift/mamba seds,
+#     SPEC/TMPL/XGCOMPACT flag injects (all flags baked in the script). ---
+docker cp /root/serve_lmc_v133.sh lsv-test:/root/serve_lmc_boot.sh
+docker exec lsv-test sh -c "sed -e 's/--max-num-batched-tokens 8192/--max-num-batched-tokens $V1227_MNBT/' -e 's/--gpu-memory-utilization 0.8/--gpu-memory-utilization $V1227_GMU/' -e 's/--max-num-seqs 64/--max-num-seqs $V1227_MAXSEQS/' /root/serve_lmc_boot.sh > /root/serve_lmc_v1227.sh"
 
-# --- optional v128 XGCOMPACT leg (WS-D engine-side fix candidate;
-#     see fix_restore_v128b.py / xg_flag_probe_v128.py) ---
-if [ "${V1227_XGCOMPACT:-0}" = "1" ]; then
-  docker exec lsv-test sed -i "s|--async-scheduling|--structured-outputs-config '{\"backend\":\"xgrammar\",\"disable_any_whitespace\":true}' --async-scheduling|" /root/serve_user_v1227.sh
-  docker exec lsv-test grep -q -F -- "--structured-outputs-config '{\"backend\":\"xgrammar\",\"disable_any_whitespace\":true}'" /root/serve_user_v1227.sh \
-    || { echo "BOOT_$MODE XGCOMPACT_FLAG_MISSING"; exit 18; }
-fi
-docker exec lsv-test grep -q -- "--kv-cache-dtype fp8_e4m3" /root/serve_user_v1227.sh \
-  && docker exec lsv-test grep -q -- "--enable-prefix-caching" /root/serve_user_v1227.sh \
-  && docker exec lsv-test grep -q -- "--async-scheduling" /root/serve_user_v1227.sh \
-  && docker exec lsv-test grep -q -- "--tool-call-parser qwen3_coder" /root/serve_user_v1227.sh \
-  || { echo "BOOT_$MODE BAKED_SERVE_CONFIG_WRONG"; exit 10; }
-if [ "$V1227_POSTURE" = "swift" ]; then
-  docker exec lsv-test grep -q -- "--model /models/swift" /root/serve_user_v1227.sh \
-    && docker exec lsv-test grep -q -- "--served-model-name qwen3.8-27b-fp8" /root/serve_user_v1227.sh \
-    && docker exec lsv-test grep -q -- "--quantization fp8" /root/serve_user_v1227.sh \
-    && docker exec lsv-test grep -q -- "--chat-template /root/chat_template_qwen38_high.jinja" /root/serve_user_v1227.sh \
-    || { echo "BOOT_$MODE SWIFT_POSTURE_FLAGS_MISSING"; exit 10; }
-fi
-docker exec lsv-test sh -c 'chmod +x /root/serve_user_v1227.sh && : > /root/serve_full.log'
-docker exec -d lsv-test bash /root/serve_user_v1227.sh
-echo "BOOT_$MODE serve started (posture=$V1227_POSTURE, log=/root/serve_full.log) $(date +%H:%M:%S)"
+# --- serve-shape asserts (LMC era): every flag the standing surface
+#     guarantees must be present in the GENERATED copy, else abort before
+#     launch — a stale/hand-edited stage script must never boot silently. ---
+docker exec lsv-test grep -q -- "--kv-cache-dtype fp8_e4m3" /root/serve_lmc_v1227.sh \
+  && docker exec lsv-test grep -q -- "--mamba-ssm-cache-dtype float16" /root/serve_lmc_v1227.sh \
+  && docker exec lsv-test grep -q -- "--enable-prefix-caching" /root/serve_lmc_v1227.sh \
+  && docker exec lsv-test grep -q -- "--async-scheduling" /root/serve_lmc_v1227.sh \
+  && docker exec lsv-test grep -q -- "--tool-call-parser qwen3_coder" /root/serve_lmc_v1227.sh \
+  && docker exec lsv-test grep -q -- "--speculative-config" /root/serve_lmc_v1227.sh \
+  && docker exec lsv-test grep -q -- "--chat-template /root/chat_template_qwen38_high.jinja" /root/serve_lmc_v1227.sh \
+  && docker exec lsv-test grep -q -- "--quantization fp8" /root/serve_lmc_v1227.sh \
+  && docker exec lsv-test grep -q -- "LMCacheConnectorV1" /root/serve_lmc_v1227.sh \
+  && docker exec lsv-test grep -q -- "LMCACHE_SAVE_DECODE_CACHE=True" /root/serve_lmc_v1227.sh \
+  && docker exec lsv-test grep -q -- "LMCACHE_LOG_LEVEL=INFO" /root/serve_lmc_v1227.sh \
+  && docker exec lsv-test grep -q -- "PYTHONHASHSEED=0" /root/serve_lmc_v1227.sh \
+  && docker exec lsv-test grep -q -- "LMCACHE_CHUNK_SIZE=1024" /root/serve_lmc_v1227.sh \
+  && docker exec lsv-test grep -q -- "LMCACHE_MIN_RETRIEVE_TOKENS=1024" /root/serve_lmc_v1227.sh \
+  || { echo "BOOT_$MODE LMC_SERVE_CONFIG_WRONG"; exit 10; }
+docker exec lsv-test sh -c 'chmod +x /root/serve_lmc_v1227.sh && : > /root/serve_full.log'
+docker exec -d lsv-test bash /root/serve_lmc_v1227.sh
+echo "BOOT_$MODE serve started (lmc-era, log=/root/serve_full.log) $(date +%H:%M:%S)"
 
 # swift = 52 GB bf16 + on-the-fly fp8 quant -> boot is minutes slower than
 # the native-fp8 ckpt; 25 min ceiling
@@ -258,10 +299,36 @@ for i in $(seq 1 150); do
     else
       echo "$CM" | grep -q -- "--model /models/target" || { echo "BOOT_$MODE DRIFT model"; exit 12; }
       echo "$CM" | grep -q "swift" && { echo "BOOT_$MODE DRIFT swift model"; exit 13; } || true
-      echo "$CM" | grep -q -- "--quantization" && { echo "BOOT_$MODE DRIFT --quantization"; exit 14; } || true
-      echo "$CM" | grep -q -- "--chat-template" && { echo "BOOT_$MODE DRIFT --chat-template"; exit 15; } || true
+      # v1.2.34 LMC era: --quantization fp8 is ON the standing cmdline
+      # (serve_lmc surface); the old ckpt-posture rule forbade the flag —
+      # inverted with the 2026-10-10 rebase.
+      echo "$CM" | grep -q -- "--quantization fp8" || { echo "BOOT_$MODE DRIFT quantization missing (lmc-era)"; exit 14; }
+      echo "$CM" | grep -q -- "--chat-template /root/chat_template_qwen38_high.jinja" \
+        || { echo "BOOT_$MODE DRIFT chat-template missing"; exit 15; }
+      echo "$CM" | grep -q -- "LMCacheConnectorV1" || { echo "BOOT_$MODE DRIFT kv connector missing (lmc-era)"; exit 23; }
     fi
     docker exec lsv-test test -s /root/serve_full.log || { echo "BOOT_$MODE DRIFT serve log empty"; exit 16; }
+    # --- v1.2.29 spec posture assert on the LIVE cmdline ---
+    if [ "${V1227_SPEC:-0}" = "1" ]; then
+      echo "$CM" | grep -q -- "--speculative-config" \
+        || { echo "BOOT_$MODE DRIFT spec flag not live"; exit 17; }
+    else
+      echo "$CM" | grep -q -- "--speculative-config" \
+        && { echo "BOOT_$MODE DRIFT speculative-config live in nospec posture"; exit 17; } || true
+    fi
+    # --- P84 async posture assert: envs live + async NOT force-disabled
+    #     (xpu.py:585 gate reads VLLM_XPU_ALLOW_ASYNC; the old failure mode
+    #     was APIServer "enabled" then Worker/EngineCore "disabled") ---
+    if [ "${V1227_ASYNC:-1}" = "1" ]; then
+      docker inspect lsv-test --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -q '^VLLM_XPU_ALLOW_ASYNC=1$' \
+        || { echo "BOOT_$MODE DRIFT async env missing"; exit 20; }
+      docker inspect lsv-test --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -q '^VLLM_V60_ZOMBIE_STRIKES=3$' \
+        || { echo "BOOT_$MODE DRIFT zombie-strikes env missing"; exit 20; }
+      docker exec lsv-test sh -c "grep -c 'Asynchronous scheduling is enabled' /root/serve_full.log" | grep -qv '^0$' \
+        || { echo "BOOT_$MODE DRIFT async not enabled in engine log"; exit 21; }
+      docker exec lsv-test sh -c "grep -i 'async scheduling' /root/serve_full.log | grep -ci disable" | grep -q '^0$' \
+        || { echo "BOOT_$MODE DRIFT async disabled in engine log"; exit 21; }
+    fi
     echo "BOOT_$MODE posture $V1227_POSTURE verified on live cmdline, telemetry live"
     echo "BOOT_V1227_RESTORED posture=$V1227_POSTURE $(date -u +%H:%M:%S)"
     exit 0

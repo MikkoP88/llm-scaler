@@ -1,0 +1,16 @@
+=== bench_run7n (cert16s4 methodology replica) ===
+call_FAIL URLError: <urlopen error [Errno 111] Connection refused>
+call_FAIL URLError: <urlopen error [Errno 111] Connection refused>
+call_FAIL URLError: <urlopen error [Errno 111] Connection refused>
+call_FAIL URLError: <urlopen error [Errno 111] Connection refused>
+agg4x256#1 wall=0.19s aggregate=0.00 tok/s ok_streams=0/4 [0tok/-1.0s 0tok/-1.0s 0tok/-1.0s 0tok/-1.0s]
+call_FAIL URLError: <urlopen error [Errno 111] Connection refused>
+call_FAIL URLError: <urlopen error [Errno 111] Connection refused>
+call_FAIL URLError: <urlopen error [Errno 111] Connection refused>
+call_FAIL URLError: <urlopen error [Errno 111] Connection refused>
+agg4x256#2 wall=0.00s aggregate=0.00 tok/s ok_streams=0/4 [0tok/-1.0s 0tok/-1.0s 0tok/-1.0s 0tok/-1.0s]
+call_FAIL URLError: <urlopen error [Errno 111] Connection refused>
+solo200 n=0 dt=0.00s tps=0.00
+call_FAIL URLError: <urlopen error [Errno 111] Connection refused>
+solo200 n=0 dt=0.00s tps=0.00
+BENCH_RUN7N_DONE

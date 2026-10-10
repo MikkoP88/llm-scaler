@@ -1,0 +1,72 @@
+=== LEG_P10CS START tag=p10final mode=none 19:57:50
+--- prefix pass1 (warm-up) start 19:57:50
+P1_EXIT=0 20:05:59
+--- prefix pass2 (record 1) start 20:05:59
+P2_EXIT=0 20:07:44
+--- prefix pass3 (record 2) start 20:07:44
+P3_EXIT=0 20:09:29
+--- longctx reprompt probe start 20:09:29
+LC_EXIT=0 20:09:36
+--- run7n x2 start 20:09:36
+R1_EXIT=0 20:09:50
+R2_EXIT=0 20:10:03
+--- bank serve log:
+1773fdbaed584b42b44e8ff6c3845e90  /root/build/telem_bench_p10final_serve.log
+--- mechanism counts:
+COUNT[Retrieved]=1100
+COUNT[Stored]=1846
+COUNT[POISONED]=132
+COUNT[Pin timeout]=0
+0
+COUNT[LMCNANDETECT]=0
+0
+COUNT[Traceback]=0
+0
+COUNT[Double unpin]=0
+0
+--- store chunk-size sample (256-chunk must be ~0.014gb not 0.038gb):
+grep: /root/serve_full.log: binary file matches
+--- prefix p2/p3 reports:
+=== bench_prefix (docs ~5k tok, orig=16 churn=112) ===
+cold: n=16 wall=6.4s ttft_med=0.31s ttft_mean=0.33s ttft_min=0.17s ttft_max=0.67s ptok_med=5202 cached_med=-1 cached_n=0/16 ttft_sum=5.3s
+warm: n=16 wall=6.4s ttft_med=0.31s ttft_mean=0.33s ttft_min=0.17s ttft_max=0.68s ptok_med=5202 cached_med=-1 cached_n=0/16 ttft_sum=5.3s
+churn: n=112 wall=83.0s ttft_med=0.64s ttft_mean=0.64s ttft_min=0.57s ttft_max=0.71s ptok_med=5697 cached_med=-1 cached_n=0/112 ttft_sum=71.6s
+rehit: n=16 wall=9.4s ttft_med=0.47s ttft_mean=0.49s ttft_min=0.31s ttft_max=0.81s ptok_med=5202 cached_med=-1 cached_n=0/16 ttft_sum=7.8s
+BENCH_PREFIX_DONE
+=== bench_prefix (docs ~5k tok, orig=16 churn=112) ===
+cold: n=16 wall=6.4s ttft_med=0.32s ttft_mean=0.33s ttft_min=0.17s ttft_max=0.68s ptok_med=5202 cached_med=-1 cached_n=0/16 ttft_sum=5.3s
+warm: n=16 wall=6.4s ttft_med=0.31s ttft_mean=0.33s ttft_min=0.16s ttft_max=0.67s ptok_med=5202 cached_med=-1 cached_n=0/16 ttft_sum=5.3s
+churn: n=112 wall=82.3s ttft_med=0.63s ttft_mean=0.63s ttft_min=0.57s ttft_max=0.70s ptok_med=5697 cached_med=-1 cached_n=0/112 ttft_sum=71.0s
+rehit: n=16 wall=9.3s ttft_med=0.47s ttft_mean=0.48s ttft_min=0.31s ttft_max=0.81s ptok_med=5202 cached_med=-1 cached_n=0/16 ttft_sum=7.7s
+BENCH_PREFIX_DONE
+--- longctx report:
+=== BENCH_LONGCTX start 20:09:29
+[small~600tok] t1 ttft=0.367s wall=0.42s prompt=600 cached=-1
+[small~600tok] t2 ttft=0.396s wall=0.45s prompt=609 cached=-1 (rehit depth -1/609)
+[small~600tok] engine prompt_tokens_total delta: t1=600 (excess 0)  t2=609 (excess 0)
+[mid~8ktok] t1 ttft=0.792s wall=0.91s prompt=7950 cached=-1
+[mid~8ktok] t2 ttft=0.592s wall=0.64s prompt=7959 cached=-1 (rehit depth -1/7959)
+[mid~8ktok] engine prompt_tokens_total delta: t1=7950 (excess 0)  t2=7959 (excess 0)
+[mid~16ktok] t1 ttft=1.115s wall=1.33s prompt=16237 cached=-1
+[mid~16ktok] t2 ttft=0.726s wall=0.76s prompt=16246 cached=-1 (rehit depth -1/16246)
+[mid~16ktok] engine prompt_tokens_total delta: t1=16237 (excess 0)  t2=16246 (excess 0)
+[long~32ktok] t1 ttft=1.315s wall=1.70s prompt=32081 cached=-1
+[long~32ktok] t2 ttft=0.554s wall=0.59s prompt=32090 cached=-1 (rehit depth -1/32090)
+[long~32ktok] engine prompt_tokens_total delta: t1=32081 (excess 0)  t2=32090 (excess 0)
+=== BENCH_LONGCTX done 20:09:36
+--- run7n reports:
+=== bench_run7n (cert16s4 methodology replica) ===
+agg4x256#1 wall=4.28s aggregate=239.31 tok/s ok_streams=4/4 [256tok/4.3s 256tok/4.3s 256tok/4.2s 256tok/4.2s]
+agg4x256#2 wall=3.93s aggregate=260.78 tok/s ok_streams=4/4 [256tok/3.8s 256tok/3.8s 256tok/3.9s 256tok/3.9s]
+solo200 n=200 dt=2.69s tps=74.22
+solo200 n=200 dt=2.67s tps=75.00
+BENCH_RUN7N_DONE
+=== bench_run7n (cert16s4 methodology replica) ===
+agg4x256#1 wall=4.17s aggregate=245.36 tok/s ok_streams=4/4 [256tok/4.2s 256tok/4.2s 256tok/4.2s 256tok/4.0s]
+agg4x256#2 wall=3.93s aggregate=260.40 tok/s ok_streams=4/4 [256tok/3.7s 256tok/3.9s 256tok/3.9s 256tok/3.5s]
+solo200 n=200 dt=2.69s tps=74.36
+solo200 n=200 dt=2.66s tps=75.12
+BENCH_RUN7N_DONE
+--- engine alive:
+HEALTH=200
+=== LEG_P10CS DONE tag=p10final 20:10:04
