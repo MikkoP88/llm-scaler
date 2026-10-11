@@ -279,12 +279,19 @@ class Qwen4ExpNGramEmbedding(nn.Module):
 
     The table (~320M rows x 160 dims, FP8, ~51 GB) never moves to the device:
     per token only ``ngram_heads`` rows (16 x 160 B = 2.56 KB) are gathered on
-    host and streamed H2D, then dequantized on device.  ``_apply`` is
-    overridden so that any whole-model ``.to(device)`` / dtype move leaves the
-    table on host (law: host-resident from day 1).
-    """
+    host and streamed H2D, then dequantized on device.
 
-    _HOST_PARAMS = ("weight", "weight_scale_inv", "weight_scale")
+    LAW (2026-10-11, leg-3 OOM): the table and its scales are PLAIN
+    ATTRIBUTES (``_host_table`` / ``_host_scale_inv`` / ``_host_scale``), NOT
+    registered parameters.  As Parameters they were visible to the weight
+    offloader's per-layer walk (offloader/uva.py): ``p.data.to("cpu")`` is a
+    no-op returning self, the 47.69 GiB table was counted against the offload
+    budget, the layer got the functional_call wrapper, and the wrapper's
+    ``state_dict()`` copy H2D'd the whole table per forward -> XPU OOM
+    (single 47.69 GiB alloc, card is 31.89 GiB).  Plain attributes are
+    invisible to ``parameters()`` / ``state_dict()`` / ``_apply``, so nothing
+    but this module's own gather ever touches the table.
+    """
 
     def __init__(
         self,
@@ -350,33 +357,21 @@ class Qwen4ExpNGramEmbedding(nn.Module):
         # Host-resident from the start: explicit device="cpu" overrides any
         # meta-device init context. float8 storage is byte-sized.  SKIP_TABLE
         # allocates a 0-row table (dev mode must not reserve the ~51 GB).
-        self.weight = nn.Parameter(
-            torch.zeros(0 if skip_table else padded_vocab_size, head_dim_per_ngram,
-                        dtype=torch.float8_e4m3fn, device="cpu"),
-            requires_grad=False,
+        # PLAIN TENSORS, not Parameters — see the class docstring LAW: any
+        # registered form is visible to the offloader's state_dict copy.
+        self._host_table = torch.zeros(
+            0 if skip_table else padded_vocab_size, head_dim_per_ngram,
+            dtype=torch.float8_e4m3fn, device="cpu",
         )
         # FP8 scales: layout (per-tensor vs weight_block_size [128, 128]) is
         # finalized in process_weights_after_loading from the checkpoint's
         # scale tensor shape; kept host-resident too.
-        self.weight_scale_inv = nn.Parameter(
-            torch.zeros(0, dtype=torch.float32, device="cpu"), requires_grad=False
-        )
+        self._host_scale_inv = torch.zeros(0, dtype=torch.float32, device="cpu")
         # Per-tensor scale variant (some checkpoints ship "weight_scale").
-        self.weight_scale = nn.Parameter(
-            torch.zeros(0, dtype=torch.float32, device="cpu"), requires_grad=False
-        )
+        self._host_scale = torch.zeros(0, dtype=torch.float32, device="cpu")
         # column block split derived from the scale layout at load time;
         # None => passthrough (unquantized table)
         self._col_block_size: int | None = None
-
-    def _apply(self, fn, recurse=True):
-        # Keep the host table (and its scales) out of any device/dtype move
-        # the model loader might perform on the whole module tree.
-        stash = {n: self._parameters.pop(n) for n in self._HOST_PARAMS if n in self._parameters}
-        try:
-            return super()._apply(fn, recurse)
-        finally:
-            self._parameters.update(stash)
 
     def compute_ngram_ids(self, token_history: torch.Tensor) -> torch.Tensor:
         """Reference Qwen4ExpTextNGramEmbedding.forward id-math, verbatim.
@@ -418,15 +413,15 @@ class Qwen4ExpNGramEmbedding(nn.Module):
         """
         out = rows.to(torch.float32)
         if self._col_block_size is None:
-            if self.weight_scale_inv.numel() == 1:
-                out = out * self.weight_scale_inv.to(out.device).to(torch.float32)
-            elif self.weight_scale.numel() == 1:
-                out = out * self.weight_scale.to(out.device).to(torch.float32)
+            if self._host_scale_inv.numel() == 1:
+                out = out * self._host_scale_inv.to(out.device).to(torch.float32)
+            elif self._host_scale.numel() == 1:
+                out = out * self._host_scale.to(out.device).to(torch.float32)
             # else: no scales at all — pure values cast up (unexpected for a
             # modules_to_convert table; logged at load time)
             return out.to(torch.float16)
         block = self._col_block_size
-        scale = self.weight_scale_inv.to(out.device).to(torch.float32)  # (V/128, K)
+        scale = self._host_scale_inv.to(out.device).to(torch.float32)  # (V/128, K)
         scale_rows = scale[row_ids // block]  # (T, K)
         width = rows.shape[-1]
         for k, start in enumerate(range(0, width, block)):
@@ -449,10 +444,10 @@ class Qwen4ExpNGramEmbedding(nn.Module):
         # (2.56 KB/token; optimization — pinned staging + async copies — is a
         # later-phase item, see PHASES.md.)
         ids_cpu = flat_ids.to("cpu", non_blocking=False).long()
-        if self.weight.dtype == torch.float8_e4m3fn:
-            rows = self.weight.view(torch.uint8).index_select(0, ids_cpu).view(torch.float8_e4m3fn)
+        if self._host_table.dtype == torch.float8_e4m3fn:
+            rows = self._host_table.view(torch.uint8).index_select(0, ids_cpu).view(torch.float8_e4m3fn)
         else:
-            rows = self.weight.index_select(0, ids_cpu)
+            rows = self._host_table.index_select(0, ids_cpu)
         rows_dev = rows.to(id_device, non_blocking=False)
         emb = self._dequant_rows(rows_dev, ids_cpu.to(id_device))
         # (R, L, heads) ids -> (R, L, heads*head_dim) == ple_embed_dim,
@@ -691,7 +686,23 @@ class Qwen4ExpDecoderLayer(Qwen3NextDecoderLayer):
         input_ids: torch.Tensor,      # (T,)
     ) -> torch.Tensor:
         ple = self.ple
+        # The XPU runner feeds int32 input_ids (lane bandwidth law); every
+        # PLE history buffer is int64 (leg-8, 2026-10-11: index-put dtype
+        # mismatch on ids_pad).  Coerce once — no-op when already int64.
+        input_ids = input_ids.to(torch.long)
         kv_cache = getattr(self.linear_attn, "kv_cache", None)
+        fwd_ctx = get_forward_context()
+        attn_md = getattr(fwd_ctx, "attn_metadata", None)
+        if attn_md is None:
+            # Fork profile law (leg-6, 2026-10-11): profile_run ->
+            # _dummy_run(is_profile=True) executes the whole model with
+            # attn_metadata=None and no wired mamba pools; the native GDN
+            # core no-ops on exactly this condition
+            # (_xpu_ops._gdn_attention_core_xpu_impl early-returns before
+            # any kv_cache touch).  PLE mirrors that idiom: stateless
+            # synthetic single-sequence run keeps activation memory
+            # representative while touching zero mamba slots.
+            return self._ple_forward_stateless(hidden_states, input_ids)
         if kv_cache is None or len(kv_cache) < 4:
             raise RuntimeError("Qwen4Exp PLE: 4-slot mamba state not wired to the layer")
 
@@ -737,6 +748,34 @@ class Qwen4ExpDecoderLayer(Qwen3NextDecoderLayer):
 
         # --- padded -> flatten ---
         return out_pad[req_of_tok, local_of_tok]
+
+    def _ple_forward_stateless(
+        self,
+        hidden_states: torch.Tensor,  # (T, hc_hidden)
+        input_ids: torch.Tensor,      # (T,)
+    ) -> torch.Tensor:
+        """Profile/dummy-run path (leg-6 law): no pools exist yet — run all T
+        tokens as ONE synthetic sequence with a zero conv state and an
+        EOS-seeded history.  Exercises the full PLE math (host-table gather,
+        conv, projections) so activation profiling stays representative;
+        reads/writes no mamba slots."""
+        ple = self.ple
+        device = hidden_states.device
+        eos = ple.ple_embedding.eos_token_id
+        ctx_len = ple.ple_embedding.context_len
+        T = hidden_states.shape[0]
+        prev_ctx = torch.full((1, ctx_len), eos, dtype=torch.long, device=device)
+        conv_state = hidden_states.new_zeros(
+            (1, ple.short_conv_state_len, hidden_states.shape[-1])
+        )
+        token_history = torch.cat(
+            [prev_ctx, input_ids.to(torch.long).unsqueeze(0)], dim=-1
+        )
+        lens = torch.tensor([T], dtype=torch.long, device=device)
+        out_pad, _, _ = ple(
+            hidden_states.unsqueeze(0), token_history, lens, conv_state
+        )
+        return out_pad.squeeze(0)
 
     # -- main forward -------------------------------------------------------
     def forward(
@@ -1179,6 +1218,7 @@ class Qwen4ExpForConditionalGeneration(
         # Scale tensors carry no shard index in their names -> plain list.
         self._ple_table_shards: dict[int, torch.Tensor] = {}
         self._ple_scale_shards: list[torch.Tensor] = []
+        self._ple_assembled = False
         # Checkpoint-side copies of the deterministic hash buffers, staged for
         # an assert-equal gate against the values computed at init (catches
         # any divergence in the prime/multiplier math for free).
@@ -1285,7 +1325,13 @@ class Qwen4ExpForConditionalGeneration(
             self,
             skip_prefixes=["model.visual.", "mtp."],
         )
-        return loader.load_weights(weights, mapper=self.hf_to_vllm_mapper)
+        loaded = loader.load_weights(weights, mapper=self.hf_to_vllm_mapper)
+        # The fork's loader never calls process_weights_after_loading on the
+        # top-level wrapper (leg-4, 2026-10-11: no "Qwen4Exp PLE:" lines in the
+        # serve log — table stayed zeros past load).  Assemble here, where the
+        # call is guaranteed.
+        self._assemble_ple_table()
+        return loaded
 
     def _stage_ple_shards(
         self, weights: Iterable[tuple[str, torch.Tensor]], skip_table: bool = False
@@ -1322,7 +1368,14 @@ class Qwen4ExpForConditionalGeneration(
             self._ple_table_shards[part] = tensor.to("cpu", copy=True)
 
     def process_weights_after_loading(self, weights: Iterable[tuple[str, torch.Tensor]] | None = None) -> None:
-        """Assemble the host-resident PLE table from staged shards."""
+        """Assemble the host-resident PLE table from staged shards (kept as
+        the standard hook name; the real entry is load_weights)."""
+        self._assemble_ple_table()
+
+    def _assemble_ple_table(self) -> None:
+        if self._ple_assembled:
+            return
+        self._ple_assembled = True
         ple_modules = [
             layer.ple.ple_embedding
             for layer in self.language_model.model.layers
@@ -1374,12 +1427,11 @@ class Qwen4ExpForConditionalGeneration(
         if first.dtype == torch.float8_e4m3fn or first.dtype == torch.uint8:
             table_dtype = torch.float8_e4m3fn
         else:
-            # Unquantized checkpoint table (bf16/fp16): re-type the parameter
-            # so the concat and the gather both see the real dtype.
+            # Unquantized checkpoint table (bf16/fp16): re-type the host
+            # tensor so the concat and the gather both see the real dtype.
             table_dtype = first.dtype
-            emb.weight = nn.Parameter(
-                torch.empty(emb.weight.shape, dtype=table_dtype, device="cpu"),
-                requires_grad=False,
+            emb._host_table = torch.empty(
+                tuple(emb._host_table.shape), dtype=table_dtype, device="cpu"
             )
         rows_per_part = first.shape[0]
         total_rows = rows_per_part * len(parts)
@@ -1395,7 +1447,7 @@ class Qwen4ExpForConditionalGeneration(
             len(parts), rows_per_part, table_dtype,
             total_rows * emb.head_dim_per_ngram * (1 if table_dtype == torch.float8_e4m3fn else 2) / 2**30,
         )
-        view = emb.weight.data.view(torch.uint8) if table_dtype == torch.float8_e4m3fn else emb.weight.data
+        view = emb._host_table.view(torch.uint8) if table_dtype == torch.float8_e4m3fn else emb._host_table
         for part in parts:
             shard = self._ple_table_shards.pop(part)
             src = shard.view(torch.uint8) if table_dtype == torch.float8_e4m3fn else shard
@@ -1419,16 +1471,16 @@ class Qwen4ExpForConditionalGeneration(
             scale = scale.to(torch.float32)
             if scale.ndim == 0 or (scale.ndim == 1 and scale.numel() == 1):
                 # per-tensor multiply scale (checkpoint "weight_scale")
-                emb.weight_scale.data = scale.reshape(())
+                emb._host_scale = scale.reshape(())
                 emb._col_block_size = None
             elif scale.ndim == 2:
                 # block [128, 128] scales: (rows/128, col_blocks)
-                if emb.weight.shape[0] % 128:
+                if emb._host_table.shape[0] % 128:
                     raise RuntimeError(
                         f"Qwen4Exp PLE: block-scale rows {scale.shape[0]} do not "
                         "divide by 128 as expected"
                     )
-                emb.weight_scale_inv.data = scale
+                emb._host_scale_inv = scale
                 emb._col_block_size = 128
             else:
                 raise RuntimeError(f"Qwen4Exp PLE: unsupported scale shape {tuple(scale.shape)}")
@@ -1436,8 +1488,7 @@ class Qwen4ExpForConditionalGeneration(
 
         if _ple_env_flag("VLLM_QW4_PLE_PIN"):
             logger.info("Qwen4Exp PLE: pinning host table (%.1f GB)",
-                        emb.weight.numel() / 2**30)
-            pinned = emb.weight.data.pin_memory()
-            emb.weight.data = pinned
+                        emb._host_table.numel() / 2**30)
+            emb._host_table = emb._host_table.pin_memory()
         logger.info("Qwen4Exp PLE: host table ready (%s layout)",
                     "block128" if emb._col_block_size else "per-tensor/passthrough")

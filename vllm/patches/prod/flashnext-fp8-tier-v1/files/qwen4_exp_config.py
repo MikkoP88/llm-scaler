@@ -231,6 +231,22 @@ class Qwen4ExpTextConfig(PretrainedConfig):
         self.eos_token_id = eos_token_id
         self.tie_word_embeddings = tie_word_embeddings
 
+        # Text-only law (leg-7, 2026-10-11): transformers' rope standardization
+        # backfills mrope_section/mrope_interleaved into rope_parameters for
+        # this VL-heritage checkpoint (JSON rope_scaling is null, rope_type
+        # "default"), and vllm's uses_mrope() trips on key PRESENCE alone ->
+        # the runner then demands M-RoPE position plumbing this port doesn't
+        # have (first real request: "M-RoPE support is not implemented").
+        # For text-only serving, mrope with uniform position ids is
+        # mathematically identical to standard partial RoPE (0.25), which is
+        # what this port runs — strip the spurious keys, keep genuine mrope
+        # (rope_type != default) untouched.
+        for _attr in ("rope_parameters", "rope_scaling"):
+            _rp = getattr(self, _attr, None)
+            if isinstance(_rp, dict) and _rp.get("rope_type", "default") == "default":
+                _rp.pop("mrope_section", None)
+                _rp.pop("mrope_interleaved", None)
+
 
 class Qwen4ExpVisionConfig(PretrainedConfig):
     model_type = "qwen4_exp_vision"
