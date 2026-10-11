@@ -680,3 +680,40 @@ Round 7 addendum (same day):
   in the serve log.
 - Corpus at bank time: legs 1-2 done (944.6/958.0 s), leg 3 in flight;
   ETA all-8 ≈ 15:45-16:00 UTC.
+
+## 17. Round 10 — P1 CORPUS COMPLETE, GATE PASS (2026-10-11 16:16 UTC)
+
+- **All 8 legs banked** (engine pids 5371/5589, zero stalls, zero xe oops,
+  dmesg standing lines only): py_fib 944.6 s / py_sort 958.0 s / sh_deploy
+  961.5 s / sql_analytics 30.1 s (c=1, temp-0 immediate-EOS benign — 82
+  prompt tokens still routed) / explain_moe 1445.6 s / hist_essay 1436.4 s
+  / agentic_trace 1444.7 s / py_fib_v2 962.8 s.  Wall ≈ 2.24 h at the P0
+  pageable 29.8 s/token floor.  routing_hist.json: 48 layers x 512 experts,
+  478,560 activations over 997 tapped tokens, 250 scatters, 19,308 distinct
+  (layer, expert) pairs of 24,576.
+- **P1 GATE: PASS.**  Full-corpus cumulative coverage top-8192 = **0.8482**
+  (>= 0.75 required); top-4096 0.6319, top-12288 0.9524, full at 20,480.
+- **Per-layer quota (the store's real shape)**: q=64/layer 0.5471, q=128
+  0.7554, q=256 0.9468.  So S=40 (TP1 smoke) buys ~45% seeded hit floor;
+  S=72 (TP2+EP2) ~60% — the store's LRU+seed must ride on top of that, and
+  parity legs show what per-half looks like below.
+- **Split view** (`--split even|odd` = expert_id parity, the TP2
+  half-partition stress view; NOTE the real EP2 fork mapping is CONTIGUOUS
+  256-expert halves, not parity — parity is the arbitrary-half bound):
+  even top-8192 (of its 12,288 pairs) = 0.9921, odd = 0.9915.  Any half of
+  the expert space self-covers at ~99% when it can hold 2/3 of its slots —
+  confirms heat is spread across BOTH halves (no contiguous-hot-range
+  pathology), so rank-local seeding under contiguous EP2 is sound.
+  coverage_per_layer_quota tables are split-invariant BY DESIGN (computed
+  over the full histogram — fn8_expert_profile.py:110).
+- **Placement verdict CONFIRMED** vs the 14:18 preview (even/odd overlap
+  51.3/48.7): hot sets are broad-but-shallow per layer (gini eyeball in
+  profile.json per_layer), global ranking wastes cross-layer slack vs
+  per-layer quotas at small S — the store's per-layer seeding matches the
+  quota curve, which is the achievable-hit law for this corpus.
+- Banked: /stage/bank/{profile,profile_even,profile_odd}.json,
+  telemetry snap_20261011_161634.json (legs=8 scatters=250 gate_ok=true
+  engine_tree=ALIVE).
+- NEXT (Round 11, in flight): P2 GPU window — fn8_p2_boot.sh + TP1 smoke
+  (S=40) then TP2+EP2 target (S=72); parity 4/4 gate + tier hit_rate readout
+  vs these quota floors.
