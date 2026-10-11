@@ -838,3 +838,85 @@ Content gates: patch_03 v4 = **9d708d021e451d39370124606fa41dc7**
 disabled, PF env (PREFETCH=1 LAYERS=4 BUDGET=8 STREAM=1; MIN_ROWS and
 BATCH default on).  NEXT: P4 MTP ×4 (head: mtp_num_hidden_layers=1,
 dense shared-expert MTP layer).
+
+## 20. Round 13 — P4 CLOSE-OUT: spec OFF for this lane; draft model + loader PROVEN (2026-10-11 21:20 UTC)
+
+Three boots, each death a different layer — the last one past the
+draft's own construction and full weight load.  Verdict per the boot
+budget (ONE fix iteration, ≤2 spec boots after boot-13): **speculative
+decoding = OFF for this lane**; P5+ serve with the P3 shape.
+
+- **boot-13 (20:20)**: `NotImplementedError: Unsupported speculative
+  method: 'mtp'` (speculative.py ~686) — qwen4_exp is absent from
+  MTPModelTypes and has no draft registry entry in this fork.  The
+  checkpoint DOES ship the head: **3101 `mtp.*` tensors** (index dump,
+  fn8_mtp_keys) — one full-attention **MoE** decoder layer (512 routed
+  experts + shared + gate), NOT the dense layer Round 12 guessed, plus
+  stem (pre_fc_norm_embedding/fc_embedding, grouped-norm
+  pre_fc_norm_hidden/fc_hidden) and its own hyper_connection_mixer
+  (hc_norm doubles as the draft's final norm; no separate model.norm).
+- **Ground truth banked before writing code**: fn8_mtp_shapes (all
+  non-expert mtp.* shapes), fn8_mtp_keys (338 non-layer keys), Strata
+  src/core/mtp.cpp:695-714 stem law (per-branch norm→fc + broadcast
+  embed add), dsv4 hyper-stream law (draft rides the PRE-mixer
+  (T, hc*H) stream; mixer deferred to compute_logits).
+- **patch_04** (7 idempotent edits + payload, all tagged FN8_04,
+  --restore): registry draft entry; MTPModelTypes += qwen4_exp_mtp;
+  hf_config_override qwen4_exp branch (n_predict from
+  mtp_num_hidden_layers=1, architectures=["Qwen4ExpMTP"]); proposer
+  hc_count analogue of dsv4 hc_mult (draft hidden 2560×4=10240);
+  Qwen4ExpModel `_mtp_hidden_buffer` (spec-gated, stable-address dsv4
+  buffer law, copy_ in forward) + FCG `get_mtp_target_hidden_states()`
+  (existing model_runner duck-tap at gpu/model_runner.py:525/1286
+  slices [:T] into propose).  CPU gate FN8_T4_MTP_ALL_OK (wiring /
+  real-module stem parity vs naive Strata loop / remap grammar /
+  compile).
+- **boot-14a (20:50)**: `ValueError: self.expert_mapping must be
+  provided to load weights using self.load_weights` —
+  fused_moe/layer.py:1399 via draft AutoWeightsLoader delegating
+  experts to FusedMoE.load_weights; the drafter `_get_model` path
+  never installs the ctor-kwarg expert_mapping the target path sets.
+  **FORK LAW: fused-expert models own their load_weights loop.**
+- **The ONE allowed fix iteration**: `Qwen4ExpMTP.load_weights` =
+  target-law custom loop (verbatim-adapted Qwen4ExpModel.load_weights:
+  stacked_params_mapping incl. GDN in_proj_qkvz/ba, expert_params_mapping
+  via `predictor.get_expert_mapping()` +
+  fused_moe_make_expert_params_mapping(self,...) — checkpoint grammar is
+  per-expert dense names (`mtp.layers.0.mlp.experts.5.gate_proj.weight`
+  + `.weight_scale_inv`), NOT fused w13; per-expert
+  weight_loader(shard_id, expert_id, return_success=True); non-local
+  expert skip; default_weight_loader fallback).  Payload md5
+  **e76f8851d1c439f6267158aea00659cc**.
+- **boot-14b (21:05)**: engagement lines clean (SpeculativeConfig
+  method='mtp' num_spec_tokens=4 in EngineCore config; draft
+  max_model_len 262144→8192 override; min_p/logit_bias spec warnings
+  ×2 workers).  `Loading drafter model...` 21:08:12 → **draft
+  CONSTRUCTED + ALL WEIGHTS LOADED — 0 "not found in params_dict"
+  warnings** (the loader fix is GPU-proven under TP2+EP2) → died
+  21:08:23 at llm_base_proposer.py:1305→1333
+  `_maybe_share_embeddings`: **"Target model does not have 'model'
+  attribute"**.  Root cause: the proposer requires the plain causal-LM
+  target shape `target.model.embed_tokens`; this fork's multimodal
+  FCG keeps the text stack at `language_model.model`, and
+  `supports_multimodal(FCG)` returned False (no MM registration) so the
+  `get_language_model()` unwrap was skipped — FCG itself has no
+  `.model`.  The remaining gap is a proposer-side target-layout edit
+  (`get_language_model()` on the FCG, or a `.model` alias) = a THIRD
+  iteration/boot class → outside the budget → NOT chased.
+
+Verdict: **P4 = spec OFF (boot-feasibility verdict, not a performance
+one — no benchmark ever ran; the 2× decode gate is untestable here).**
+patch_04 stays applied and DORMANT (every edit is spec-gated or
+registry-dormant; `_mtp_hidden_buffer=None` without spec mtp) — a
+future fork with a multimodal-aware proposer enables it by serving the
+same shape.  Salvage: no orphans (defunct-only procs), logs preserved
+/stage/serve_p4_boot13.log (7.4K), boot14a (68K, expert_mapping
+evidence), boot14b (52K, share_embeddings evidence).
+
+Content gates: payload e76f8851d1c439f6267158aea00659cc; registry
+185cc4d13955bd3c293672443be30e82; speculative
+8e3eb63535efa7c0077ae0cfd1b4fdca; proposer
+52a0a3896bbd5cac532b3eee467b4708; qwen4_exp
+eb36a51e166afc66f3b950d55b9145c9; fn8_serve_p4.sh
+06f7ee147c589d9c3aecf0758ff43ea2.  NEXT: P5 adaptive + persistence
+on the P3 stack (no --speculative-config).
