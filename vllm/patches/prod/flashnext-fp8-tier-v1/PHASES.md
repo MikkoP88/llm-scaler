@@ -920,3 +920,146 @@ Content gates: payload e76f8851d1c439f6267158aea00659cc; registry
 eb36a51e166afc66f3b950d55b9145c9; fn8_serve_p4.sh
 06f7ee147c589d9c3aecf0758ff43ea2.  NEXT: P5 adaptive + persistence
 on the P3 stack (no --speculative-config).
+
+## 21. Round 14 — P5 adaptive tier + persistence: implemented, CPU gate
+## GREEN, GPU window OPEN (2026-10-11 21:40 UTC)
+
+Design (PHASES P5 plan): windowed swaps from live routing stats, decay,
+profile persisted across restarts — all inside the FN8_02A/03 store.
+
+- **patch_05_adapt_persist.py** (9 idempotent edits,
+  fused_moe_modular_method.py only, `--restore`, py_compile-on-temp,
+  backup `.fn8_05.bak`): E1 knobs `V1X_TIER_ADAPT/_EVERY(200)/_SWAPS(4)/
+  _DECAY(0.995)/_MIN_SCORE(3.0)`, `V1X_TIER_PERSIST`/`_EVERY(4)`;
+  E2 `_fn8_seed_hot_lists_merged` (base seed counts + every
+  `<PERSIST>.r*` file summed — the restart merge law) +
+  `_fn8_persist_rank` (RANK/LOCAL_RANK env, else ownership fallback
+  `0 in owned → 0`, EP halves contiguous); E3 ctor calls the merged
+  loader; E4 ctor state `real_dispatches/live_scores/touch_counts` +
+  global `_FN8_RANK`; E5 rec keys `adapt_windows/adapt_swaps/
+  persist_flushes`; E6 touch loop = EWMA `score=score*DECAY+1` per
+  routed-to OWNED id (hit or miss — pure demand signal, free) + raw
+  touch count (persistence, same semantics as the P1 profile seed);
+  E7 window boundary at end of `ensure_resident` (every EVERY real
+  dispatches); E8 `_adapt_window` (hottest NON-RESIDENT owned ids,
+  score ≥ MIN_SCORE, ≤ SWAPS, pulled in via `_pf_fill` — the certified
+  displacement-rights fill: LRU victim out, side stream, ev_def event
+  ordering; selection score-based, eviction stays LRU = v2 law) +
+  `_persist_flush` (merge ALL stores' touches into the rank counts
+  matrix — lazily seeded from this rank's previous file — atomic
+  tmp+replace write `<PERSIST>.r<rank>`); E9 telemetry tmp per-rank
+  (`dump.tmpN`) — fixes the Round-12 TP2 collision (both ranks shared
+  ONE tmp path, mid-traffic frames interleaved).
+- **P10 lesson applied by construction**: NO helper thread — swaps run
+  on the forward thread at window boundaries riding the proven
+  side-stream machinery; nothing parks on events.
+- **CPU gate `FN8_T5_ADAPT_ALL_OK`** (fn8_t5_adapt_test.py, 3 passes:
+  mock-dataclass regression, window-fires-inside-run assert fix, merge
+  glob `.json` path fix — all test-side): SLOTS=2 ids {1,2,3},
+  EVERY=3/DECAY=0.9/MIN=0.5 — d1 {1,2} resident → d2 demand-3 evicts
+  LRU 1 → d3 {1,2} demand evicts 3 → window #3 fires INSIDE that
+  ensure: id 3 (EWMA 1.0 ≥ 0.5, non-resident) swapped back in
+  displacing LRU 2 — `adapt_windows=1 adapt_swaps=1` resident {1,3},
+  scores exactly 1.9/1.9/1.0, evictions 3, pf_fills 1; persist r0 row
+  layer7 = [0,2,2,1,0...] (touches 1:2, 2:2, 3:1), touch_counts
+  consumed; telemetry parses with new keys; merge units (base+r1
+  summing → order [0,3,1,2]; persisted touches reorder boot hot set;
+  rank fallback + env-override law); py_compile.
+- **fn8_p5_run.py**: two-corpus legs — LEG A code-class (seed domain,
+  keep-or-improve sanity), LEG B distant-domain prose (history/bio/
+  literature — seed does NOT cover its routing; where adapt must earn
+  the gate); 8 prompts × 192ct per leg (~1.9k dispatches/layer →
+  ~9 windows); tier counters are LIFETIME-cumulative → before/mid/
+  after dump reads with per-leg deltas + first/second-half hit-rate
+  splits; lenient torn-frame retry; persist .r file report.
+- **fn8_serve_p5.sh**: P3 shape byte-identical + P5 env block;
+  `FN8_P5_CONTROL=1` → adapt OFF baseline lane (boot-15).
+- **GPU window (3-boot budget)**: boot-15 CONTROL (launched 21:33,
+  legs AB → hA_ctl/hB_ctl) → boot-16 adapt ON (leg B → intra-leg climb
+  + .r files) → boot-17 restart (legs AB → hB_ad17 warm from merged
+  prewarm).  GATE: `hB_ad17 − hB_ctl ≥ +0.05` AND hB_ad17 1h≈2h AND
+  `hA_ad17 ≥ hA_ctl − 0.02` (keep-or-improve) AND restart-reproduce
+  evidence (.r files counts>0 + pre-warm lines + warm-start halves).
+
+Content gates: module **55e9691228d1293aa22382d7ef515a0f**
+(backup = P3 9d708d02…); patch_05 382fdfc79041a1f87ad4ae43489f7f53;
+fn8_t5 7ad7957a63c8cffc0fc39fe862640967; fn8_serve_p5
+ddc1117cca2da12eaa32ecd5ce6d6051; fn8_p5_run
+1a1c8780d1724a5d5c46779ad8acd3a8.
+
+## 22. Round 14 — P5 CLOSED: mechanism certified, gain hypothesis
+## REFUTED — honest FAIL on +0.05 gate; adapt ships default-OFF
+## (2026-10-12 00:00 UTC)
+
+GPU window executed 3 boots on fn8-p2 (two xe bcs wedge restarts
+absorbed, see operational events):
+
+| boot | mode | hA | hB | B halves | windows/swaps |
+|---|---|---|---|---|---|
+| 15 | control (seed, no adapt) | 0.8474 | **0.8654** | .8655/.8652 FLAT | 0/0 |
+| 16 | adapt ON, leg B only | — | 0.8624 | .8600/.8657 | 336/1315 |
+| 17 | adapt ON, restart, legs AB | **0.8592** | 0.8538 | .8477/.8598 | 720/2844 total |
+
+GATE VERDICT: **FAIL** — hB_ad17 0.8538 vs required ≥0.9154
+(−1.16pp vs control, not merely short); halves 1h<2h (not warm from
+step one). hA_ad17 0.8592 ≥ 0.8274 PASS (+1.2pp vs control).
+Restart evidence ALL GREEN: 96 merged-seed pre-warm lines (48 layers
+× 2 ranks), 0 DISABLED, .r persistence accumulated across the real
+restart (795,109 → 2,387,612 total touches: r0 401,038→1,204,968;
+r1 394,071→1,182,644; 48 layers each), 0 traceback/error lines.
+
+DIAGNOSIS (from banks, not knobs):
+1. Mechanism fully works: windows fire (every 200 dispatches/store),
+   swaps land via the displacement-rights fill (2,844 across boot-17),
+   per-rank atomic persistence, boot-time merged-seed reproduction.
+2. Gain hypothesis refuted: control leg B = 0.8654 with FLAT halves —
+   demand-LRU self-converges within ~1 prompt and the STATIC seed
+   already covers prose routing ~86.5% (high cross-domain routing
+   overlap; distant-domain marginal hot set inside top-72 is small).
+   ~0.87 is the SLOTS=72 coverage ceiling for ANY residency policy;
+   +5pp was unreachable by construction on this corpus.
+3. Adapt nets −0.3pp (boot-16) to −1.2pp (boot-17) on leg B = pure
+   churn cost. Boot-17 leg-B first half dipped because leg A's 1,308
+   code-domain swaps displaced the prose pre-warm before leg B ran;
+   adapt re-learned intra-leg (.8477→.8598) — the boot-16 learning
+   cost repeated. Persistence pre-warm cannot survive an intervening
+   other-domain leg under SWAPS=4@200 churn.
+4. Leg A +1.2pp (0.8474→0.8592): merged counts sharpened the seed
+   domain's top-72 AND/OR intra-leg adapt — the one real win, but
+   net across legs is a wash (A +1.2, B −1.2).
+5. One fix-iteration candidate (EVERY=400, SWAPS=2, MIN_SCORE=6.0 —
+   gentler churn toward control) was evaluated and REJECTED: it can
+   only asymptote TO control, never +5pp past a ~0.87 ceiling.
+   Burning the iteration cannot pass the gate → honest verdict.
+
+VERDICT: P5 CLOSED. patch_05 ships DEFAULT-OFF (V1X_TIER_ADAPT
+defaults "0" — knob-gated opt-in, same posture as dormant P4 spec).
+Lane operating point stays the P3 stack: static seed pre-warm +
+demand-LRU + prefetch (v2+v3+v4+PIN, 690.6 tok/s gate). The
+adaptive/persistence capability is proven and available for
+workloads with genuinely disjoint routing domains.
+
+P6 DECISION: SKIP — not PCIe-bound. Leg B: 112,510 misses (14.6% of
+routed dispatches), h2d_copies 115,966 absorbed by the side stream
+with NO wall-clock penalty (~37.0s vs ~36.8s/prompt control = noise);
+the binding constraint is routing coverage, not transfer. Cold-expert
+CPU compute has nothing to feed.
+
+OPERATIONAL EVENTS (xe hardware, not code): two bcs copy-engine
+reset wedges during this window, both at the offloader D2H site
+(uva.py:113 `_maybe_offload_to_cpu`), signature = one worker
+R-spinning 100% CPU + frozen serve log mid-load, dmesg `bcs reset`:
+21:35 (both cards, boot-15 #1) and 22:31 (card b1, boot-16 #1).
+Procedure executed twice cleanly: bank devcoredump (HOST shell
+/sys/class/drm loop → /root/fn8_stage/coredump_*.bin), kill full
+tree (bracket-pattern pkills + verify), host reboot, `docker start
+fn8-p2`, md5 content gates, relaunch. Resets are probabilistic under
+D2H streaming stress — boot-15 #2 completed a 29-min clean window
+immediately after reboot #1; no fix owed in code. Third xe event of
+the day (17:23) predates this window.
+
+FLUSH LAW (recorded for P7): tier telemetry flushes every
+V1X_TIER_FLUSH=200 dispatches PER STORE — a fresh boot has NO dump
+file until ≥200 dispatches/store; runners must issue a 256-token
+warmup completion before their first dump read (64 tokens
+insufficient). Warmup also satisfies the warm-engine ceiling law.
