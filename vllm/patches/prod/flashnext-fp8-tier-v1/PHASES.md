@@ -477,3 +477,60 @@ Round 7 addendum (same day):
   ≠ stuck; and always read host `date` before calling a log stale
   (local/remote clock drift illusion burned 20 min of suspicion on a
   healthy 30 s/token leg).
+
+## 14. Round 8 — P0 smoke banked; async gate + THE WEDGE; profiling window live (2026-10-11)
+
+- **P0 smoke parity banked** (`/root/fn8_stage/g1_smoke.json`, 4 legs all
+  ~1435 s ± 3 s — uniform, offload-bound as designed):
+  - `fib50` SEMANTIC-PASS — model emitted " 12,586,269,025." = correct
+    F50; the client substring check was the bug (expected a code fence
+    the model legitimately emitted inline instead).
+  - `gcd` PASS (21), `fib20` PASS (6765).
+  - `exec1` SEMANTIC-FAIL — correct trajectory (`?\n\n<think>...</think>
+    When you run a Python script...`), 48-token budget consumed by the
+    think-preamble before `['a','b','c']` could appear. Adjudicated as
+    harness-budget artifact, not a routing/quality regression.
+  - Engine: 1 h 53 m continuous pageable grind, zero NaN/stalls.
+- **Async-scheduling fork gate** (13:19 boot failure): the fork REFUSES
+  `--enable-return-routed-experts` with async scheduling ("not yet
+  validated with: async scheduling", pydantic ValidationError at boot).
+  Fix: `--no-async-scheduling` in fn8_serve_g1p.sh. Profile-equivalent —
+  the window measures routing CONTENT (per-token router decisions are
+  batch-composition-independent), not speed.
+- **THE WEDGE LAW — `DISABLE_ESIMD_MOE=1` wedges the boot dummy run**
+  (convicted by single-variable bisect): with the env set, EngineCore
+  hangs after "Model loading took 17.45 GiB / 176 s" inside `_dummy_run`
+  — 150-200% CPU in `at::native::xpu::_copy_xpu` (userspace L0 poll),
+  ZERO syscalls (strace -c 6 s), zero disk I/O (io read_bytes flat),
+  host memory healthy. P0's identical phase: 35 s. Leg B (ONLY change =
+  env removed; capturer flag + --no-async-scheduling + patch_01 kept)
+  boots in ~5-6 min and serves. Capturer ELIMINATED via init ordering:
+  `init_routed_experts_capturer` runs in `_initialize_kv_caches` AFTER
+  `determine_available_memory` — it did not exist during the hang
+  (neither init log line printed). Kill law: TERM ignores the wedged
+  EngineCore; -9 leaves `Z <defunct>` until the APIServer parent is
+  also killed. Repo fn8_serve_g1p.sh cleaned (env removed + WEDGE LAW
+  comment); the live window ran the sed-derived `/stage_serve_g1b.sh`
+  (g1p minus the env, log /stage/serve_g1b.log).
+- **Capture consequence (accepted limitation)**: ESIMD stays enabled →
+  decode-path routing (≤12-token batches take the monolithic
+  moe_forward_full fast path) is NOT captured; prefill (>12 tok, modular
+  path) captures cleanly. Stale decode rows echo prefill ids — ~25%
+  distribution-preserving contamination; corpus is prefill-dominant
+  (~6:1 tokens) so the P2 coverage seed stays sound.
+- **Tap verified end-to-end on the live window** (14:08 first flush):
+  25 scatters / 151 tapped tokens / 48 layers × 512 experts / 72,480
+  activations = 151 × 48 × 10 EXACT — no short rows, no garbage ids.
+  Capturer init confirmed in serve_g1b.log:196-198 (device buffer
+  (48, 2048, 10), 1.88 MB; host cache lazy). Epilogue fires per step
+  (`gpu_model_runner.py:5385`, gated only on routed_experts_initialized).
+- **Runner hygiene incident (banked)**: `pkill -9 -f profile_run` aimed
+  at the dead serve did NOT kill runner 4252 (pattern matched the
+  redirect path, not the process) → believed dead → launched a duplicate
+  (5878) → killed duplicate by explicit PID (5878 + bash parent 5870).
+  Law reaffirmed: kill by explicit PID; pkill -f patterns match
+  unrelated cmdlines (redirect paths included).
+- Window state at bank time: runner pid 4252 mid leg 1 (py_fib, ~24/32
+  decode steps), serve pid 5371, corpus ETA ≈ 2.5-3 h from 13:56.
+  Profile adjudication (fn8_expert_profile.py ≥75%-within-8192 gate +
+  --split even|odd TP2 view) lands in Round 9 with the banked JSONs.
