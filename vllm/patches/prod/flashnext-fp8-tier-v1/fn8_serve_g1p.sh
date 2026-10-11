@@ -13,6 +13,11 @@
 #   V1X_ROUTING_DUMP                patch_01 histogram tap output
 # patch_01_routing_dump.py must be applied BEFORE this serve (XPU sync-D2H
 # fallback + the tap).  Requires: patch_00a/00b/00c/00d also applied.
+# --no-async-scheduling: the fork refuses --enable-return-routed-experts
+# with async scheduling (unvalidated combo, pydantic gate at boot).  The
+# profiling window measures ROUTING CONTENT, not speed — per-token router
+# decisions are batch-composition-independent, so sync scheduling is
+# profile-equivalent (13:19 2026-10-11 boot failure → fix).
 export PYTHONHASHSEED=0
 export VLLM_WEIGHT_OFFLOADING_DISABLE_PIN_MEMORY=1
 export VLLM_WEIGHT_OFFLOADING_DISABLE_UVA=1
@@ -24,6 +29,7 @@ mkdir -p /stage/bank
 exec vllm serve --model /models/flash-next-fp8 \
   --served-model-name flash-next-fp8 \
   --enable-return-routed-experts \
+  --no-async-scheduling \
   --tensor-parallel-size 1 \
   --gpu-memory-utilization 0.8 \
   --cpu-offload-gb 104 \
