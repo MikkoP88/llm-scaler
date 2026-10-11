@@ -414,3 +414,66 @@ over a code+prose corpus → fn8_expert_profile.py → bank the curve.
 - Stage bank /root/fn8_stage/ refreshed: patch_01_routing_dump.py,
   fn8_expert_profile.py, fn8_t2_histtest.py, fn8_profile_run_g1.py,
   fn8_serve_g1p.sh, fn8_t2_validate.sh.
+
+## 13. Round 7 — P2 groundwork: offloader anatomy + whole-expert EP path (2026-10-11, fn8-t2 reads)
+
+- **P0 slow-path anatomy CONFIRMED** (uva.py): with
+  `VLLM_WEIGHT_OFFLOADING_DISABLE_UVA=1` (+ pin disabled),
+  `UVAOffloader._maybe_offload_to_cpu` leaves `p.data` on pageable CPU
+  and wraps each offloaded module's forward in a closure that does
+  `functional_call(module, {k: v.to(device) for state_dict})` — i.e.
+  the FULL module state_dict (≈2.17 GiB experts/layer × 48) is H2D'd
+  every step ≈ 104 GiB/step pageable ≈ the observed 29.8 s/token. The
+  lever P2 pulls: experts stop being per-step-copied wholesale.
+- **Exclusion surface exists**: both backends take a segment-matching
+  param whitelist (`cpu_offload_params` UVA / `offload_params` prefetch;
+  "experts" matches `mlp.experts.w13_weight` but not `_scale` variants).
+  `PrefetchOffloader` (group-based, StaticBufferPool + copy stream +
+  wait_prefetch/start_prefetch custom ops) exists as the alternate
+  backend — P0 does not use it.
+- **Block-128 law is real in code**: FusedMoE default TP slices N
+  (layer.py:447 `intermediate_size // tp_size` → 640/2 = 320 = 2.5
+  blocks — impossible). Whole-expert TP2 must ride the EP path:
+  `use_ep` → `determine_expert_map` + `local_num_experts` +
+  `_expert_map` buffer + placement strategy; **xpu_moe.py consumes
+  expert_map natively** (`torch.ops._moe_C.init_expert_map(...)`,
+  `moe_forward*` take `expert_map=`) — whole-expert EP on XPU is
+  first-class, NO kernel changes needed for the rank split.
+- **P2 architecture concretized**: (1) experts leave the offloader
+  (whitelist-exclude or offload 0) → `TieredExpertsStore` owns them:
+  host mirror + device slot pool (top-P by profile seed) + forward
+  pre-step reading the SAME routing surface P1 taps → miss list →
+  async H2D into LRU slots → id-remap (kernel sees slot ids, expert
+  rows whole → block-128 intact); (2) rank split via EP expert_map.
+- **Open P2 questions for the build round**: (a) verify
+  XPUExpertsFp8Block weight creation under ep_size=2 keeps experts
+  full-width (no N-slice) on the fp8-block path; (b) expert_map
+  placement: contiguous vs interleaved vs profile-heat-balanced
+  (profiler `--split even|odd` already banks the interleaved view);
+  (c) confirm the EP combine on this fork is local-compute + TP
+  allreduce (no DeepEP dispatch) so the certified TP2 posture holds.
+
+Round 7 addendum (same day):
+- (c) CLOSED: `MoEPrepareAndFinalizeNoDPEPModular` (prepare_finalize/
+  no_dp_ep.py) — num_dispatchers=1, `output_is_reduced=False`, local
+  prepare (input quant only). EP combine = local compute + the model's
+  existing TP allreduce. Certified-posture compatible.
+- (a) CLOSED by construction: `XPUExperts._supports_parallel_config`
+  → True and `supports_expert_map` → True; w1/w2/topk_ids/expert_map
+  all flow into `apply()` as ARGUMENTS (weights are not captured inside
+  the experts object) → the P2 slot pool hands `apply()` pool tensors +
+  slot-remapped topk_ids with ZERO kernel changes. Build round still
+  asserts load-time shapes under ep_size=2 (one log line).
+- (b) remains the placement-strategy choice at P2 seed time.
+- **Model-file note**: FlashNext-FP8 runs as `qwen4_exp.py` (patch_00
+  registration) — decoder-layer forward at :910; ESIMD MoE fast paths
+  are in this file for THIS model (qwen3_next.py refs in earlier rounds
+  were the lane model).
+- **Watch item**: 4 corrected MCE DRAM events (EDAC skx MC2) 11:28 →
+  12:29 on the 10:45-boot host + 2 benign `xe: Range is already in
+  VRAM` during fn8-g1 load. Corrected-only so far; any UNcorrected MCE
+  → stop, host maintenance. Also: false-wedge lesson — all 48 decoder
+  layers share one forward code line, so two identical py-spy stacks
+  ≠ stuck; and always read host `date` before calling a log stale
+  (local/remote clock drift illusion burned 20 min of suspicion on a
+  healthy 30 s/token leg).
