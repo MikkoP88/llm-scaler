@@ -4,18 +4,21 @@
 Run BOTH ways (docker exec -e ... fn8-p2 python3 /stage/fn8_t3_pf_test.py):
   1. -e FN8_TIERED=1 -e FN8_TIER_SLOTS=6 \
      -e V1X_TIER_DUMP=/tmp/fn8_t3_pf_dump.json \
-     -e V1X_TIER_PREFETCH=1 -e V1X_TIER_PF_LAYERS=4
-     -> full PF suite (side-stream fakes monkeypatched in).
+     -e V1X_TIER_PREFETCH=1 -e V1X_TIER_PF_LAYERS=4 \
+     -e V1X_TIER_PF_MIN_ROWS=1
+     -> full PF suite (side-stream fakes monkeypatched in; MIN_ROWS=1 so
+     the tiny synthetic dispatches stage — the decode gate has its own
+     scenario).
   2. -e FN8_TIERED=1 -e FN8_TIER_SLOTS=6 (NO V1X_TIER_PREFETCH)
      -> OFF-mode suite: default leaves every _pf_ dormant.
 
 Verifies the highest-risk pure logic: replay staging + chunk-epoch tagging
 (attn_metadata identity), layer-ahead fill from the SOURCE layer's fresh
-replay, free-slot-only fills (prefetch never evicts), slot_map_host mirror
-staying dummy for un-promoted fills, ensure-side promotion (needed ->
-event.synchronize + pf_waits; completed-unneeded -> opportunistic), the
-authoritative miss path evicting residents but never touching filling
-slots, budget cap, full-pool skip, loud per-store disable, and the
+replay, saturated-pool LRU displacement by prefetch (boot-8 law),
+slot_map_host mirror staying dummy for un-promoted fills, ensure-side
+promotion (needed -> event.synchronize + pf_waits; completed-unneeded ->
+opportunistic), the authoritative miss path evicting residents but never
+touching filling slots, budget cap, loud per-store disable, and the
 pf_drops oldest-fill eviction when the pool is entirely in flight.
 """
 import contextlib
@@ -49,7 +52,8 @@ class FakeStream:
         pass
 
 
-torch.xpu.synchronize = lambda *a, **k: None
+SYNCS = [0]
+torch.xpu.synchronize = lambda *a, **k: SYNCS.__setitem__(0, SYNCS[0] + 1)
 torch.xpu.current_device = lambda: "cpu"
 torch.xpu.Event = FakeEvent
 torch.xpu.Stream = FakeStream
@@ -166,6 +170,8 @@ if not m._FN8_PF:
     sys.exit(0)
 
 assert m._FN8_PF_LAYERS == 4 and m._FN8_PF_STREAM
+assert m._FN8_PF_MIN_ROWS == 1
+assert m._FN8_PF_BATCH is True
 
 w7 = make_world(7)
 st7, k7, snap7 = w7[0], w7[1], w7[2]
@@ -240,21 +246,30 @@ got = k11.calls[-1]["topk_ids"].tolist()
 assert got == [slot_ids(st11, [20, 9])], got
 print("MISS_EVICT_OK victim=%d slot reused for 20" % victim)
 
-# -- full pool -> tail is a no-op (prefetch NEVER evicts) --------------------
-before = st11.rec["pf_fills"]
+# -- saturated pool -> tail DISPLACES the LRU residents (boot-8 law) --------
+# L11 is full (6 residents after md4); the md5 tail must evict the LRU
+# pair and async-fill 13,14 into their slots.
+res_before = set(st11.slot_of)
 md5 = object()
 _MD.attn_metadata = md5
 dispatch(w7, [[13, 14]])          # L7 replay fresh again
 assert st7.replay_epoch == 5
-assert st11.rec["pf_fills"] == before, "no free slot -> skip prediction"
-print("FULL_POOL_SKIP_OK")
+assert st11.rec["pf_fills"] == 6 and set(st11.filling) == {13, 14}
+assert st11.rec["evictions"] == 3  # md4 miss + 2 prefetch displacements
+victims = res_before - set(st11.slot_of)
+assert len(victims) == 2 and victims.isdisjoint({13, 14})
+for v in victims:
+    assert st11.slot_map_host[v] == DUMMY, "displaced id falls to dummy"
+assert st11.filling_slots.isdisjoint(
+    {s for g, s in ((g, st11.slot_of[g]) for g in st11.slot_of)})
+print("SATURATED_EVICT_FILL_OK victims=%s" % sorted(victims))
 
 # -- budget cap: 0 budget blocks fills even with capacity -------------------
 m._FN8_PF_BUDGET = 0
 md6 = object()
 _MD.attn_metadata = md6
 dispatch(w7, [[15, 16]])
-assert st11.rec["pf_fills"] == before, "budget 0 must block all fills"
+assert st11.rec["pf_fills"] == 6, "budget 0 must block all fills"
 m._FN8_PF_BUDGET = 8
 print("BUDGET_OK")
 
@@ -288,6 +303,35 @@ assert 200 in st15.slot_of and st15.slot_of[200] == 0
 assert len(st15.filling) == SLOTS - 1
 print("PF_DROPS_OK oldest fill dropped+synchronized, slot reused")
 
+# -- v4 batched demand loads: ONE device sync for the whole miss set -------
+w19 = make_world(19)
+st19, k19, snap19 = w19[0], w19[1], w19[2]
+mdX = object()
+_MD.attn_metadata = mdX                # epoch 9
+SYNCS[0] = 0
+dispatch(w19, [[31, 32, 33, 34, 35, 36, 37, 38]])  # 8 missing, pool 6
+assert SYNCS[0] == 1, "one device sync for the whole batch"
+assert st19.rec["misses"] == 8 and st19.rec["h2d_copies"] == 6
+assert len(st19.slot_of) == 6, "oversize set: excess routed to dummy"
+routed = k19.calls[-1]["topk_ids"].tolist()[0]
+assert routed.count(DUMMY) == 2, "exactly the overflow ids hit dummy"
+assert DUMMY not in [st19.slot_map_host[g] for g in st19.slot_of]
+for g in st19.slot_of:
+    assert torch.equal(
+        st19.pool_w13[st19.slot_of[g]], snap19[g]), f"batch slot {g} wrong"
+print("BATCH_LOAD_OK 8-miss batch: 1 sync, 6 resident, 2 dummy")
+
+mdY = object()
+_MD.attn_metadata = mdY                # epoch 10
+SYNCS[0] = 0
+dispatch(w19, [[39, 40]])              # pool full: in-batch LRU eviction
+assert SYNCS[0] == 1
+assert st19.rec["evictions"] == 2 and len(st19.slot_of) == 6
+assert 39 in st19.slot_of and 40 in st19.slot_of
+got = k19.calls[-1]["topk_ids"].tolist()
+assert got == [slot_ids(st19, [39, 40])] and DUMMY not in got[0]
+print("BATCH_EVICT_OK 2 more via one batch, gather routes real slots")
+
 # -- telemetry carries the pf counters ---------------------------------------
 m._FN8_TELE.flush()
 with open(m._FN8_TIER_DUMP) as f:
@@ -295,9 +339,19 @@ with open(m._FN8_TIER_DUMP) as f:
 r11 = payload["stores"]["11"]
 for key in ("pf_fills", "pf_promotes", "pf_waits", "pf_drops"):
     assert key in r11, key
-assert r11["pf_fills"] == 4 and r11["pf_promotes"] == 4
+assert r11["pf_fills"] == 6 and r11["pf_promotes"] == 4
 print("TELE_PF_OK", {k: r11[k] for k in
                      ("pf_fills", "pf_promotes", "pf_waits", "pf_drops")})
+
+# -- decode gate: a dispatch with n < MIN_ROWS stages nothing (boot-9 law) --
+m._FN8_PF_MIN_ROWS = 8
+md_ds = object()
+_MD.attn_metadata = md_ds
+dispatch(w11, [[30, 31]])            # 2 rows < 8 -> skip staging + tail
+assert m._FN8_EPOCH == 11 and st11.replay_epoch == 4, "no staging below MIN_ROWS"
+assert st11.rec["pf_fills"] == 6, "dormant tail must not fill"
+m._FN8_PF_MIN_ROWS = 1
+print("DECODE_SKIP_OK small dispatch: no staging, no fills, tail dormant")
 
 print("FN8_T3_PF_ALL_OK")
 sys.exit(0)

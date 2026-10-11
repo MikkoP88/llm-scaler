@@ -770,3 +770,71 @@ Round 7 addendum (same day):
   up, gate = median prompt tok/s ≥600 @4K + no TTFT regression vs
   prefill_p2ref.json; watch for FN8_03 DISABLED lines (loud per-store
   disables) and pf_fills/pf_promotes/pf_waits > 0 in tier_p3.json.
+
+## 19. Round 12 — P3 CLOSED: GATE MET at 690.6 tok/s (5.1× P2 ref) via v2+v3+v4+PIN stack (2026-10-11 20:10 UTC)
+
+Five boots, each evidence-gated; the 600 gate fell to a LEVER STACK, not
+to the originally-designed prediction machinery:
+
+- **boot-8 (patch_03 v1, never-evict)**: pf_fills==0 — never-evict
+  prefetch is a permanent no-op in saturated pools (steady-state
+  resident==pool_slots).  ROOT of v2.
+- **v2 (LRU-displacement rights)**: _pf_fill may take the LRU RESIDENT's
+  slot.  Safety re-derivation: ev_def (default-stream event recorded at
+  fill-enqueue, side stream waits it) orders the fill after every already
+  enqueued kernel (covers the victim slot's queued readers); _load_slot
+  never scans a filling slot free; displaced ids re-enter only via the
+  authoritative miss path (which syncs the device map); promotion
+  host-syncs before the dependent kernel.
+- **boot-9 (v2)**: parity 4/4, pf machinery LIVE (salvage: fills 20068,
+  promotes 19622, waits 0, drops 0) BUT decode **−40%** (1.917/1.927
+  tok/s, x56.6/x56.9) and prefill only 152.0 (ref 135.6).  Two laws
+  found: (a) the per-dispatch blocking replay D2H (non_blocking=False)
+  drains the pipeline 48×/step at decode (n≤4 rows) → v3; (b) **TP2 DUMP
+  COLLISION LAW** — both ranks flush through one shared tmp path, so
+  mid-traffic frames are interleaved-corrupt and retry loops cannot catch
+  a clean one; salvage counters by regex (fn8_salvage.py) or read after
+  teardown.  Hit-rate collapsed to 36.1%: a 2048-token chunk touches
+  ~all 256 owned experts vs pool 72 — structural thrash (misses 9.5×
+  TP2's).
+- **v3 (V1X_TIER_PF_MIN_ROWS=64)**: decode-shaped dispatches stage
+  nothing (stale replay + bumped epoch also make the tail dormant —
+  prefetch is a prefill mechanism).  **boot-10**: decode HEALED
+  3.026/3.643 = x89.3/x107.5 (≈TP2), prefill 141.8 (noise vs v2's 152),
+  pf fires prefill-legs-only (4224/4224/0/0).
+- **v4 (_load_many batched demand loads, V1X_TIER_BATCH=1 default)**:
+  TTFT forensics — a prefill chunk misses ~140 experts per store and the
+  02a path paid one DEVICE-WIDE sync per miss (~26k serialized syncs per
+  4K prompt ≈ the whole 32 s TTFT; bytes are only ~0.5 s).  ensure now
+  collects the whole miss set → plan victims/slots (same LRU policy,
+  in-batch slots never re-victimized; oversize sets route the excess to
+  the dummy exactly as the old thrash did, minus the churn; pf_drops
+  fallback when the pool is entirely in-flight) → back-to-back H2D → ONE
+  sync → bookkeeping.  **boot-11**: prefill **284.2 median (2.1× ref)**,
+  decode holds x86.5/x101.2, misses −24% (69860).  CPU: BATCH_LOAD_OK
+  (8-miss batch → 1 sync, 6 resident, 2 dummy) + BATCH_EVICT_OK.
+- **boot-12 (v4 + PINNED 56 GB offload region)**: the salvage math said
+  TTFT ≈ the transfer itself (~70 GB/leg/rank at ~4 GB/s pageable);
+  removing VLLM_WEIGHT_OFFLOADING_DISABLE_PIN_MEMORY (UVA stays disabled
+  — keep the explicit copy_ path) lifted H2D BW 3-5×.  **PREFILL MEDIAN
+  690.6 tok/s — GATE_600 TRUE** (legs 662.9/693.5/687.5/690.6, TTFT
+  ~7.0 s = 5.1× the P2 reference's 35.6 s median), AND decode
+  4.975/5.243 tok/s = **x146.85/x154.78** (+60% over the P2 window;
+  ensure_ms 19.4→4.8, h2d_ms 29.0→6.1).  Parity 3/4 (exec1 = known
+  structural leg), 96/96 prewarm, 0 FN8_03 DISABLED.  Salvage: misses
+  67944, pf 4224/4224/0/0.  Banks: /stage/bank/{p3_run12,
+  prefill_p3v4pin,tier_p3}.json (+ boot-9/10/11 artifacts).
+
+Verdicts: prediction (layer-ahead) is ALIVE and cheap (fills always
+promote, never wait) but its coverage (~5% of misses) is not the story —
+the story is sync-elimination × pinned bandwidth.  Cards: 2× Arc Pro
+B70 28 GB → pool ceiling ~88 slots (0.33 GiB/store at 72) — slots were
+never the lever on this hardware.  Untried next levers (documented, not
+needed for the gate): side-stream demand batches (event-wait instead of
+device sync — hides residual H2D under pre-MoE compute), slots 88.
+
+Content gates: patch_03 v4 = **9d708d021e451d39370124606fa41dc7**
+(--restore → bff4b08b = 02a-v4).  fn8_serve_p3.sh: pin enabled, UVA
+disabled, PF env (PREFETCH=1 LAYERS=4 BUDGET=8 STREAM=1; MIN_ROWS and
+BATCH default on).  NEXT: P4 MTP ×4 (head: mtp_num_hidden_layers=1,
+dense shared-expert MTP layer).

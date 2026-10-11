@@ -10,7 +10,10 @@
 #     triage before trusting perf legs)
 #   - tier_p3.json pf_fills/pf_promotes/pf_waits > 0 (machinery live)
 export PYTHONHASHSEED=0
-export VLLM_WEIGHT_OFFLOADING_DISABLE_PIN_MEMORY=1
+# boot-12: PIN the 56GB offload region (v4 salvage math: prefill TTFT ==
+# the transfer — ~70GB/leg/rank at ~4GB/s pageable; pinned lifts H2D BW
+# 3-5x).  DISABLE_UVA stays 1 (keep the explicit copy_ path; UVA would
+# turn gathers into per-access PCIe reads).
 export VLLM_WEIGHT_OFFLOADING_DISABLE_UVA=1
 export FN8_TIERED=1
 export FN8_TIER_SLOTS=72

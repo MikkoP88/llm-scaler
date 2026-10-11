@@ -17,16 +17,30 @@ keeping the lane-hot file out of the patch set removes a whole md5 gate):
    routing correlation stands in for the target's not-yet-computed routing
    (the target's own stale replay predicts nothing: its ensure already
    made those ids resident).  Budget-capped, ownership-filtered.
-3. Side-stream async fills: predicted experts stream into FREE pool slots
-   on a dedicated torch.xpu.Stream ordered after all default-stream work
-   enqueued so far, recorded with an event; ensure_resident PROMOTES
-   filling ids (event.synchronize) before the kernel runs and
-   opportunistically promotes completed fills so they age out via LRU.
+3. Side-stream async fills: predicted experts stream into pool slots
+   (free, else the LRU resident's — steady-state pools are saturated,
+   boot-8 law) on a dedicated torch.xpu.Stream ordered after all
+   default-stream work enqueued so far, recorded with an event;
+   ensure_resident PROMOTES filling ids (event.synchronize) before the
+   kernel runs and opportunistically promotes completed fills so they
+   age out via LRU.
+4. Batched demand loads (v4): a prefill chunk misses ~140 experts per
+   store and the 02a miss path paid one DEVICE-WIDE synchronize per miss
+   (~26k serialized syncs per 4K prompt = the 32s TTFT, while the actual
+   bytes are ~0.5s).  ensure_resident now collects ALL missing ids and
+   hands them to _load_many: plan victims/slots for the whole batch
+   (same LRU policy, this batch's slots excluded from victim scans),
+   issue every H2D back-to-back, ONE synchronize, then bookkeeping.
+   An oversize needed-set (working set > pool) routes the excess to the
+   dummy slot exactly as the per-miss thrash did — minus the churn.
 
 SLOT-OWNERSHIP INVARIANTS (the two-writer and stale-map races):
-- Prefetch NEVER evicts: _pf_fill uses only genuinely free slots (excl.
-  filling); a full pool makes the tail a no-op (prediction is advisory).
-  _load_slot stays the SINGLE eviction site.
+- _pf_fill may displace the LRU RESIDENT when the pool is saturated
+  (boot-8 law: steady-state pools are always full — never-evict prefetch
+  measured pf_fills==0).  Safe: the side-stream fill is ordered after
+  ALL prior default-stream work via ev_def (a displaced slot's queued
+  readers complete first), and the displaced id re-enters only through
+  the authoritative miss path, which syncs the device map.
 - _load_slot counts filling slots in its capacity check, never scans a
   filling slot as free, and when the pool is entirely in-flight fills it
   drops the OLDEST fill (event-synchronized first — two async writers
@@ -44,7 +58,17 @@ layer down).
 
 Env: V1X_TIER_PREFETCH=1 (default off), V1X_TIER_PF_LAYERS=4,
 V1X_TIER_PF_BUDGET=8, V1X_TIER_PF_STREAM=1 (0 = fill on the default
-stream via the blocking _load_slot = prediction-only mode).
+stream via the blocking _load_slot = prediction-only mode),
+V1X_TIER_PF_MIN_ROWS=64 (dispatches with fewer token rows stage nothing —
+boot-9 law: a 1-4-row decode dispatch paid the blocking replay D2H 48x per
+step = pipeline drain per layer = decode -40%; prefill chunks are ~2048
+rows and stage as designed), V1X_TIER_BATCH=1 (v4 batched demand loads;
+0 = the 02a per-miss _load_slot path, for A/B).
+
+TP2 TELEMETRY LAW (boot-9): both ranks flush through the SAME tmp path, so
+live mid-traffic dump reads catch interleaved corrupt frames (retry loops
+do not help — every flush re-corrupts).  Read the dump only AFTER serve
+teardown, when the atexit flushes run as single writers.
 
 Idempotent (FN8_03 marker), .q4dbak3, --restore undoes.  MUST run after
 patch_02a (asserts the FN8_02A marker).
@@ -65,6 +89,8 @@ _FN8_PF = _fn8_os.environ.get("V1X_TIER_PREFETCH", "0") == "1"
 _FN8_PF_LAYERS = int(_fn8_os.environ.get("V1X_TIER_PF_LAYERS", "4"))
 _FN8_PF_BUDGET = int(_fn8_os.environ.get("V1X_TIER_PF_BUDGET", "8"))
 _FN8_PF_STREAM = _fn8_os.environ.get("V1X_TIER_PF_STREAM", "1") == "1"
+_FN8_PF_MIN_ROWS = int(_fn8_os.environ.get("V1X_TIER_PF_MIN_ROWS", "64"))
+_FN8_PF_BATCH = _fn8_os.environ.get("V1X_TIER_BATCH", "1") == "1"
 _FN8_EPOCH = 0
 _FN8_LAST_MD = None
 _FN8_PF_SIDE = None  # lazy per-process side stream
@@ -101,6 +127,12 @@ N_METHODS = '''    # -- FN8_03: prefill streaming (layer-ahead prefetch) -------
             return
         try:
             n, k = topk_ids.shape
+            if n < _FN8_PF_MIN_ROWS:
+                # decode-shaped dispatch: the blocking replay D2H would
+                # drain the pipeline once per layer per step (boot-9:
+                # decode -40%).  Stale replay + bumped epoch also make the
+                # dispatch tail dormant — prefetch is a prefill mechanism.
+                return
             if self.replay_dev is None or self.replay_dev.shape[1] != k:
                 # one buffer sized for max_num_batched_tokens headroom; a
                 # bigger n than that simply skips staging (stale stays None)
@@ -127,11 +159,84 @@ N_METHODS = '''    # -- FN8_03: prefill streaming (layer-ahead prefetch) -------
                 "FN8_03 prefetch DISABLED for layer %s (stage): %s",
                 self.layer_idx, _e)
 
-    def _pf_fill(self, global_id: int) -> None:
-        """Async side-stream fill of one expert into a FREE pool slot.
+    def _load_many(self, ids) -> None:
+        """v4 batched demand load: plan slots for ALL missing ids first
+        (same LRU victim policy, this batch's slots never re-victimized),
+        issue every H2D back-to-back, ONE device synchronize, then the
+        bookkeeping.  The 02a path paid a device-wide sync per miss —
+        ~26k serialized syncs per 4K prompt was the entire TTFT story
+        (bytes are ~0.5s).  Oversize needed-sets route the excess to the
+        dummy slot, exactly as the per-miss thrash did, minus the churn."""
+        import torch as _t
+        t0 = _fn8_time.time()
+        taken = set()
+        plan = []
+        for g in ids:
+            slot = next(
+                (s for s in range(self.pool_slots)
+                 if s not in self.global_of and s not in self.filling_slots
+                 and s not in taken),
+                None)
+            if slot is None:
+                victim = min(
+                    (g2 for g2 in self.slot_of
+                     if self.slot_of[g2] not in taken),
+                    key=lambda g2: self.last_use.get(g2, 0), default=None)
+                if victim is not None:
+                    slot = self.slot_of.pop(victim)
+                    del self.global_of[slot]
+                    del self.last_use[victim]
+                    # keep slot_map_host a trustworthy mirror
+                    self.slot_map_host[victim] = self.dummy
+                    self.rec["evictions"] += 1
+                elif self.filling:
+                    # pool entirely in-flight: drop the oldest fill
+                    # (event-synchronized — two writers never share a slot)
+                    fg = next(iter(self.filling))
+                    slot_fg, ev_fg = self.filling.pop(fg)
+                    try:
+                        ev_fg.synchronize()
+                    except Exception:
+                        pass
+                    self.filling_slots.discard(slot_fg)
+                    self.slot_map_host[fg] = self.dummy
+                    self.rec["pf_drops"] = self.rec.get("pf_drops", 0) + 1
+                    slot = slot_fg
+                else:
+                    break  # working set > pool: excess goes to dummy
+            taken.add(slot)
+            plan.append((g, slot, self.owned[g]))
+        for _g, slot, local in plan:
+            self.pool_w13[slot].copy_(self.host_w13[local])
+            self.pool_w2[slot].copy_(self.host_w2[local])
+            self.pool_s13[slot].copy_(self.host_s13[local])
+            self.pool_s2[slot].copy_(self.host_s2[local])
+        _t.xpu.synchronize()
+        dt = _fn8_time.time() - t0
+        for g, slot, local in plan:
+            self.slot_of[g] = slot
+            self.global_of[slot] = g
+            self.last_use[g] = self.use_tick
+            self.rec["h2d_copies"] += 1
+            self.rec["h2d_bytes"] += (
+                self.host_w13[local].numel()
+                * self.host_w13.element_size()
+                + self.host_w2[local].numel()
+                * self.host_w2.element_size())
+            self.slot_map_host[g] = slot
+        self.rec["h2d_ms"] += dt
 
-        Advisory: NEVER evicts — with no free slot the prediction is
-        skipped (eviction stays the sole province of _load_slot)."""
+    def _pf_fill(self, global_id: int) -> None:
+        """Async side-stream fill of one expert into a pool slot.
+
+        Saturated-pool law (boot-8 lesson: at steady state evictions==
+        misses and every slot is resident, so a never-evicting prefetch is
+        a permanent no-op — pf_fills stayed 0): with no free slot, take
+        the LRU RESIDENT's slot.  Safe because (a) ev_def orders the fill
+        after every default-stream kernel already enqueued (covers the
+        victim slot's prior readers), (b) _load_slot never scans a
+        filling slot as free, (c) a tail-evicted victim re-enters only
+        via the authoritative miss path, which syncs the device map."""
         import torch as _t
         global _FN8_PF_SIDE
         if not _FN8_PF_STREAM:
@@ -144,7 +249,18 @@ N_METHODS = '''    # -- FN8_03: prefill streaming (layer-ahead prefetch) -------
              if s not in self.global_of and s not in self.filling_slots),
             None)
         if slot is None:
-            return  # pool full of residents+fills: prediction skipped
+            # saturated: displace the LRU resident (prediction competes
+            # with demand only through the budget-capped tail)
+            victim = min(
+                (g for g in self.slot_of),
+                key=lambda g: self.last_use.get(g, 0), default=None)
+            if victim is None:
+                return  # pool entirely in-flight fills: nothing to take
+            slot = self.slot_of.pop(victim)
+            del self.global_of[slot]
+            del self.last_use[victim]
+            self.slot_map_host[victim] = self.dummy
+            self.rec["evictions"] += 1
         if _FN8_PF_SIDE is None:
             _FN8_PF_SIDE = _t.xpu.Stream()
         # order after ALL default-stream work enqueued so far: earlier
@@ -285,6 +401,14 @@ N_RET = ('        if _FN8_PF:\n'
 A_ENSURE = '''        changed = False
         for g in needed:
             if g in self.slot_of:
+                self.last_use[g] = self.use_tick
+                self.rec["hits"] += 1
+            else:
+                self.rec["misses"] += 1
+                self._load_slot(g)
+                changed = True
+        if changed:
+            self._sync_slot_map()
 '''
 N_ENSURE = '''        changed = False
         # FN8_03: promote async fills first — a needed filling id MUST be
@@ -314,6 +438,20 @@ N_ENSURE = '''        changed = False
                 self.layer_idx, _e)
         for g in needed:
             if g in self.slot_of:
+                self.last_use[g] = self.use_tick
+                self.rec["hits"] += 1
+        missing = [g for g in needed if g not in self.slot_of]
+        if missing:
+            for g in missing:
+                self.rec["misses"] += 1
+            if _FN8_PF_BATCH and len(missing) > 1:
+                self._load_many(missing)   # v4: ONE sync per dispatch
+            else:
+                for g in missing:
+                    self._load_slot(g)
+            changed = True
+        if changed:
+            self._sync_slot_map()
 '''
 
 
