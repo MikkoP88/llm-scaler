@@ -597,3 +597,86 @@ Round 7 addendum (same day):
   evictions, H2D bytes + ms, D2H sync ms, pool occupancy, per-step store
   overhead, dummy-slot traffic share.  One V1X_TIER_DUMP env, same
   never-take-down-the-engine try/except law as the routing tap.
+
+## 16. Round 9 — P2 CODE WRITTEN + CPU-VALIDATED (2026-10-11)
+
+- **patch_02a_tiered_experts.py** — patches
+  fused_moe_modular_method.py (anchor: `logger = init_logger` + the
+  verbatim `apply` head; FN8_02A marker, .q4dbak, --restore).  Injects
+  `_Fn8TieredStore` + module-level lazy builder `_fn8_store_for(layer,
+  method)`; the patched `apply` head routes through the store when
+  FN8_TIERED=1 (inert otherwise — original path byte-identical).
+  Implementation laws:
+  - **Lazy build at FIRST apply == the boot dummy run** — supersedes the
+    Round 8b "gpu_worker hook" plan (no third file patched; per-layer
+    build + seed pre-warm spreads across the dummy run; pool resident
+    during determine_available_memory so KV sizing accounts for it).
+    Dummy-run detect: `get_forward_context().attn_metadata is None`
+    (fork idiom, qwen4_exp_model import path) → all ids to the zero
+    dummy slot, no misses/copies.
+  - Pool `[S+1, *host.shape[1:]]` fp8 + fp32 scales on device; dummy
+    slot S stays zero FOREVER (never allocated); moe_config override via
+    `dataclasses.replace(experts.moe_config, num_local_experts=S+1,
+    ep_rank=0, ep_size=1)` — NEW object, shared configs never mutated;
+    scales re-pointed `experts.quant_config.w1_scale/.w2_scale = pool`
+    (verified live-read each call: modular_kernel.py:1410 direct path +
+    :1264 workspace path both terminal in XPUExperts.apply which reads
+    self.moe_config/self.w1_scale).
+  - `local_num_experts = w1.shape[0]` (modular_kernel.py:1397) — pool
+    geometry drives the kernel stack; slot ids are direct row indices;
+    expert_map=None.  Zero kernel edits (verified against venv).
+  - ensure_resident: sync D2H `topk_ids.tolist()` (P3 replaces with the
+    capturer's one-step-stale staged buffer), host-side needed-set,
+    LRU eviction, blocking H2D rows, slot_map_host mirror synced to
+    device; evicted ids reset to DUMMY in the mirror (map-as-mirror law
+    — P3 prefetch reads it outside ensure).
+  - Telemetry per layer (dispatches, dummy share, hits/misses/
+    evictions, h2d copies/bytes/ms, d2h/ensure ms, resident), atomic
+    tmp+rename flush every V1X_TIER_FLUSH=200 + atexit, never-kill
+    try/except; COMPUTE-path errors propagate (loud-not-silent law).
+- **patch_02b_uva_nowrap.py** — patches offloader/uva.py (3 anchors:
+  logger line, `cpu_offload_params = ... or set()`, the wrap gate
+  `if offloaded_parameters and not self.uva_offloading:`).  (1)
+  whitelist default under FN8_TIERED=1 when no explicit set: page ONLY
+  {w13_weight, w2_weight, +_scale_inv segments} (exact-segment matcher —
+  ".w13_weight." ≠ ".w13_weight_scale_inv."); non-matching params skip
+  WITHOUT consuming budget → dense/shared/gates stay resident.  (2)
+  no-wrap: FusedMoE modules (w13+w2 attr detect) skip the per-step
+  functional_call closure (the 29.8 s/token wholesale copy); params
+    still page, budget accounting intact; FN8_00D empty-cache fix stays
+  for every module that still wraps.  `_fn8_tier_no_wrap` marker set.
+- **Validation (fn8-t3 throwaway, image v1.2.35, GPU-less)** — three
+  test assets committed alongside:
+  - fn8_t3_import_test.py: inert import both modules, env-gate
+    defaults, seed hot-list parser (ordering/zero-skip/tie/missing
+    file), telemetry atomic flush + payload shape → FN8_T3_ALL_OK.
+  - fn8_t3_store_test.py: full store machinery on CPU mocks
+    (monkeypatched torch.xpu): lazy build, moe_config replace on new
+    object, scale re-point identity, slot remap feeding kernel kwargs,
+    pool content EXACTNESS (torch.equal), LRU eviction + slot reuse +
+    mirror reset, dummy routing for non-owned ids, counters, builder
+    idempotence → FN8_T3_STORE_ALL_OK.
+  - fn8_t3_uva_test.py: whitelist default fills empty set; explicit
+    CLI set wins → UVA_WHITELIST_OK.
+  - TWO REAL BUGS caught by this round: (1) `_FN8_DISABLED = set[int]
+    = set()` chained-assignment typo — runtime TypeError, INVISIBLE to
+    py_compile (caught by the import test); (2) eviction didn't reset
+    slot_map_host[victim] — harmless within one dispatch (evicted ids
+    reload before their entry is read) but broke the map-mirror law P3
+    depends on (caught by the store test).  Plus one hardening: flush()
+    guards empty dump path.
+  - Dry-run md5s in fn8-t3 (final): modular_method 173acea0 →
+    a409e62987ddc0630f435758b402cdbf, uva d7979457 →
+    98257355851a6ed35d2584ce002cb049 (these are the patch_02 content
+    gates for the P2 GPU window).
+- **Serve shape for P2 window** (next GPU window): throwaway container,
+  patch_01 (tap, md5 gate ae55ade2 family) + patch_02a + 02b, serve
+  with `--enable-expert-parallel` (ESIMD self-disable, wedge-law
+  compliant), FN8_TIERED=1 FN8_TIER_SLOTS=96 FN8_TIER_SEED=<profile>
+  V1X_TIER_DUMP=<file>; TP1 first then TP2+EP2 target.  VRAM budget
+  watch: whitelist keeps dense resident (+~7 GB vs P0 shape) — if KV
+  sizing starves under TP2, drop FN8_TIER_SLOTS to 72.  Load-time shape
+  assert under ep_size=2 (whole experts, no N-slice) still to eyeball
+  in the serve log.
+- Corpus at bank time: legs 1-2 done (944.6/958.0 s), leg 3 in flight;
+  ETA all-8 ≈ 15:45-16:00 UTC.
