@@ -534,3 +534,66 @@ Round 7 addendum (same day):
   decode steps), serve pid 5371, corpus ETA ≈ 2.5-3 h from 13:56.
   Profile adjudication (fn8_expert_profile.py ≥75%-within-8192 gate +
   --split even|odd TP2 view) lands in Round 9 with the banked JSONs.
+
+## 15. Round 8b — standing telemetry + P2 design locked from live reads (2026-10-11)
+
+- **fn8_telemetry.py** (user directive: comprehensive telemetry points for
+  env / parameters / memory / performance / health): host-side snapshot
+  collector, one JSON per invocation to /root/fn8_stage/telemetry/.  Zero
+  engine-process contact (logs/files/proc/dmesg/xpu-smi only — safe at any
+  cadence against the busy window).  Pure stdlib.  Fields: container flags,
+  serve args line, content-gate md5s + patch markers + engine tree, model
+  config + engine shape, VRAM/cgroup/host-mem/disk, corpus legs +
+  throughput tail + routing histogram header with LIVE coverage preview
+  (global + ep2 rank-local views), dmesg xe/MCE/EDAC watch.
+- **First snapshot (14:18, 1/8 legs)**: cov-within-8192 = **95.4%**
+  (gate ≥75%), cov-12288 = 100%, 11,383 nonzero (layer,expert) pairs.
+  Rank-local placement preview: even/odd split 51.3/48.7 share with
+  95.1/95.7% local coverage at 4096 slots; contiguous lo/hi 48.9/51.1
+  with 95.3/95.6% — EQUIVALENT.  P2 open question (b) CLOSED pending
+  full-corpus confirm: default contiguous expert_map placement, no
+  heat-balanced strategy needed for v1.  Health: only corrected MCEs.
+- **P2 interposition point LOCKED** (venv refs banked in refs/*_venv.py):
+  `FusedMoEModularMethod.apply` (fused_moe_modular_method.py:87) — has
+  the layer, sources w1/w2 from it, passes expert_map + topk_ids into
+  moe_kernel.apply → XPUExperts.apply (block branch) →
+  `_xpu_block_moe_forward`.  Key mechanics found:
+  - `_xpu_block_moe_forward` builds its own expert_map ONLY when
+    moe_config.ep_size > 1; with ep_size == 1 it passes expert_map=None
+    and treats topk_ids as DIRECT indices into w1 rows; group loop count
+    = moe_config.num_local_experts.  → per-layer moe_config field
+    overrides (num_local_experts=pool_size, ep_rank=0, ep_size=1) +
+    store-side pre-remapped slot ids give POOL SEMANTICS WITH ZERO
+    KERNEL/xpu_moe.py EDITS.
+  - Non-owned / not-resident ids map to a persistent ZERO-WEIGHT dummy
+    slot: fp8 zeros dequant to 0 → GEMM out 0 → gather adds
+    topk_weight × 0 = 0 — mathematically exact drop, same partial-sum +
+    TP-allreduce contract as EP expert_map=-1 dropping.
+  - Scales: block branch reads `self.w1_scale/self.w2_scale` off the
+    EXPERTS object (not args) — store must assign pool scale tensors to
+    the experts object at build (attr path via moe_kernel internals;
+    fused_moe_impl is lazily cached per-tensor-path only, block path
+    reads live each call).
+  - ESIMD self-disable: all three monolithic decode gates require
+    `not parallel_config.enable_expert_parallel` — `--enable-expert-
+    parallel` (even at TP1/ep_size=1) kills every weights-direct fast
+    path WITHOUT DISABLE_ESIMD_MOE=1 (wedge law).  Store runs need
+    exactly this: apply() becomes the sole weights consumer.
+  - uva.py (FN8_00D variant): the offloader closure re-wraps
+    module.forward every call; unwrap-by-flag is the design —
+    `_fn8_no_wrap` module marker makes `_maybe_offload_to_cpu` page the
+    params (budget accounting intact) but skip the closure.  Serve uses
+    the cpu_offload_params whitelist (segment matcher) so ONLY routed
+    expert params page; dense + shared expert stay resident.
+  - Dummy-run (_dummy_run/determine_available_memory, attn_metadata
+    None — the PLE/GDN fork idiom): store routes ALL ids to the dummy
+    zero slot — no misses, no copies, VRAM-safe (cannot one-shot
+    materialize 48.3 GB/rank), activation peak representative, pool
+    resident during measurement so KV sizing accounts for it.  Store
+    BUILD hook: gpu_worker BEFORE determine_available_memory (capturer
+    precedent inits AFTER — wrong side for the store).
+- **P2 telemetry baked into patch_02 design** (user directive): store
+  counters flushed via the patch_01 atomic-JSON pattern — hits, misses,
+  evictions, H2D bytes + ms, D2H sync ms, pool occupancy, per-step store
+  overhead, dummy-slot traffic share.  One V1X_TIER_DUMP env, same
+  never-take-down-the-engine try/except law as the routing tap.
