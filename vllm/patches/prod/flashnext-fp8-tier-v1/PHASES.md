@@ -208,3 +208,60 @@ subagents) · lane lsv-test untouched until bake; its content gates
 orphaned-engine restart law · MNBT 8192 / CHUNK 1024 standing ·
 KERNELS_MAX_JOBS=52 if kernels rebuild · commit with Co-Authored-By line ·
 bank every leg (config + results + stderr tail + xpu-smi dump).
+
+## 7. P0 execution log (2026-10-11, throwaway container fn8-t1)
+
+Assets: checkpoint `/models/flash-next-fp8` on .65 — 185.5 GB
+(173 GiB), 131 shards, 152,089 tensors; arch
+`Qwen4ExpForConditionalGeneration`, model_type `qwen4_exp` (vendored trio
+Qwen4ExpConfig/Text/Vision; stock transformers 5.8.0 has none of it).
+Throwaway `fn8-t1` from llm-scaler-exp:v1.2.35; image parity vs live
+lsv-test proven by md5 on the three patched-file pristine backups.
+
+**Round 1 — t1_config_test.py PASS** (config/registry/import/ckpt cross-facts):
+PLE per-tensor scale EXISTS — `…ple.ple_embedding.ngram_embedding.weight_scale`
+BF16 [1], shard 00005 (corrects the earlier "NO scale tensors" —
+fn8_inspect.py had a filtering gap) · ple_layer_ids [2] is ONE-indexed →
+model layer index 1; 49 layers = 36 GDN + 12 full-attn + 1 PLE ·
+hash buffers torch.equal vs checkpoint · vocab math exact
+(total 320,001,446 ≤ 128×2,500,012 = padded 320,001,536) ·
+`--runner generate` protocol law: registered class must expose
+`__init__(vllm_config=…)` + `embed_input_ids` + `forward(input_ids=,
+positions=)` + `compute_logits` — ForCondGen needed an explicit
+`embed_input_ids` delegator · fused_moe_make_expert_params_mapping imports
+from `vllm.model_executor.layers.fused_moe` (NOT models.moe.utils) ·
+GatedDeltaNet from `layers/mamba/gdn_linear_attn.py` (prefix-based
+attn_metadata_raw[self.prefix] plumbing confirmed) · SKIP_TABLE mode =
+0-row fp8 table (never allocate 51 GB on a dry-run).
+
+**Round 2 — t2_weightmap_test.py PASS** (real load path, meta model,
+stub tensors): 148,487 loader calls == 148,487 non-skipped ckpt names
+EXACT, 1,079/1,079 distinct params loaded, zero "Parameter not found"
+warnings, non-scale untouched params = 0, PLE staging shard-index parse
+0..127 + 1 scale + 3 buffers.  Checkpoint GDN projections ship SPLIT
+(`in_proj_qkv`/`in_proj_z`/`in_proj_b`/`in_proj_a`) — matches the
+stacked mapping.  **MIXED-QUANT LAW (the round's discovery):** the
+checkpoint quantizes ONLY the routed experts — 73,728 weight_scale_inv
+tensors = 48 MoE layers × 512 experts × 3 (gate/up/down); GDN
+projections, self-attn, router gates and shared experts ship BF16 with
+NO scale tensors.  → GPU-smoke watch item #1: Fp8LinearMethod on
+non-expert linears has no checkpoint scale (expect the fork's
+dynamic-requant missing-scale path; if it asserts instead, we need a
+per-linear quant override patch).
+
+GPU-less dry-run idioms (banked for future CPU rounds):
+`DeviceConfig(device="cpu")` (no inference) · `set_current_vllm_config(vc)`
+must wrap dist-init AND model construction (Fp8LinearMethod reads it) ·
+force `vllm.platforms.current_platform = XPUPlatform()` BEFORE any vllm
+import that binds it (kernels/linear/__init__.py binds at module import;
+unpatched ⇒ KeyError PlatformEnum.UNSPECIFIED) + `XPUPlatform.current_device
+= lambda: "cpu"` (GDN ctor allocates RMSNormGated on
+current_platform.current_device()) · stacked-mapping loops call
+`param.weight_loader(param, w, shard_id, …)` POSITIONALLY — instrument by
+param identity, not name · AutoWeightsLoader re-partitions weight
+streams (a name-current variable coupled to the input generator lies;
+tee at the child-module boundary instead).
+
+Remaining pre-GPU unknowns (P0 smoke verifies): PLE runtime metadata
+fields, F.conv1d depthwise-dilated fp16 on XPU, real weight load +
+outputs, the mixed-quant missing-scale path above.
