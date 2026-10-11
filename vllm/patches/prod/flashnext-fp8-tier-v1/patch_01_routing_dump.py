@@ -58,10 +58,11 @@ HISTOGRAM_BLOCK = '''
 
 _V1X_DUMP_PATH = os.environ.get("V1X_ROUTING_DUMP", "")
 _V1X_NUM_EXPERTS = int(os.environ.get("V1X_ROUTING_EXPERTS", "512"))
+_V1X_FLUSH_EVERY = int(os.environ.get("V1X_ROUTING_FLUSH", "500"))
 
 
 class _V1XRoutingHistogram:
-    FLUSH_EVERY = 500  # scatters between flushes
+    FLUSH_EVERY = _V1X_FLUSH_EVERY  # scatters between flushes
 
     def __init__(self, path: str) -> None:
         self.path = path

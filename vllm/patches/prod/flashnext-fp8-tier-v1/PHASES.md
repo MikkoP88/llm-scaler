@@ -389,3 +389,28 @@ q=32 = 0.843, gate logic PASS. P1 profiling RUN = next engine window
 (fn8-g1 after smoke): serve + `--enable-return-routed-experts` +
 `DISABLE_ESIMD_MOE=1` + `V1X_ROUTING_DUMP=/stage/bank/routing_hist.json`
 over a code+prose corpus → fn8_expert_profile.py → bank the curve.
+
+## 12. Round 6b — P1 turnkey window + FLUSH edit re-validated (2026-10-11)
+
+- **patch_01 FLUSH edit**: `V1X_ROUTING_FLUSH` env (default 500) →
+  `FLUSH_EVERY` — the tiny P0-speed corpus would never hit 500 scatters
+  before atexit; the window sets 25. New patched md5
+  **36d913c3 → ae55ade2** (was 58ac98e2 pre-edit). Re-validated in a
+  FRESH fn8-t2: roundtrip exact (restore → 36d913c3), 4 markers,
+  py_compile OK; histtest under `V1X_ROUTING_FLUSH=2` exercises the
+  mid-run flush path (fires at scatters%2==0) → same exact final file
+  (scatters 2 / tapped 128 / sum 61440, HIST_CHAIN_OK).
+- **fn8_serve_g1p.sh**: P0 reference shape + the three P1 knobs
+  (`--enable-return-routed-experts`, `DISABLE_ESIMD_MOE=1`,
+  `V1X_ROUTING_DUMP=/stage/bank/routing_hist.json`,
+  `V1X_ROUTING_FLUSH=25`); log /stage/serve_g1p.log. Requires patch_01 +
+  00a/00b/00c/00d applied first.
+- **fn8_profile_run_g1.py**: corpus runner — waits health :8319, 8 legs
+  (py_fib, py_sort, sh_deploy, sql_analytics, explain_moe, hist_essay,
+  agentic_trace, py_fib_v2 phrasing-shifted repeat for routing-stability
+  eyeball), fat prompts (~120–330 tok visible, cheap per token at P0
+  chunk economics) + max_tokens 32/48 temp 0; banks per-leg latencies +
+  text heads to /stage/bank/profile_run.json after every leg.
+- Stage bank /root/fn8_stage/ refreshed: patch_01_routing_dump.py,
+  fn8_expert_profile.py, fn8_t2_histtest.py, fn8_profile_run_g1.py,
+  fn8_serve_g1p.sh, fn8_t2_validate.sh.
