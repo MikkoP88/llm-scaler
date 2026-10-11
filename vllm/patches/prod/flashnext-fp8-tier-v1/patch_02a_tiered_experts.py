@@ -5,20 +5,25 @@ Port of the Strata resident-set ideology to this fork's modular MoE path,
 specialized for FlashNext-FP8 (XPUExpertsFp8Block, 128x128 block FP8):
 
 - Host mirror: the UVA offloader's pageable expert tensors (patch_02b
-  suppresses the per-step wholesale-copy closure for FusedMoE modules;
-  the whitelisted params still page at load, budget accounting intact).
+  suppresses the per-step wholesale-copy closure for modules whose subtree
+  carries whitelisted expert tensors; the params still page at load,
+  budget accounting intact).
 - Device slot pool: S slots/layer + 1 persistent ZERO-WEIGHT dummy slot.
   Seeded from the P1 routing profile (per-layer hot lists, rank-local).
-- Runtime: apply() is interposed at FusedMoEModularMethod.apply (the
-  single choke point — under --enable-expert-parallel every monolithic
-  ESIMD fast path self-disables, so the modular path carries prefill AND
-  decode).  Per dispatch: sync D2H of topk_ids (tiny), host-side
-  ensure-resident (blocking H2D of misses into LRU slots), device remap
-  global->slot, then the UNMODIFIED kernel stack runs on pool tensors:
-  w1.shape[0] drives local_num_experts downstream, and with the experts
-  object's moe_config copy set to (num_local=S+1, ep_rank=0, ep_size=1)
-  _xpu_block_moe_forward passes expert_map=None and treats slot ids as
-  direct weight-row indices.  Zero kernel / xpu_moe.py edits.
+- Runtime: apply() is interposed at BOTH apply choke points —
+  FusedMoEModularMethod.apply (the layer.py maybe_init_modular_kernel swap
+  path) AND Fp8MoEMethod.apply in quantization/fp8.py.  OWNS-MK LAW
+  (boot-3 DEVICE_LOST, 2026-10-11): flash-next-fp8 takes the SECOND path —
+  Fp8MoEMethod builds its own moe_kernel in process_weights_after_loading
+  (make_fp8_moe_kernel), layer.py sees supports_internal_mk=True and SKIPS
+  the modular-method swap, so the runner calls Fp8MoEMethod.apply directly
+  and the Round-9-only interposition never ran: zero store lines,
+  kernel-direct MoE against CPU-paged weights, UR error 20 (DEVICE_LOST)
+  at the first sync after warmup.  fp8.py bridges to the shared
+  _fn8_store_for via a lazily-bound resolver (no import-order coupling).
+  Per dispatch: sync D2H of topk_ids (tiny), host-side ensure-resident
+  (blocking H2D of misses into LRU slots), device remap global->slot,
+  then the UNMODIFIED kernel stack runs on pool tensors.
 - Non-owned and not-resident ids map to the dummy zero slot: fp8 zeros
   dequant to 0, so the gathered contribution is topk_weight * 0 = 0 —
   mathematically exact drop, identical partial-sum + TP-allreduce
@@ -28,6 +33,9 @@ specialized for FlashNext-FP8 (XPUExpertsFp8Block, 128x128 block FP8):
   no copies, VRAM-safe, and the pool is resident during measurement so
   KV sizing accounts for it.  The store builds lazily at first apply,
   which is exactly that call — pre-warm rides the dummy run per layer.
+- Guard law: the store disables only LOUDLY.  The is_block_fp8 gate and
+  build failures log (warning / exception); a silent disable is what made
+  boot-3 fail card-killing instead of legible.
 - Telemetry (V1X_TIER_DUMP, patch_01 atomic-JSON law): per-layer
   dispatches, dummy share, D2H/ensure/H2D ms, copies+bytes, hits/misses/
   evictions, resident count; flushed every V1X_TIER_FLUSH + atexit;
@@ -38,13 +46,16 @@ Env: FN8_TIERED=1 master, FN8_TIER_SEED=<routing_hist.json>,
 FN8_TIER_SLOTS=<per-layer slots, default 96>, V1X_TIER_DUMP=<file>,
 V1X_TIER_FLUSH=<n>.
 
-Idempotent (FN8_02A marker), backs up .q4dbak, --restore undoes.
-Companion: patch_02b (uva.py no-wrap flag + offload whitelist).
+Idempotent (FN8_02A marker per target, independent), backs up .q4dbak,
+--restore undoes both targets.  Companion: patch_02b (uva.py no-wrap +
+offload whitelist).
 """
 import sys
 
-TARGET = ("/opt/venv/lib/python3.12/site-packages/vllm/model_executor/"
-          "layers/fused_moe/fused_moe_modular_method.py")
+TARGET_MOD = ("/opt/venv/lib/python3.12/site-packages/vllm/model_executor/"
+              "layers/fused_moe/fused_moe_modular_method.py")
+TARGET_FP8 = ("/opt/venv/lib/python3.12/site-packages/vllm/model_executor/"
+              "layers/quantization/fp8.py")
 MARKER = "FN8_02A"
 
 ANCHOR_LOGGER = "logger = init_logger(__name__)\n"
@@ -130,9 +141,19 @@ class _Fn8TieredStore:
         # unpatched path would have consumed via the per-step closure).
         self.host_w13 = layer.w13_weight.data
         self.host_w2 = layer.w2_weight.data
-        qc = self.experts.quant_config
-        self.host_s13 = qc.w1_scale
-        self.host_s2 = qc.w2_scale
+        # Block-scale host mirror + repoint.  Primary path: the experts
+        # object's quant_config (the modular FusedMoEQuantConfig the block
+        # branch reads live).  Fallback: the layer scale_inv params (both
+        # are whitelisted/pageable in patch_02b; whichever the kernel
+        # stack consumes must end up pointing at the pool).
+        qc = getattr(self.experts, "quant_config", None)
+        self.host_s13 = getattr(qc, "w1_scale", None)
+        self.host_s2 = getattr(qc, "w2_scale", None)
+        self.scale_on_layer = False
+        if self.host_s13 is None or self.host_s2 is None:
+            self.host_s13 = layer.w13_weight_scale_inv.data
+            self.host_s2 = layer.w2_weight_scale_inv.data
+            self.scale_on_layer = True
 
         local_num, hidden_dim = self.host_w13.shape[1], self.host_w13.shape[2]
         n2, k2 = self.host_w2.shape[1], self.host_w2.shape[2]
@@ -176,13 +197,35 @@ class _Fn8TieredStore:
 
         # Kernel-stack view: pool geometry + no expert_map.  A COPY of
         # the experts' moe_config (never mutate the shared layer/runner
-        # config); scales re-pointed at the pool on the quant_config
-        # (block branch reads them live off the experts object).
+        # config); scales re-pointed at the pool on whichever object the
+        # block branch reads them from.  REAL FusedMoEConfig law (boot-5):
+        # ep_rank/ep_size are PROPERTIES over moe_parallel_config (not
+        # fields — dataclasses.replace raised "unexpected keyword 'ep_rank'"
+        # on all 48 layers); the pool is one flat local expert set, so the
+        # consistent trio is num_experts == num_local_experts ==
+        # num_logical_experts = S+1.  EP neutralization only when needed
+        # (TP1 already runs ep 1/0; the TP2 window exercises the replace).
+        _fn8_pc = self.experts.moe_config.moe_parallel_config
+        if getattr(_fn8_pc, "ep_size", 1) != 1:
+            try:
+                _fn8_pc = dataclasses.replace(_fn8_pc, ep_size=1, ep_rank=0)
+            except TypeError:
+                pass  # non-dataclass parallel config; TP2 gate must catch
         self.experts.moe_config = dataclasses.replace(
             self.experts.moe_config,
-            num_local_experts=self.pool_slots + 1, ep_rank=0, ep_size=1)
-        qc.w1_scale = self.pool_s13
-        qc.w2_scale = self.pool_s2
+            num_experts=self.pool_slots + 1,
+            num_local_experts=self.pool_slots + 1,
+            num_logical_experts=self.pool_slots + 1,
+            moe_parallel_config=_fn8_pc)
+        if self.scale_on_layer:
+            layer.w13_weight_scale_inv = self.pool_s13
+            layer.w2_weight_scale_inv = self.pool_s2
+        else:
+            # REAL FusedMoEQuantConfig law (boot-6): w1_scale/w2_scale are
+            # read-only properties over the _w1/_w2 desc dataclasses —
+            # repoint the desc FIELDS (plain, per-layer, no setter).
+            qc._w1.scale = self.pool_s13
+            qc._w2.scale = self.pool_s2
 
         # Telemetry record.
         self.layer_idx = -1
@@ -200,6 +243,7 @@ class _Fn8TieredStore:
             "d2h_ms": 0.0, "ensure_ms": 0.0, "h2d_ms": 0.0,
             "resident": 0, "pool_slots": self.pool_slots,
             "local_num": int(local_num), "hidden": int(hidden_dim),
+            "scale_on_layer": self.scale_on_layer,
         }
         if _FN8_TELE is not None:
             _FN8_TELE.register(self.layer_idx, self.rec)
@@ -347,10 +391,12 @@ class _Fn8TieredStore:
 
 _FN8_BUILT: set[int] = set()
 _FN8_DISABLED: set[int] = set()
+_FN8_WARNED_GATE = False
 
 
 def _fn8_store_for(layer, method):
     """Lazy per-layer build at first apply (== the boot dummy run)."""
+    global _FN8_WARNED_GATE
     if not _FN8_TIERED:
         return None
     lid = id(layer)
@@ -360,6 +406,18 @@ def _fn8_store_for(layer, method):
         experts = getattr(method.moe_kernel, "fused_experts", None)
         if not getattr(experts, "is_block_fp8", False):
             _FN8_DISABLED.add(lid)
+            if not _FN8_WARNED_GATE:
+                # Guard law: disables are LOUD.  Silent disable = the
+                # boot-3 DEVICE_LOST shape (kernel-direct MoE against
+                # pageable host weights, UR error 20 at first sync).
+                _FN8_WARNED_GATE = True
+                logger.warning(
+                    "FN8_02A store DISABLED (first at layer %s): "
+                    "moe_kernel=%r fused_experts=%r is_block_fp8=%s — "
+                    "kernel-direct path keeps CPU-paged weights",
+                    getattr(layer, "layer_name", "?"),
+                    getattr(method, "moe_kernel", None), experts,
+                    getattr(experts, "is_block_fp8", None))
             return None
         try:
             layer._fn8_store = _Fn8TieredStore(layer, method)
@@ -401,6 +459,72 @@ NEW_APPLY_HEAD = '''    def apply(
         assert self.moe_kernel is not None
 '''
 
+# -- fp8.py: the path flash-next-fp8 actually takes (owns-MK law) ----------
+
+ANCHOR_FP8_CLASS = "class Fp8MoEMethod(FusedMoEMethodBase):\n"
+
+NEW_FP8_CLASS = '''_FN8_RESOLVER = None
+
+
+def _fn8_store_for(layer, method):
+    """FN8_02A: lazy bridge to the shared TieredExpertsStore builder.
+
+    quantization/fp8.py must not import fused_moe_modular_method at module
+    level (import-order coupling); the resolver binds on first call and
+    caches.  Both apply() choke points share one store registry keyed by
+    id(layer), so whichever path a layer takes, its store builds once.
+    """
+    global _FN8_RESOLVER
+    if _FN8_RESOLVER is None:
+        from vllm.model_executor.layers.fused_moe.fused_moe_modular_method import (  # noqa: E501
+            _fn8_store_for as _resolver,
+        )
+        _FN8_RESOLVER = _resolver
+    return _FN8_RESOLVER(layer, method)
+
+
+class Fp8MoEMethod(FusedMoEMethodBase):
+'''
+
+ANCHOR_FP8_APPLY = '''    def apply(
+        self,
+        layer: FusedMoE,
+        x: torch.Tensor,
+        topk_weights: torch.Tensor,
+        topk_ids: torch.Tensor,
+        shared_experts_input: torch.Tensor | None,
+    ) -> torch.Tensor:
+        assert not self.is_monolithic
+        assert self.moe_kernel is not None
+        return self.moe_kernel.apply(
+'''
+
+NEW_FP8_APPLY = '''    def apply(
+        self,
+        layer: FusedMoE,
+        x: torch.Tensor,
+        topk_weights: torch.Tensor,
+        topk_ids: torch.Tensor,
+        shared_experts_input: torch.Tensor | None,
+    ) -> torch.Tensor:
+        # FN8_02A: tiered-experts dispatch on the fp8-owns-MK path — the
+        # one flash-next-fp8 actually takes.  Fp8MoEMethod builds its own
+        # moe_kernel in process_weights_after_loading, layer.py's
+        # maybe_init_modular_kernel sees supports_internal_mk=True and
+        # SKIPS the FusedMoEModularMethod swap, so without this head the
+        # store never builds and moe_kernel.apply reads CPU-paged weights
+        # kernel-direct (boot-3 DEVICE_LOST, 2026-10-11).  Inert unless
+        # FN8_TIERED=1.
+        _fn8_st = _fn8_store_for(layer, self)
+        if _fn8_st is not None:
+            return _fn8_st.dispatch(
+                self, layer, x, topk_weights, topk_ids,
+                shared_experts_input)
+        assert not self.is_monolithic
+        assert self.moe_kernel is not None
+        return self.moe_kernel.apply(
+'''
+
 
 def md5(path):
     import hashlib
@@ -408,40 +532,51 @@ def md5(path):
         return hashlib.md5(f.read()).hexdigest()
 
 
-def main():
-    if len(sys.argv) > 1 and sys.argv[1] == "--restore":
-        bak = TARGET + ".q4dbak"
-        import shutil
-        shutil.copyfile(bak, TARGET)
-        print("FN8_02A RESTORED", TARGET, md5(TARGET))
-        return
-
-    with open(TARGET) as f:
+def patch_file(label, target, edits, marker_min):
+    with open(target) as f:
         src = f.read()
 
     if MARKER in src:
-        print("FN8_02A already applied, nothing to do", md5(TARGET))
+        print(f"{label} already applied, nothing to do", md5(target))
         return
 
-    for name, anchor, count_expected in (
-        ("logger", ANCHOR_LOGGER, 1),
-        ("apply-head", ANCHOR_APPLY_HEAD, 1),
-    ):
+    for name, anchor, _repl in edits:
         n = src.count(anchor)
-        assert n == count_expected, f"anchor {name} count {n} != {count_expected}"
+        assert n == 1, f"{label} anchor {name} count {n} != 1"
 
     import shutil
-    shutil.copyfile(TARGET, TARGET + ".q4dbak")
-    before = md5(TARGET)
+    shutil.copyfile(target, target + ".q4dbak")
+    before = md5(target)
 
-    src = src.replace(ANCHOR_LOGGER, STORE_BLOCK)
-    src = src.replace(ANCHOR_APPLY_HEAD, NEW_APPLY_HEAD)
-    assert src.count(MARKER) >= 5, "marker missing after edit?!"
+    for _name, anchor, repl in edits:
+        src = src.replace(anchor, repl)
+    assert src.count(MARKER) >= marker_min, f"{label} marker missing after edit?!"
 
-    with open(TARGET, "w") as f:
+    with open(target, "w") as f:
         f.write(src)
-    print(f"FN8_02A backup written: {TARGET}.q4dbak (md5 {before})")
-    print(f"FN8_02A PATCHED: {TARGET} md5 {before} -> {md5(TARGET)}")
+    print(f"{label} backup written: {target}.q4dbak (md5 {before})")
+    print(f"{label} PATCHED: {target} md5 {before} -> {md5(target)}")
+
+
+def main():
+    if len(sys.argv) > 1 and sys.argv[1] == "--restore":
+        import shutil
+        for label, target in (("FN8_02A-MOD", TARGET_MOD),
+                              ("FN8_02A-FP8", TARGET_FP8)):
+            shutil.copyfile(target + ".q4dbak", target)
+            print("FN8_02A RESTORED", target, md5(target))
+        return
+
+    patch_file(
+        "FN8_02A-MOD", TARGET_MOD,
+        (("logger", ANCHOR_LOGGER, STORE_BLOCK),
+         ("apply-head", ANCHOR_APPLY_HEAD, NEW_APPLY_HEAD)),
+        marker_min=5)
+    patch_file(
+        "FN8_02A-FP8", TARGET_FP8,
+        (("fp8-class", ANCHOR_FP8_CLASS, NEW_FP8_CLASS),
+         ("fp8-apply", ANCHOR_FP8_APPLY, NEW_FP8_APPLY)),
+        marker_min=2)
 
 
 if __name__ == "__main__":

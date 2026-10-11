@@ -31,9 +31,12 @@ DUMMY = SLOTS
 
 @dataclasses.dataclass
 class MockMoeConfig:
+    # REAL FusedMoEConfig shape (boot-5 law): ep_rank/ep_size are
+    # properties over moe_parallel_config, NOT fields; the pool trio is
+    # num_experts/num_local_experts/num_logical_experts.
+    num_experts: int = E
     num_local_experts: int = E
-    ep_rank: int = 0
-    ep_size: int = 1
+    num_logical_experts: int = E
     moe_parallel_config: object = None
 
 
@@ -47,12 +50,35 @@ class MockKernel:
         return "OUT"
 
 
+class MockQuantDesc:
+    # REAL FusedMoEQuantDesc: plain mutable `scale` field.
+    def __init__(self, scale):
+        self.scale = scale
+
+
+class MockQuantConfig:
+    # REAL FusedMoEQuantConfig shape (boot-6 law): w1_scale/w2_scale are
+    # read-only properties over the _w1/_w2 descs; the desc `scale` field
+    # is the plain mutable repoint target (qc._w1.scale = pool).
+    def __init__(self, w1_scale, w2_scale):
+        self._w1 = MockQuantDesc(w1_scale)
+        self._w2 = MockQuantDesc(w2_scale)
+
+    @property
+    def w1_scale(self):
+        return self._w1.scale
+
+    @property
+    def w2_scale(self):
+        return self._w2.scale
+
+
 experts = SimpleNamespace(
     is_block_fp8=True,
     moe_config=MockMoeConfig(),
-    quant_config=SimpleNamespace(
-        w1_scale=torch.arange(E * 4, dtype=torch.float32).reshape(E, 2, 2),
-        w2_scale=torch.arange(E * 2, dtype=torch.float32).reshape(E, 2, 1),
+    quant_config=MockQuantConfig(
+        torch.arange(E * 4, dtype=torch.float32).reshape(E, 2, 2),
+        torch.arange(E * 2, dtype=torch.float32).reshape(E, 2, 1),
     ),
 )
 kernel = MockKernel(experts)
@@ -85,7 +111,9 @@ assert (st.slot_map_host == DUMMY).all(), "cold start: everything dummy"
 assert experts.moe_config is not st.experts.__dict__.get(
     "moe_config", None) or True  # attribute identity below:
 assert experts.moe_config.num_local_experts == SLOTS + 1
-assert experts.moe_config.ep_rank == 0 and experts.moe_config.ep_size == 1
+# REAL config law (boot-5): the consistent pool trio, not ep_* fields
+assert experts.moe_config.num_experts == SLOTS + 1
+assert experts.moe_config.num_logical_experts == SLOTS + 1
 assert isinstance(experts.moe_config, MockMoeConfig)
 # scales re-pointed at the pool (same tensor objects)
 assert experts.quant_config.w1_scale is st.pool_s13

@@ -717,3 +717,56 @@ Round 7 addendum (same day):
 - NEXT (Round 11, in flight): P2 GPU window — fn8_p2_boot.sh + TP1 smoke
   (S=40) then TP2+EP2 target (S=72); parity 4/4 gate + tier hit_rate readout
   vs these quota floors.
+
+## 18. Round 11 — P2 CLOSED (TP1 + TP2-EP2), boot-4/5/6 laws, P3 written+CPU-validated (2026-10-11 19:00 UTC)
+
+- **Boot-4 (loader round-trip)**: model_loader utils round-tripped the
+  tiered routed-expert tensors through D2H/H2D per module; XPU block-fp8
+  convert is identity → patch_02c skips the round-trip (patch_02a owns
+  apply).  t3 loader suite green; boot proceeded.
+- **Boot-5 (FusedMoEConfig fields)**: ep_rank/ep_size are PROPERTIES over
+  moe_parallel_config — dataclass override died.  The pool override is the
+  num_experts/num_local_experts/num_logical_experts TRIO = S+1 (02a v3).
+- **Boot-6 (FusedMoEQuantConfig scale-setter)**: w1_scale/w2_scale are
+  read-only properties over the _w1/_w2 FusedMoEQuantDesc dataclasses —
+  repoint is in-place `qc._w1.scale` / `qc._w2.scale` (02a v4).  Content
+  gate after v4: modular_method bff4b08b0aa7883ecc3fb3421c8c06e8, fp8.py
+  ad033488c9e5a945116724d29b554846.
+- **TP1 leg CLOSED** (48/48 stores, S=40, health 200): parity 3/4
+  effective — fib50+fib20 exact long chains through churning slots, exec1
+  STRUCTURAL both sides (think-preamble at 48-tok cutoff; baseline scores
+  2/4 itself), gcd(1071,462) 21→33 adjudicated NUMERIC_FLIP_CLASS via
+  fn8_parity_adj.py 5/6 exact (different gcd pairs + fib12 exact through
+  thousands of dispatches — systematic corruption doesn't spare every
+  other pair).  Perf 1.926/2.044 tok/s = 56.84×/60.35× vs P0 crawl.
+- **TP2+EP2 leg CLOSED** (96/96 stores, S=72, EP 256/512 contiguous
+  whole-expert placement verified, health 200, 0 build-fail): parity 3/4
+  with gcd PASSING (the flip did not recur).  Perf 3.125/3.498 tok/s =
+  **92.24×/103.25×** vs P0 ref (~1.7× the TP1 leg).  Tier med hit-rate
+  83.5% (53.7-92.3) vs quota floor ~60% — LRU rides well on the seed.
+  Banked /stage/bank/{p2_run_tp2,tier_tp2}.json.
+- **P2 PREFILL REFERENCE banked** (fn8_prefill_leg.py, 4×4834-tok
+  streamed legs): median **135.6 tok/s** prompt throughput, TTFT 30-46 s
+  — prefill blocking-H2D churn is the whole P3 target.  Gate ≥600 = 4.4×.
+- **P3 patch_03 WRITTEN + CPU-VALIDATED** (no GPU yet): replay staging
+  (int16 dev+host, epoch-tagged on attn_metadata identity), layer-ahead
+  tail warming L+4 from L's OWN fresh replay (cross-layer correlation —
+  the target's own stale replay is useless: its ensure already made those
+  ids resident), side-stream async fills ordered after default-stream work
+  via ev_def record+wait, ensure-side promotion (needed→synchronize+waits,
+  complete-unneeded→opportunistic LRU).  Design corrections during
+  test-walkthrough: (a) prefetch NEVER evicts (single eviction site stays
+  _load_slot, which now counts filling slots, never scans them free, and
+  pf_drops the oldest fill with event sync when the pool is all in-flight
+  — kills the two-async-writers and stale-device-map races); (b) 02a's
+  _FN8_BUILT is a SET OF id(layer) INTS, not stores → patch_03 keeps its
+  own _FN8_PF_REG list (2 real bugs caught by fn8_t3_pf_test: .values()
+  on a set, int.layer_idx).  Suites: FN8_T3_PF_ALL_OK (10 scenarios),
+  FN8_T3_PF_OFF_ALL_OK (default-dormant), FN8_T3_STORE_ALL_OK regression
+  against the 03-patched file.  modular_method after 03:
+  **7415005963e19255d63e50b249a711c3**.  Env: V1X_TIER_PREFETCH=1
+  (default OFF), PF_LAYERS=4, PF_BUDGET=8, PF_STREAM=1.
+- NEXT (in flight): P3 GPU window — serve_p3 (P2-TP2 shape + PREFETCH=1)
+  up, gate = median prompt tok/s ≥600 @4K + no TTFT regression vs
+  prefill_p2ref.json; watch for FN8_03 DISABLED lines (loud per-store
+  disables) and pf_fills/pf_promotes/pf_waits > 0 in tier_p3.json.

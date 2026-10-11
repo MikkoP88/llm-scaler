@@ -17,11 +17,19 @@ weights pageable-host):
 
 2. No-wrap: the per-step closure (state_dict `.to(device)` + functional_call
    per call = the measured 29.8 s/token wholesale copy) is NOT installed on
-   FusedMoE modules (detected by w13_weight+w2_weight attributes) when
-   FN8_TIERED=1.  Params still page at load (budget accounting intact);
-   placement from the first apply on is owned by the tiered store, which
-   copies expert rows into its slot pool on demand.  The FN8_00D
-   empty-cache fix stays in place for every module that still wraps.
+   any module whose (recursive) named_parameters include a whitelisted
+   routed-expert tensor when FN8_TIERED=1.  GRANULARITY LAW (TP1 boot OOM
+   2026-10-11): models/utils.py get_layers hands wrap_modules whole DECODER
+   LAYERS (layer_fn generator) — the FusedMoE leaf is never visited, so the
+   original direct-attribute hasattr(w13_weight) detection missed, the
+   layer got the closure, and its recursive state_dict materialized the
+   EP-path's CPU-registered 20Mx1280 fp16 ngram table (47.69 GiB) at the
+   dummy run = OOM.  Detection now matches at the module granularity that
+   actually wraps: whitelist containment over named_parameters.  Params
+   still page at load (budget accounting intact); placement from the first
+   apply on is owned by the tiered store, which copies expert rows into
+   its slot pool on demand.  The FN8_00D empty-cache fix stays in place
+   for every module that still wraps.
 
 Guard law: patch_02a disables its store only loudly (build failure logs
 + raises through the kernel's device assert) — a host-weight GEMM crash
@@ -68,15 +76,26 @@ ANCHOR_WRAP = '''        if offloaded_parameters and not self.uva_offloading:
             original_forward = module.forward
 '''
 
-NEW_WRAP = '''        # FN8_02B: FusedMoE modules (w13+w2 params) never get the
-        # per-step wholesale-copy closure under tiering — the store does
-        # row-granular placement instead.  Params still page above.
-        _fn8_no_wrap = (
-            _FN8_TIERED
-            and hasattr(module, "w13_weight")
+NEW_WRAP = '''        # FN8_02B: modules whose subtree contains a whitelisted routed-expert
+        # tensor never get the per-step wholesale-copy closure under tiering
+        # — the store does row-granular placement instead.  Granularity law:
+        # wrap_modules receives whole decoder layers (get_layers layer_fn
+        # generator), NOT FusedMoE leaves — detection must be containment
+        # over recursive named_parameters, not direct attributes (the
+        # hasattr form missed the layer and its state_dict materialized the
+        # 47.69 GiB CPU-side ngram table at the dummy run = TP1 boot OOM).
+        _fn8_owns_moe = (
+            hasattr(module, "w13_weight")
             and hasattr(module, "w2_weight")
         )
-        if (_fn8_no_wrap and offloaded_parameters):
+        _fn8_no_wrap = (
+            _FN8_TIERED
+            and any(
+                any(f".{seg}." in f".{n}." for seg in _FN8_TIER_OFFLOAD_PARAMS)
+                for n, _ in module.named_parameters()
+            )
+        )
+        if (_fn8_owns_moe and offloaded_parameters):
             module._fn8_tier_no_wrap = True
         if (offloaded_parameters and not self.uva_offloading
                 and not _fn8_no_wrap):
