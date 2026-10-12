@@ -229,6 +229,15 @@ class Qwen4ExpMTP(nn.Module, QwenNextMixtureOfExperts):
         mixed = self.model.hyper_connection_mixer(hidden_states)
         return self.logits_processor(self.lm_head, mixed)
 
+    def get_top_tokens(self, hidden_states: torch.Tensor) -> torch.Tensor:
+        """Greedy draft tokens without full-vocab logits (TP MTP law:
+        fork's use_local_argmax_reduction / VLLM_XPU_MTP_LOCAL_ARGMAX
+        path).  forward() returns the raw pre-mixer hyper stream (dsv4
+        law) — collapse it here exactly like compute_logits before the
+        local argmax."""
+        mixed = self.model.hyper_connection_mixer(hidden_states)
+        return self.logits_processor.get_top_tokens(self.lm_head, mixed)
+
     def load_weights(
         self, weights: Iterable[tuple[str, torch.Tensor]]
     ) -> set[str]:

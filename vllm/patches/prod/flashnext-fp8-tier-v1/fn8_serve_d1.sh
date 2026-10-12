@@ -32,10 +32,10 @@ exec vllm serve --model /models/flash-next-fp8 \
   --enable-expert-parallel \
   --no-async-scheduling \
   --tensor-parallel-size 2 \
-  --gpu-memory-utilization 0.85 \
+  --gpu-memory-utilization 0.8 \
   --cpu-offload-gb 56 \
   --max-model-len 8192 \
-  --max-num-batched-tokens 2048 \
+  --max-num-batched-tokens 4096 \
   --max-num-seqs 4 \
   --block-size 64 \
   --dtype float16 \
