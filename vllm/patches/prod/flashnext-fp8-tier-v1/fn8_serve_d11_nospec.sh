@@ -1,0 +1,71 @@
+#!/bin/bash
+# fn8_serve_d11_nospec.sh — NON-SPEC CONTROL for the d11 loop report.
+#
+# User report: via Open WebUI responses end mid-response; long
+# generations show degenerate repetition tails ("pangat pangat ...",
+# "Need ensure no extra text?" cycling) on the SPEC serve.  This leg
+# isolates MTP speculation: byte-identical to fn8_serve_d11.sh EXCEPT
+# --speculative-config is removed (user directive 2026-10-12: "if
+# issue continue validate issue do not exist on non spec").
+# Writes the same /stage/serve_d11.log so watch_live_d11.sh stays
+# live; the boot header in the log identifies the leg.
+#
+# Note: 06q guard is in the image and inert here (no spec steps);
+# VLLM_XPU_MTP_EAGER_HEAD / FN8_PLE_PRESTAGE / SPEC_EXTRA_SPLITS env
+# are kept for exactness — without a spec config they never fire.
+
+export PYTHONHASHSEED=0
+export VLLM_WEIGHT_OFFLOADING_DISABLE_UVA=1
+
+# lane-residue scheduler machinery: OFF on this model (see d11 header)
+export VLLM_V60_ZOMBIE_STRIKES=0
+export VLLM_V63_CONTENDED_BUDGET=0
+export VLLM_V64_DECODE_INTERLEAVE=0
+
+export VLLM_XPU_ALLOW_ASYNC=1
+export VLLM_XPU_MTP_EAGER_HEAD=1
+
+export FN8_TIERED=1
+export FN8_TIER_SLOTS=72
+export FN8_TIER_SEED=/stage/bank/routing_hist.json
+export FN8_TIER_GRAPHS=1
+export FN8_TIER_NO_SYNC=1
+export V1X_TIER_DUMP=/stage/bank/tier_d9.json
+export V1X_TIER_FLUSH=200
+export V1X_TIER_PREFETCH=1
+export V1X_TIER_PF_LAYERS=4
+export V1X_TIER_PF_BUDGET=8
+export V1X_TIER_PF_STREAM=1
+
+export FN8_PLE_PRESTAGE=1
+export FN8_PLE_PRESTAGE_MAX_TOKENS=4096
+export FN8_UVA_SAFE_D2H=1
+export FN8_UVA_D2H_CHUNK_MB=128
+export FN8_UVA_D2H_TIMEOUT_S=60
+
+export VLLM_XPU_SPEC_EXTRA_SPLITS="vllm::gdn_attention_core,vllm::gdn_attention_core_xpu,vllm::gdn_attention,vllm::ple_ngram_gather"
+
+echo "=== FN8 d11 NOSPEC CONTROL (no --speculative-config) ==="
+
+exec vllm serve --model /models/flash-next-fp8 \
+  --served-model-name flash-next-fp8 \
+  --enable-expert-parallel \
+  --async-scheduling \
+  --tensor-parallel-size 2 \
+  --gpu-memory-utilization 0.8 \
+  --cpu-offload-gb 56 \
+  --max-model-len 8192 \
+  --max-num-batched-tokens 4096 \
+  --max-num-seqs 4 \
+  --block-size 64 \
+  --dtype float16 \
+  --kv-cache-dtype fp8_e4m3 \
+  --mamba-ssm-cache-dtype float16 \
+  --enable-prefix-caching \
+  --no-disable-hybrid-kv-cache-manager \
+  --compilation-config '{"cudagraph_mode":"FULL_DECODE_ONLY"}' \
+  --chat-template /stage/chat_template_flashnext_cc.jinja \
+  --enable-auto-tool-choice \
+  --tool-call-parser qwen3_coder \
+  --trust-remote-code \
+  --port 8321 > /stage/serve_d11.log 2>&1
