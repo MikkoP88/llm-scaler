@@ -27,7 +27,12 @@
 # (6520f916, v135 P10 queue-kick). Previous posture notes (v1.2.31 era:
 # swift/ckpt/legacy branches, quantization-forbidden) retired with this
 # rebase — see git history in the llm-scaler repo banks.
-EXPECT_IMAGE="${V1227_EXPECT_IMAGE:-llm-scaler-exp:v1.2.35}"
+#
+# REBASED 2026-10-12 (flashnext-fp8-tier-v1 P7 SHIP): image v1.3.0 adds a
+# THIRD content gate — the fn8 tiered-MoE module md5 (55e96912, env-gated
+# FN8_TIERED=1 default OFF = inert on this lane). Verdict renamed
+# certified-fn-fp8-tier-v1; every lmc-era gate below unchanged.
+EXPECT_IMAGE="${V1227_EXPECT_IMAGE:-llm-scaler-exp:v1.3.0}"
 # v141 adapter (double-unpin dedupe + per-step logging debug-demoted),
 # deployed to BOTH the vllm connector path and the lmcache integration path
 EXPECT_ADAPTER_MD5="${V1227_EXPECT_ADAPTER_MD5:-dcb23fbe0e8990a0b35d6367a8542f3f}"
@@ -36,6 +41,10 @@ EXPECT_ADAPTER_PATH="/opt/venv/lib/python3.12/site-packages/vllm/distributed/kv_
 # chunked-prefill event-visibility stalls fixed 2026-10-10, baked v1.2.35)
 EXPECT_GMR_MD5="${V1227_EXPECT_GMR_MD5:-6520f91686ac8db3d296595bb43c13e2}"
 EXPECT_GMR_PATH="/opt/venv/lib/python3.12/site-packages/vllm/v1/worker/gpu_model_runner.py"
+# v1.3.0 (2026-10-12): fn8 tiered-MoE module (flashnext-fp8-tier-v1 P7 bake;
+# env-gated FN8_TIERED=1 default OFF = inert on this lane)
+EXPECT_FN8_MD5="${V1227_EXPECT_FN8_MD5:-55e9691228d1293aa22382d7ef515a0f}"
+EXPECT_FN8_PATH="/opt/venv/lib/python3.12/site-packages/vllm/model_executor/layers/fused_moe/fused_moe_modular_method.py"
 # fp16 SSM pool is certified (2.7-3.2x decode vs fp8 per the dtype law);
 # flip via env only for an explicit fp8 leg window
 EXPECT_SSM="${V1227_EXPECT_SSM:-float16}"
@@ -75,6 +84,15 @@ if [ "$GMR_MD5" = "$EXPECT_GMR_MD5" ]; then
   GMR_OK=1
 else
   echo "DRIFT: gpu_model_runner md5 '$GMR_MD5' != $EXPECT_GMR_MD5 (v135 P10 certified content)"
+fi
+
+# content gate 3 (v1.3.0): fn8 tier module baked, default-inert
+FN8_MD5=$(docker exec lsv-test md5sum $EXPECT_FN8_PATH 2>/dev/null | awk '{print $1}')
+FN8_OK=0
+if [ "$FN8_MD5" = "$EXPECT_FN8_MD5" ]; then
+  FN8_OK=1
+else
+  echo "DRIFT: fn8 tier module md5 '$FN8_MD5' != $EXPECT_FN8_MD5 (v1.3.0 bake)"
 fi
 
 CM=$(docker exec lsv-test sh -c "ps -ef | grep 'vllm serve' | grep -v grep" 2>/dev/null)
@@ -131,12 +149,13 @@ docker exec lsv-test sh -c 'test -s /root/serve_full.log' 2>/dev/null || echo "D
 docker exec lsv-test sh -c 'find /root/serve_full.log -mmin -10 | grep -q serve_full' 2>/dev/null || echo "DRIFT: /root/serve_full.log stale >10 min under traffic"
 
 # Consolidated verdict: DRIFT lines above win; otherwise posture certified.
-# Gate = content (adapter+GMR md5) + serve-cmdline floor + spec/tmpl/async +
-# live telemetry. Image tag is NOT in the conjunction (commit-forward era).
+# Gate = content (adapter+GMR+FN8 md5) + serve-cmdline floor + spec/tmpl/async
+# + live telemetry. Image tag is NOT in the conjunction (commit-forward era).
 if docker exec lsv-test sh -c 'test -s /root/serve_full.log' 2>/dev/null \
    && [ -n "$CM" ] \
    && [ "$ADAPTER_OK" = "1" ] \
    && [ "$GMR_OK" = "1" ] \
+   && [ "$FN8_OK" = "1" ] \
    && echo "$CM" | grep -q -- "--model /models/target" \
    && echo "$CM" | grep -q -- "--served-model-name qwen3.8-27b-fp8" \
    && echo "$CM" | grep -q -- "--quantization fp8" \
@@ -147,6 +166,6 @@ if docker exec lsv-test sh -c 'test -s /root/serve_full.log' 2>/dev/null \
    && [ "${SPEC_OK:-0}" = "1" ] \
    && [ "${ASYNC_OK:-1}" = "1" ] \
    && [ "${TMPL_OK:-1}" = "1" ]; then
-  echo "V1227_DRIFT_NONE posture=certified-lmc-v135-spec-async-tmpl $(date -u +%H:%M:%S)"
+  echo "V1227_DRIFT_NONE posture=certified-fn-fp8-tier-v1 $(date -u +%H:%M:%S)"
 fi
 exit 0

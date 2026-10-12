@@ -10,6 +10,11 @@
 # + LMCacheConnectorV1 REQUIRED). Filename preserved — the watchdog invokes
 # /root/build/v127_stage/boot_v1227_restore.sh (line 76).
 #
+# REBASED 2026-10-12 (flashnext-fp8-tier-v1 P7 SHIP): default image v1.3.0
+# (docker commit of fn8-p2 = v1.2.35 content + the fn8 tiered-MoE module,
+# md5-gated below). FN8_TIERED is env-gated default OFF = fully inert on
+# the swift-qwen lane (no FN8_*/V1X_TIER_* envs in serve_lmc_v133.sh).
+#
 # DESIGNATED CERTIFIED POSTURE (user directive 2026-09-30):
 #   model         /models/swift-qwen3.8-27b  (52 GB bf16 swift checkpoint)
 #   quantization  --quantization fp8         (on-the-fly dynamic fp8)
@@ -83,7 +88,7 @@ V1227_POSTURE="${V1227_POSTURE:-ckpt}"
 # 2.2x faster than the fastest spec leg on the standard shape). Spec
 # stays SUPPORTED opt-in:
 V1227_SPEC="${V1227_SPEC:-1}"
-V1227_IMAGE="${V1227_IMAGE:-llm-scaler-exp:v1.2.35}"
+V1227_IMAGE="${V1227_IMAGE:-llm-scaler-exp:v1.3.0}"
 V1227_ASYNC="${V1227_ASYNC:-1}"
 V1227_TMPL="${V1227_TMPL:-1}"
 V1227_MNBT="${V1227_MNBT:-8192}"
@@ -244,6 +249,16 @@ fi
 docker exec lsv-test test -f /root/.llm_scaler_exp_v1226_baked || { echo "BOOT_$MODE MARKER MISSING"; exit 9; }
 DBN=$(docker exec lsv-test sh -c 'grep -c "llm-scaler v126 DUAL BRIDGE" /opt/venv/lib/python3.12/site-packages/vllm/_xpu_ops.py' | tr -d "[:space:]")
 [ "$DBN" -ge 1 ] 2>/dev/null || { echo "BOOT V1226 DUALBRIDGE MISSING got=$DBN"; exit 9; }
+
+# --- v1.3.0 FN8-TIER content gate (flashnext-fp8-tier-v1 P7 bake,
+#     2026-10-12): image ships the fn8 tiered-MoE module (patch chain
+#     02a/02b/02c/03/05; P7-certified prefill 691.4 tok/s, parity 4/4,
+#     adj 6/6). FN8_TIERED env-gated default OFF = INERT on this lane;
+#     the md5 gate certifies baked content so a stale image can never
+#     boot as v1.3.0 silently. ---
+FN8MD5=$(docker exec lsv-test md5sum /opt/venv/lib/python3.12/site-packages/vllm/model_executor/layers/fused_moe/fused_moe_modular_method.py 2>/dev/null | awk '{print $1}')
+[ "$FN8MD5" = "55e9691228d1293aa22382d7ef515a0f" ] \
+  || { echo "BOOT_$MODE FN8_TIER CONTENT GATE FAIL got=$FN8MD5"; exit 25; }
 
 # --- v1.2.34 LMCACHE ERA serve surface (P9b ship 2026-10-10): the standing
 #     script is /root/serve_lmc_v133.sh — LMCacheConnectorV1 kv_both ratio 2,

@@ -1063,3 +1063,77 @@ V1X_TIER_FLUSH=200 dispatches PER STORE — a fresh boot has NO dump
 file until ≥200 dispatches/store; runners must issue a 256-token
 warmup completion before their first dump read (64 tokens
 insufficient). Warmup also satisfies the warm-engine ceiling law.
+
+## 23. Round 15 — P7 CLOSED: certification PASS on boot-18#2, v1.3.0
+## baked, chain rebased, lane restored + drift-certified; series
+## complete (2026-10-12 00:45 UTC)
+
+SERVE: exact Round-12 P3 shape (fn8_serve_p3.sh md5 768f0827 —
+static seed pre-warm, demand-LRU, v2+v3+v4+PIN, prefetch P3 knobs;
+NO P5 envs → V1X_TIER_ADAPT defaults OFF, patch_05 inert; spec OFF
+per P4). Boot-18#2 after wedge-3 recovery (reboot 3 ~00:09, content
+gates re-verified python3.12 path, relaunch 00:12, healthy ~00:23).
+
+CERT RESULTS (all gates):
+- PARITY 4/4 — fib50 12586269025, gcd 21, fib20 6765, exec1
+  ['a','b','c'] (the known structural miss didn't fire; gate was
+  ≥3/4). Adj battery 6/6 NUMERIC_FLIP_CLASS (gate ≥4/6).
+- PREFILL median 691.4 tok/s (668.3 / 691.4 / 691.9 / 690.9; TTFT
+  6.99-7.23s; gate ≥600) — reproduces the R12 bank 690.6 within
+  0.1%.
+- PERF decode-class healthy: perf_fib 4.887 tok/s ×144.25, perf_sort
+  5.05 tok/s ×149.08 vs P0-ref (R12 class 4.975/5.243).
+- Boot gates: 96 "FN8_02A store layer" pre-warm lines, 0 DISABLED,
+  EP2 "Local/global number of experts: 256/512" linear, "Total CPU
+  offloaded parameters: 56.26" ×2 workers, speculative_config=None.
+- Integrity: 0 NaN/traceback in serve_p3.log; host dmesg clean
+  through the whole cert window (baseline 00:13:05).
+
+HARDWARE (5-reset day, xe bcs copy-engine): wedges 21:35 (both
+cards), 22:31 (card b1), 00:02 (WEDGE-3 — the 23:57:10 card2 reset
+limped through shards NON-wedging ~4 min, then poisoned the next
+blocking wait at 00:01:47 mamba-padding; lesson recorded: watch
+several minutes past ANY reset before downgrading). Coredumps
+banked HOST /root/fn8_stage/coredump_2231_card1.bin (379,038 B) +
+coredump_2357_card2.bin (379,005 B) + WEDGE_BOOT15_NOTE.txt (3
+notes). Reboots 21:56 / ~23:04 / ~00:09. Boot-18#2 ran the entire
+cert sequence clean post-reboot-3 — probabilistic D2H stress
+events, no code fix owed.
+
+BAKE: llm-scaler-exp:v1.3.0 = docker commit of fn8-p2 (v1.2.35
+content + fn8 module chain). Image id 121ddcf82b1e (sha256:
+121ddcf82b1e6d803a4edfcccd7c2d89e5fbb429229945f842953c0c070b7c04).
+Content: fused_moe_modular_method.py md5 55e9691228d1293aa22382d7ef515a0f
+(patches 02a/02b/02c/03/05; 04 dormant), uva.py md5
+5522b1e8abac6478d875e11e312bb104. On the swift-qwen lane the module
+is env-gated INERT (FN8_TIERED unset → tier never constructs).
+
+CHAIN REBASE (lane restore chain, 2026-10-12):
+- boot_v1227_restore.sh md5 a2d6cdb2dae169506541bf68c1b9a746 —
+  /root/build/ + /root/build/v127_stage/ + repo perf-v127 bank (was
+  c5900b92): V1227_IMAGE default → llm-scaler-exp:v1.3.0, NEW
+  FN8-TIER content gate (module md5 55e96912 assert, exit 25) so a
+  stale image can never boot as v1.3.0 silently.
+- watchdog_v2_drift_check.sh md5 6ff9df0e50b8bce2c8922600642546cd —
+  /root/build/v127_stage/ + repo (was 55d4d6aa): EXPECT_IMAGE →
+  v1.3.0, THIRD content gate FN8 module 55e96912 wired into the
+  verdict conjunction, verdict renamed
+  posture=certified-fn-fp8-tier-v1 (all lmc-era gates unchanged).
+
+LANE RESTORE VERIFIED (P7_CLOSE, 00:36:19 → 00:40:27): HEALTH_OK
+after ~240s; GPU KV cache 486,018 tokens / concurrency 1.85×;
+posture ckpt verified on live cmdline. Running-lane content gates:
+adapter dcb23fbe + gpu_model_runner 6520f916 + fn8 module 55e96912
+all md5-exact in lsv-test; :8000 health 200; drift check emitted
+`V1227_DRIFT_NONE posture=certified-fn-fp8-tier-v1 00:41:12`;
+watchdog pause flag removed (re-armed on its next 60s cycle). No
+second host reboot — the 00:10 reboot stands. fn8-p2 removed; all
+banks persist host-side /root/fn8_stage/.
+
+SERIES DISPOSITION: P0 scoping ✅ · P1 corpus ✅ (84.82% ≤8192) ·
+P2 baseline ✅ · P3 tiered pool ✅ (690.6 gate) · P4 spec OFF
+(final) · P5 adapt default-OFF (mechanism proven, +5pp refuted at
+the ~0.87 SLOTS=72 ceiling) · P6 skipped (not PCIe-bound) · P7
+certification + bake + chain rebase + lane restore ✅. Standing
+operating point for flashnext-fp8 tiered serving: fn8_serve_p3.sh
+shape, v1.3.0 image.
